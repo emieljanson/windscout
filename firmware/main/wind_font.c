@@ -1,0 +1,203 @@
+#include "wind_font.h"
+
+#include <limits.h>
+#include <string.h>
+
+#include "fonts/wind_font_internal.h"
+#include "fonts/inter_58.inc"
+
+static const wind_font_asset_t *find_asset(wind_font_family_t family,
+                                           int pixel_size) {
+    if (family == WIND_FONT_BERKELEY_MONO) {
+        if (pixel_size == 12) return &wind_font_berkeley_mono_12;
+        if (pixel_size == 14) return &wind_font_berkeley_mono_14;
+        if (pixel_size == 32) return &wind_font_berkeley_mono_32;
+    } else if (family == WIND_FONT_BERKELEY_MONO_BOLD) {
+        if (pixel_size == 15) return &wind_font_berkeley_mono_bold_15;
+    } else if (family == WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED) {
+        if (pixel_size == 15) return &wind_font_berkeley_mono_bold_condensed_15;
+    } else if (family == WIND_FONT_INTER_BOLD) {
+        if (pixel_size == 15) return &wind_font_inter_bold_15;
+    } else if (family == WIND_FONT_INTER) {
+        if (pixel_size == 16) return &wind_font_inter_16;
+        if (pixel_size == 28) return &wind_font_inter_28;
+        if (pixel_size == 58) return &wind_font_inter_58;
+    }
+    return NULL;
+}
+
+static uint32_t next_codepoint(const char **cursor) {
+    const uint8_t *s = (const uint8_t *)*cursor;
+    uint32_t cp;
+    size_t count;
+
+    if (*s < 0x80) {
+        *cursor += 1;
+        return *s;
+    }
+    if ((*s & 0xe0) == 0xc0) {
+        cp = *s & 0x1f;
+        count = 2;
+    } else if ((*s & 0xf0) == 0xe0) {
+        cp = *s & 0x0f;
+        count = 3;
+    } else if ((*s & 0xf8) == 0xf0) {
+        cp = *s & 0x07;
+        count = 4;
+    } else {
+        *cursor += 1;
+        return '?';
+    }
+
+    for (size_t i = 1; i < count; ++i) {
+        if ((s[i] & 0xc0) != 0x80) {
+            *cursor += 1;
+            return '?';
+        }
+        cp = (cp << 6) | (s[i] & 0x3f);
+    }
+    if ((count == 2 && cp < 0x80) || (count == 3 && cp < 0x800) ||
+        (count == 4 && cp < 0x10000) || cp > 0x10ffff ||
+        (cp >= 0xd800 && cp <= 0xdfff)) {
+        *cursor += 1;
+        return '?';
+    }
+    *cursor += count;
+    return cp;
+}
+
+static const wind_font_glyph_t *find_glyph(const wind_font_asset_t *asset,
+                                            uint32_t codepoint) {
+    size_t lo = 0;
+    size_t hi = asset->glyph_count;
+    while (lo < hi) {
+        const size_t mid = lo + (hi - lo) / 2;
+        const uint32_t candidate = asset->glyphs[mid].codepoint;
+        if (candidate < codepoint)
+            lo = mid + 1;
+        else
+            hi = mid;
+    }
+    if (lo < asset->glyph_count && asset->glyphs[lo].codepoint == codepoint)
+        return &asset->glyphs[lo];
+    return &asset->glyphs[asset->fallback_index];
+}
+
+static int measure_width(const wind_font_asset_t *asset, const char *utf8) {
+    int width = 0;
+    const char *cursor = utf8 ? utf8 : "";
+    while (*cursor) {
+        const wind_font_glyph_t *glyph = find_glyph(asset, next_codepoint(&cursor));
+        if (width > INT_MAX - glyph->advance) return INT_MAX;
+        width += glyph->advance;
+    }
+    return width;
+}
+
+wind_text_metrics_t wind_font_measure(wind_font_family_t family, int pixel_size,
+                                      const char *utf8) {
+    wind_text_metrics_t result = {0, 0, 0};
+    const wind_font_asset_t *asset = find_asset(family, pixel_size);
+    if (!asset) return result;
+    result.width = measure_width(asset, utf8);
+    result.ascent = asset->ascent;
+    result.descent = asset->descent;
+    return result;
+}
+
+void wind_font_draw(uint8_t *luma, int width, int height, int stride, int x,
+                    int baseline_y, wind_font_family_t family, int pixel_size,
+                    uint8_t gray, const char *utf8) {
+    const wind_font_asset_t *asset = find_asset(family, pixel_size);
+    const char *cursor = utf8 ? utf8 : "";
+    if (!luma || !asset || width <= 0 || height <= 0 || stride < width) return;
+
+    while (*cursor) {
+        const wind_font_glyph_t *glyph = find_glyph(asset, next_codepoint(&cursor));
+        const int left = x + glyph->bearing_x;
+        const int top = baseline_y + glyph->bearing_y;
+        for (int gy = 0; gy < glyph->bitmap_height; ++gy) {
+            const int py = top + gy;
+            if (py < 0 || py >= height) continue;
+            for (int gx = 0; gx < glyph->bitmap_width; ++gx) {
+                const int px = left + gx;
+                if (px < 0 || px >= width) continue;
+                const uint8_t alpha = asset->bitmap[glyph->bitmap_offset +
+                                                    gy * glyph->bitmap_width + gx];
+                uint8_t *destination = &luma[py * stride + px];
+                *destination = (uint8_t)((gray * alpha +
+                                          *destination * (255u - alpha) + 127u) /
+                                         255u);
+            }
+        }
+        x += glyph->advance;
+    }
+}
+
+static size_t copy_utf8(char *output, size_t output_size, const char *first,
+                        const char *separator, const char *second) {
+    size_t used = 0;
+    const char *parts[] = {first, separator, second};
+    if (!output_size) return 0;
+    for (size_t part = 0; part < 3; ++part) {
+        const char *cursor = parts[part] ? parts[part] : "";
+        while (*cursor) {
+            const char *start = cursor;
+            (void)next_codepoint(&cursor);
+            const size_t bytes = (size_t)(cursor - start);
+            if (used + bytes >= output_size) {
+                output[used] = '\0';
+                return used;
+            }
+            memcpy(output + used, start, bytes);
+            used += bytes;
+        }
+    }
+    output[used] = '\0';
+    return used;
+}
+
+size_t wind_font_fit_ellipsis(wind_font_family_t family, int pixel_size,
+                              const char *name_utf8,
+                              const char *coordinates_utf8, int max_width,
+                              char *output, size_t output_size,
+                              int *coordinates_included) {
+    static const char ellipsis[] = "\xe2\x80\xa6";
+    const wind_font_asset_t *asset = find_asset(family, pixel_size);
+    const char *name = name_utf8 ? name_utf8 : "";
+    const char *coordinates = coordinates_utf8 ? coordinates_utf8 : "";
+    const int name_width = asset ? measure_width(asset, name) : 0;
+    const int coordinates_width = asset ? measure_width(asset, coordinates) : 0;
+    const int separator_width = asset && *coordinates ? measure_width(asset, " ") : 0;
+
+    if (coordinates_included) *coordinates_included = 0;
+    if (output_size) output[0] = '\0';
+    if (!asset || !output || !output_size || max_width < 0) return 0;
+
+    if (*coordinates && name_width <= max_width - separator_width - coordinates_width) {
+        if (coordinates_included) *coordinates_included = 1;
+        return copy_utf8(output, output_size, name, " ", coordinates);
+    }
+    if (name_width <= max_width)
+        return copy_utf8(output, output_size, name, "", "");
+
+    const int ellipsis_width = measure_width(asset, ellipsis);
+    if (ellipsis_width > max_width || output_size <= sizeof(ellipsis) - 1) return 0;
+
+    size_t used = 0;
+    int width_used = 0;
+    const char *cursor = name;
+    while (*cursor) {
+        const char *start = cursor;
+        const wind_font_glyph_t *glyph = find_glyph(asset, next_codepoint(&cursor));
+        const size_t bytes = (size_t)(cursor - start);
+        if (width_used > max_width - ellipsis_width - glyph->advance ||
+            used + bytes + sizeof(ellipsis) > output_size)
+            break;
+        memcpy(output + used, start, bytes);
+        used += bytes;
+        width_used += glyph->advance;
+    }
+    memcpy(output + used, ellipsis, sizeof(ellipsis));
+    return used + sizeof(ellipsis) - 1;
+}

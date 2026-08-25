@@ -1,0 +1,13 @@
+firmware/build*/
+firmware/host_tests/build/
+firmware/sdkconfig
+firmware/sdkconfig.old
+firmware/main/wind_config.local.h
+.playwright-cli/
+.tmp*/
+*.bin
+
+# Local operating-system and interpreter artifacts
+**/.DS_Store
+**/__pycache__/
+*.py[cod]

@@ -1,0 +1,69 @@
+# ESP32-S3 Configuration
+CONFIG_IDF_TARGET="esp32s3"
+
+# Flash Configuration
+CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE="16MB"
+CONFIG_ESPTOOLPY_FLASHMODE_QIO=y
+
+# WiFi Configuration
+CONFIG_ESP_WIFI_SSID=""
+CONFIG_ESP_WIFI_PASSWORD=""
+CONFIG_ESP_MAXIMUM_RETRY=5
+
+# HTTP Server Configuration
+CONFIG_HTTPD_MAX_REQ_HDR_LEN=1024
+CONFIG_HTTPD_MAX_URI_LEN=512
+
+# PSRAM Configuration
+CONFIG_SPIRAM=y
+CONFIG_SPIRAM_MODE_OCT=y
+CONFIG_SPIRAM_SPEED_80M=y
+CONFIG_SPIRAM_USE_MALLOC=y
+
+# Partition Table
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+
+# SD Card Configuration
+CONFIG_FATFS_LFN_HEAP=y
+CONFIG_FATFS_MAX_LFN=255
+
+# FreeRTOS
+CONFIG_FREERTOS_HZ=1000
+
+# Main task stack size - Increase for WiFi and HTTP client operations
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=16384
+
+# Component config
+CONFIG_LWIP_MAX_SOCKETS=16
+
+# Enable deep sleep
+CONFIG_ESP_SLEEP_POWER_DOWN_FLASH=y
+CONFIG_ESP_SLEEP_RTC_BUS_ISO_WORKAROUND=y
+
+# Log level
+CONFIG_LOG_DEFAULT_LEVEL_INFO=y
+
+# Interrupt Watchdog - Increase timeout for long SPI transfers during e-paper refresh
+# Default is 300ms, increase to 1000ms to allow large SPI buffer transfers
+CONFIG_ESP_INT_WDT_TIMEOUT_MS=1000
+
+# Task Watchdog - Increase timeout for slow SD card writes during image conversion
+# Default is 5 seconds, increase to 15 seconds to allow for slow SD card operations
+CONFIG_ESP_TASK_WDT_TIMEOUT_S=15
+
+# Power Management - Enable automatic light sleep and CPU frequency scaling
+CONFIG_PM_ENABLE=y
+CONFIG_FREERTOS_USE_TICKLESS_IDLE=y
+CONFIG_PM_DFS_INIT_AUTO=y
+CONFIG_USJ_NO_AUTO_LS_ON_CONNECTION=y
+
+# ESP-TLS - Allow skipping server certificate verification for HTTPS
+# CONFIG_ESP_TLS_INSECURE is not set
+# CONFIG_ESP_TLS_SKIP_SERVER_CERT_VERIFY is not set
+CONFIG_MBEDTLS_CERTIFICATE_BUNDLE=y
+CONFIG_MBEDTLS_DEFAULT_CERTIFICATE_BUNDLE=y
+
+# mbedTLS - Keep peer certificate for trust-cert endpoint
+CONFIG_MBEDTLS_SSL_KEEP_PEER_CERTIFICATE=y
