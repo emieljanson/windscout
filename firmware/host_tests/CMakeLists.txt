@@ -162,6 +162,24 @@ endfunction()
 
 add_wind_test(wind_forecast_test test_wind_forecast.cpp ../main/wind_forecast.c)
 
+add_wind_test(wind_tide_test test_wind_tide.cpp ../main/wind_tide.c)
+
+add_wind_test(
+  open_meteo_marine_provider_test
+  test_open_meteo_marine_provider.cpp
+  ../main/wind_tide.c
+  ../main/open_meteo_marine_provider.c
+)
+target_link_libraries(open_meteo_marine_provider_test cjson)
+target_include_directories(open_meteo_marine_provider_test BEFORE PRIVATE ${cjson_SOURCE_DIR})
+
+add_wind_test(
+  wind_tide_cache_test
+  test_wind_tide_cache.cpp
+  ../main/wind_tide.c
+  ../main/wind_tide_cache.c
+)
+
 add_wind_test(wind_spots_test test_wind_spots.cpp ../main/wind_spots.c)
 
 add_wind_test(
