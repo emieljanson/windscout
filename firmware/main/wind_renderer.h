@@ -14,6 +14,17 @@ enum {
     WIND_RENDERER_DAY_COUNT = 5,
     WIND_RENDERER_SAMPLES_PER_DAY = 5,
     WIND_RENDERER_PALETTE_BYTES = WIND_RENDERER_WIDTH * WIND_RENDERER_HEIGHT,
+    WIND_RENDERER_CONTRACT_VERSION = 1,
+    WIND_RENDERER_MIN_THRESHOLD_KT = 5,
+    WIND_RENDERER_DEFAULT_THRESHOLD_KT = 17,
+    WIND_RENDERER_MAX_THRESHOLD_KT = 35,
+    WIND_RENDERER_SPOT_NAME_CAPACITY = 96,
+    WIND_RENDERER_COORDINATES_CAPACITY = 64,
+    WIND_RENDERER_PROVIDER_CAPACITY = 32,
+    WIND_RENDERER_UPDATED_TIME_CAPACITY = 32,
+    WIND_RENDERER_DAY_LABEL_CAPACITY = 16,
+    WIND_RENDERER_DATE_LABEL_CAPACITY = 16,
+    WIND_RENDERER_TIME_LABEL_CAPACITY = 8,
 };
 
 typedef enum {
@@ -68,8 +79,44 @@ typedef struct {
     /* Negative means that battery state is unknown. */
     int battery_percent;
     wind_renderer_display_mode_t display_mode;
+    int threshold_kt;
     wind_renderer_day_t days[WIND_RENDERER_DAY_COUNT];
 } wind_renderer_dashboard_t;
+
+/*
+ * Versioned, bounded storage used by cross-runtime bridges. Its native byte
+ * layout is intentionally not an ABI: browser callers must use bridge setter
+ * functions rather than writing this structure from JavaScript.
+ */
+typedef struct {
+    char time[WIND_RENDERER_TIME_LABEL_CAPACITY];
+    int32_t sustained_kt;
+    int32_t gust_kt;
+    int32_t destination_degrees;
+    int32_t available;
+    int32_t weather;
+} wind_renderer_input_sample_v1_t;
+
+typedef struct {
+    char day[WIND_RENDERER_DAY_LABEL_CAPACITY];
+    char date[WIND_RENDERER_DATE_LABEL_CAPACITY];
+    wind_renderer_input_sample_v1_t samples[WIND_RENDERER_SAMPLES_PER_DAY];
+} wind_renderer_input_day_v1_t;
+
+typedef struct {
+    uint32_t version;
+    char spot_name[WIND_RENDERER_SPOT_NAME_CAPACITY];
+    char coordinates[WIND_RENDERER_COORDINATES_CAPACITY];
+    char provider[WIND_RENDERER_PROVIDER_CAPACITY];
+    char updated_time[WIND_RENDERER_UPDATED_TIME_CAPACITY];
+    int32_t state;
+    int32_t refresh_failed;
+    int32_t age_hours;
+    int32_t battery_percent;
+    int32_t display_mode;
+    int32_t threshold_kt;
+    wind_renderer_input_day_v1_t days[WIND_RENDERER_DAY_COUNT];
+} wind_renderer_input_v1_t;
 
 typedef struct {
     int dither_passes;
@@ -86,6 +133,45 @@ typedef struct {
 int wind_renderer_render(const wind_renderer_dashboard_t *dashboard,
                          uint8_t *palette_out, size_t palette_size,
                          wind_renderer_stats_t *stats);
+
+uint32_t wind_renderer_contract_version(void);
+
+void wind_renderer_input_v1_init(wind_renderer_input_v1_t *input);
+
+int wind_renderer_input_v1_set_metadata(wind_renderer_input_v1_t *input,
+                                        const char *spot_name,
+                                        const char *coordinates,
+                                        const char *provider,
+                                        const char *updated_time);
+
+int wind_renderer_input_v1_set_status(wind_renderer_input_v1_t *input,
+                                      wind_renderer_state_t state,
+                                      int refresh_failed, int age_hours,
+                                      int battery_percent,
+                                      wind_renderer_display_mode_t display_mode,
+                                      int threshold_kt);
+
+int wind_renderer_input_v1_set_day(wind_renderer_input_v1_t *input,
+                                   int day_index, const char *day,
+                                   const char *date);
+
+int wind_renderer_input_v1_set_sample(wind_renderer_input_v1_t *input,
+                                      int day_index, int sample_index,
+                                      const char *time, int sustained_kt,
+                                      int gust_kt, int destination_degrees,
+                                      int available,
+                                      wind_renderer_weather_t weather);
+
+/*
+ * Creates the canonical pointer-based dashboard view over input. The returned
+ * dashboard remains valid only while input remains alive and unchanged.
+ */
+int wind_renderer_input_v1_to_dashboard(const wind_renderer_input_v1_t *input,
+                                        wind_renderer_dashboard_t *dashboard);
+
+int wind_renderer_input_v1_render(const wind_renderer_input_v1_t *input,
+                                  uint8_t *palette_out, size_t palette_size,
+                                  wind_renderer_stats_t *stats);
 
 /*
  * Expands one renderer palette row to RGB888 for display-manager streaming.

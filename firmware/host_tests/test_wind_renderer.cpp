@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <iterator>
 #include <string>
 #include <vector>
 
@@ -11,6 +12,7 @@
 
 extern "C" {
 #include "wind_renderer.h"
+#include "wind_renderer_fixture.h"
 }
 
 namespace {
@@ -29,6 +31,7 @@ wind_renderer_dashboard_t Dashboard(wind_renderer_state_t state = WIND_RENDERER_
     result.state = state;
     result.age_hours = state == WIND_RENDERER_STALE ? 25 : 1;
     result.battery_percent = 74;
+    result.threshold_kt = WIND_RENDERER_DEFAULT_THRESHOLD_KT;
     for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day) {
         result.days[day].day = days[day];
         result.days[day].date = dates[day];
@@ -112,6 +115,16 @@ Frame ReadPbm(const std::string &path) {
                     (byte & (0x80 >> bit)) ? 0 : 1;
         }
     }
+    return frame;
+}
+
+Frame ReadPaletteFixture(const char *name) {
+    const auto path = std::filesystem::path(WIND_RENDERER_SHARED_FIXTURE_DIR) /
+                      (std::string(name) + ".bin");
+    std::ifstream input(path, std::ios::binary);
+    EXPECT_TRUE(input.good()) << path;
+    Frame frame(std::istreambuf_iterator<char>(input), {});
+    EXPECT_EQ(frame.size(), WIND_RENDERER_PALETTE_BYTES) << path;
     return frame;
 }
 
@@ -236,6 +249,122 @@ TEST(WindRenderer, SupportsBackgroundThresholdAndSolidDisplayModes) {
     EXPECT_EQ(threshold_bottom, solid_bottom);
     EXPECT_GT(CountColor(threshold, 28, 320, 771, 324, 3), 0);
     EXPECT_EQ(CountColor(solid, 28, 320, 771, 324, 3), 0);
+}
+
+TEST(WindRenderer, UsesTheConfiguredThresholdAcrossItsSupportedRange) {
+    auto dashboard = Dashboard();
+    dashboard.display_mode = WIND_RENDERER_MODE_THRESHOLD;
+
+    dashboard.threshold_kt = WIND_RENDERER_MIN_THRESHOLD_KT;
+    const Frame minimum = Render(dashboard);
+    dashboard.threshold_kt = WIND_RENDERER_DEFAULT_THRESHOLD_KT;
+    const Frame default_threshold = Render(dashboard);
+    const Frame repeated_default = Render(dashboard);
+    dashboard.threshold_kt = WIND_RENDERER_MAX_THRESHOLD_KT;
+    const Frame maximum = Render(dashboard);
+
+    const auto threshold_y = [](int knots) { return 424 - knots * 240 / 40; };
+    EXPECT_GT(CountColor(minimum, 36, threshold_y(WIND_RENDERER_MIN_THRESHOLD_KT),
+                         762, threshold_y(WIND_RENDERER_MIN_THRESHOLD_KT), 3),
+              0);
+    EXPECT_GT(CountColor(default_threshold, 36,
+                         threshold_y(WIND_RENDERER_DEFAULT_THRESHOLD_KT), 762,
+                         threshold_y(WIND_RENDERER_DEFAULT_THRESHOLD_KT), 3),
+              0);
+    EXPECT_GT(CountColor(maximum, 36, threshold_y(WIND_RENDERER_MAX_THRESHOLD_KT),
+                         762, threshold_y(WIND_RENDERER_MAX_THRESHOLD_KT), 3),
+              0);
+    EXPECT_NE(minimum, default_threshold);
+    EXPECT_NE(default_threshold, maximum);
+    EXPECT_EQ(default_threshold, repeated_default);
+}
+
+TEST(WindRenderer, RejectsInvalidConfigurationAndIncompleteAvailableSamples) {
+    Frame frame(WIND_RENDERER_PALETTE_BYTES);
+    auto dashboard = Dashboard();
+
+    dashboard.display_mode = WIND_RENDERER_MODE_COUNT;
+    EXPECT_NE(wind_renderer_render(&dashboard, frame.data(), frame.size(), nullptr), 0);
+
+    dashboard = Dashboard();
+    dashboard.threshold_kt = WIND_RENDERER_MIN_THRESHOLD_KT - 1;
+    EXPECT_NE(wind_renderer_render(&dashboard, frame.data(), frame.size(), nullptr), 0);
+    dashboard.threshold_kt = WIND_RENDERER_MAX_THRESHOLD_KT + 1;
+    EXPECT_NE(wind_renderer_render(&dashboard, frame.data(), frame.size(), nullptr), 0);
+
+    dashboard = Dashboard();
+    dashboard.days[0].samples[0].time = nullptr;
+    EXPECT_NE(wind_renderer_render(&dashboard, frame.data(), frame.size(), nullptr), 0);
+
+    dashboard = Dashboard();
+    const std::string oversized(WIND_RENDERER_SPOT_NAME_CAPACITY, 'W');
+    dashboard.spot_name = oversized.c_str();
+    EXPECT_NE(wind_renderer_render(&dashboard, frame.data(), frame.size(), nullptr), 0);
+}
+
+TEST(WindRenderer, ConvertsVersionedBoundedInputToTheCanonicalDashboard) {
+    wind_renderer_input_v1_t input{};
+    wind_renderer_input_v1_init(&input);
+    EXPECT_EQ(wind_renderer_contract_version(), WIND_RENDERER_CONTRACT_VERSION);
+    EXPECT_EQ(input.version, WIND_RENDERER_CONTRACT_VERSION);
+    EXPECT_EQ(input.threshold_kt, WIND_RENDERER_DEFAULT_THRESHOLD_KT);
+
+    EXPECT_EQ(wind_renderer_input_v1_set_metadata(
+                  &input, "Brouwersdam", "51.7506N 3.8577E", "KNMI", "11:05"),
+              0);
+    EXPECT_EQ(wind_renderer_input_v1_set_status(
+                  &input, WIND_RENDERER_FRESH, 0, 1, 74,
+                  WIND_RENDERER_MODE_THRESHOLD, 23),
+              0);
+    EXPECT_EQ(wind_renderer_input_v1_set_day(&input, 0, "TODAY", "24 AUG"), 0);
+    EXPECT_EQ(wind_renderer_input_v1_set_sample(
+                  &input, 0, 0, "08", 18, 24, 245, 1,
+                  WIND_RENDERER_WEATHER_CLEAR_DAY),
+              0);
+
+    wind_renderer_dashboard_t dashboard{};
+    EXPECT_EQ(wind_renderer_input_v1_to_dashboard(&input, &dashboard), 0);
+    EXPECT_STREQ(dashboard.spot_name, "Brouwersdam");
+    EXPECT_EQ(dashboard.threshold_kt, 23);
+    EXPECT_EQ(dashboard.days[0].samples[0].sustained_kt, 18);
+
+    const std::string oversized(WIND_RENDERER_SPOT_NAME_CAPACITY, 'W');
+    EXPECT_NE(wind_renderer_input_v1_set_metadata(
+                  &input, oversized.c_str(), "", "KNMI", "11:05"),
+              0);
+    EXPECT_NE(wind_renderer_input_v1_set_status(
+                  &input, WIND_RENDERER_FRESH, 0, 1, 74,
+                  WIND_RENDERER_MODE_COUNT, 23),
+              0);
+    EXPECT_NE(wind_renderer_input_v1_set_sample(
+                  &input, 0, 0, "", 18, 24, 245, 1,
+                  WIND_RENDERER_WEATHER_CLEAR_DAY),
+              0);
+
+    input.version = WIND_RENDERER_CONTRACT_VERSION + 1;
+    EXPECT_NE(wind_renderer_input_v1_to_dashboard(&input, &dashboard), 0);
+}
+
+TEST(WindRenderer, MatchesEveryFullPaletteCrossRuntimeFixture) {
+    for (std::size_t fixture_index = 0;
+         fixture_index < WIND_RENDERER_FIXTURE_COUNT; ++fixture_index) {
+        wind_renderer_input_v1_t input{};
+        ASSERT_EQ(wind_renderer_fixture_build(fixture_index, &input), 0);
+        Frame actual(WIND_RENDERER_PALETTE_BYTES);
+        ASSERT_EQ(wind_renderer_input_v1_render(
+                      &input, actual.data(), actual.size(), nullptr),
+                  0);
+        const char *name = wind_renderer_fixture_name(fixture_index);
+        ASSERT_NE(name, nullptr);
+        const Frame expected = ReadPaletteFixture(name);
+        EXPECT_EQ(actual, expected) << name;
+        if (input.display_mode == WIND_RENDERER_MODE_THRESHOLD) {
+            EXPECT_GT(std::count(actual.begin(), actual.end(),
+                                 static_cast<uint8_t>(3)),
+                      0)
+                << name;
+        }
+    }
 }
 
 TEST(WindRenderer, MakesBatteryRedBelowTenPercentOnly) {

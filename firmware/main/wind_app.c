@@ -337,6 +337,7 @@ static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast
                               : 0;
     dashboard.battery_percent = board_hal_get_battery_percent();
     dashboard.display_mode = s_display_mode;
+    dashboard.threshold_kt = WIND_RENDERER_DEFAULT_THRESHOLD_KT;
     format_coordinates(coordinates, sizeof(coordinates),
                        forecast ? forecast->latitude : spot->latitude,
                        forecast ? forecast->longitude : spot->longitude);

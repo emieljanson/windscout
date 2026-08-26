@@ -225,10 +225,37 @@ add_wind_test(wind_font_test test_wind_font.cpp ${WIND_FONT_SOURCES})
 add_wind_test(
   wind_renderer_test
   test_wind_renderer.cpp
+  ../../shared/renderer-fixtures/wind_renderer_fixture.c
   ../main/wind_renderer.c
   ${WIND_FONT_SOURCES}
 )
+target_include_directories(
+  wind_renderer_test
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../shared/renderer-fixtures
+)
 target_compile_definitions(
   wind_renderer_test
-  PRIVATE WIND_RENDERER_GOLDEN_DIR="${CMAKE_CURRENT_SOURCE_DIR}/goldens"
+  PRIVATE
+  WIND_RENDERER_GOLDEN_DIR="${CMAKE_CURRENT_SOURCE_DIR}/goldens"
+  WIND_RENDERER_SHARED_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../../shared/renderer-fixtures"
 )
+
+add_executable(
+  render_wind_fixture
+  render_wind_fixture.cpp
+  ../../shared/renderer-fixtures/wind_renderer_fixture.c
+  ../main/wind_renderer.c
+  ${WIND_FONT_SOURCES}
+)
+target_include_directories(
+  render_wind_fixture
+  PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/../main
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../shared/renderer-fixtures
+)
+target_compile_definitions(
+  render_wind_fixture
+  PRIVATE
+  WIND_RENDERER_SHARED_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../../shared/renderer-fixtures"
+)
+target_link_libraries(render_wind_fixture m)

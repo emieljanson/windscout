@@ -31,7 +31,6 @@ enum {
     SAMPLE_FIRST_CENTER = 26,
     CHART_SCALE_HEIGHT = 240,
     SUSTAINED_BAR_WIDTH = 16,
-    WIND_THRESHOLD_KT = 17,
 };
 
 typedef struct {
@@ -45,6 +44,57 @@ static int clamp_int(int value, int low, int high) {
     if (value < low) return low;
     if (value > high) return high;
     return value;
+}
+
+static int text_fits(const char *text, size_t capacity) {
+    return !text || memchr(text, '\0', capacity) != NULL;
+}
+
+static int copy_bounded_text(char *destination, size_t capacity,
+                             const char *source) {
+    const char *text = safe_text(source);
+    if (!destination || capacity == 0 || !text_fits(text, capacity)) return -1;
+    const size_t length = strlen(text);
+    memcpy(destination, text, length + 1);
+    return 0;
+}
+
+static int dashboard_valid(const wind_renderer_dashboard_t *dashboard) {
+    if (!dashboard ||
+        dashboard->state < WIND_RENDERER_FRESH ||
+        dashboard->state > WIND_RENDERER_UNAVAILABLE ||
+        (dashboard->refresh_failed != 0 && dashboard->refresh_failed != 1) ||
+        dashboard->age_hours < 0 ||
+        dashboard->battery_percent < -1 || dashboard->battery_percent > 100 ||
+        dashboard->display_mode < WIND_RENDERER_MODE_BACKGROUND_FADE ||
+        dashboard->display_mode >= WIND_RENDERER_MODE_COUNT ||
+        dashboard->threshold_kt < WIND_RENDERER_MIN_THRESHOLD_KT ||
+        dashboard->threshold_kt > WIND_RENDERER_MAX_THRESHOLD_KT ||
+        !text_fits(dashboard->spot_name, WIND_RENDERER_SPOT_NAME_CAPACITY) ||
+        !text_fits(dashboard->coordinates, WIND_RENDERER_COORDINATES_CAPACITY) ||
+        !text_fits(dashboard->provider, WIND_RENDERER_PROVIDER_CAPACITY) ||
+        !text_fits(dashboard->updated_time, WIND_RENDERER_UPDATED_TIME_CAPACITY)) {
+        return 0;
+    }
+    for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day) {
+        if (!text_fits(dashboard->days[day].day,
+                       WIND_RENDERER_DAY_LABEL_CAPACITY) ||
+            !text_fits(dashboard->days[day].date,
+                       WIND_RENDERER_DATE_LABEL_CAPACITY)) {
+            return 0;
+        }
+        for (int sample = 0; sample < WIND_RENDERER_SAMPLES_PER_DAY; ++sample) {
+            const wind_renderer_sample_t *slot = &dashboard->days[day].samples[sample];
+            if ((slot->available != 0 && slot->available != 1) ||
+                slot->weather < WIND_RENDERER_WEATHER_UNAVAILABLE ||
+                slot->weather > WIND_RENDERER_WEATHER_HEAVY_RAIN ||
+                !text_fits(slot->time, WIND_RENDERER_TIME_LABEL_CAPACITY) ||
+                (slot->available && (!slot->time || !slot->time[0]))) {
+                return 0;
+            }
+        }
+    }
+    return 1;
 }
 
 static void set_pixel(canvas_t *canvas, int x, int y, uint8_t gray) {
@@ -464,7 +514,7 @@ static void draw_palette_outlined_text(canvas_t *scratch, uint8_t *palette,
 static void draw_threshold_overlay(canvas_t *scratch, uint8_t *palette,
                                    const wind_renderer_dashboard_t *dashboard) {
     const int y = CHART_BASELINE -
-                  WIND_THRESHOLD_KT * CHART_SCALE_HEIGHT / 40;
+                  dashboard->threshold_kt * CHART_SCALE_HEIGHT / 40;
     const int line_left = OUTER_X + SAMPLE_FIRST_CENTER -
                           SUSTAINED_BAR_WIDTH / 2 - 2;
     const int line_right = OUTER_X +
@@ -506,7 +556,7 @@ static void draw_threshold_overlay(canvas_t *scratch, uint8_t *palette,
     }
 
     char label[16];
-    snprintf(label, sizeof(label), "%dKTS", WIND_THRESHOLD_KT);
+    snprintf(label, sizeof(label), "%dKTS", dashboard->threshold_kt);
     const int baseline = y + 5;
     const wind_text_metrics_t metrics = wind_font_measure(
         WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED,
@@ -524,6 +574,152 @@ static void draw_low_battery_overlay(canvas_t *scratch, uint8_t *palette,
     draw_battery(scratch, CONTENT_RIGHT, 72, battery_percent);
     apply_mask_to_palette(scratch, palette, CONTENT_RIGHT - 24, 65,
                           CONTENT_RIGHT + 1, 78, PALETTE_RED);
+}
+
+uint32_t wind_renderer_contract_version(void) {
+    return WIND_RENDERER_CONTRACT_VERSION;
+}
+
+void wind_renderer_input_v1_init(wind_renderer_input_v1_t *input) {
+    if (!input) return;
+    memset(input, 0, sizeof(*input));
+    input->version = WIND_RENDERER_CONTRACT_VERSION;
+    input->battery_percent = -1;
+    input->threshold_kt = WIND_RENDERER_DEFAULT_THRESHOLD_KT;
+}
+
+int wind_renderer_input_v1_set_metadata(wind_renderer_input_v1_t *input,
+                                        const char *spot_name,
+                                        const char *coordinates,
+                                        const char *provider,
+                                        const char *updated_time) {
+    if (!input || input->version != WIND_RENDERER_CONTRACT_VERSION ||
+        !text_fits(safe_text(spot_name), sizeof(input->spot_name)) ||
+        !text_fits(safe_text(coordinates), sizeof(input->coordinates)) ||
+        !text_fits(safe_text(provider), sizeof(input->provider)) ||
+        !text_fits(safe_text(updated_time), sizeof(input->updated_time))) {
+        return -1;
+    }
+    copy_bounded_text(input->spot_name, sizeof(input->spot_name), spot_name);
+    copy_bounded_text(input->coordinates, sizeof(input->coordinates), coordinates);
+    copy_bounded_text(input->provider, sizeof(input->provider), provider);
+    copy_bounded_text(input->updated_time, sizeof(input->updated_time), updated_time);
+    return 0;
+}
+
+int wind_renderer_input_v1_set_status(wind_renderer_input_v1_t *input,
+                                      wind_renderer_state_t state,
+                                      int refresh_failed, int age_hours,
+                                      int battery_percent,
+                                      wind_renderer_display_mode_t display_mode,
+                                      int threshold_kt) {
+    if (!input || input->version != WIND_RENDERER_CONTRACT_VERSION ||
+        state < WIND_RENDERER_FRESH ||
+        state > WIND_RENDERER_UNAVAILABLE ||
+        (refresh_failed != 0 && refresh_failed != 1) || age_hours < 0 ||
+        battery_percent < -1 || battery_percent > 100 ||
+        display_mode < WIND_RENDERER_MODE_BACKGROUND_FADE ||
+        display_mode >= WIND_RENDERER_MODE_COUNT ||
+        threshold_kt < WIND_RENDERER_MIN_THRESHOLD_KT ||
+        threshold_kt > WIND_RENDERER_MAX_THRESHOLD_KT) {
+        return -1;
+    }
+    input->state = state;
+    input->refresh_failed = refresh_failed;
+    input->age_hours = age_hours;
+    input->battery_percent = battery_percent;
+    input->display_mode = display_mode;
+    input->threshold_kt = threshold_kt;
+    return 0;
+}
+
+int wind_renderer_input_v1_set_day(wind_renderer_input_v1_t *input,
+                                   int day_index, const char *day,
+                                   const char *date) {
+    if (!input || input->version != WIND_RENDERER_CONTRACT_VERSION ||
+        day_index < 0 || day_index >= WIND_RENDERER_DAY_COUNT ||
+        !text_fits(safe_text(day), sizeof(input->days[day_index].day)) ||
+        !text_fits(safe_text(date), sizeof(input->days[day_index].date))) {
+        return -1;
+    }
+    copy_bounded_text(input->days[day_index].day,
+                      sizeof(input->days[day_index].day), day);
+    copy_bounded_text(input->days[day_index].date,
+                      sizeof(input->days[day_index].date), date);
+    return 0;
+}
+
+int wind_renderer_input_v1_set_sample(wind_renderer_input_v1_t *input,
+                                      int day_index, int sample_index,
+                                      const char *time, int sustained_kt,
+                                      int gust_kt, int destination_degrees,
+                                      int available,
+                                      wind_renderer_weather_t weather) {
+    if (!input || input->version != WIND_RENDERER_CONTRACT_VERSION ||
+        day_index < 0 || day_index >= WIND_RENDERER_DAY_COUNT ||
+        sample_index < 0 || sample_index >= WIND_RENDERER_SAMPLES_PER_DAY ||
+        (available != 0 && available != 1) ||
+        weather < WIND_RENDERER_WEATHER_UNAVAILABLE ||
+        weather > WIND_RENDERER_WEATHER_HEAVY_RAIN ||
+        !text_fits(safe_text(time),
+                   sizeof(input->days[day_index].samples[sample_index].time)) ||
+        (available && (!time || !time[0]))) {
+        return -1;
+    }
+    wind_renderer_input_sample_v1_t *sample =
+        &input->days[day_index].samples[sample_index];
+    copy_bounded_text(sample->time, sizeof(sample->time), time);
+    sample->sustained_kt = sustained_kt;
+    sample->gust_kt = gust_kt;
+    sample->destination_degrees = destination_degrees;
+    sample->available = available;
+    sample->weather = weather;
+    return 0;
+}
+
+int wind_renderer_input_v1_to_dashboard(const wind_renderer_input_v1_t *input,
+                                        wind_renderer_dashboard_t *dashboard) {
+    if (!input || !dashboard || input->version != WIND_RENDERER_CONTRACT_VERSION)
+        return -1;
+
+    wind_renderer_dashboard_t result = {0};
+    result.spot_name = input->spot_name;
+    result.coordinates = input->coordinates;
+    result.provider = input->provider;
+    result.updated_time = input->updated_time;
+    result.state = (wind_renderer_state_t)input->state;
+    result.refresh_failed = input->refresh_failed;
+    result.age_hours = input->age_hours;
+    result.battery_percent = input->battery_percent;
+    result.display_mode = (wind_renderer_display_mode_t)input->display_mode;
+    result.threshold_kt = input->threshold_kt;
+    for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day) {
+        result.days[day].day = input->days[day].day;
+        result.days[day].date = input->days[day].date;
+        for (int sample = 0; sample < WIND_RENDERER_SAMPLES_PER_DAY; ++sample) {
+            const wind_renderer_input_sample_v1_t *source =
+                &input->days[day].samples[sample];
+            result.days[day].samples[sample] = (wind_renderer_sample_t) {
+                .time = source->time,
+                .sustained_kt = source->sustained_kt,
+                .gust_kt = source->gust_kt,
+                .destination_degrees = source->destination_degrees,
+                .available = source->available,
+                .weather = (wind_renderer_weather_t)source->weather,
+            };
+        }
+    }
+    if (!dashboard_valid(&result)) return -2;
+    *dashboard = result;
+    return 0;
+}
+
+int wind_renderer_input_v1_render(const wind_renderer_input_v1_t *input,
+                                  uint8_t *palette_out, size_t palette_size,
+                                  wind_renderer_stats_t *stats) {
+    wind_renderer_dashboard_t dashboard;
+    if (wind_renderer_input_v1_to_dashboard(input, &dashboard) != 0) return -1;
+    return wind_renderer_render(&dashboard, palette_out, palette_size, stats);
 }
 
 int wind_renderer_palette_row_to_rgb(const uint8_t *palette_row, size_t width,
@@ -550,6 +746,7 @@ int wind_renderer_render(const wind_renderer_dashboard_t *dashboard,
                          wind_renderer_stats_t *stats) {
     if (!dashboard || !palette_out || palette_size < WIND_RENDERER_PALETTE_BYTES)
         return -1;
+    if (!dashboard_valid(dashboard)) return -3;
 
     canvas_t canvas = {0};
     canvas.pixels = (uint8_t *)malloc(WIND_RENDERER_PALETTE_BYTES);
