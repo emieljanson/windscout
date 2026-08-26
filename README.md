@@ -45,12 +45,19 @@ Open-Meteo request. Best fit is the default, while the DialKit model control can
 switch the 3D preview instantly between the already normalized forecasts.
 Cached forecasts are separated by spot and model.
 
-The parity test still compares every one of the 384,000 device-palette bytes,
-including red threshold pixels, so compiling to WebAssembly cannot change what
-the device would receive. A separate preview test verifies that the same
+Weather is shown by default. Air temperature and tide are independent optional
+rows; wind always remains visible and expands into the space left over. Tide is
+retrieved separately from Open-Meteo Marine only when needed on the device, so
+a marine-data failure cannot break the regular forecast. Tide timing is an
+indicative model forecast and is not suitable for navigation.
+
+The parity tests compare every one of the 384,000 device-palette bytes for all
+eight row combinations and a missing-data state, including red threshold
+pixels. Compiling to WebAssembly therefore cannot silently change what the
+device would receive. A separate preview test verifies that the same
 composition can be exported as opaque RGBA with continuous gray and red
-accents. Forecast requests go directly from the browser to Open-Meteo; the
-renderer itself performs no networking or persistence.
+accents. Forecast and optional marine requests go directly from the browser to
+Open-Meteo; the renderer itself performs no networking or persistence.
 
 The Berkeley Mono bitmap assets are derived from a separately licensed local
 font. Check that licence before distributing firmware binaries.

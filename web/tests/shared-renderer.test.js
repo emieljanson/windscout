@@ -19,7 +19,7 @@ async function loadRealRenderer() {
   return loadSharedRenderer({ wasmBytes: await readFile(wasmPath) })
 }
 
-function fixtureInput(displayMode = 0, thresholdKt = 17) {
+function fixtureInput(displayMode = 0, thresholdKt = 17, rowMask = 1, missingData = false) {
   const dayNames = ['TODAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']
   const dates = ['26 AUG', '27 AUG', '28 AUG', '29 AUG', '30 AUG']
   const times = ['08', '11', '14', '17', '20']
@@ -35,11 +35,24 @@ function fixtureInput(displayMode = 0, thresholdKt = 17) {
     batteryPercent: 74,
     displayMode,
     thresholdKt,
-    showWeather: true,
-    showTemperature: false,
-    showTide: false,
-    tideAvailable: false,
-    tideSamples: [],
+    showWeather: Boolean(rowMask & 1),
+    showTemperature: Boolean(rowMask & 2),
+    showTide: Boolean(rowMask & 4),
+    tideAvailable: Boolean(rowMask & 4) && !missingData,
+    tideSamples: (rowMask & 4) && !missingData
+      ? Array.from({ length: 120 }, (_, index) => {
+          const hour = index % 24
+          const seaLevelMm = hour <= 6 ? hour * 100
+            : hour <= 18 ? 600 - (hour - 6) * 100
+              : -600 + (hour - 18) * 100
+          return {
+            dayIndex: Math.floor(index / 24),
+            localHour: hour,
+            seaLevelMm,
+            available: true,
+          }
+        })
+      : [],
     days: dayNames.map((day, dayIndex) => ({
       day,
       date: dates[dayIndex],
@@ -51,9 +64,9 @@ function fixtureInput(displayMode = 0, thresholdKt = 17) {
           gustKt: sustainedKt + 5,
           destinationDegrees: dayIndex * 55 + sampleIndex * 27,
           available: true,
-          weather: 1 + (dayIndex * 5 + sampleIndex) % 8,
-          temperatureTenthsC: 120 + sampleIndex * 5,
-          temperatureAvailable: true,
+          weather: missingData ? 0 : 1 + (dayIndex * 5 + sampleIndex) % 8,
+          temperatureTenthsC: 120 + dayIndex * 5 + sampleIndex,
+          temperatureAvailable: !missingData,
         }
       }),
     })),
@@ -70,10 +83,24 @@ describe('shared WebAssembly renderer', () => {
       ['threshold-17.bin', fixtureInput(1, 17)],
       ['threshold-35.bin', fixtureInput(1, 35)],
       ['solid-17.bin', fixtureInput(2, 17)],
+      ...Array.from({ length: 8 }, (_, rowMask) => [
+        `rows-${Boolean(rowMask & 1) ? 1 : 0}${Boolean(rowMask & 2) ? 1 : 0}${Boolean(rowMask & 4) ? 1 : 0}.bin`,
+        fixtureInput(0, 17, rowMask),
+      ]),
+      ['rows-111-missing.bin', fixtureInput(0, 17, 7, true)],
     ]
 
     expect(fixtureNames.sort()).toEqual([
       'background-fade-17.bin',
+      'rows-000.bin',
+      'rows-001.bin',
+      'rows-010.bin',
+      'rows-011.bin',
+      'rows-100.bin',
+      'rows-101.bin',
+      'rows-110.bin',
+      'rows-111-missing.bin',
+      'rows-111.bin',
       'solid-17.bin',
       'threshold-05.bin',
       'threshold-17.bin',
@@ -87,9 +114,9 @@ describe('shared WebAssembly renderer', () => {
       const expected = new Uint8Array(await readFile(join(fixtureDirectory, fixtureName)))
       const actual = renderer.render(input)
       expect(actual).toHaveLength(RENDERER_PALETTE_BYTES)
-      expect(actual).toEqual(expected)
+      expect(actual, fixtureName).toEqual(expected)
     }
-  })
+  }, 15_000)
 
   it('preserves red threshold pixels and output across repeated renders', async () => {
     const renderer = await loadRealRenderer()

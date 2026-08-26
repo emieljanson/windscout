@@ -24,6 +24,7 @@ function responseFor(latitude) {
       [`cloud_cover_${modelId}`]: '%',
       [`precipitation_${modelId}`]: 'mm',
       [`is_day_${modelId}`]: '',
+      [`temperature_2m_${modelId}`]: '°C',
     })
     Object.assign(hourly, {
       [`wind_speed_10m_${modelId}`]: times.map((_, index) => 11 + offset + modelIndex * 3 + (index % 5)),
@@ -32,6 +33,7 @@ function responseFor(latitude) {
       [`cloud_cover_${modelId}`]: times.map(() => 20 + modelIndex * 10),
       [`precipitation_${modelId}`]: times.map(() => 0),
       [`is_day_${modelId}`]: times.map(() => 1),
+      [`temperature_2m_${modelId}`]: times.map((_, index) => 12 + modelIndex + (index % 5)),
     })
   })
   return {
@@ -53,6 +55,23 @@ async function mockForecastApi(page, state = { fail: false }) {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(
       responseFor(Number(url.searchParams.get('latitude'))),
     ) })
+  })
+  await page.route('https://marine-api.open-meteo.com/v1/marine**', async (route) => {
+    const firstDate = amsterdamDate()
+    const start = Math.floor(Date.parse(`${firstDate}T00:00:00+02:00`) / 1000)
+    const times = Array.from({ length: 120 }, (_, index) => start + index * 3600)
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        timezone: 'Europe/Amsterdam',
+        hourly_units: { time: 'unixtime', sea_level_height_msl: 'm' },
+        hourly: {
+          time: times,
+          sea_level_height_msl: times.map((_, index) => Math.sin(index / 6) * 0.8),
+        },
+      }),
+    })
   })
   return requests
 }
@@ -148,6 +167,24 @@ test('switches forecast model instantly and redraws the 3D screen', async ({ pag
   const after = await page.locator('canvas').screenshot()
   expect(after.equals(before)).toBe(false)
   expect(requests).toHaveLength(1)
+})
+
+test('recomposes the preview immediately when optional rows change', async ({ page }) => {
+  await mockForecastApi(page)
+  await page.setViewportSize({ width: 1200, height: 900 })
+  await page.goto('/')
+  await expect(page.locator('[data-scene-status="ready"]')).toBeVisible({ timeout: 15_000 })
+  await expect(page.locator('#tide-capability-message')).toHaveCount(0)
+  const before = await page.locator('canvas').screenshot()
+
+  await page.getByText('Air Temperature', { exact: true }).locator('..')
+    .getByRole('button', { name: 'On' }).click()
+  await page.getByText('Tide', { exact: true }).locator('..')
+    .getByRole('button', { name: 'On' }).click()
+
+  await expect(page.locator('#tide-capability-message')).toContainText(/indicative/i)
+  const after = await page.locator('canvas').screenshot()
+  expect(after.equals(before)).toBe(false)
 })
 
 test('labels a first network failure as demo outside the device screen', async ({ page }) => {

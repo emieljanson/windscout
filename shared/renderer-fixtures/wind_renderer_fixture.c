@@ -6,6 +6,15 @@ static const char *const FIXTURE_NAMES[WIND_RENDERER_FIXTURE_COUNT] = {
     "threshold-17",
     "threshold-35",
     "solid-17",
+    "rows-000",
+    "rows-100",
+    "rows-010",
+    "rows-001",
+    "rows-110",
+    "rows-101",
+    "rows-011",
+    "rows-111",
+    "rows-111-missing",
 };
 
 static const char *const DAY_NAMES[WIND_RENDERER_DAY_COUNT] = {
@@ -61,7 +70,18 @@ int wind_renderer_fixture_build(size_t fixture_index,
             input, WIND_RENDERER_FRESH, 0, 1, 74, mode, threshold_kt) != 0) {
         return -3;
     }
-    if (wind_renderer_input_v2_set_display_rows(input, 1, 0, 0, 0) != 0) {
+    int row_mask = 1;
+    int tide_available = 0;
+    const int is_row_fixture = fixture_index >= WIND_RENDERER_FIXTURE_ROWS_NONE;
+    const int missing_data = fixture_index == WIND_RENDERER_FIXTURE_ROWS_ALL_MISSING;
+    if (is_row_fixture) {
+        static const int ROW_MASKS[] = {0, 1, 2, 4, 3, 5, 6, 7, 7};
+        row_mask = ROW_MASKS[fixture_index - WIND_RENDERER_FIXTURE_ROWS_NONE];
+        tide_available = (row_mask & 4) && !missing_data;
+    }
+    if (wind_renderer_input_v2_set_display_rows(
+            input, row_mask & 1, (row_mask >> 1) & 1,
+            (row_mask >> 2) & 1, tide_available) != 0) {
         return -6;
     }
 
@@ -75,10 +95,24 @@ int wind_renderer_fixture_build(size_t fixture_index,
             if (wind_renderer_input_v2_set_sample(
                     input, day, sample, SAMPLE_TIMES[sample], sustained,
                     sustained + 5, day * 55 + sample * 27, 1,
-                    (wind_renderer_weather_t)(
-                        1 + (day * WIND_RENDERER_SAMPLES_PER_DAY + sample) % 8),
-                    120 + day * 5 + sample, 1) != 0) {
+                    missing_data ? WIND_RENDERER_WEATHER_UNAVAILABLE
+                                 : (wind_renderer_weather_t)(
+                                       1 + (day * WIND_RENDERER_SAMPLES_PER_DAY + sample) % 8),
+                    120 + day * 5 + sample, missing_data ? 0 : 1) != 0) {
                 return -5;
+            }
+        }
+    }
+    if (tide_available) {
+        for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day) {
+            for (int hour = 0; hour < 24; ++hour) {
+                const int level = hour <= 6 ? hour * 100
+                                  : hour <= 18 ? 600 - (hour - 6) * 100
+                                               : -600 + (hour - 18) * 100;
+                if (wind_renderer_input_v2_set_tide_sample(
+                        input, day * 24 + hour, day, hour, level, 1) != 0) {
+                    return -7;
+                }
             }
         }
     }
