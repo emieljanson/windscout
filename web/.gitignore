@@ -1,0 +1,7 @@
+node_modules/
+dist/
+test-results/
+playwright-report/
+public/devices/e1002/e1002.glb
+public/devices/e1002/provenance.json
+
