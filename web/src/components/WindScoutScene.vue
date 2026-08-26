@@ -39,6 +39,9 @@ function resize() {
   const height = Math.max(host.value.clientHeight, 1)
   renderer.setSize(width, height, false)
   camera.aspect = width / height
+  if (status.value === 'loading' && controls) applyHeroPose(camera, controls, width / height)
+  if (width >= 900) camera.setViewOffset(width, height, Math.round(width * 0.075), 0, width, height)
+  else camera.clearViewOffset()
   camera.updateProjectionMatrix()
   requestRender()
 }
@@ -63,13 +66,47 @@ function resetView() {
   }
 }
 
-function showFront() {
-  if (!camera || !controls) return
-  const narrow = host.value && host.value.clientWidth / Math.max(host.value.clientHeight, 1) < 0.9
-  camera.position.set(0, 0, narrow ? 0.66 : 0.39)
-  controls.target.set(0, 0, 0)
-  controls.update()
-  requestRender()
+function createScreenGlare(screen) {
+  const material = new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    toneMapped: false,
+    vertexShader: `
+      varying vec2 vUv;
+      varying vec3 vWorldPosition;
+      varying vec3 vWorldNormal;
+      void main() {
+        vUv = uv;
+        vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+        vWorldPosition = worldPosition.xyz;
+        vWorldNormal = normalize(mat3(modelMatrix) * normal);
+        gl_Position = projectionMatrix * viewMatrix * worldPosition;
+      }
+    `,
+    fragmentShader: `
+      varying vec2 vUv;
+      varying vec3 vWorldPosition;
+      varying vec3 vWorldNormal;
+      void main() {
+        vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
+        float shift = dot(viewDirection, vec3(0.72, 0.18, 0.0));
+        float center = 0.5 + shift * 0.32;
+        float diagonal = vUv.x + vUv.y * 0.22;
+        float band = 1.0 - smoothstep(0.035, 0.19, abs(diagonal - center));
+        float grazing = pow(1.0 - abs(dot(normalize(vWorldNormal), viewDirection)), 1.35);
+        float alpha = band * (0.025 + grazing * 0.12);
+        gl_FragColor = vec4(0.98, 1.0, 0.99, alpha);
+      }
+    `,
+  })
+  const glare = new THREE.Mesh(screen.geometry.clone(), material)
+  glare.name = 'SCREEN_GLARE'
+  glare.position.copy(screen.position)
+  glare.rotation.copy(screen.rotation)
+  glare.scale.copy(screen.scale)
+  glare.position.z += 0.00035
+  glare.renderOrder = 3
+  screen.parent.add(glare)
 }
 
 async function initialize() {
@@ -86,7 +123,7 @@ async function initialize() {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     renderer.outputColorSpace = THREE.SRGBColorSpace
     renderer.toneMapping = THREE.ACESFilmicToneMapping
-    renderer.toneMappingExposure = 0.8
+    renderer.toneMappingExposure = 0.9
     renderer.shadowMap.enabled = true
     renderer.shadowMap.type = THREE.PCFShadowMap
     renderer.domElement.setAttribute('aria-hidden', 'true')
@@ -97,16 +134,16 @@ async function initialize() {
     controls.addEventListener('change', requestRender)
     resetView()
 
-    scene.add(new THREE.HemisphereLight(0xf5f8f5, 0x67716d, 2.4))
-    const keyLight = new THREE.DirectionalLight(0xffffff, 3.4)
+    scene.add(new THREE.HemisphereLight(0xf5f8f5, 0x67716d, 1.75))
+    const keyLight = new THREE.DirectionalLight(0xffffff, 2.35)
     keyLight.position.set(-0.22, 0.32, 0.42)
     keyLight.castShadow = true
     scene.add(keyLight)
-    const rimLight = new THREE.DirectionalLight(0xb7d4ce, 1.7)
+    const rimLight = new THREE.DirectionalLight(0xb7d4ce, 0.8)
     rimLight.position.set(0.35, 0.02, -0.2)
     scene.add(rimLight)
 
-    const groundMaterial = new THREE.ShadowMaterial({ color: 0x27302d, opacity: 0.16, transparent: true })
+    const groundMaterial = new THREE.ShadowMaterial({ color: 0x27302d, opacity: 0.13, transparent: true })
     const ground = new THREE.Mesh(new THREE.PlaneGeometry(0.52, 0.36), groundMaterial)
     ground.name = 'CONTACT_SHADOW'
     ground.rotation.x = -Math.PI / 2
@@ -121,13 +158,20 @@ async function initialize() {
     model.traverse((child) => {
       if (child.isMesh) {
         child.castShadow = child.name !== 'SCREEN'
-        child.receiveShadow = child.name !== 'SCREEN'
+        child.receiveShadow = false
       }
     })
-    screenSource = createScreenTexture({ treatment: treatment.value, threshold: threshold.value })
+    const initialConfig = { treatment: treatment.value, threshold: threshold.value }
+    const loadedScreenSource = await createScreenTexture({ config: initialConfig })
+    if (!lifetime.adopt(loadedScreenSource, (source) => source.dispose())) return
+    screenSource = loadedScreenSource
+    if (treatment.value !== initialConfig.treatment || threshold.value !== initialConfig.threshold) {
+      screenSource.update({ config: { treatment: treatment.value, threshold: threshold.value } })
+    }
     const screen = model.getObjectByName('SCREEN')
     screen.material.dispose()
     screen.material = new THREE.MeshBasicMaterial({ map: screenSource.texture, toneMapped: false, name: 'live-forecast' })
+    createScreenGlare(screen)
     scene.add(model)
 
     resizeObserver = new ResizeObserver(resize)
@@ -144,7 +188,7 @@ async function initialize() {
 }
 
 watch([treatment, threshold], () => {
-  screenSource?.update({ treatment: treatment.value, threshold: threshold.value })
+  screenSource?.update({ config: { treatment: treatment.value, threshold: threshold.value } })
   requestRender()
 })
 
@@ -162,7 +206,6 @@ onBeforeUnmount(() => {
   renderer?.domElement.remove()
 })
 
-defineExpose({ resetView, showFront })
 </script>
 
 <template>
