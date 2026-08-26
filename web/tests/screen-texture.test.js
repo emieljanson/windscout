@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createRendererInput, createScreenTexture } from '../src/configurator/screenTexture'
 import { brouwersdamForecast } from '../src/fixtures/brouwersdam'
+import { DISPLAY_MODES } from '../src/renderer/contract'
 import { RENDERER_CONTRACT_VERSION, RENDERER_RGBA_BYTES } from '../src/renderer/sharedRenderer'
 
 function completeFrame(red = 255, green = 255, blue = 255) {
@@ -28,7 +29,7 @@ describe('canonical screen texture', () => {
 
     const source = await createScreenTexture({
       forecast: brouwersdamForecast,
-      config: { treatment: 'background-fade', threshold: 17 },
+      config: { showThreshold: false, treatment: 'background-fade', threshold: 17 },
       rendererLoader,
     })
 
@@ -38,7 +39,7 @@ describe('canonical screen texture', () => {
       version: RENDERER_CONTRACT_VERSION,
       spotName: 'Brouwersdam',
       provider: 'BEST MATCH',
-      displayMode: 0,
+      displayMode: DISPLAY_MODES.solid,
       thresholdKt: 17,
       days: expect.arrayContaining([
         expect.objectContaining({
@@ -60,21 +61,21 @@ describe('canonical screen texture', () => {
     const rendererLoader = vi.fn(async () => renderer)
     const source = await createScreenTexture({
       forecast: brouwersdamForecast,
-      config: { treatment: 'background-fade', threshold: 17 },
+      config: { showThreshold: false, threshold: 17 },
       rendererLoader,
     })
     const firstFrame = source.texture.image.data
 
-    source.update({ config: { treatment: 'threshold-line', threshold: 25 } })
+    source.update({ config: { showThreshold: true, treatment: 'solid', threshold: 25 } })
     const secondFrame = source.texture.image.data
-    source.update({ config: { treatment: 'solid', threshold: 30 } })
+    source.update({ config: { showThreshold: false, treatment: 'threshold-line', threshold: 30 } })
 
     expect(rendererLoader).toHaveBeenCalledOnce()
     expect(renderer.renderPreview).toHaveBeenCalledTimes(3)
     expect(renderer.renderPreview.mock.calls.map(([input]) => [input.displayMode, input.thresholdKt])).toEqual([
-      [0, 17],
-      [1, 25],
-      [2, 30],
+      [DISPLAY_MODES.solid, 17],
+      [DISPLAY_MODES['threshold-line'], 25],
+      [DISPLAY_MODES.solid, 30],
     ])
     expect([...source.texture.image.data.slice(0, 4)]).toEqual([255, 0, 0, 255])
     expect(secondFrame).not.toBe(firstFrame)
@@ -93,7 +94,7 @@ describe('canonical screen texture', () => {
     }
 
     const input = createRendererInput(brouwersdamForecast, {
-      treatment: 'solid',
+      showThreshold: false,
       threshold: 17,
       showWeather: false,
       showTemperature: true,
@@ -117,10 +118,10 @@ describe('canonical screen texture', () => {
 
   it('formats the update time from one timestamp using the selected clock', () => {
     const twentyFourHour = createRendererInput(brouwersdamForecast, {
-      treatment: 'solid', threshold: 17, timeFormat: '24-hour', temperatureUnit: 'celsius',
+      showThreshold: false, threshold: 17, timeFormat: '24-hour', temperatureUnit: 'celsius',
     })
     const twelveHour = createRendererInput(brouwersdamForecast, {
-      treatment: 'solid', threshold: 17, timeFormat: '12-hour', temperatureUnit: 'celsius',
+      showThreshold: false, threshold: 17, timeFormat: '12-hour', temperatureUnit: 'celsius',
     })
 
     expect(twentyFourHour.updatedTime).toMatch(/^\d{2} [A-Z]{3} \d{2}:\d{2}$/)
@@ -132,16 +133,16 @@ describe('canonical screen texture', () => {
     const renderer = fakeRenderer([initial, new Uint8Array(24), completeFrame(255, 0, 0)])
     const source = await createScreenTexture({
       forecast: brouwersdamForecast,
-      config: { treatment: 'background-fade', threshold: 17 },
+      config: { showThreshold: false, threshold: 17 },
       rendererLoader: async () => renderer,
     })
 
-    expect(() => source.update({ config: { treatment: 'threshold-line', threshold: 18 } })).toThrow(
+    expect(() => source.update({ config: { showThreshold: true, threshold: 18 } })).toThrow(
       /complete 800 × 480 RGBA preview/,
     )
     expect([...source.texture.image.data.slice(0, 4)]).toEqual([0, 0, 0, 255])
 
-    source.update({ config: { treatment: 'threshold-line', threshold: 19 } })
+    source.update({ config: { showThreshold: true, threshold: 19 } })
     expect([...source.texture.image.data.slice(0, 4)]).toEqual([255, 0, 0, 255])
   })
 
@@ -152,7 +153,7 @@ describe('canonical screen texture', () => {
     ])
     const source = await createScreenTexture({
       forecast: brouwersdamForecast,
-      config: { treatment: 'background-fade', threshold: 17 },
+      config: { showThreshold: false, threshold: 17 },
       rendererLoader: async () => renderer,
     })
     const edam = structuredClone(brouwersdamForecast)
@@ -172,7 +173,7 @@ describe('canonical screen texture', () => {
     const renderer = fakeRenderer([completeFrame()])
     const source = await createScreenTexture({
       forecast: brouwersdamForecast,
-      config: { treatment: 'solid', threshold: 17 },
+      config: { showThreshold: false, threshold: 17 },
       rendererLoader: async () => renderer,
     })
     const disposed = vi.fn()
@@ -183,5 +184,13 @@ describe('canonical screen texture', () => {
 
     expect(renderer.dispose).toHaveBeenCalledOnce()
     expect(disposed).toHaveBeenCalledOnce()
+  })
+
+  it('keeps all historical renderer mode numbers stable at the shared ABI boundary', () => {
+    expect(DISPLAY_MODES).toEqual({
+      'background-fade': 0,
+      'threshold-line': 1,
+      solid: 2,
+    })
   })
 })

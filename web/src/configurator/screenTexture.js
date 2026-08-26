@@ -55,8 +55,9 @@ function formatUpdatedTime(forecast, timeFormat) {
 }
 
 export function createRendererInput(forecast, config) {
-  const displayMode = DISPLAY_MODES[config.treatment]
-  if (displayMode === undefined) throw new Error(`Unknown display treatment: ${config.treatment}`)
+  const displayMode = config.showThreshold
+    ? DISPLAY_MODES['threshold-line']
+    : DISPLAY_MODES.solid
 
   const tide = config.tide ?? forecast.tide
   const tideSamples = rendererTideSamples(tide, forecast.days)

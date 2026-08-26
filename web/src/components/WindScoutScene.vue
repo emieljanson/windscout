@@ -39,7 +39,7 @@ const {
   pendingForecastRevision,
   selectedModelId,
   selectedSpotId,
-  treatment,
+  showThreshold,
   threshold,
   showWeather,
   showTemperature,
@@ -67,7 +67,7 @@ let rimLight
 
 function currentDisplayConfig() {
   return {
-    treatment: treatment.value,
+    showThreshold: showThreshold.value,
     threshold: threshold.value,
     showWeather: showWeather.value,
     showTemperature: showTemperature.value,
@@ -348,7 +348,7 @@ async function initialize() {
     const loadedScreenSource = await createScreenTexture({ forecast: initialForecast, config: initialConfig })
     if (!lifetime.adopt(loadedScreenSource, (source) => source.dispose())) return
     screenSource = loadedScreenSource
-    if (treatment.value !== initialConfig.treatment || threshold.value !== initialConfig.threshold ||
+    if (showThreshold.value !== initialConfig.showThreshold || threshold.value !== initialConfig.threshold ||
         showWeather.value !== initialConfig.showWeather ||
         showTemperature.value !== initialConfig.showTemperature ||
         timeFormat.value !== initialConfig.timeFormat ||
@@ -389,7 +389,7 @@ async function initialize() {
 }
 
 watch([
-  treatment,
+  showThreshold,
   threshold,
   showWeather,
   showTemperature,
