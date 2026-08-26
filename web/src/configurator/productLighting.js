@@ -1,7 +1,16 @@
 export const PRODUCT_LIGHTING = Object.freeze({
   background: 0xf5f7f3,
   hemisphere: Object.freeze({ sky: 0xf8fbff, ground: 0x69716d, intensity: 0.32 }),
-  key: Object.freeze({ color: 0xfff8ee, intensity: 1.38, position: [0.24, 0.92, 0.34] }),
+  key: Object.freeze({
+    kind: 'spot',
+    color: 0xfff8ee,
+    intensity: 0.8,
+    position: Object.freeze([-0.075, 0.34, 0.2]),
+    angle: 0.82,
+    penumbra: 0.92,
+    decay: 1.35,
+    distance: 1.8,
+  }),
   softbox: Object.freeze({
     color: 0xfffcf4,
     intensity: 3.15,

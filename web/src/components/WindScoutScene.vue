@@ -16,7 +16,12 @@ import {
   enhanceE1002Surface,
 } from '../configurator/deviceSurface'
 import { loadE1002Model } from '../configurator/modelLoader'
-import { applyHeroPose, configureOrbitControls, isWebGLAvailable } from '../configurator/sceneController'
+import {
+  applyHeroPose,
+  calculateSceneComposition,
+  configureOrbitControls,
+  isWebGLAvailable,
+} from '../configurator/sceneController'
 import { createResourceLifetime } from '../configurator/sceneLifetime'
 import { createScreenTexture } from '../configurator/screenTexture'
 import { createProductStudioEnvironment } from '../configurator/studioEnvironment'
@@ -38,6 +43,8 @@ const {
   threshold,
   showWeather,
   showTemperature,
+  temperatureUnit,
+  timeFormat,
   tide,
 } = storeToRefs(store)
 
@@ -50,7 +57,13 @@ let camera
 let controls
 let animationFrame
 let resizeObserver
+let settingsPanel
+let compositionMode
 let screenSource
+let keyLight
+let softbox
+let accent
+let rimLight
 
 function currentDisplayConfig() {
   return {
@@ -59,6 +72,8 @@ function currentDisplayConfig() {
     showWeather: showWeather.value,
     showTemperature: showTemperature.value,
     showTide: effectiveShowTide.value,
+    timeFormat: timeFormat.value,
+    temperatureUnit: temperatureUnit.value,
     tide: tide.value,
   }
 }
@@ -79,13 +94,31 @@ function resize() {
   if (!renderer || !camera || !host.value) return
   const width = Math.max(host.value.clientWidth, 1)
   const height = Math.max(host.value.clientHeight, 1)
+  const hostBounds = host.value.getBoundingClientRect()
+  const settingsBounds = settingsPanel?.getBoundingClientRect()
+  const settingsTop = settingsBounds ? settingsBounds.top - hostBounds.top : height
+  const composition = calculateSceneComposition({ width, height, settingsTop })
+  const nextCompositionMode = width <= 56 * 16 ? 'compact' : 'wide'
   renderer.setSize(width, height, false)
   composer?.setSize(width, height)
   camera.aspect = width / height
-  if (status.value === 'loading' && controls) applyHeroPose(camera, controls, width / height)
-  // Reserve visual breathing room for the floating inspector while keeping the
-  // orbit target on the device itself.
-  if (width >= 900) camera.setViewOffset(width, height, Math.round(width * 0.13), 0, width, height)
+  camera.zoom = composition.zoom
+  if ((status.value === 'loading' || compositionMode !== nextCompositionMode) && controls) {
+    applyHeroPose(camera, controls, width / height)
+  }
+  compositionMode = nextCompositionMode
+  // Keep the orbit target on the product, while composing it inside the actual
+  // space left free by the floating inspector.
+  if (composition.viewOffsetX || composition.viewOffsetY) {
+    camera.setViewOffset(
+      width,
+      height,
+      composition.viewOffsetX,
+      composition.viewOffsetY,
+      width,
+      height,
+    )
+  }
   else camera.clearViewOffset()
   camera.updateProjectionMatrix()
   requestRender()
@@ -165,7 +198,7 @@ function createPerspectiveSurface() {
 function createPhysicalShadowLayer() {
   const material = new THREE.ShadowMaterial({
     color: 0x4d524f,
-    opacity: 0.22,
+    opacity: 0.28,
     transparent: true,
     depthWrite: false,
     toneMapped: false,
@@ -199,12 +232,12 @@ function createContactOcclusion() {
         float frontTail = smoothstep(0.0, 0.5, vUv.y);
         float backTail = 1.0 - smoothstep(0.5, 1.0, vUv.y);
         float contact = vUv.y < 0.5 ? frontTail : backTail;
-        contact = pow(max(contact, 0.0), 1.9);
-        gl_FragColor = vec4(vec3(0.075, 0.082, 0.078), ends * contact * 0.46);
+        contact = pow(max(contact, 0.0), 2.35);
+        gl_FragColor = vec4(vec3(0.075, 0.082, 0.078), ends * contact * 0.58);
       }
     `,
   })
-  const contact = new THREE.Mesh(new THREE.PlaneGeometry(0.175, 0.012), material)
+  const contact = new THREE.Mesh(new THREE.PlaneGeometry(0.175, 0.026), material)
   contact.name = 'CONTACT_OCCLUSION'
   contact.rotation.x = -Math.PI / 2
   // BODY_03 touches the surface across x ±87.5 mm and z 0…4 mm. The tiny
@@ -256,24 +289,22 @@ async function initialize() {
       lighting.hemisphere.ground,
       lighting.hemisphere.intensity,
     ))
-    const keyLight = new THREE.DirectionalLight(lighting.key.color, lighting.key.intensity)
-    // A high, near-centred studio key keeps the cast shadow tucked behind the
-    // enclosure. The older side key projected a detached rectangle to the
-    // right, which made the product read as if it were hovering.
+    keyLight = new THREE.SpotLight(lighting.key.color, lighting.key.intensity)
     keyLight.position.set(...lighting.key.position)
+    keyLight.angle = lighting.key.angle
+    keyLight.penumbra = lighting.key.penumbra
+    keyLight.decay = lighting.key.decay
+    keyLight.distance = lighting.key.distance
     keyLight.castShadow = true
     keyLight.shadow.mapSize.set(512, 512)
-    keyLight.shadow.camera.near = 0.1
-    keyLight.shadow.camera.far = 1.2
-    keyLight.shadow.camera.left = -0.19
-    keyLight.shadow.camera.right = 0.19
-    keyLight.shadow.camera.top = 0.17
-    keyLight.shadow.camera.bottom = -0.1
+    keyLight.shadow.camera.near = 0.08
+    keyLight.shadow.camera.far = lighting.key.distance
     keyLight.shadow.bias = -0.00002
     keyLight.shadow.normalBias = 0.00012
     keyLight.shadow.radius = 5
-    scene.add(keyLight)
-    const softbox = new THREE.RectAreaLight(
+    keyLight.target.position.set(0, -0.02, 0)
+    scene.add(keyLight, keyLight.target)
+    softbox = new THREE.RectAreaLight(
       lighting.softbox.color,
       lighting.softbox.intensity,
       lighting.softbox.width,
@@ -284,7 +315,7 @@ async function initialize() {
     softbox.position.set(...lighting.softbox.position)
     softbox.lookAt(0, 0, 0)
     scene.add(softbox)
-    const accent = new THREE.RectAreaLight(
+    accent = new THREE.RectAreaLight(
       lighting.accent.color,
       lighting.accent.intensity,
       lighting.accent.width,
@@ -293,7 +324,7 @@ async function initialize() {
     accent.position.set(...lighting.accent.position)
     accent.lookAt(0, 0, 0)
     scene.add(accent)
-    const rimLight = new THREE.DirectionalLight(lighting.rim.color, lighting.rim.intensity)
+    rimLight = new THREE.DirectionalLight(lighting.rim.color, lighting.rim.intensity)
     rimLight.position.set(...lighting.rim.position)
     scene.add(rimLight)
 
@@ -320,6 +351,8 @@ async function initialize() {
     if (treatment.value !== initialConfig.treatment || threshold.value !== initialConfig.threshold ||
         showWeather.value !== initialConfig.showWeather ||
         showTemperature.value !== initialConfig.showTemperature ||
+        timeFormat.value !== initialConfig.timeFormat ||
+        temperatureUnit.value !== initialConfig.temperatureUnit ||
         effectiveShowTide.value !== initialConfig.showTide || tide.value !== initialConfig.tide ||
         forecastRevision.value !== initialForecastRevision) {
       screenSource.update({
@@ -340,8 +373,10 @@ async function initialize() {
     createMatteScreenFinish(screenBacking)
     scene.add(model)
 
+    settingsPanel = host.value.closest('.configurator-layout')?.querySelector('.settings-panel')
     resizeObserver = new ResizeObserver(resize)
     resizeObserver.observe(host.value)
+    if (settingsPanel) resizeObserver.observe(settingsPanel)
     resize()
     status.value = 'ready'
     emit('ready')
@@ -353,7 +388,16 @@ async function initialize() {
   }
 }
 
-watch([treatment, threshold, showWeather, showTemperature, effectiveShowTide, tide], () => {
+watch([
+  treatment,
+  threshold,
+  showWeather,
+  showTemperature,
+  effectiveShowTide,
+  tide,
+  timeFormat,
+  temperatureUnit,
+], () => {
   try {
     screenSource?.update({ config: currentDisplayConfig() })
   } catch {

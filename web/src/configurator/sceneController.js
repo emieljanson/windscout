@@ -21,6 +21,40 @@ export const ORBIT_LIMITS = Object.freeze({
   maxDistance: 0.75,
 })
 
+const COMPACT_LAYOUT_MAX_WIDTH = 56 * 16
+const COMPACT_STAGE_GAP = 12
+const PRODUCT_HEIGHT_RATIO = 0.44
+const COMPACT_PRODUCT_FIT_WIDTH = 540
+const MIN_COMPOSITION_ZOOM = 0.55
+
+export function calculateSceneComposition({ width, height, settingsTop }) {
+  if (width > COMPACT_LAYOUT_MAX_WIDTH) {
+    return {
+      availableHeight: height,
+      viewOffsetX: Math.round(width * 0.13),
+      viewOffsetY: 0,
+      zoom: 1,
+    }
+  }
+
+  const measuredTop = Number.isFinite(settingsTop) ? settingsTop : height
+  const availableHeight = Math.max(0, Math.round(Math.min(measuredTop, height) - COMPACT_STAGE_GAP))
+  const viewOffsetY = Math.max(0, Math.round((height - availableHeight) / 2))
+  const comfortableProductHeight = Math.max(height * PRODUCT_HEIGHT_RATIO, 1)
+  const widthZoom = Math.min(1, width / COMPACT_PRODUCT_FIT_WIDTH)
+  const zoom = Math.max(
+    MIN_COMPOSITION_ZOOM,
+    Math.min(widthZoom, availableHeight / comfortableProductHeight),
+  )
+
+  return {
+    availableHeight,
+    viewOffsetX: 0,
+    viewOffsetY,
+    zoom,
+  }
+}
+
 export function applyHeroPose(camera, controls, aspect = 1.5) {
   const pose = aspect < 0.9 ? NARROW_CAMERA : HERO_CAMERA
   camera.position.set(...pose.position)
