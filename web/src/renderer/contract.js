@@ -9,7 +9,6 @@ export const DISPLAY_MODES = Object.freeze({
   'threshold-line': 1,
   solid: 2,
 })
-export const DISPLAY_TREATMENTS = Object.freeze(Object.keys(DISPLAY_MODES))
 
 export const MIN_THRESHOLD = 5
 export const DEFAULT_THRESHOLD = 17

@@ -43,7 +43,7 @@ function responseFor(latitude) {
   }
 }
 
-async function mockForecastApi(page, state = { fail: false }) {
+async function mockForecastApi(page, state = { fail: false, tideUnsupported: false }) {
   const requests = []
   await page.route('https://api.open-meteo.com/v1/forecast**', async (route) => {
     const url = new URL(route.request().url())
@@ -68,7 +68,9 @@ async function mockForecastApi(page, state = { fail: false }) {
         hourly_units: { time: 'unixtime', sea_level_height_msl: 'm' },
         hourly: {
           time: times,
-          sea_level_height_msl: times.map((_, index) => Math.sin(index / 6) * 0.8),
+          sea_level_height_msl: state.tideUnsupported
+            ? times.map(() => null)
+            : times.map((_, index) => Math.sin(index / 6) * 0.8),
         },
       }),
     })
@@ -80,48 +82,101 @@ function forecastStatus(page) {
   return page.locator('.settings-panel [role="status"]')
 }
 
-test('configures the live display with actual DialKit controls', async ({ page }) => {
+async function selectWithKeyboard(page, name, search) {
+  const control = page.getByRole('combobox', { name })
+  await control.focus()
+  await page.keyboard.press('Enter')
+  await page.keyboard.type(search)
+  await page.keyboard.press('Enter')
+  return control
+}
+
+function splitShadows(value) {
+  const shadows = []
+  let depth = 0
+  let start = 0
+  for (let index = 0; index < value.length; index += 1) {
+    if (value[index] === '(') depth += 1
+    if (value[index] === ')') depth -= 1
+    if (value[index] === ',' && depth === 0) {
+      shadows.push(value.slice(start, index).trim())
+      start = index + 1
+    }
+  }
+  shadows.push(value.slice(start).trim())
+  return shadows.filter(Boolean)
+}
+
+test('selects a catalog spot by keyboard and rejects an uncommitted draft', async ({ page }) => {
   const requests = await mockForecastApi(page)
-  await page.setViewportSize({ width: 1200, height: 900 })
+  await page.setViewportSize({ width: 1280, height: 900 })
   await page.goto('/')
 
   await expect(page.getByRole('region', { name: 'WindScout 3D preview' })).toBeVisible()
-  await expect(page.locator('.configurator-header')).toHaveCount(0)
   await expect(forecastStatus(page)).toContainText('Live Best Match forecast for Brouwersdam', { timeout: 15_000 })
-  await expect(page.getByTestId('forecast-label')).toHaveCount(0)
-  expect(requests).toHaveLength(1)
-  const treatment = page.getByRole('button', { name: /Treatment/ })
-  await expect(treatment).toBeVisible()
-  await treatment.click()
-  await page.getByRole('button', { name: 'Threshold line' }).click()
-  await expect(page.getByRole('button', { name: 'Treatment Threshold line' })).toBeVisible()
-
-  const threshold = page.getByRole('slider', { name: 'Wind threshold' })
-  await threshold.focus()
-  await page.keyboard.press('ArrowUp')
-  await expect(threshold).toHaveAttribute('aria-valuenow', '18')
   expect(requests).toHaveLength(1)
 
-  await page.getByTestId('install-continuation').click()
-  await expect(page.getByText(/USB installation is the next build step/)).toBeVisible()
+  const spot = page.getByRole('combobox', { name: 'Spot' })
+  await spot.focus()
+  await page.keyboard.press(process.platform === 'darwin' ? 'Meta+A' : 'Control+A')
+  await page.keyboard.type('bro')
+  await expect(page.getByRole('option', { name: 'Brouwersdam' })).toBeVisible()
+  await expect(page.getByRole('option', { name: 'Edam' })).toHaveCount(0)
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('Enter')
+  await expect(spot).toHaveValue('Brouwersdam')
+  await expect(spot).toBeFocused()
+  expect(requests).toHaveLength(1)
+
+  await page.keyboard.press(process.platform === 'darwin' ? 'Meta+A' : 'Control+A')
+  await page.keyboard.type('nowhere')
+  await expect(page.getByText('No existing spots found', { exact: true })).toBeVisible()
+  await page.keyboard.press('Tab')
+  await expect(spot).toHaveValue('Brouwersdam')
+  expect(requests).toHaveLength(1)
 })
 
-test('keeps the 3D product and controls usable in the narrow composition', async ({ page }) => {
-  await mockForecastApi(page)
-  await page.setViewportSize({ width: 390, height: 844 })
-  await page.emulateMedia({ reducedMotion: 'reduce' })
+test('uses model typeahead and restores focus when its popup is dismissed', async ({ page }) => {
+  const requests = await mockForecastApi(page)
+  await page.setViewportSize({ width: 1280, height: 900 })
   await page.goto('/')
+  await expect(forecastStatus(page)).toContainText('Live Best Match forecast for Brouwersdam', { timeout: 15_000 })
 
+  const model = await selectWithKeyboard(page, 'Model', 'gfs')
+  await expect(model).toContainText('GFS')
+  await expect(forecastStatus(page)).toContainText('Live GFS forecast for Brouwersdam')
+  await expect(page.locator('.scene-host')).toHaveAttribute('data-forecast-model', 'gfs_seamless')
+  expect(requests).toHaveLength(1)
+
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('option', { name: 'GFS' })).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(model).toBeFocused()
+})
+
+test('keeps threshold state explicit and redraws the live preview', async ({ page }) => {
+  await mockForecastApi(page)
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto('/')
   await expect(page.locator('[data-scene-status="ready"]')).toBeVisible({ timeout: 15_000 })
-  await expect(page.getByRole('slider', { name: 'Wind threshold' })).toBeVisible()
-  await expect(page.locator('.settings-panel')).toHaveCSS('border-radius', '16px')
+  const before = await page.locator('canvas').screenshot()
 
-  await page.getByRole('button', { name: 'Model Best Match' }).click()
-  for (const name of ['Best Match', 'KNMI', 'ECMWF', 'ICON', 'GFS']) {
-    await expect(page.getByRole('button', { name, exact: true })).toBeVisible()
-  }
-  await page.getByRole('button', { name: 'ECMWF', exact: true }).click()
-  await expect(forecastStatus(page)).toContainText('Live ECMWF forecast')
+  const showThreshold = page.getByRole('switch', { name: 'Show threshold' })
+  await showThreshold.focus()
+  await page.keyboard.press('Space')
+  await expect(showThreshold).toBeChecked()
+  const threshold = page.getByRole('spinbutton', { name: 'Threshold' })
+  await threshold.fill('24')
+  await expect(threshold).toHaveValue('24')
+  const withThreshold = await page.locator('canvas').screenshot()
+  expect(withThreshold.equals(before)).toBe(false)
+
+  await showThreshold.focus()
+  await page.keyboard.press('Space')
+  await expect(showThreshold).not.toBeChecked()
+  await expect(threshold).toHaveCount(0)
+  await page.keyboard.press('Space')
+  await expect(page.getByRole('spinbutton', { name: 'Threshold' })).toHaveValue('24')
 })
 
 test('loads the local CAD model into the constrained 3D scene', async ({ page }) => {
@@ -141,9 +196,12 @@ test('switches the live preview to another supported spot without a page reload'
   await page.goto('/')
   await expect(forecastStatus(page)).toContainText('Live Best Match forecast for Brouwersdam', { timeout: 15_000 })
 
-  const spot = page.getByRole('button', { name: /Spot/ })
-  await spot.click()
-  await page.getByRole('button', { name: 'Edam' }).click()
+  const spot = page.getByRole('combobox', { name: 'Spot' })
+  await spot.focus()
+  await page.keyboard.press(process.platform === 'darwin' ? 'Meta+A' : 'Control+A')
+  await page.keyboard.type('eda')
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('Enter')
 
   await expect(forecastStatus(page)).toContainText('Live Best Match forecast for Edam', { timeout: 15_000 })
   await expect(page.locator('.scene-host')).toHaveAttribute('data-forecast-spot', 'edam')
@@ -152,40 +210,106 @@ test('switches the live preview to another supported spot without a page reload'
   expect(requests[1].searchParams.get('latitude')).toBe('52.512600')
 })
 
-test('switches forecast model instantly and redraws the 3D screen', async ({ page }) => {
-  const requests = await mockForecastApi(page)
-  await page.setViewportSize({ width: 1200, height: 900 })
-  await page.goto('/')
-  await expect(forecastStatus(page)).toContainText('Live Best Match forecast for Brouwersdam', { timeout: 15_000 })
-  const before = await page.locator('canvas').screenshot()
-
-  await page.getByRole('button', { name: /Model/ }).click()
-  await page.getByRole('button', { name: 'GFS' }).click()
-
-  await expect(forecastStatus(page)).toContainText('Live GFS forecast for Brouwersdam')
-  await expect(page.locator('.scene-host')).toHaveAttribute('data-forecast-model', 'gfs_seamless')
-  const after = await page.locator('canvas').screenshot()
-  expect(after.equals(before)).toBe(false)
-  expect(requests).toHaveLength(1)
-})
-
-test('recomposes the preview immediately when optional rows change', async ({ page }) => {
+test('recomposes the preview when Weather, Temperature, and Tide change', async ({ page }) => {
   await mockForecastApi(page)
   await page.setViewportSize({ width: 1200, height: 900 })
   await page.goto('/')
   await expect(page.locator('[data-scene-status="ready"]')).toBeVisible({ timeout: 15_000 })
-  await expect(page.locator('#tide-capability-message')).toHaveCount(0)
   const before = await page.locator('canvas').screenshot()
 
-  await page.getByText('Air Temperature', { exact: true }).locator('..')
-    .getByRole('button', { name: 'On' }).click()
-  await page.getByText('Tide', { exact: true }).locator('..')
-    .getByRole('button', { name: 'On' }).click()
+  const weather = page.getByRole('switch', { name: 'Weather' })
+  await weather.focus()
+  await page.keyboard.press('Space')
+  await expect(weather).not.toBeChecked()
 
-  await expect(page.locator('#tide-capability-message')).toContainText(/indicative/i)
+  const temperature = await selectWithKeyboard(page, 'Temperature', 'fahrenheit')
+  await expect(temperature).toContainText('Fahrenheit')
+
+  const tide = page.getByRole('switch', { name: 'Tide' })
+  await expect(tide).toBeEnabled()
+  await tide.focus()
+  await page.keyboard.press('Space')
+  await expect(tide).toBeChecked()
   const after = await page.locator('canvas').screenshot()
   expect(after.equals(before)).toBe(false)
 })
+
+test('announces why Tide is unavailable', async ({ page }) => {
+  await mockForecastApi(page, { tideUnsupported: true })
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto('/')
+
+  const tide = page.getByRole('switch', { name: 'Tide' })
+  await expect(tide).toBeDisabled({ timeout: 15_000 })
+  await expect(tide).not.toBeChecked()
+  await expect(tide).toHaveAttribute('aria-describedby', 'tide-capability-message')
+  await expect(page.locator('#tide-capability-message')).toContainText('not available')
+})
+
+for (const viewport of [
+  { name: 'desktop', width: 1280, height: 900, radius: '20px' },
+  { name: 'mobile', width: 390, height: 844, radius: '16px' },
+  { name: 'minimum-width', width: 320, height: 700, radius: '16px' },
+]) {
+  test(`keeps the floating panel and popups polished at ${viewport.name} width`, async ({ page }) => {
+    await mockForecastApi(page)
+    await page.setViewportSize({ width: viewport.width, height: viewport.height })
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.goto('/')
+    await expect(page.locator('[data-scene-status="ready"]')).toBeVisible({ timeout: 15_000 })
+
+    const panel = page.locator('.settings-panel')
+    await expect(panel).toHaveCSS('border-top-width', '0px')
+    await expect(panel).toHaveCSS('border-radius', viewport.radius)
+    const panelMetrics = await panel.evaluate((element) => {
+      const rect = element.getBoundingClientRect()
+      const style = getComputedStyle(element)
+      return {
+        left: rect.left,
+        right: rect.right,
+        top: rect.top,
+        bottom: rect.bottom,
+        shadow: style.boxShadow,
+        documentWidth: document.documentElement.scrollWidth,
+      }
+    })
+    expect(panelMetrics.left).toBeGreaterThanOrEqual(0)
+    expect(panelMetrics.right).toBeLessThanOrEqual(viewport.width)
+    expect(panelMetrics.top).toBeGreaterThanOrEqual(0)
+    expect(panelMetrics.bottom).toBeLessThanOrEqual(viewport.height)
+    expect(panelMetrics.documentWidth).toBeLessThanOrEqual(viewport.width)
+    expect(splitShadows(panelMetrics.shadow)).toHaveLength(2)
+
+    const rowMetrics = await page.locator('.setting-row').evaluateAll((rows) => rows.map((row) => {
+      const label = row.querySelector('.setting-row__label').getBoundingClientRect()
+      const control = row.querySelector('.setting-row__control').getBoundingClientRect()
+      return { labelLeft: Math.round(label.left), controlLeft: Math.round(control.left) }
+    }))
+    expect(new Set(rowMetrics.map(({ labelLeft }) => labelLeft)).size).toBe(1)
+    expect(new Set(rowMetrics.map(({ controlLeft }) => controlLeft)).size).toBe(1)
+    const controlHeights = await page.locator('.setting-control').evaluateAll((controls) =>
+      controls.map((control) => control.getBoundingClientRect().height))
+    expect(controlHeights.every((height) => Math.abs(height - 40) < 0.5)).toBe(true)
+
+    const model = page.getByRole('combobox', { name: 'Model' })
+    const triggerBox = await model.boundingBox()
+    await model.focus()
+    await page.keyboard.press('Enter')
+    const popup = page.getByRole('listbox')
+    await expect(popup).toBeVisible()
+    const popupBox = await popup.boundingBox()
+    expect(popupBox.x).toBeGreaterThanOrEqual(0)
+    expect(popupBox.x + popupBox.width).toBeLessThanOrEqual(viewport.width)
+    expect(popupBox.width).toBeGreaterThanOrEqual(triggerBox.width - 1)
+    await page.keyboard.press('Escape')
+    await expect(model).toBeFocused()
+    const focusStyle = await model.evaluate((element) => {
+      const style = getComputedStyle(element)
+      return { outlineStyle: style.outlineStyle, outlineWidth: style.outlineWidth }
+    })
+    expect(focusStyle).toEqual({ outlineStyle: 'solid', outlineWidth: '2px' })
+  })
+}
 
 test('labels a first network failure as demo outside the device screen', async ({ page }) => {
   await mockForecastApi(page, { fail: true })
@@ -196,4 +320,15 @@ test('labels a first network failure as demo outside the device screen', async (
   await expect(forecastStatus(page)).toContainText('Live forecast unavailable. Showing demo data.')
   await expect(page.getByTestId('forecast-label')).toBeVisible()
   await expect(page.getByTestId('forecast-label').locator('xpath=ancestor::aside')).toHaveCount(1)
+})
+
+test('keeps installation continuation and omits retired controls', async ({ page }) => {
+  await mockForecastApi(page)
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto('/')
+
+  await expect(page.getByText('Treatment', { exact: true })).toHaveCount(0)
+  await expect(page.getByText('Time format', { exact: true })).toHaveCount(0)
+  await page.getByTestId('install-continuation').click()
+  await expect(page.getByText(/USB installation is the next build step/)).toBeVisible()
 })

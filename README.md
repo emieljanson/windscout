@@ -41,7 +41,7 @@ npm test -- --run tests/shared-renderer.test.js
 ```
 
 The configurator retrieves Best fit, KNMI, ECMWF, ICON, and GFS in one
-Open-Meteo request. Best fit is the default, while the DialKit model control can
+Open-Meteo request. Best fit is the default, while the Model control can
 switch the 3D preview instantly between the already normalized forecasts.
 Cached forecasts are separated by spot and model.
 

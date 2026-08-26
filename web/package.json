@@ -16,8 +16,6 @@
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
-    "dialkit": "1.4.3",
-    "motion-v": "^2.4.0",
     "pinia": "^3.0.3",
     "reka-ui": "2.10.4",
     "three": "^0.185.0",

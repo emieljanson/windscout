@@ -84,7 +84,6 @@ describe('configurator store', () => {
   it('starts with the current display defaults', () => {
     const store = useConfiguratorStore()
     expect(store.showThreshold).toBe(false)
-    expect(store.treatment).toBe('solid')
     expect(store.threshold).toBe(17)
     expect(store.showWeather).toBe(true)
     expect(store.showTemperature).toBe(false)
@@ -173,18 +172,6 @@ describe('configurator store', () => {
     expect(store.threshold).toBe(35)
     expect(store.setShowThreshold(true)).toBe(true)
     expect(store.threshold).toBe(35)
-  })
-
-  it('maps the temporary treatment bridge onto threshold visibility', () => {
-    const store = useConfiguratorStore()
-
-    expect(store.setTreatment('threshold-line')).toBe(true)
-    expect(store.showThreshold).toBe(true)
-    expect(store.treatment).toBe('threshold-line')
-    expect(store.setTreatment('background-fade')).toBe(true)
-    expect(store.showThreshold).toBe(false)
-    expect(store.treatment).toBe('solid')
-    expect(store.setTreatment('rainbow')).toBe(false)
   })
 
   it('maps the combined temperature choice without discarding the hidden unit', () => {

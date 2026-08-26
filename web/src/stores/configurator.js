@@ -21,7 +21,7 @@ import {
 } from '../renderer/contract'
 import { DEFAULT_SPOT_ID, getSpot } from '../spots'
 
-export { DEFAULT_THRESHOLD, DISPLAY_TREATMENTS, MAX_THRESHOLD, MIN_THRESHOLD } from '../renderer/contract'
+export { DEFAULT_THRESHOLD, MAX_THRESHOLD, MIN_THRESHOLD } from '../renderer/contract'
 
 export const useConfiguratorStore = defineStore('configurator', {
   state: () => {
@@ -60,8 +60,6 @@ export const useConfiguratorStore = defineStore('configurator', {
     }
   },
   getters: {
-    // Temporary bridge while the existing settings panel and preview move to showThreshold.
-    treatment: (state) => state.showThreshold ? 'threshold-line' : 'solid',
     temperatureChoice: (state) => state.showTemperature ? state.temperatureUnit : 'hide',
     tideAvailable: (state) =>
       ['available', 'cached'].includes(state.tideStatus) &&
@@ -71,13 +69,6 @@ export const useConfiguratorStore = defineStore('configurator', {
     },
   },
   actions: {
-    setTreatment(treatment) {
-      if (treatment === 'threshold-line') return this.setShowThreshold(true)
-      if (treatment === 'solid' || treatment === 'background-fade') {
-        return this.setShowThreshold(false)
-      }
-      return false
-    },
     setShowThreshold(value) {
       if (typeof value !== 'boolean') return false
       this.showThreshold = value
