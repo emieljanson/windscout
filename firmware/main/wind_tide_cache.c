@@ -1,6 +1,8 @@
 #include "wind_tide_cache.h"
 
+#include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -15,12 +17,13 @@ typedef struct {
 
 static uint32_t checksum(const tide_record_t *record)
 {
-    tide_record_t copy = *record;
-    copy.checksum = 0;
-    const uint8_t *bytes = (const uint8_t *) &copy;
+    const uint8_t *bytes = (const uint8_t *) record;
+    const size_t checksum_offset = offsetof(tide_record_t, checksum);
     uint32_t crc = 0xFFFFFFFFu;
-    for (size_t index = 0; index < sizeof(copy); ++index) {
-        crc ^= bytes[index];
+    for (size_t index = 0; index < sizeof(*record); ++index) {
+        const bool checksum_byte = index >= checksum_offset &&
+                                   index < checksum_offset + sizeof(record->checksum);
+        crc ^= checksum_byte ? 0 : bytes[index];
         for (int bit = 0; bit < 8; ++bit) {
             crc = (crc >> 1) ^ (0xEDB88320u & (uint32_t) -(int32_t) (crc & 1u));
         }
@@ -40,19 +43,17 @@ static esp_err_t read_record(const char *path, const wind_tide_cache_identity_t 
 {
     FILE *file = fopen(path, "rb");
     if (!file) return ESP_ERR_NOT_FOUND;
-    tide_record_t record;
-    bool ok = fread(&record, 1, sizeof(record), file) == sizeof(record) && fgetc(file) == EOF;
+    bool ok = fread(out, 1, sizeof(*out), file) == sizeof(*out) && fgetc(file) == EOF;
     fclose(file);
-    if (!ok || record.magic != 0x574E4454u || record.schema != WIND_TIDE_CACHE_SCHEMA_VERSION ||
-        record.payload_size != sizeof(record.tide) || record.generation == 0 ||
-        record.checksum != checksum(&record) || !wind_tide_validate(&record.tide)) {
+    if (!ok || out->magic != 0x574E4454u || out->schema != WIND_TIDE_CACHE_SCHEMA_VERSION ||
+        out->payload_size != sizeof(out->tide) || out->generation == 0 ||
+        out->checksum != checksum(out) || !wind_tide_validate(&out->tide)) {
         return ESP_ERR_INVALID_CRC;
     }
-    if (identity && (strcmp(record.tide.spot_id, identity->spot_id) != 0 ||
-                     strcmp(record.tide.timezone, identity->timezone) != 0)) {
+    if (identity && (strcmp(out->tide.spot_id, identity->spot_id) != 0 ||
+                     strcmp(out->tide.timezone, identity->timezone) != 0)) {
         return ESP_ERR_INVALID_STATE;
     }
-    *out = record;
     return ESP_OK;
 }
 
@@ -66,9 +67,19 @@ static esp_err_t write_slot(const char *path, const tide_record_t *record)
     bool ok = fwrite(record, 1, sizeof(*record), file) == sizeof(*record) && fflush(file) == 0 &&
               fsync(fileno(file)) == 0;
     if (fclose(file) != 0) ok = false;
-    tide_record_t verified;
-    if (!ok || read_record(temporary, NULL, &verified) != ESP_OK ||
-        verified.generation != record->generation) {
+    if (!ok) {
+        unlink(temporary);
+        return ESP_FAIL;
+    }
+    tide_record_t *verified = malloc(sizeof(*verified));
+    if (!verified) {
+        unlink(temporary);
+        return ESP_ERR_NO_MEM;
+    }
+    const bool verified_ok = read_record(temporary, NULL, verified) == ESP_OK &&
+                             verified->generation == record->generation;
+    free(verified);
+    if (!verified_ok) {
         unlink(temporary);
         return ESP_FAIL;
     }
@@ -90,21 +101,28 @@ esp_err_t wind_tide_cache_store(const char *path, const wind_tide_t *tide)
     if (!slot_path(a, sizeof(a), path, 'a') || !slot_path(b, sizeof(b), path, 'b')) {
         return ESP_ERR_INVALID_SIZE;
     }
-    tide_record_t record_a, record_b;
-    bool valid_a = read_record(a, NULL, &record_a) == ESP_OK;
-    bool valid_b = read_record(b, NULL, &record_b) == ESP_OK;
-    uint64_t generation = valid_a ? record_a.generation : 0;
-    if (valid_b && record_b.generation > generation) generation = record_b.generation;
-    if (generation == UINT64_MAX) return ESP_ERR_INVALID_STATE;
+    tide_record_t *record = calloc(1, sizeof(*record));
+    if (!record) return ESP_ERR_NO_MEM;
+    const bool valid_a = read_record(a, NULL, record) == ESP_OK;
+    const uint64_t generation_a = valid_a ? record->generation : 0;
+    const bool valid_b = read_record(b, NULL, record) == ESP_OK;
+    const uint64_t generation_b = valid_b ? record->generation : 0;
+    uint64_t generation = generation_a > generation_b ? generation_a : generation_b;
+    if (generation == UINT64_MAX) {
+        free(record);
+        return ESP_ERR_INVALID_STATE;
+    }
     const char *inactive = !valid_a ? a : !valid_b ? b :
-        record_a.generation <= record_b.generation ? a : b;
-    tide_record_t record = {.magic = 0x574E4454u,
-                            .schema = WIND_TIDE_CACHE_SCHEMA_VERSION,
-                            .payload_size = sizeof(*tide),
-                            .generation = generation + 1,
-                            .tide = *tide};
-    record.checksum = checksum(&record);
-    return write_slot(inactive, &record);
+        generation_a <= generation_b ? a : b;
+    *record = (tide_record_t) {.magic = 0x574E4454u,
+                              .schema = WIND_TIDE_CACHE_SCHEMA_VERSION,
+                              .payload_size = sizeof(*tide),
+                              .generation = generation + 1,
+                              .tide = *tide};
+    record->checksum = checksum(record);
+    const esp_err_t result = write_slot(inactive, record);
+    free(record);
+    return result;
 }
 
 esp_err_t wind_tide_cache_load(const char *path, const wind_tide_cache_identity_t *identity,
@@ -117,10 +135,17 @@ esp_err_t wind_tide_cache_load(const char *path, const wind_tide_cache_identity_
     if (!slot_path(a, sizeof(a), path, 'a') || !slot_path(b, sizeof(b), path, 'b')) {
         return ESP_ERR_INVALID_SIZE;
     }
-    tide_record_t record_a, record_b;
-    esp_err_t result_a = read_record(a, identity, &record_a);
-    esp_err_t result_b = read_record(b, identity, &record_b);
-    bool valid_a = result_a == ESP_OK, valid_b = result_b == ESP_OK;
+    tide_record_t *record = malloc(sizeof(*record));
+    if (!record) return ESP_ERR_NO_MEM;
+    const esp_err_t result_a = read_record(a, identity, record);
+    const bool valid_a = result_a == ESP_OK;
+    const uint64_t generation_a = valid_a ? record->generation : 0;
+    if (valid_a) *out_tide = record->tide;
+    const esp_err_t result_b = read_record(b, identity, record);
+    const bool valid_b = result_b == ESP_OK;
+    const uint64_t generation_b = valid_b ? record->generation : 0;
+    if (valid_b && (!valid_a || generation_b > generation_a)) *out_tide = record->tide;
+    free(record);
     if (!valid_a && !valid_b) {
         if (result_a == ESP_ERR_INVALID_STATE || result_b == ESP_ERR_INVALID_STATE) {
             return ESP_ERR_INVALID_STATE;
@@ -130,9 +155,5 @@ esp_err_t wind_tide_cache_load(const char *path, const wind_tide_cache_identity_
         }
         return ESP_ERR_INVALID_CRC;
     }
-    const tide_record_t *latest = valid_a && valid_b
-        ? (record_a.generation >= record_b.generation ? &record_a : &record_b)
-        : (valid_a ? &record_a : &record_b);
-    *out_tide = latest->tide;
     return ESP_OK;
 }

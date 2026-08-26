@@ -262,23 +262,25 @@ static void load_or_refresh_tide(wind_spot_runtime_t *runtime, bool allow_fetch,
         .spot_id = runtime->spot->id,
         .timezone = runtime->spot->timezone,
     };
-    wind_tide_t cached;
-    if (wind_tide_cache_load(runtime->tide_path, &identity, &cached) == ESP_OK) {
-        runtime->tide = cached;
+    if (wind_tide_cache_load(runtime->tide_path, &identity, &runtime->tide) == ESP_OK) {
         runtime->have_tide = true;
     }
 
     if (!allow_fetch) {
         return;
     }
-    wind_tide_t fetched;
-    wind_tide_clear(&fetched);
+    wind_tide_t *fetched = malloc(sizeof(*fetched));
+    if (!fetched) {
+        ESP_LOGW(TAG, "No memory available to refresh tide for %s", runtime->spot->id);
+        return;
+    }
+    wind_tide_clear(fetched);
     const esp_err_t result = runtime->tide_provider.fetch(
-        runtime->tide_provider.context, now, &fetched);
-    if (result == ESP_OK && wind_tide_validate(&fetched)) {
-        runtime->tide = fetched;
+        runtime->tide_provider.context, now, fetched);
+    if (result == ESP_OK && wind_tide_validate(fetched)) {
+        runtime->tide = *fetched;
         runtime->have_tide = true;
-        if (wind_tide_cache_store(runtime->tide_path, &fetched) != ESP_OK) {
+        if (wind_tide_cache_store(runtime->tide_path, fetched) != ESP_OK) {
             ESP_LOGW(TAG, "Could not persist tide data for %s", runtime->spot->id);
         }
     } else if (runtime->have_tide) {
@@ -287,6 +289,7 @@ static void load_or_refresh_tide(wind_spot_runtime_t *runtime, bool allow_fetch,
     } else {
         ESP_LOGW(TAG, "Tide unavailable for %s", runtime->spot->id);
     }
+    free(fetched);
 }
 
 static const char *day_name(int weekday)
