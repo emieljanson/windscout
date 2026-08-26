@@ -15,19 +15,6 @@ vi.mock('../src/forecast/openMeteoMarine', () => ({
   fetchOpenMeteoTide: fetchTide,
 }))
 
-vi.mock('dialkit/vue', () => ({
-  DialRoot: { template: '<div data-testid="dial-root">Display controls</div>' },
-  useDialKitController: () => ({
-    values: {
-      value: {
-        spot: 'brouwersdam', model: 'best_match', treatment: 'background-fade', windThreshold: 17,
-        weather: true, airTemperature: false, tide: false,
-      },
-    },
-    setValue: vi.fn(),
-  }),
-}))
-
 import ConfiguratorView from '../src/views/ConfiguratorView.vue'
 
 describe('configurator experience', () => {
@@ -40,7 +27,11 @@ describe('configurator experience', () => {
     })
     expect(wrapper.find('[data-testid="3d-scene"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="flat-preview"]').exists()).toBe(false)
-    expect(wrapper.find('[data-testid="dial-root"]').exists()).toBe(true)
+    expect(wrapper.find('.settings-panel').exists()).toBe(true)
+    expect(wrapper.findAll('.setting-section__title').map((title) => title.text())).toEqual([
+      'Forecast',
+      'Display',
+    ])
     expect(wrapper.text()).not.toContain('See your next session')
     expect(wrapper.text()).not.toContain('Reset view')
   })

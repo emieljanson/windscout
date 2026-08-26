@@ -1,152 +1,65 @@
 <script setup>
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { DialRoot, useDialKitController } from 'dialkit/vue'
 import { useConfiguratorStore } from '../stores/configurator'
-import { enhanceDialKitSlider } from '../configurator/dialKitAccessibility'
 import { FORECAST_MODELS } from '../forecast/models'
 import { MAX_THRESHOLD, MIN_THRESHOLD } from '../renderer/contract'
-import { SPOTS } from '../spots'
+import { getSpot, SPOTS } from '../spots'
+import SettingCombobox from './settings/SettingCombobox.vue'
+import SettingNumberInput from './settings/SettingNumberInput.vue'
+import SettingRow from './settings/SettingRow.vue'
+import SettingSection from './settings/SettingSection.vue'
+import SettingSelect from './settings/SettingSelect.vue'
+import SettingSwitch from './settings/SettingSwitch.vue'
 
 const store = useConfiguratorStore()
 const {
+  effectiveShowTide,
   forecastLabel,
   forecastMessage,
   forecastStatus,
+  selectedModelId,
+  selectedSpotId,
+  showThreshold,
+  showWeather,
+  temperatureChoice,
+  threshold,
   tideAvailable,
   tideMessage,
   tideStatus,
 } = storeToRefs(store)
-const dialkitFrame = ref(null)
-const dial = useDialKitController('Display', {
-  spot: {
-    type: 'select',
-    options: SPOTS.map((spot) => ({ value: spot.id, label: spot.name })),
-    default: store.selectedSpotId,
-  },
-  model: {
-    type: 'select',
-    options: FORECAST_MODELS.map((model) => ({ value: model.id, label: model.label })),
-    default: store.selectedModelId,
-  },
-  treatment: {
-    type: 'select',
-    options: [
-      { value: 'background-fade', label: 'Background fade' },
-      { value: 'threshold-line', label: 'Threshold line' },
-      { value: 'solid', label: 'Solid bars' },
-    ],
-    default: store.treatment,
-  },
-  windThreshold: [store.threshold, MIN_THRESHOLD, MAX_THRESHOLD, 1],
-  weather: store.showWeather,
-  airTemperature: store.showTemperature,
-  tide: store.showTide,
-  timeFormat: {
-    type: 'select',
-    options: [
-      { value: '24-hour', label: '24-hour' },
-      { value: '12-hour', label: '12-hour' },
-    ],
-    default: store.timeFormat,
-  },
-  temperatureUnit: {
-    type: 'select',
-    options: [
-      { value: 'celsius', label: '°C · Celsius' },
-      { value: 'fahrenheit', label: '°F · Fahrenheit' },
-    ],
-    default: store.temperatureUnit,
-  },
-}, {
-  id: 'windscout-display',
+
+const spotSearchTerm = ref(getSpot(selectedSpotId.value)?.name ?? '')
+const filteredSpots = computed(() => {
+  const query = spotSearchTerm.value.trim().toLocaleLowerCase()
+  if (!query) return SPOTS
+  return SPOTS.filter((spot) => spot.name.toLocaleLowerCase().includes(query))
 })
 
-let sliderEnhancement
-let controlsObserver
+const modelOptions = FORECAST_MODELS.map((model) => ({
+  value: model.id,
+  label: model.label,
+}))
+const temperatureOptions = [
+  { value: 'hide', label: 'Hide' },
+  { value: 'celsius', label: 'Celsius' },
+  { value: 'fahrenheit', label: 'Fahrenheit' },
+]
 
-function attachSliderAccessibility() {
-  const slider = dialkitFrame.value?.querySelector('.dialkit-slider')
-  if (!slider || sliderEnhancement) return
-  sliderEnhancement = enhanceDialKitSlider(slider, {
-    label: 'Wind threshold',
-    min: MIN_THRESHOLD,
-    max: MAX_THRESHOLD,
-    step: 1,
-    getValue: () => dial.values.value.windThreshold,
-    setValue: (value) => dial.setValue('windThreshold', value),
-  })
+watch(selectedSpotId, (spotId) => {
+  spotSearchTerm.value = getSpot(spotId)?.name ?? ''
+})
+
+function selectSpot(spotId) {
+  const spot = getSpot(spotId)
+  if (!spot) return
+  spotSearchTerm.value = spot.name
+  if (spotId !== selectedSpotId.value) void store.selectSpot(spotId)
 }
 
-function syncTideAccessibility() {
-  const toggle = [...(dialkitFrame.value?.querySelectorAll('.dialkit-toggle') ?? [])]
-    .find((element) => element.textContent?.toLowerCase().includes('tide'))
-  if (!toggle) return
-  toggle.toggleAttribute('disabled', !tideAvailable.value)
-  toggle.setAttribute('aria-disabled', String(!tideAvailable.value))
-  if (['available', 'cached'].includes(tideStatus.value)) {
-    toggle.removeAttribute('aria-describedby')
-  } else {
-    toggle.setAttribute('aria-describedby', 'tide-capability-message')
-  }
+function selectModel(modelId) {
+  if (modelId !== selectedModelId.value) void store.selectModel(modelId)
 }
-
-watch(
-  () => [
-    dial.values.value.treatment,
-    dial.values.value.windThreshold,
-    dial.values.value.weather,
-    dial.values.value.airTemperature,
-    dial.values.value.tide,
-    dial.values.value.timeFormat,
-    dial.values.value.temperatureUnit,
-  ],
-  ([treatment, threshold, weather, airTemperature, tide, timeFormat, temperatureUnit]) => {
-    store.setTreatment(treatment)
-    store.setThreshold(threshold)
-    store.setShowWeather(weather)
-    store.setShowTemperature(airTemperature)
-    store.setShowTide(tide)
-    store.setTimeFormat(timeFormat)
-    store.setTemperatureUnit(temperatureUnit)
-  },
-  { immediate: true },
-)
-
-watch(
-  () => dial.values.value.spot,
-  (spotId) => {
-    if (spotId && spotId !== store.selectedSpotId) void store.selectSpot(spotId)
-  },
-)
-
-watch(
-  () => dial.values.value.model,
-  (modelId) => {
-    if (modelId && modelId !== store.selectedModelId) void store.selectModel(modelId)
-  },
-)
-
-watch(() => dial.values.value.windThreshold, () => sliderEnhancement?.sync())
-watch([tideAvailable, tideStatus], () => nextTick(syncTideAccessibility))
-
-onMounted(async () => {
-  await nextTick()
-  attachSliderAccessibility()
-  syncTideAccessibility()
-  if (dialkitFrame.value) {
-    controlsObserver = new MutationObserver(() => {
-      attachSliderAccessibility()
-      syncTideAccessibility()
-    })
-    controlsObserver.observe(dialkitFrame.value, { childList: true, subtree: true })
-  }
-})
-
-onBeforeUnmount(() => {
-  controlsObserver?.disconnect()
-  sliderEnhancement?.dispose()
-})
 </script>
 
 <template>
@@ -167,33 +80,93 @@ onBeforeUnmount(() => {
       </span>
       <span class="forecast-status__message">{{ forecastMessage }}</span>
     </div>
-    <div ref="dialkitFrame" class="dialkit-frame">
-      <DialRoot mode="inline" theme="light" production-enabled />
+
+    <div class="settings-controls">
+      <SettingSection title="Forecast">
+        <SettingRow label="Spot">
+          <SettingCombobox
+            :model-value="selectedSpotId"
+            v-model:search-term="spotSearchTerm"
+            :options="filteredSpots"
+            :get-option-value="(spot) => spot.id"
+            :get-option-label="(spot) => spot.name"
+            :display-value="(spotId) => getSpot(spotId)?.name ?? ''"
+            placeholder="Search spots"
+            empty-text="No existing spots found"
+            name="spot"
+            @update:model-value="selectSpot"
+          />
+        </SettingRow>
+
+        <SettingRow label="Model">
+          <SettingSelect
+            :model-value="selectedModelId"
+            :options="modelOptions"
+            name="model"
+            @update:model-value="selectModel"
+          />
+        </SettingRow>
+      </SettingSection>
+
+      <SettingSection title="Display">
+        <SettingRow label="Show threshold">
+          <SettingSwitch
+            :model-value="showThreshold"
+            name="show-threshold"
+            @update:model-value="store.setShowThreshold"
+          />
+        </SettingRow>
+
+        <SettingRow v-if="showThreshold" label="Threshold">
+          <SettingNumberInput
+            :model-value="threshold"
+            :min="MIN_THRESHOLD"
+            :max="MAX_THRESHOLD"
+            :step="1"
+            unit="kt"
+            name="threshold"
+            @update:model-value="store.setThreshold"
+          />
+        </SettingRow>
+
+        <SettingRow label="Weather">
+          <SettingSwitch
+            :model-value="showWeather"
+            name="show-weather"
+            @update:model-value="store.setShowWeather"
+          />
+        </SettingRow>
+
+        <SettingRow label="Temperature">
+          <SettingSelect
+            :model-value="temperatureChoice"
+            :options="temperatureOptions"
+            name="temperature"
+            @update:model-value="store.setTemperatureChoice"
+          />
+        </SettingRow>
+
+        <SettingRow label="Tide" :disabled="!tideAvailable">
+          <SettingSwitch
+            :model-value="effectiveShowTide"
+            :disabled="!tideAvailable"
+            :aria-describedby="tideAvailable ? undefined : 'tide-capability-message'"
+            name="show-tide"
+            @update:model-value="store.setShowTide"
+          />
+        </SettingRow>
+      </SettingSection>
+
+      <p
+        v-if="!['available', 'cached'].includes(tideStatus)"
+        id="tide-capability-message"
+        class="tide-capability-message"
+        :data-state="tideStatus"
+        role="status"
+        aria-live="polite"
+      >
+        {{ tideMessage }}
+      </p>
     </div>
-    <p
-      v-if="!['available', 'cached'].includes(tideStatus)"
-      id="tide-capability-message"
-      class="tide-capability-message"
-      :data-state="tideStatus"
-      role="status"
-      aria-live="polite"
-    >
-      {{ tideMessage }}
-    </p>
   </div>
 </template>
-
-<style scoped>
-.tide-capability-message {
-  margin: 0;
-  padding: 10px 12px 2px;
-  color: color-mix(in srgb, currentColor 66%, transparent);
-  font-size: 12px;
-  line-height: 1.4;
-}
-
-.tide-capability-message[data-state='failed'],
-.tide-capability-message[data-state='unsupported'] {
-  color: color-mix(in srgb, currentColor 78%, transparent);
-}
-</style>

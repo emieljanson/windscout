@@ -1,130 +1,172 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import { ref, nextTick } from 'vue'
-
-const dialValues = ref({
-  spot: 'brouwersdam', model: 'best_match', treatment: 'background-fade', windThreshold: 17,
-  weather: true, airTemperature: false, tide: false,
-  timeFormat: '24-hour', temperatureUnit: 'celsius',
-})
-const controllerCalls = []
-
-vi.mock('dialkit/vue', () => ({
-  DialRoot: { template: '<button class="dialkit-toggle">Tide</button>' },
-  useDialKitController: (...args) => {
-    controllerCalls.push(args)
-    return { values: dialValues, setValue: vi.fn() }
-  },
-}))
+import { nextTick } from 'vue'
 
 import WindScoutSettings from '../src/components/WindScoutSettings.vue'
+import SettingSelect from '../src/components/settings/SettingSelect.vue'
 import { useConfiguratorStore } from '../src/stores/configurator'
 
-describe('WindScout settings adapter', () => {
+let wrapper
+
+function mountSettings() {
+  wrapper = mount(WindScoutSettings, { attachTo: document.body })
+  return wrapper
+}
+
+function rowControl(label) {
+  const row = wrapper.findAll('.setting-row')
+    .find((candidate) => candidate.get('.setting-row__label').text() === label)
+  if (!row) throw new Error(`Missing settings row: ${label}`)
+  return row
+}
+
+function bodyOption(label) {
+  return [...document.body.querySelectorAll('[role="option"]')]
+    .find((candidate) => candidate.textContent.includes(label))
+}
+
+describe('WindScout settings panel', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
-    dialValues.value = {
-      spot: 'brouwersdam', model: 'best_match', treatment: 'background-fade', windThreshold: 17,
-      weather: true, airTemperature: false, tide: false,
-      timeFormat: '24-hour', temperatureUnit: 'celsius',
-    }
-    controllerCalls.length = 0
   })
 
-  it('translates DialKit display values into the canonical store', async () => {
-    mount(WindScoutSettings)
-    const store = useConfiguratorStore()
-    dialValues.value = {
-      spot: 'brouwersdam', model: 'best_match', treatment: 'threshold-line', windThreshold: 23,
-      weather: false, airTemperature: true, tide: false,
-      timeFormat: '12-hour', temperatureUnit: 'fahrenheit',
-    }
-    await nextTick()
-    expect(store.treatment).toBe('threshold-line')
-    expect(store.threshold).toBe(23)
-    expect(store.showWeather).toBe(false)
-    expect(store.showTemperature).toBe(true)
-    expect(store.timeFormat).toBe('12-hour')
-    expect(store.temperatureUnit).toBe('fahrenheit')
+  afterEach(() => {
+    wrapper?.unmount()
+    wrapper = undefined
+    document.body.innerHTML = ''
   })
 
-  it('leaves persistence disabled so Pinia remains the only configuration owner', () => {
-    mount(WindScoutSettings)
-    expect(controllerCalls[0][2]).toEqual({ id: 'windscout-display' })
-    expect(controllerCalls[0][1]).toMatchObject({
-      weather: true,
-      airTemperature: false,
-      tide: false,
-      timeFormat: expect.objectContaining({ default: '24-hour' }),
-      temperatureUnit: expect.objectContaining({ default: 'celsius' }),
-    })
-  })
+  it('uses the approved left-label settings model without Treatment or Time controls', () => {
+    mountSettings()
 
-  it('offers all firmware spots and refreshes when the selected spot changes', async () => {
-    const store = useConfiguratorStore()
-    const selectSpot = vi.spyOn(store, 'selectSpot').mockResolvedValue(true)
-    mount(WindScoutSettings)
-    expect(controllerCalls[0][1].spot.options).toEqual([
-      { value: 'edam', label: 'Edam' },
-      { value: 'brouwersdam', label: 'Brouwersdam' },
-      { value: 'castricum-aan-zee', label: 'Castricum aan Zee' },
+    expect(wrapper.findAll('.setting-section__title').map((title) => title.text())).toEqual([
+      'Forecast',
+      'Display',
     ])
-    dialValues.value = {
-      spot: 'edam', model: 'best_match', treatment: 'background-fade', windThreshold: 17,
-      weather: true, airTemperature: false, tide: false,
-      timeFormat: '24-hour', temperatureUnit: 'celsius',
-    }
-    await nextTick()
-    expect(selectSpot).toHaveBeenCalledWith('edam')
+    expect(wrapper.findAll('.setting-row__label').map((label) => label.text())).toEqual([
+      'Spot',
+      'Model',
+      'Show threshold',
+      'Weather',
+      'Temperature',
+      'Tide',
+    ])
+    expect(wrapper.text()).not.toContain('Treatment')
+    expect(wrapper.text()).not.toContain('Time format')
+    expect(rowControl('Spot').find('.setting-select__chevron').exists()).toBe(false)
+    expect(rowControl('Model').find('.setting-select__chevron').exists()).toBe(true)
   })
 
-  it('offers the curated forecast models and switches the preview model', async () => {
+  it('filters local spots, commits only a supplied result, and announces no results', async () => {
+    const store = useConfiguratorStore()
+    store.selectedSpotId = 'edam'
+    const selectSpot = vi.spyOn(store, 'selectSpot').mockResolvedValue(true)
+    mountSettings()
+    const input = rowControl('Spot').get('input[role="combobox"]')
+
+    await input.trigger('focus')
+    await input.setValue('bro')
+    await nextTick()
+    expect(bodyOption('Brouwersdam')).toBeDefined()
+    expect(bodyOption('Edam')).toBeUndefined()
+
+    bodyOption('Brouwersdam').click()
+    await nextTick()
+    expect(selectSpot).toHaveBeenCalledWith('brouwersdam')
+
+    await input.setValue('nowhere')
+    await nextTick()
+    expect(document.body.textContent).toContain('No existing spots found')
+    expect(selectSpot).toHaveBeenCalledTimes(1)
+  })
+
+  it('offers the curated model list and selects a model through the store', async () => {
     const store = useConfiguratorStore()
     const selectModel = vi.spyOn(store, 'selectModel').mockResolvedValue(true)
-    mount(WindScoutSettings)
+    mountSettings()
+    const modelSelect = wrapper.findAllComponents(SettingSelect)[0]
 
-    expect(controllerCalls[0][1].model.options).toEqual([
-      { value: 'best_match', label: 'Best Match' },
-      { value: 'knmi_seamless', label: 'KNMI' },
-      { value: 'ecmwf_ifs025', label: 'ECMWF' },
-      { value: 'icon_seamless', label: 'ICON' },
-      { value: 'gfs_seamless', label: 'GFS' },
+    expect(modelSelect.props('options').map((option) => option.label)).toEqual([
+      'Best Match', 'KNMI', 'ECMWF', 'ICON', 'GFS',
     ])
-
-    dialValues.value = {
-      spot: 'brouwersdam', model: 'gfs_seamless', treatment: 'background-fade', windThreshold: 17,
-      weather: true, airTemperature: false, tide: false,
-      timeFormat: '24-hour', temperatureUnit: 'celsius',
-    }
+    modelSelect.vm.$emit('update:modelValue', 'gfs_seamless')
     await nextTick()
+
     expect(selectModel).toHaveBeenCalledWith('gfs_seamless')
   })
 
-  it('announces forecast progress and keeps the demo badge outside the screen', () => {
-    const wrapper = mount(WindScoutSettings)
-    expect(wrapper.get('[role="status"]').attributes('aria-live')).toBe('polite')
-    expect(wrapper.get('[data-testid="forecast-label"]').text()).toBe('Demo')
-    expect(wrapper.text()).toContain('Loading current Brouwersdam weather')
+  it('reveals an exact threshold input and restores its last valid value', async () => {
+    const store = useConfiguratorStore()
+    mountSettings()
+    const thresholdSwitch = rowControl('Show threshold').get('[role="switch"]')
+
+    expect(wrapper.find('input[type="number"]').exists()).toBe(false)
+    await thresholdSwitch.trigger('click')
+    expect(store.showThreshold).toBe(true)
+
+    const thresholdInput = rowControl('Threshold').get('input[type="number"]')
+    await thresholdInput.setValue('24')
+    expect(store.threshold).toBe(24)
+
+    await thresholdSwitch.trigger('click')
+    expect(store.showThreshold).toBe(false)
+    expect(wrapper.find('input[type="number"]').exists()).toBe(false)
+    await thresholdSwitch.trigger('click')
+    expect(rowControl('Threshold').get('input').element.value).toBe('24')
   })
 
-  it('keeps the tide control visible but disabled until capability is available', async () => {
-    const wrapper = mount(WindScoutSettings)
+  it('maps Temperature to Hide, Celsius, or Fahrenheit as one setting', async () => {
     const store = useConfiguratorStore()
+    mountSettings()
+    const temperatureSelect = wrapper.findAllComponents(SettingSelect)[1]
+
+    expect(store.temperatureChoice).toBe('hide')
+    expect(temperatureSelect.props('options').map((option) => option.label)).toEqual([
+      'Hide', 'Celsius', 'Fahrenheit',
+    ])
+    temperatureSelect.vm.$emit('update:modelValue', 'fahrenheit')
     await nextTick()
+    expect(store.temperatureChoice).toBe('fahrenheit')
+
+    temperatureSelect.vm.$emit('update:modelValue', 'hide')
     await nextTick()
-    const toggle = wrapper.get('.dialkit-toggle')
-    expect(toggle.attributes('disabled')).toBeDefined()
-    expect(toggle.attributes('aria-describedby')).toBe('tide-capability-message')
+    expect(store.temperatureChoice).toBe('hide')
+  })
+
+  it('shows Tide effectively off while unavailable without losing its preference', async () => {
+    const store = useConfiguratorStore()
+    store.tide = { capability: 'available' }
+    store.tideStatus = 'available'
+    store.showTide = true
+    mountSettings()
+
+    const tideSwitch = rowControl('Tide').get('[role="switch"]')
+    expect(tideSwitch.attributes('data-state')).toBe('checked')
+    expect(tideSwitch.attributes('disabled')).toBeUndefined()
+
+    store.tide = null
+    store.tideStatus = 'failed'
+    store.tideMessage = 'Could not check tide availability. Try again later.'
+    await nextTick()
+
+    expect(store.showTide).toBe(true)
+    expect(store.effectiveShowTide).toBe(false)
+    expect(tideSwitch.attributes('data-state')).toBe('unchecked')
+    expect(tideSwitch.attributes('disabled')).toBeDefined()
+    expect(tideSwitch.attributes('aria-describedby')).toBe('tide-capability-message')
+    expect(wrapper.get('#tide-capability-message').text()).toContain('Could not check')
 
     store.tide = { capability: 'available' }
     store.tideStatus = 'available'
     await nextTick()
-    await nextTick()
+    expect(tideSwitch.attributes('data-state')).toBe('checked')
+  })
 
-    expect(toggle.attributes('disabled')).toBeUndefined()
-    expect(toggle.attributes('aria-disabled')).toBe('false')
-    expect(toggle.attributes('aria-describedby')).toBeUndefined()
-    expect(wrapper.find('#tide-capability-message').exists()).toBe(false)
+  it('announces forecast progress and keeps the demo badge outside the screen', () => {
+    mountSettings()
+    expect(wrapper.get('.forecast-status').attributes('aria-live')).toBe('polite')
+    expect(wrapper.get('[data-testid="forecast-label"]').text()).toBe('Demo')
+    expect(wrapper.text()).toContain('Loading current Brouwersdam weather')
   })
 })

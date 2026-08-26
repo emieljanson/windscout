@@ -58,14 +58,16 @@
   top: 1rem;
   right: 1rem;
   display: flex;
-  width: min(20rem, calc(100% - 2rem));
+  width: min(22rem, calc(100% - 2rem));
   max-height: calc(100dvh - 2rem);
   flex-direction: column;
-  overflow: visible;
-  border: 1px solid rgba(20, 25, 23, 0.1);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 18px 54px rgba(38, 49, 45, 0.16);
+  overflow: hidden;
+  border: 0;
+  border-radius: 1.25rem;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow:
+    0 2px 5px rgba(21, 24, 23, 0.12),
+    0 20px 56px rgba(21, 24, 23, 0.16);
   backdrop-filter: blur(20px) saturate(1.08);
 }
 
@@ -73,7 +75,13 @@
   position: relative;
   z-index: 2;
   min-height: 0;
-  overflow: visible;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.settings-controls {
+  padding: 1.125rem;
 }
 
 .forecast-status {
@@ -81,7 +89,7 @@
   min-height: 2.5rem;
   align-items: center;
   gap: 0.55rem;
-  margin: 10px 10px 0;
+  margin: 0.75rem 0.75rem 0;
   padding: 0.55rem 0.65rem;
   border: 1px solid rgba(20, 25, 23, 0.08);
   border-radius: 10px;
@@ -127,60 +135,24 @@
   white-space: nowrap;
 }
 
-.dialkit-frame {
-  overflow: visible;
-  padding-top: 2px;
+.tide-capability-message {
+  margin: 1rem 0 0;
+  color: #68716e;
+  font-size: 0.72rem;
+  line-height: 1.45;
 }
 
-.dialkit-frame > * {
-  width: 100%;
-}
-
-.dialkit-frame .dialkit-root {
-  position: relative;
-  z-index: 2;
-  --dial-glass-bg: transparent;
-  --dial-dropdown-bg: #ffffff;
-  --dial-radius: 10px;
-  --dial-row-height: 38px;
-}
-
-.dialkit-frame .dialkit-panel-inline {
-  border-radius: 0;
-  background: transparent;
-}
-
-.dialkit-frame .dialkit-panel-inner {
-  padding: 10px 10px 2px;
-}
-
-.dialkit-frame .dialkit-panel-header,
-.dialkit-frame .dialkit-folder,
-.dialkit-frame .dialkit-folder:not(.dialkit-folder-root) {
-  border-top: 0;
-  border-bottom: 0;
-}
-
-.dialkit-frame .dialkit-select-dropdown {
-  z-index: 10001;
-  background: #ffffff;
-}
-
-.dialkit-frame .dialkit-panel-toolbar,
-.dialkit-frame .dialkit-panel-section-toolbar {
-  display: none;
-}
-
-.dialkit-frame .dialkit-slider[role='slider']:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
+.tide-capability-message[data-state='failed'],
+.tide-capability-message[data-state='unsupported'] {
+  color: #59625f;
 }
 
 .install-continuation {
   position: relative;
   z-index: 1;
-  margin: 0 10px 10px;
-  padding-top: 10px;
+  flex: none;
+  margin: 0 0.75rem 0.75rem;
+  padding-top: 0;
 }
 
 .install-button {
@@ -239,17 +211,12 @@
     position: absolute;
     top: auto;
     right: auto;
-    bottom: 1rem;
+    bottom: max(1rem, env(safe-area-inset-bottom));
     left: 50%;
     width: min(30rem, calc(100% - 2rem));
-    max-height: none;
+    max-height: calc(100dvh - max(2rem, env(safe-area-inset-top)) - max(1rem, env(safe-area-inset-bottom)));
     margin: 0;
-    overflow: visible;
     transform: translateX(-50%);
-  }
-
-  .dialkit-frame {
-    overflow: visible;
   }
 }
 
@@ -259,7 +226,12 @@
   }
 
   .settings-panel {
-    width: calc(100% - 1.5rem);
-    bottom: 0.75rem;
+    width: calc(100% - 1rem);
+    bottom: max(0.5rem, env(safe-area-inset-bottom));
+    border-radius: 1rem;
+  }
+
+  .settings-controls {
+    padding: 1rem;
   }
 }
