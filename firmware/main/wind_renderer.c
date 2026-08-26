@@ -38,6 +38,22 @@ typedef struct {
     int clipped;
 } canvas_t;
 
+typedef enum {
+    OUTPUT_PALETTE,
+    OUTPUT_RGBA,
+} output_format_t;
+
+typedef enum {
+    OUTPUT_BLACK,
+    OUTPUT_WHITE,
+    OUTPUT_RED,
+} output_color_t;
+
+typedef struct {
+    uint8_t *pixels;
+    output_format_t format;
+} output_surface_t;
+
 static const char *safe_text(const char *text) { return text ? text : ""; }
 
 static int clamp_int(int value, int low, int high) {
@@ -134,7 +150,7 @@ static bool dither_pixel_is_black(int x, int y, int density) {
     return BAYER8[y & 7][x & 7] * 100 < density * 64;
 }
 
-static void draw_low_wind_background(canvas_t *canvas) {
+static void draw_low_wind_background(canvas_t *canvas, bool clean_preview) {
     const int y_20kt = CHART_BASELINE - 20 * CHART_SCALE_HEIGHT / 40;
     const int y_15kt = CHART_BASELINE - 15 * CHART_SCALE_HEIGHT / 40;
     const int fade_height = y_15kt - y_20kt;
@@ -143,8 +159,12 @@ static void draw_low_wind_background(canvas_t *canvas) {
                                 ? 12
                                 : (py - y_20kt) * 12 / fade_height;
         for (int px = OUTER_X + 1; px < OUTER_RIGHT; ++px) {
-            if (dither_pixel_is_black(px, py, density))
+            if (clean_preview) {
+                set_pixel(canvas, px, py,
+                          (uint8_t)(CANVAS_WHITE - density * CANVAS_WHITE / 100));
+            } else if (dither_pixel_is_black(px, py, density)) {
                 set_pixel(canvas, px, py, CANVAS_BLACK);
+            }
         }
     }
 }
@@ -474,21 +494,44 @@ static int dither_once(uint8_t *luma, uint8_t *palette) {
     return 0;
 }
 
-static void apply_mask_to_palette(const canvas_t *mask, uint8_t *palette,
-                                  int left, int top, int right, int bottom,
-                                  uint8_t palette_color) {
+static void set_output_pixel(output_surface_t *output, int index,
+                             output_color_t color) {
+    if (output->format == OUTPUT_PALETTE) {
+        output->pixels[index] = color == OUTPUT_BLACK
+                                    ? PALETTE_BLACK
+                                    : color == OUTPUT_WHITE ? PALETTE_WHITE
+                                                            : PALETTE_RED;
+        return;
+    }
+    const int offset = index * 4;
+    output->pixels[offset] = color == OUTPUT_BLACK ? 0 : 255;
+    output->pixels[offset + 1] = color == OUTPUT_RED || color == OUTPUT_BLACK
+                                     ? 0
+                                     : 255;
+    output->pixels[offset + 2] = color == OUTPUT_RED || color == OUTPUT_BLACK
+                                     ? 0
+                                     : 255;
+    output->pixels[offset + 3] = 255;
+}
+
+static void apply_mask_to_output(const canvas_t *mask,
+                                 output_surface_t *output, int left, int top,
+                                 int right, int bottom,
+                                 output_color_t color) {
     for (int y = top; y <= bottom; ++y) {
         for (int x = left; x <= right; ++x) {
             if (mask->pixels[y * WIND_RENDERER_WIDTH + x] < 128)
-                palette[y * WIND_RENDERER_WIDTH + x] = palette_color;
+                set_output_pixel(output, y * WIND_RENDERER_WIDTH + x, color);
         }
     }
 }
 
-static void draw_palette_outlined_text(canvas_t *scratch, uint8_t *palette,
-                                       int x, int baseline,
-                                       wind_font_family_t family, int size,
-                                       const char *text, uint8_t text_color) {
+static void draw_output_outlined_text(canvas_t *scratch,
+                                      output_surface_t *output, int x,
+                                      int baseline,
+                                      wind_font_family_t family, int size,
+                                      const char *text,
+                                      output_color_t text_color) {
     const wind_text_metrics_t metrics = wind_font_measure(family, size, text);
     const int mask_left = x - 3;
     const int mask_top = baseline - 24;
@@ -502,16 +545,17 @@ static void draw_palette_outlined_text(canvas_t *scratch, uint8_t *palette,
             draw_text(scratch, x + dx, baseline + dy, family, size, text);
         }
     }
-    apply_mask_to_palette(scratch, palette, mask_left, mask_top,
-                          mask_right, mask_bottom, PALETTE_WHITE);
+    apply_mask_to_output(scratch, output, mask_left, mask_top,
+                         mask_right, mask_bottom, OUTPUT_WHITE);
 
     memset(scratch->pixels, CANVAS_WHITE, WIND_RENDERER_PALETTE_BYTES);
     draw_text(scratch, x, baseline, family, size, text);
-    apply_mask_to_palette(scratch, palette, mask_left, mask_top,
-                          mask_right, mask_bottom, text_color);
+    apply_mask_to_output(scratch, output, mask_left, mask_top,
+                         mask_right, mask_bottom, text_color);
 }
 
-static void draw_threshold_overlay(canvas_t *scratch, uint8_t *palette,
+static void draw_threshold_overlay(canvas_t *scratch,
+                                   output_surface_t *output,
                                    const wind_renderer_dashboard_t *dashboard) {
     const int y = CHART_BASELINE -
                   dashboard->threshold_kt * CHART_SCALE_HEIGHT / 40;
@@ -523,9 +567,11 @@ static void draw_threshold_overlay(canvas_t *scratch, uint8_t *palette,
                            (WIND_RENDERER_SAMPLES_PER_DAY - 1) * SAMPLE_STEP +
                            SUSTAINED_BAR_WIDTH / 2 - 1 + 2;
     for (int x = line_left; x <= line_right; ++x) {
-        palette[(y - 1) * WIND_RENDERER_WIDTH + x] = PALETTE_WHITE;
-        palette[y * WIND_RENDERER_WIDTH + x] = PALETTE_RED;
-        palette[(y + 1) * WIND_RENDERER_WIDTH + x] = PALETTE_WHITE;
+        set_output_pixel(output, (y - 1) * WIND_RENDERER_WIDTH + x,
+                         OUTPUT_WHITE);
+        set_output_pixel(output, y * WIND_RENDERER_WIDTH + x, OUTPUT_RED);
+        set_output_pixel(output, (y + 1) * WIND_RENDERER_WIDTH + x,
+                         OUTPUT_WHITE);
     }
 
     for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day) {
@@ -548,10 +594,10 @@ static void draw_threshold_overlay(canvas_t *scratch, uint8_t *palette,
             const wind_text_metrics_t metrics = wind_font_measure(
                 WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED,
                 WIND_FONT_SIZE_STATUS, value);
-            draw_palette_outlined_text(
-                scratch, palette, center_x - metrics.width / 2, baseline,
+            draw_output_outlined_text(
+                scratch, output, center_x - metrics.width / 2, baseline,
                 WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED,
-                WIND_FONT_SIZE_STATUS, value, PALETTE_BLACK);
+                WIND_FONT_SIZE_STATUS, value, OUTPUT_BLACK);
         }
     }
 
@@ -562,18 +608,19 @@ static void draw_threshold_overlay(canvas_t *scratch, uint8_t *palette,
         WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED,
         WIND_FONT_SIZE_STATUS, label);
     const int x = CONTENT_RIGHT - metrics.width + 1;
-    draw_palette_outlined_text(scratch, palette, x, baseline,
-                               WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED,
-                               WIND_FONT_SIZE_STATUS, label, PALETTE_RED);
+    draw_output_outlined_text(scratch, output, x, baseline,
+                              WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED,
+                              WIND_FONT_SIZE_STATUS, label, OUTPUT_RED);
 }
 
-static void draw_low_battery_overlay(canvas_t *scratch, uint8_t *palette,
+static void draw_low_battery_overlay(canvas_t *scratch,
+                                     output_surface_t *output,
                                      int battery_percent) {
     if (battery_percent < 0 || battery_percent >= 10) return;
     memset(scratch->pixels, CANVAS_WHITE, WIND_RENDERER_PALETTE_BYTES);
     draw_battery(scratch, CONTENT_RIGHT, 72, battery_percent);
-    apply_mask_to_palette(scratch, palette, CONTENT_RIGHT - 24, 65,
-                          CONTENT_RIGHT + 1, 78, PALETTE_RED);
+    apply_mask_to_output(scratch, output, CONTENT_RIGHT - 24, 65,
+                         CONTENT_RIGHT + 1, 78, OUTPUT_RED);
 }
 
 uint32_t wind_renderer_contract_version(void) {
@@ -722,6 +769,15 @@ int wind_renderer_input_v1_render(const wind_renderer_input_v1_t *input,
     return wind_renderer_render(&dashboard, palette_out, palette_size, stats);
 }
 
+int wind_renderer_input_v1_render_preview_rgba(
+    const wind_renderer_input_v1_t *input, uint8_t *rgba_out,
+    size_t rgba_size, wind_renderer_stats_t *stats) {
+    wind_renderer_dashboard_t dashboard;
+    if (wind_renderer_input_v1_to_dashboard(input, &dashboard) != 0) return -1;
+    return wind_renderer_render_preview_rgba(&dashboard, rgba_out, rgba_size,
+                                             stats);
+}
+
 int wind_renderer_palette_row_to_rgb(const uint8_t *palette_row, size_t width,
                                      uint8_t *rgb_row, size_t rgb_size) {
     if (!palette_row || !rgb_row || width == 0 || width > rgb_size / 3)
@@ -741,10 +797,14 @@ int wind_renderer_palette_row_to_rgb(const uint8_t *palette_row, size_t width,
     return 0;
 }
 
-int wind_renderer_render(const wind_renderer_dashboard_t *dashboard,
-                         uint8_t *palette_out, size_t palette_size,
-                         wind_renderer_stats_t *stats) {
-    if (!dashboard || !palette_out || palette_size < WIND_RENDERER_PALETTE_BYTES)
+static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
+                            uint8_t *output_pixels, size_t output_size,
+                            output_format_t output_format,
+                            wind_renderer_stats_t *stats) {
+    const size_t required_size = output_format == OUTPUT_PALETTE
+                                     ? WIND_RENDERER_PALETTE_BYTES
+                                     : WIND_RENDERER_RGBA_BYTES;
+    if (!dashboard || !output_pixels || output_size < required_size)
         return -1;
     if (!dashboard_valid(dashboard)) return -3;
 
@@ -771,7 +831,7 @@ int wind_renderer_render(const wind_renderer_dashboard_t *dashboard,
                     WIND_FONT_SIZE_STATUS, update);
 
     if (dashboard->display_mode == WIND_RENDERER_MODE_BACKGROUND_FADE)
-        draw_low_wind_background(&canvas);
+        draw_low_wind_background(&canvas, output_format == OUTPUT_RGBA);
     draw_wind_reference_lines(&canvas);
 
     const int header_text_right = 565;
@@ -834,20 +894,53 @@ int wind_renderer_render(const wind_renderer_dashboard_t *dashboard,
                   WIND_FONT_BERKELEY_MONO_BOLD, WIND_FONT_SIZE_DAY, message);
     }
 
-    const int dither_result = dither_once(canvas.pixels, palette_out);
-    if (dither_result == 0 &&
+    int output_result = 0;
+    if (output_format == OUTPUT_PALETTE) {
+        output_result = dither_once(canvas.pixels, output_pixels);
+    } else {
+        for (int pixel = 0; pixel < WIND_RENDERER_PALETTE_BYTES; ++pixel) {
+            const int offset = pixel * 4;
+            const uint8_t luma = canvas.pixels[pixel];
+            output_pixels[offset] = luma;
+            output_pixels[offset + 1] = luma;
+            output_pixels[offset + 2] = luma;
+            output_pixels[offset + 3] = 255;
+        }
+    }
+    output_surface_t output = {
+        .pixels = output_pixels,
+        .format = output_format,
+    };
+    if (output_result == 0 &&
         dashboard->display_mode == WIND_RENDERER_MODE_THRESHOLD &&
         dashboard->state != WIND_RENDERER_UNAVAILABLE)
-        draw_threshold_overlay(&canvas, palette_out, dashboard);
-    if (dither_result == 0)
-        draw_low_battery_overlay(&canvas, palette_out,
+        draw_threshold_overlay(&canvas, &output, dashboard);
+    if (output_result == 0)
+        draw_low_battery_overlay(&canvas, &output,
                                  dashboard->battery_percent);
     if (stats) {
-        stats->dither_passes = dither_result == 0 ? 1 : 0;
+        stats->dither_passes = output_result == 0 &&
+                                      output_format == OUTPUT_PALETTE
+                                  ? 1
+                                  : 0;
         stats->coordinates_included = coordinates_included;
         stats->status_right = CONTENT_RIGHT;
         stats->clipped_primitives = canvas.clipped;
     }
     free(canvas.pixels);
-    return dither_result == 0 ? 0 : -2;
+    return output_result == 0 ? 0 : -2;
+}
+
+int wind_renderer_render(const wind_renderer_dashboard_t *dashboard,
+                         uint8_t *palette_out, size_t palette_size,
+                         wind_renderer_stats_t *stats) {
+    return render_dashboard(dashboard, palette_out, palette_size,
+                            OUTPUT_PALETTE, stats);
+}
+
+int wind_renderer_render_preview_rgba(
+    const wind_renderer_dashboard_t *dashboard, uint8_t *rgba_out,
+    size_t rgba_size, wind_renderer_stats_t *stats) {
+    return render_dashboard(dashboard, rgba_out, rgba_size, OUTPUT_RGBA,
+                            stats);
 }

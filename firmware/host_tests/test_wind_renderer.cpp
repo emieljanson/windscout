@@ -55,6 +55,15 @@ Frame Render(const wind_renderer_dashboard_t &dashboard,
     return frame;
 }
 
+Frame RenderPreview(const wind_renderer_dashboard_t &dashboard,
+                    wind_renderer_stats_t *stats = nullptr) {
+    Frame frame(WIND_RENDERER_RGBA_BYTES, 0x7f);
+    EXPECT_EQ(wind_renderer_render_preview_rgba(
+                  &dashboard, frame.data(), frame.size(), stats),
+              0);
+    return frame;
+}
+
 int CountBlack(const Frame &frame, int left, int top, int right, int bottom) {
     int count = 0;
     for (int y = top; y <= bottom; ++y)
@@ -154,6 +163,44 @@ TEST(WindRenderer, ProducesOneDeterministicMonochromeFrameWithoutClipping) {
     EXPECT_EQ(first[12 * 800 + 12], 0);
     EXPECT_EQ(first[103 * 800 + 400], 0);
     EXPECT_EQ(first[467 * 800 + 787], 0);
+}
+
+TEST(WindRenderer, UsesTheSameCompositionForACleanUnditheredPreview) {
+    auto dashboard = Dashboard();
+    dashboard.display_mode = WIND_RENDERER_MODE_BACKGROUND_FADE;
+    const Frame palette_before = Render(dashboard);
+    wind_renderer_stats_t stats{};
+    const Frame preview = RenderPreview(dashboard, &stats);
+    const Frame palette_after = Render(dashboard);
+
+    EXPECT_EQ(palette_before, palette_after);
+    EXPECT_EQ(preview.size(), static_cast<size_t>(WIND_RENDERER_RGBA_BYTES));
+    EXPECT_EQ(stats.dither_passes, 0);
+    EXPECT_EQ(stats.clipped_primitives, 0);
+    bool has_continuous_gray = false;
+    bool all_alpha_opaque = true;
+    for (size_t offset = 0; offset < preview.size(); offset += 4) {
+        all_alpha_opaque = all_alpha_opaque && preview[offset + 3] == 255;
+        if (preview[offset] == preview[offset + 1] &&
+            preview[offset + 1] == preview[offset + 2] &&
+            preview[offset] > 0 && preview[offset] < 255) {
+            has_continuous_gray = true;
+        }
+    }
+    EXPECT_TRUE(all_alpha_opaque);
+    EXPECT_TRUE(has_continuous_gray);
+
+    dashboard.display_mode = WIND_RENDERER_MODE_THRESHOLD;
+    const Frame threshold = RenderPreview(dashboard);
+    bool has_red = false;
+    for (size_t offset = 0; offset < threshold.size(); offset += 4) {
+        if (threshold[offset] == 255 && threshold[offset + 1] == 0 &&
+            threshold[offset + 2] == 0 && threshold[offset + 3] == 255) {
+            has_red = true;
+            break;
+        }
+    }
+    EXPECT_TRUE(has_red);
 }
 
 TEST(WindRenderer, ExpandsNativePaletteToPhysicalBlackWhiteAndRedRgb) {

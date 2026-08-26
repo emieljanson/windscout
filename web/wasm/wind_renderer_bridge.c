@@ -5,7 +5,6 @@
 #include <emscripten/emscripten.h>
 
 #include "wind_renderer.h"
-#include "wind_renderer_fixture.h"
 
 enum {
     METADATA_SPOT_NAME = 0,
@@ -18,10 +17,12 @@ enum {
 
 static wind_renderer_input_v1_t renderer_input;
 static uint8_t renderer_output[WIND_RENDERER_PALETTE_BYTES];
+static uint8_t renderer_preview_output[WIND_RENDERER_RGBA_BYTES];
 static char string_scratch[WIND_RENDERER_SPOT_NAME_CAPACITY];
 static int input_ready;
 static int input_error;
 static int output_valid;
+static int preview_output_valid;
 
 static int copy_text(char *destination, size_t capacity) {
     if (!destination || capacity == 0 ||
@@ -39,9 +40,11 @@ static int accept_result(int result) {
     if (result != 0) {
         input_error = 1;
         output_valid = 0;
+        preview_output_valid = 0;
         return result;
     }
     output_valid = 0;
+    preview_output_valid = 0;
     return 0;
 }
 
@@ -61,10 +64,6 @@ EMSCRIPTEN_KEEPALIVE uint32_t wind_wasm_palette_bytes(void) {
     return WIND_RENDERER_PALETTE_BYTES;
 }
 
-EMSCRIPTEN_KEEPALIVE uint32_t wind_wasm_fixture_count(void) {
-    return WIND_RENDERER_FIXTURE_COUNT;
-}
-
 EMSCRIPTEN_KEEPALIVE uintptr_t wind_wasm_scratch_ptr(void) {
     return (uintptr_t)string_scratch;
 }
@@ -77,13 +76,20 @@ EMSCRIPTEN_KEEPALIVE uintptr_t wind_wasm_output_ptr(void) {
     return output_valid ? (uintptr_t)renderer_output : 0;
 }
 
+EMSCRIPTEN_KEEPALIVE uintptr_t wind_wasm_preview_output_ptr(void) {
+    return preview_output_valid ? (uintptr_t)renderer_preview_output : 0;
+}
+
+EMSCRIPTEN_KEEPALIVE uint32_t wind_wasm_preview_bytes(void) {
+    return WIND_RENDERER_RGBA_BYTES;
+}
+
 EMSCRIPTEN_KEEPALIVE int wind_wasm_reset(uint32_t contract_version) {
-    memset(&renderer_input, 0, sizeof(renderer_input));
-    memset(renderer_output, 0, sizeof(renderer_output));
     memset(string_scratch, 0, sizeof(string_scratch));
     input_ready = 0;
     input_error = 0;
     output_valid = 0;
+    preview_output_valid = 0;
     if (contract_version != WIND_RENDERER_CONTRACT_VERSION) return -1;
     wind_renderer_input_v1_init(&renderer_input);
     input_ready = 1;
@@ -185,13 +191,18 @@ EMSCRIPTEN_KEEPALIVE int wind_wasm_render(void) {
     return 0;
 }
 
-EMSCRIPTEN_KEEPALIVE int wind_wasm_render_fixture(uint32_t fixture_index) {
-    output_valid = 0;
-    if (wind_renderer_fixture_build(fixture_index, &renderer_input) != 0) {
-        memset(renderer_output, 0, sizeof(renderer_output));
-        return -1;
+EMSCRIPTEN_KEEPALIVE int wind_wasm_render_preview(void) {
+    preview_output_valid = 0;
+    if (!input_ready || input_error) return -1;
+    wind_renderer_stats_t stats;
+    const int result = wind_renderer_input_v1_render_preview_rgba(
+        &renderer_input, renderer_preview_output,
+        sizeof(renderer_preview_output), &stats);
+    if (result != 0 || stats.dither_passes != 0 ||
+        stats.clipped_primitives != 0) {
+        memset(renderer_preview_output, 0, sizeof(renderer_preview_output));
+        return result != 0 ? result : -2;
     }
-    input_ready = 1;
-    input_error = 0;
-    return wind_wasm_render();
+    preview_output_valid = 1;
+    return 0;
 }

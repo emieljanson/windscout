@@ -71,4 +71,16 @@ describe('forecast normalizer', () => {
     })
     expect(forecast.days.flatMap((day) => day.samples).every((sample) => sample.weather === 0)).toBe(true)
   })
+
+  it('rounds cloud cover before applying the firmware weather boundaries', () => {
+    const response = responseFor()
+    response.hourly.cloud_cover[0] = 20.4
+    response.hourly.cloud_cover[2] = 60.4
+    const forecast = normalizeForecast(response, SPOTS[1], {
+      firstDate: '2026-08-26', retrievedAt: 1_777_000_000_000,
+    })
+
+    expect(forecast.days[0].samples[0].weather).toBe(1)
+    expect(forecast.days[0].samples[2].weather).toBe(3)
+  })
 })

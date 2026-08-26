@@ -2,8 +2,9 @@
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { DialRoot, useDialKitController } from 'dialkit/vue'
-import { MAX_THRESHOLD, MIN_THRESHOLD, useConfiguratorStore } from '../stores/configurator'
+import { useConfiguratorStore } from '../stores/configurator'
 import { enhanceDialKitSlider } from '../configurator/dialKitAccessibility'
+import { MAX_THRESHOLD, MIN_THRESHOLD } from '../renderer/contract'
 import { SPOTS } from '../spots'
 
 const store = useConfiguratorStore()

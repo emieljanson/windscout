@@ -1,3 +1,5 @@
+import { RENDERER_TEXT_CAPACITIES, textFitsRenderer } from '../renderer/contract'
+
 const REQUIRED_HOURS = Object.freeze([8, 11, 14, 17, 20])
 const CORE_FIELDS = Object.freeze([
   'time',
@@ -81,11 +83,12 @@ function weatherState(cloudCover, precipitation, isDay) {
       cloudCover < 0 || cloudCover > 100 || precipitation < 0 || precipitation > 655.35 ||
       (isDay !== 0 && isDay !== 1)) return 0
   const precipitationHundredths = Math.round(precipitation * 100)
+  const cloudCoverPercent = Math.round(cloudCover)
   if (precipitationHundredths >= 250) return 8
   if (precipitationHundredths >= 100) return 7
   if (precipitationHundredths >= 10) return 6
-  if (cloudCover <= 20) return isDay ? 1 : 2
-  if (cloudCover <= 60) return isDay ? 3 : 4
+  if (cloudCoverPercent <= 20) return isDay ? 1 : 2
+  if (cloudCoverPercent <= 60) return isDay ? 3 : 4
   return 5
 }
 
@@ -181,10 +184,16 @@ export function isNormalizedForecast(value) {
       value.model !== 'KNMI SEAMLESS' || typeof value.updatedTime !== 'string' ||
       !Number.isFinite(value.retrievedAt) || value.retrievedAt <= 0 ||
       !Array.isArray(value.days) || value.days.length !== 5) return false
+  if (!textFitsRenderer(value.spotName, RENDERER_TEXT_CAPACITIES.spotName) ||
+      !textFitsRenderer(value.coordinates, RENDERER_TEXT_CAPACITIES.coordinates) ||
+      !textFitsRenderer(value.model, RENDERER_TEXT_CAPACITIES.provider) ||
+      !textFitsRenderer(value.updatedTime, RENDERER_TEXT_CAPACITIES.updatedTime)) return false
 
   return value.days.every((day, dayIndex) => {
     if (!day || typeof day.localDate !== 'string' || typeof day.day !== 'string' ||
-        typeof day.date !== 'string' || !Array.isArray(day.samples) || day.samples.length !== 5) return false
+        typeof day.date !== 'string' || !textFitsRenderer(day.day, RENDERER_TEXT_CAPACITIES.day) ||
+        !textFitsRenderer(day.date, RENDERER_TEXT_CAPACITIES.date) ||
+        !Array.isArray(day.samples) || day.samples.length !== 5) return false
     try {
       if (dayIndex > 0 && day.localDate !== addDays(value.days[dayIndex - 1].localDate, 1)) return false
     } catch {
@@ -192,8 +201,9 @@ export function isNormalizedForecast(value) {
     }
     return day.samples.every((sample, sampleIndex) => sample &&
       sample.time === String(REQUIRED_HOURS[sampleIndex]).padStart(2, '0') &&
-      Number.isInteger(sample.sustainedKt) && sample.sustainedKt >= 0 &&
-      Number.isInteger(sample.gustKt) && sample.gustKt >= 0 &&
+      textFitsRenderer(sample.time, RENDERER_TEXT_CAPACITIES.time) &&
+      Number.isInteger(sample.sustainedKt) && sample.sustainedKt >= 0 && sample.sustainedKt <= 32767 &&
+      Number.isInteger(sample.gustKt) && sample.gustKt >= 0 && sample.gustKt <= 32767 &&
       Number.isInteger(sample.destinationDegrees) && sample.destinationDegrees >= 0 && sample.destinationDegrees < 360 &&
       sample.available === true && Number.isInteger(sample.weather) && sample.weather >= 0 && sample.weather <= 8)
   })

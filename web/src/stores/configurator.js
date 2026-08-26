@@ -2,17 +2,15 @@ import { defineStore } from 'pinia'
 import { brouwersdamForecast } from '../fixtures/brouwersdam'
 import { readCachedForecast, writeCachedForecast } from '../forecast/forecastCache'
 import { fetchOpenMeteoForecast } from '../forecast/openMeteo'
+import {
+  DEFAULT_THRESHOLD,
+  DISPLAY_TREATMENTS,
+  MAX_THRESHOLD,
+  MIN_THRESHOLD,
+} from '../renderer/contract'
 import { DEFAULT_SPOT_ID, getSpot } from '../spots'
 
-export const DISPLAY_TREATMENTS = Object.freeze([
-  'background-fade',
-  'threshold-line',
-  'solid',
-])
-
-export const MIN_THRESHOLD = 5
-export const MAX_THRESHOLD = 35
-export const DEFAULT_THRESHOLD = 17
+export { DEFAULT_THRESHOLD, DISPLAY_TREATMENTS, MAX_THRESHOLD, MIN_THRESHOLD } from '../renderer/contract'
 
 export const useConfiguratorStore = defineStore('configurator', {
   state: () => ({
@@ -20,13 +18,14 @@ export const useConfiguratorStore = defineStore('configurator', {
     threshold: DEFAULT_THRESHOLD,
     selectedSpotId: DEFAULT_SPOT_ID,
     forecast: brouwersdamForecast,
+    publishedForecast: brouwersdamForecast,
     forecastRevision: 0,
     pendingForecastRevision: null,
+    pendingForecastSpotId: null,
     forecastStatus: 'idle',
     forecastSource: 'demo',
     forecastMessage: 'Demo forecast. Loading current Brouwersdam weather…',
     forecastLabel: 'Demo',
-    showDemoLabel: true,
     forecastInitialized: false,
     forecastRequestId: 0,
   }),
@@ -57,17 +56,18 @@ export const useConfiguratorStore = defineStore('configurator', {
       const spot = getSpot(this.selectedSpotId)
       if (!spot) return false
       const requestId = ++this.forecastRequestId
+      this.pendingForecastRevision = null
+      this.pendingForecastSpotId = null
       const cached = readCachedForecast(spot.id, storage)
       if (cached) {
         this.forecast = cached
+        this.publishedForecast = cached
         this.forecastSource = 'cache'
         this.forecastLabel = 'Cached'
-        this.showDemoLabel = false
         this.forecastRevision += 1
       } else if (this.forecast.spotId && this.forecast.spotId !== spot.id) {
         this.forecastSource = 'previous'
         this.forecastLabel = 'Previous spot'
-        this.showDemoLabel = false
       }
       this.forecastStatus = 'loading'
       this.forecastMessage = `Loading current forecast for ${spot.name}…`
@@ -79,17 +79,17 @@ export const useConfiguratorStore = defineStore('configurator', {
         this.forecast = nextForecast
         this.forecastRevision += 1
         this.pendingForecastRevision = this.forecastRevision
+        this.pendingForecastSpotId = spot.id
         this.forecastSource = 'current'
-        this.forecastLabel = ''
         this.forecastStatus = 'rendering'
         this.forecastMessage = `Updating the ${spot.name} preview…`
         return true
       } catch {
         if (requestId !== this.forecastRequestId || this.selectedSpotId !== spot.id) return false
         this.pendingForecastRevision = null
+        this.pendingForecastSpotId = null
         this.forecastStatus = 'warning'
         if (this.forecastSource === 'demo') {
-          this.showDemoLabel = true
           this.forecastLabel = 'Demo'
           this.forecastMessage = 'Live forecast unavailable. Showing demo data.'
         } else if (this.forecastSource === 'previous') {
@@ -112,14 +112,35 @@ export const useConfiguratorStore = defineStore('configurator', {
       return this.refreshForecast(options)
     },
     publishForecast(revision) {
-      if (revision !== this.pendingForecastRevision || revision !== this.forecastRevision) return false
+      if (revision !== this.pendingForecastRevision || revision !== this.forecastRevision ||
+          this.pendingForecastSpotId !== this.selectedSpotId || this.forecast.spotId !== this.selectedSpotId) return false
       const spot = getSpot(this.selectedSpotId)
       this.pendingForecastRevision = null
+      this.pendingForecastSpotId = null
+      this.publishedForecast = this.forecast
       this.forecastSource = 'live'
       this.forecastLabel = ''
       this.forecastStatus = 'ready'
       this.forecastMessage = `Live forecast for ${spot?.name ?? 'this spot'}.`
-      this.showDemoLabel = false
+      return true
+    },
+    rejectForecastPublication(revision) {
+      if (revision !== this.pendingForecastRevision || revision !== this.forecastRevision) return false
+      const failedSpot = getSpot(this.pendingForecastSpotId)
+      this.pendingForecastRevision = null
+      this.pendingForecastSpotId = null
+      this.forecast = this.publishedForecast
+      this.forecastRevision += 1
+      this.forecastStatus = 'warning'
+      if (this.forecast.spotId !== this.selectedSpotId) {
+        this.forecastSource = 'previous'
+        this.forecastLabel = 'Previous spot'
+        this.forecastMessage = `Could not show ${failedSpot?.name ?? 'that spot'}. Still showing ${this.forecast.spotName}.`
+      } else {
+        this.forecastSource = 'current'
+        this.forecastLabel = 'Update delayed'
+        this.forecastMessage = 'Could not update the preview. Showing the last forecast.'
+      }
       return true
     },
   },

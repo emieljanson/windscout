@@ -14,6 +14,7 @@ enum {
     WIND_RENDERER_DAY_COUNT = 5,
     WIND_RENDERER_SAMPLES_PER_DAY = 5,
     WIND_RENDERER_PALETTE_BYTES = WIND_RENDERER_WIDTH * WIND_RENDERER_HEIGHT,
+    WIND_RENDERER_RGBA_BYTES = WIND_RENDERER_PALETTE_BYTES * 4,
     WIND_RENDERER_CONTRACT_VERSION = 1,
     WIND_RENDERER_MIN_THRESHOLD_KT = 5,
     WIND_RENDERER_DEFAULT_THRESHOLD_KT = 17,
@@ -134,6 +135,15 @@ int wind_renderer_render(const wind_renderer_dashboard_t *dashboard,
                          uint8_t *palette_out, size_t palette_size,
                          wind_renderer_stats_t *stats);
 
+/*
+ * Renders the same dashboard composition as wind_renderer_render, but keeps
+ * continuous grayscale values and red accents for a clean browser preview.
+ * Only the final output pass differs; layout and drawing stay shared.
+ */
+int wind_renderer_render_preview_rgba(
+    const wind_renderer_dashboard_t *dashboard, uint8_t *rgba_out,
+    size_t rgba_size, wind_renderer_stats_t *stats);
+
 uint32_t wind_renderer_contract_version(void);
 
 void wind_renderer_input_v1_init(wind_renderer_input_v1_t *input);
@@ -172,6 +182,10 @@ int wind_renderer_input_v1_to_dashboard(const wind_renderer_input_v1_t *input,
 int wind_renderer_input_v1_render(const wind_renderer_input_v1_t *input,
                                   uint8_t *palette_out, size_t palette_size,
                                   wind_renderer_stats_t *stats);
+
+int wind_renderer_input_v1_render_preview_rgba(
+    const wind_renderer_input_v1_t *input, uint8_t *rgba_out,
+    size_t rgba_size, wind_renderer_stats_t *stats);
 
 /*
  * Expands one renderer palette row to RGB888 for display-manager streaming.

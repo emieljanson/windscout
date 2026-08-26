@@ -57,4 +57,15 @@ describe('forecast cache', () => {
     clearCachedForecast(storage)
     expect(readCachedForecast('brouwersdam', storage)).toBeNull()
   })
+
+  it('rejects structurally valid data that cannot cross the renderer bridge', () => {
+    const storage = memoryStorage()
+    const oversizedName = forecast()
+    oversizedName.spotName = 'x'.repeat(96)
+    expect(writeCachedForecast(oversizedName, storage)).toBe(false)
+
+    const oversizedWind = forecast()
+    oversizedWind.days[0].samples[0].sustainedKt = 32768
+    expect(writeCachedForecast(oversizedWind, storage)).toBe(false)
+  })
 })

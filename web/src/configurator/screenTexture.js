@@ -1,32 +1,21 @@
 import * as THREE from 'three'
 import { brouwersdamForecast } from '../fixtures/brouwersdam'
 import {
-  RENDERER_CONTRACT_VERSION,
   RENDERER_HEIGHT,
-  RENDERER_PALETTE_BYTES,
+  RENDERER_RGBA_BYTES,
   RENDERER_WIDTH,
   loadSharedRenderer,
 } from '../renderer/sharedRenderer'
+import { DISPLAY_MODES, RENDERER_CONTRACT_VERSION } from '../renderer/contract'
 
-export const PALETTE_BLACK = 0
-export const PALETTE_WHITE = 1
-export const PALETTE_RED = 3
-
-const SAMPLE_TIMES = Object.freeze(['08', '11', '14', '17', '20'])
-const DISPLAY_MODES = Object.freeze({
-  'background-fade': 0,
-  'threshold-line': 1,
-  solid: 2,
-})
-
-function rendererSample(sample, sampleIndex) {
+function rendererSample(sample) {
   return {
-    time: sample.time ?? SAMPLE_TIMES[sampleIndex],
-    sustainedKt: sample.sustainedKt ?? sample[0],
-    gustKt: sample.gustKt ?? sample[1],
-    destinationDegrees: sample.destinationDegrees ?? sample[2],
-    available: sample.available ?? true,
-    weather: sample.weather ?? 1,
+    time: sample.time,
+    sustainedKt: sample.sustainedKt,
+    gustKt: sample.gustKt,
+    destinationDegrees: sample.destinationDegrees,
+    available: sample.available,
+    weather: sample.weather,
   }
 }
 
@@ -36,10 +25,10 @@ export function createRendererInput(forecast, config) {
 
   return {
     version: RENDERER_CONTRACT_VERSION,
-    spotName: forecast.spotName ?? forecast.spot,
+    spotName: forecast.spotName,
     coordinates: forecast.coordinates,
     provider: forecast.model ?? forecast.provider ?? 'OPEN-METEO',
-    updatedTime: forecast.updatedTime ?? forecast.updated,
+    updatedTime: forecast.updatedTime,
     state: forecast.state ?? 0,
     refreshFailed: forecast.refreshFailed ?? false,
     ageHours: forecast.ageHours ?? 0,
@@ -54,37 +43,6 @@ export function createRendererInput(forecast, config) {
   }
 }
 
-export function paletteToRgba(palette, target = new Uint8Array(RENDERER_PALETTE_BYTES * 4)) {
-  if (!(palette instanceof Uint8Array) || palette.byteLength !== RENDERER_PALETTE_BYTES) {
-    throw new Error('The canonical renderer must return one complete 800 × 480 palette frame')
-  }
-  if (!(target instanceof Uint8Array) || target.byteLength !== RENDERER_PALETTE_BYTES * 4) {
-    throw new Error('The screen texture target must fit one complete RGBA frame')
-  }
-
-  for (let pixel = 0; pixel < palette.length; pixel += 1) {
-    const paletteValue = palette[pixel]
-    const offset = pixel * 4
-    if (paletteValue === PALETTE_BLACK) {
-      target[offset] = 0
-      target[offset + 1] = 0
-      target[offset + 2] = 0
-    } else if (paletteValue === PALETTE_WHITE) {
-      target[offset] = 255
-      target[offset + 1] = 255
-      target[offset + 2] = 255
-    } else if (paletteValue === PALETTE_RED) {
-      target[offset] = 255
-      target[offset + 1] = 0
-      target[offset + 2] = 0
-    } else {
-      throw new Error(`The canonical renderer returned unsupported palette value ${paletteValue}`)
-    }
-    target[offset + 3] = 255
-  }
-  return target
-}
-
 export async function createScreenTexture({
   forecast = brouwersdamForecast,
   config,
@@ -94,12 +52,14 @@ export async function createScreenTexture({
   let texture
   let currentForecast = forecast
   let currentConfig = config
-  let stagingRgba
   let disposed = false
 
   function renderFrame(nextForecast, nextConfig) {
     const input = createRendererInput(nextForecast, nextConfig)
-    const rgba = paletteToRgba(renderer.render(input), stagingRgba)
+    const rgba = renderer.renderPreview(input)
+    if (!(rgba instanceof Uint8Array) || rgba.byteLength !== RENDERER_RGBA_BYTES) {
+      throw new Error('The canonical renderer must return one complete 800 × 480 RGBA preview')
+    }
 
     if (!texture) {
       texture = new THREE.DataTexture(
@@ -110,15 +70,12 @@ export async function createScreenTexture({
         THREE.UnsignedByteType,
       )
       texture.colorSpace = THREE.SRGBColorSpace
-      texture.magFilter = THREE.NearestFilter
-      texture.minFilter = THREE.LinearFilter
-      texture.generateMipmaps = false
+      texture.magFilter = THREE.LinearFilter
+      texture.minFilter = THREE.LinearMipmapLinearFilter
+      texture.generateMipmaps = true
       texture.flipY = true
-      stagingRgba = new Uint8Array(RENDERER_PALETTE_BYTES * 4)
     } else {
-      const previousFrame = texture.image.data
       texture.image.data = rgba
-      stagingRgba = previousFrame
     }
     texture.needsUpdate = true
   }

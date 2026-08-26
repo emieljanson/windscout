@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process'
-import { chmod, mkdir, rename, rm, stat } from 'node:fs/promises'
+import { chmod, mkdir, readFile, rename, rm, stat } from 'node:fs/promises'
 import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -9,10 +9,10 @@ const repositoryRoot = dirname(webRoot)
 const outputDirectory = join(webRoot, 'public', 'renderer')
 const temporaryOutput = join(outputDirectory, 'wind-renderer.tmp.wasm')
 const finalOutput = join(outputDirectory, 'wind-renderer.wasm')
+const checkOnly = process.argv.includes('--check')
 
 const sources = [
   'web/wasm/wind_renderer_bridge.c',
-  'shared/renderer-fixtures/wind_renderer_fixture.c',
   'firmware/main/wind_renderer.c',
   'firmware/main/wind_font.c',
   'firmware/main/fonts/berkeley_mono_12.c',
@@ -23,25 +23,6 @@ const sources = [
   'firmware/main/fonts/inter_bold_15.c',
   'firmware/main/fonts/inter_16.c',
   'firmware/main/fonts/inter_28.c',
-]
-
-const exportedFunctions = [
-  '_wind_wasm_contract_version',
-  '_wind_wasm_width',
-  '_wind_wasm_height',
-  '_wind_wasm_palette_bytes',
-  '_wind_wasm_fixture_count',
-  '_wind_wasm_scratch_ptr',
-  '_wind_wasm_scratch_capacity',
-  '_wind_wasm_output_ptr',
-  '_wind_wasm_reset',
-  '_wind_wasm_set_metadata_field',
-  '_wind_wasm_set_status',
-  '_wind_wasm_set_day_field',
-  '_wind_wasm_set_sample_label',
-  '_wind_wasm_set_sample_values',
-  '_wind_wasm_render',
-  '_wind_wasm_render_fixture',
 ]
 
 async function main() {
@@ -70,7 +51,6 @@ async function main() {
     '-sALLOW_MEMORY_GROWTH=0',
     '-sINITIAL_MEMORY=8388608',
     '-sSTACK_SIZE=262144',
-    `-sEXPORTED_FUNCTIONS=${JSON.stringify(exportedFunctions)}`,
     '-Wl,--strip-all',
     '-o', outputInContainer,
   ]
@@ -79,9 +59,16 @@ async function main() {
     execFileSync('docker', args, { cwd: repositoryRoot, stdio: 'inherit' })
     const result = await stat(temporaryOutput)
     if (result.size === 0) throw new Error('Emscripten produced an empty module')
-    await rename(temporaryOutput, finalOutput)
-    await chmod(finalOutput, 0o644)
-    console.log(`Built ${relative(repositoryRoot, finalOutput)} with ${EMSCRIPTEN_IMAGE} (${result.size} bytes)`)
+    if (checkOnly) {
+      const [expected, actual] = await Promise.all([readFile(finalOutput), readFile(temporaryOutput)])
+      if (!expected.equals(actual)) throw new Error('The checked-in WebAssembly renderer is stale; run npm run renderer:build')
+      await rm(temporaryOutput, { force: true })
+      console.log(`Verified ${relative(repositoryRoot, finalOutput)} with ${EMSCRIPTEN_IMAGE} (${result.size} bytes)`)
+    } else {
+      await rename(temporaryOutput, finalOutput)
+      await chmod(finalOutput, 0o644)
+      console.log(`Built ${relative(repositoryRoot, finalOutput)} with ${EMSCRIPTEN_IMAGE} (${result.size} bytes)`)
+    }
   } catch (error) {
     await rm(temporaryOutput, { force: true })
     throw error

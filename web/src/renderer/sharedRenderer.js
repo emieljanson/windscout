@@ -1,7 +1,22 @@
-export const RENDERER_CONTRACT_VERSION = 1
-export const RENDERER_WIDTH = 800
-export const RENDERER_HEIGHT = 480
-export const RENDERER_PALETTE_BYTES = RENDERER_WIDTH * RENDERER_HEIGHT
+import {
+  RENDERER_CONTRACT_VERSION,
+  RENDERER_HEIGHT,
+  RENDERER_PALETTE_BYTES,
+  RENDERER_RGBA_BYTES,
+  RENDERER_TEXT_CAPACITIES,
+  RENDERER_WIDTH,
+  textFitsRenderer,
+} from './contract'
+
+export {
+  RENDERER_CONTRACT_VERSION,
+  RENDERER_HEIGHT,
+  RENDERER_PALETTE_BYTES,
+  RENDERER_RGBA_BYTES,
+  RENDERER_WIDTH,
+} from './contract'
+
+export const RENDERER_LOAD_TIMEOUT_MS = 10_000
 
 const EXPECTED_EXPORTS = [
   'memory',
@@ -9,10 +24,11 @@ const EXPECTED_EXPORTS = [
   'wind_wasm_width',
   'wind_wasm_height',
   'wind_wasm_palette_bytes',
-  'wind_wasm_fixture_count',
   'wind_wasm_scratch_ptr',
   'wind_wasm_scratch_capacity',
   'wind_wasm_output_ptr',
+  'wind_wasm_preview_output_ptr',
+  'wind_wasm_preview_bytes',
   'wind_wasm_reset',
   'wind_wasm_set_metadata_field',
   'wind_wasm_set_status',
@@ -20,7 +36,7 @@ const EXPECTED_EXPORTS = [
   'wind_wasm_set_sample_label',
   'wind_wasm_set_sample_values',
   'wind_wasm_render',
-  'wind_wasm_render_fixture',
+  'wind_wasm_render_preview',
 ]
 
 export class SharedRendererError extends Error {
@@ -40,9 +56,12 @@ function requireInteger(value, name) {
   return value
 }
 
-function requireString(value, name) {
+function requireString(value, name, capacity) {
   if (typeof value !== 'string') fail('INVALID_INPUT', `${name} must be a string`)
   if (value.includes('\0')) fail('INVALID_INPUT', `${name} contains an invalid character`)
+  if (capacity && !textFitsRenderer(value, capacity)) {
+    fail('INVALID_INPUT', `${name} is longer than the shared render contract allows`)
+  }
   return value
 }
 
@@ -57,7 +76,9 @@ function validateInput(input) {
   if (input.version !== RENDERER_CONTRACT_VERSION) {
     fail('INCOMPATIBLE_CONTRACT', `Renderer input contract ${input.version ?? 'missing'} is not supported`)
   }
-  for (const name of ['spotName', 'coordinates', 'provider', 'updatedTime']) requireString(input[name], name)
+  for (const name of ['spotName', 'coordinates', 'provider', 'updatedTime']) {
+    requireString(input[name], name, RENDERER_TEXT_CAPACITIES[name])
+  }
   for (const name of ['state', 'ageHours', 'batteryPercent', 'displayMode', 'thresholdKt']) {
     requireInteger(input[name], name)
   }
@@ -66,13 +87,13 @@ function validateInput(input) {
     fail('INVALID_INPUT', 'Renderer input must contain exactly five days')
   }
   input.days.forEach((day, dayIndex) => {
-    requireString(day?.day, `days[${dayIndex}].day`)
-    requireString(day?.date, `days[${dayIndex}].date`)
+    requireString(day?.day, `days[${dayIndex}].day`, RENDERER_TEXT_CAPACITIES.day)
+    requireString(day?.date, `days[${dayIndex}].date`, RENDERER_TEXT_CAPACITIES.date)
     if (!Array.isArray(day.samples) || day.samples.length !== 5) {
       fail('INVALID_INPUT', `days[${dayIndex}] must contain exactly five samples`)
     }
     day.samples.forEach((sample, sampleIndex) => {
-      requireString(sample?.time, `days[${dayIndex}].samples[${sampleIndex}].time`)
+      requireString(sample?.time, `days[${dayIndex}].samples[${sampleIndex}].time`, RENDERER_TEXT_CAPACITIES.time)
       for (const name of ['sustainedKt', 'gustKt', 'destinationDegrees', 'weather']) {
         requireInteger(sample[name], `days[${dayIndex}].samples[${sampleIndex}].${name}`)
       }
@@ -90,7 +111,7 @@ class SharedRenderer {
     this.width = exports.wind_wasm_width()
     this.height = exports.wind_wasm_height()
     this.paletteBytes = exports.wind_wasm_palette_bytes()
-    this.fixtureCount = exports.wind_wasm_fixture_count()
+    this.previewBytes = exports.wind_wasm_preview_bytes()
   }
 
   #assertActive() {
@@ -115,17 +136,15 @@ class SharedRenderer {
     target.set(encoded)
   }
 
-  #copyOutput() {
-    const pointer = this.#exports.wind_wasm_output_ptr()
-    if (!pointer || pointer + this.paletteBytes > this.#exports.memory.buffer.byteLength) {
+  #copyOutput(pointerExport, byteLength) {
+    const pointer = this.#exports[pointerExport]()
+    if (!pointer || pointer + byteLength > this.#exports.memory.buffer.byteLength) {
       fail('RENDER_FAILED', 'The canonical renderer did not publish a complete bitmap')
     }
-    return new Uint8Array(
-      new Uint8Array(this.#exports.memory.buffer, pointer, this.paletteBytes),
-    )
+    return new Uint8Array(this.#exports.memory.buffer, pointer, byteLength).slice()
   }
 
-  render(input) {
+  #prepareInput(input) {
     this.#assertActive()
     validateInput(input)
     this.#call('wind_wasm_reset', input.version)
@@ -164,18 +183,18 @@ class SharedRenderer {
         )
       })
     })
-
-    this.#call('wind_wasm_render')
-    return this.#copyOutput()
   }
 
-  renderFixture(fixtureIndex) {
-    this.#assertActive()
-    if (!Number.isInteger(fixtureIndex) || fixtureIndex < 0 || fixtureIndex >= this.fixtureCount) {
-      fail('INVALID_INPUT', `Unknown renderer fixture ${fixtureIndex}`)
-    }
-    this.#call('wind_wasm_render_fixture', fixtureIndex)
-    return this.#copyOutput()
+  render(input) {
+    this.#prepareInput(input)
+    this.#call('wind_wasm_render')
+    return this.#copyOutput('wind_wasm_output_ptr', this.paletteBytes)
+  }
+
+  renderPreview(input) {
+    this.#prepareInput(input)
+    this.#call('wind_wasm_render_preview')
+    return this.#copyOutput('wind_wasm_preview_output_ptr', this.previewBytes)
   }
 
   dispose() {
@@ -183,9 +202,9 @@ class SharedRenderer {
   }
 }
 
-async function getWasmBytes({ wasmBytes, wasmUrl, fetchImpl }) {
+async function getWasmBytes({ wasmBytes, wasmUrl, fetchImpl, signal }) {
   if (wasmBytes) return wasmBytes
-  const response = await fetchImpl(wasmUrl)
+  const response = await fetchImpl(wasmUrl, { signal })
   if (!response?.ok) throw new Error(`HTTP ${response?.status ?? 'error'}`)
   return response.arrayBuffer()
 }
@@ -195,10 +214,17 @@ export async function loadSharedRenderer({
   wasmUrl = '/renderer/wind-renderer.wasm',
   fetchImpl = globalThis.fetch,
   instantiate = WebAssembly.instantiate,
+  timeoutMs = RENDERER_LOAD_TIMEOUT_MS,
 } = {}) {
+  const controller = wasmBytes ? null : new AbortController()
+  let didTimeout = false
+  const timeout = controller && setTimeout(() => {
+    didTimeout = true
+    controller.abort()
+  }, timeoutMs)
   try {
     if (!wasmBytes && typeof fetchImpl !== 'function') throw new Error('Fetch is unavailable')
-    const bytes = await getWasmBytes({ wasmBytes, wasmUrl, fetchImpl })
+    const bytes = await getWasmBytes({ wasmBytes, wasmUrl, fetchImpl, signal: controller?.signal })
     const result = await instantiate(bytes, {})
     const instance = result instanceof WebAssembly.Instance ? result : result.instance
     const exports = instance?.exports
@@ -211,15 +237,24 @@ export async function loadSharedRenderer({
     const width = exports.wind_wasm_width()
     const height = exports.wind_wasm_height()
     const paletteBytes = exports.wind_wasm_palette_bytes()
+    const previewBytes = exports.wind_wasm_preview_bytes()
     if (version !== RENDERER_CONTRACT_VERSION) {
       fail('INCOMPATIBLE_RENDERER', `Renderer contract ${version} is not supported`)
     }
-    if (width !== RENDERER_WIDTH || height !== RENDERER_HEIGHT || paletteBytes !== RENDERER_PALETTE_BYTES) {
+    if (
+      width !== RENDERER_WIDTH ||
+      height !== RENDERER_HEIGHT ||
+      paletteBytes !== RENDERER_PALETTE_BYTES ||
+      previewBytes !== RENDERER_RGBA_BYTES
+    ) {
       fail('INCOMPATIBLE_RENDERER', 'Renderer dimensions do not match the WindScout display')
     }
     return new SharedRenderer(exports)
   } catch (error) {
     if (error instanceof SharedRendererError) throw error
+    if (didTimeout) fail('LOAD_TIMEOUT', 'The WindScout screen renderer took too long to load', error)
     fail('LOAD_FAILED', 'The WindScout screen renderer could not be loaded', error)
+  } finally {
+    if (timeout) clearTimeout(timeout)
   }
 }

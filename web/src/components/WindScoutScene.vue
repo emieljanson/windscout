@@ -215,9 +215,9 @@ watch(forecastRevision, () => {
     })
     store.publishForecast(forecastRevision.value)
     requestRender()
-  } catch (error) {
-    status.value = 'error'
-    emit('error', error instanceof Error ? error.message : 'The forecast preview could not be updated.')
+  } catch {
+    store.rejectForecastPublication(forecastRevision.value)
+    requestRender()
   }
 })
 

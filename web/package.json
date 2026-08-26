@@ -10,6 +10,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "renderer:build": "node scripts/build-wind-renderer.mjs",
+    "renderer:check": "node scripts/build-wind-renderer.mjs --check",
     "model:prepare": "node scripts/prepare-e1002-model.mjs"
   },
   "dependencies": {

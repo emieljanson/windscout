@@ -12,6 +12,16 @@ function memoryStorage() {
   }
 }
 
+function deferred() {
+  let resolve
+  let reject
+  const promise = new Promise((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise
+    reject = rejectPromise
+  })
+  return { promise, resolve, reject }
+}
+
 function liveForecast(spotId = 'brouwersdam', retrievedAt = 1_777_000_000_000) {
   const spot = getSpot(spotId)
   return {
@@ -46,7 +56,6 @@ describe('configurator store', () => {
     expect(store.selectedSpotId).toBe('brouwersdam')
     expect(store.forecastSource).toBe('demo')
     expect(store.forecastLabel).toBe('Demo')
-    expect(store.showDemoLabel).toBe(true)
   })
 
   it('accepts every supported treatment and valid threshold boundary', () => {
@@ -78,12 +87,12 @@ describe('configurator store', () => {
     })).resolves.toBe(true)
     expect(store.forecast).toEqual(forecast)
     expect(store.forecastStatus).toBe('rendering')
-    expect(store.showDemoLabel).toBe(true)
+    expect(store.forecastLabel).toBe('Demo')
     expect(store.pendingForecastRevision).toBe(store.forecastRevision)
 
     expect(store.publishForecast(store.forecastRevision)).toBe(true)
     expect(store.forecastStatus).toBe('ready')
-    expect(store.showDemoLabel).toBe(false)
+    expect(store.forecastLabel).toBe('')
   })
 
   it('shows an explicit demo fallback when the first request fails', async () => {
@@ -94,7 +103,7 @@ describe('configurator store', () => {
     })).resolves.toBe(false)
     expect(store.forecastSource).toBe('demo')
     expect(store.forecastStatus).toBe('warning')
-    expect(store.showDemoLabel).toBe(true)
+    expect(store.forecastLabel).toBe('Demo')
     expect(store.forecastMessage).toContain('demo')
   })
 
@@ -109,7 +118,7 @@ describe('configurator store', () => {
     await expect(store.refreshForecast({ fetcher, storage: memoryStorage() })).resolves.toBe(false)
     expect(store.forecast).toEqual(first)
     expect(store.forecastStatus).toBe('warning')
-    expect(store.showDemoLabel).toBe(false)
+    expect(store.forecastLabel).toBe('Update delayed')
     expect(store.forecastMessage).toContain('last forecast')
   })
 
@@ -126,7 +135,6 @@ describe('configurator store', () => {
     expect(store.forecast).toEqual(current)
     expect(store.forecastSource).toBe('cache')
     expect(store.forecastLabel).toBe('Cached')
-    expect(store.showDemoLabel).toBe(false)
   })
 
   it('labels the old spot honestly if a newly selected spot cannot load', async () => {
@@ -161,5 +169,58 @@ describe('configurator store', () => {
     expect(fetcher).toHaveBeenCalledTimes(2)
     await expect(store.selectSpot('nowhere', { fetcher, storage })).resolves.toBe(false)
     expect(fetcher).toHaveBeenCalledTimes(2)
+  })
+
+  it('does not publish an old pending forecast under a newly selected spot', async () => {
+    const store = useConfiguratorStore()
+    await store.initializeForecast({ fetcher: vi.fn().mockResolvedValue(liveForecast()), storage: memoryStorage() })
+    const oldRevision = store.forecastRevision
+    const edam = deferred()
+
+    const selectingEdam = store.selectSpot('edam', { fetcher: () => edam.promise, storage: memoryStorage() })
+
+    expect(store.publishForecast(oldRevision)).toBe(false)
+    edam.resolve(liveForecast('edam'))
+    await selectingEdam
+    expect(store.publishForecast(store.forecastRevision)).toBe(true)
+    expect(store.forecastMessage).toBe('Live forecast for Edam.')
+  })
+
+  it('ignores an older spot request that resolves after the newest one', async () => {
+    const store = useConfiguratorStore()
+    await store.initializeForecast({ fetcher: vi.fn().mockResolvedValue(liveForecast()), storage: memoryStorage() })
+    store.publishForecast(store.forecastRevision)
+    const edam = deferred()
+    const castricum = deferred()
+
+    const firstSelection = store.selectSpot('edam', { fetcher: () => edam.promise, storage: memoryStorage() })
+    const secondSelection = store.selectSpot('castricum-aan-zee', {
+      fetcher: () => castricum.promise,
+      storage: memoryStorage(),
+    })
+    castricum.resolve(liveForecast('castricum-aan-zee'))
+    await secondSelection
+    store.publishForecast(store.forecastRevision)
+    edam.resolve(liveForecast('edam'))
+
+    await expect(firstSelection).resolves.toBe(false)
+    expect(store.forecast.spotId).toBe('castricum-aan-zee')
+    expect(store.forecastMessage).toBe('Live forecast for Castricum aan Zee.')
+  })
+
+  it('restores the last published forecast when a new bitmap is rejected', async () => {
+    const store = useConfiguratorStore()
+    const fetcher = vi.fn()
+      .mockResolvedValueOnce(liveForecast())
+      .mockResolvedValueOnce(liveForecast('edam'))
+    await store.initializeForecast({ fetcher, storage: memoryStorage() })
+    store.publishForecast(store.forecastRevision)
+    await store.selectSpot('edam', { fetcher, storage: memoryStorage() })
+
+    expect(store.rejectForecastPublication(store.forecastRevision)).toBe(true)
+    expect(store.forecast.spotId).toBe('brouwersdam')
+    expect(store.pendingForecastRevision).toBeNull()
+    expect(store.forecastStatus).toBe('warning')
+    expect(store.forecastLabel).toBe('Previous spot')
   })
 })

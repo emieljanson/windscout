@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 import {
   RENDERER_CONTRACT_VERSION,
   RENDERER_PALETTE_BYTES,
+  RENDERER_RGBA_BYTES,
   SharedRendererError,
   loadSharedRenderer,
 } from '../src/renderer/sharedRenderer'
@@ -18,7 +19,7 @@ async function loadRealRenderer() {
   return loadSharedRenderer({ wasmBytes: await readFile(wasmPath) })
 }
 
-function backgroundFixtureInput() {
+function fixtureInput(displayMode = 0, thresholdKt = 17) {
   const dayNames = ['TODAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']
   const dates = ['26 AUG', '27 AUG', '28 AUG', '29 AUG', '30 AUG']
   const times = ['08', '11', '14', '17', '20']
@@ -32,8 +33,8 @@ function backgroundFixtureInput() {
     refreshFailed: false,
     ageHours: 1,
     batteryPercent: 74,
-    displayMode: 0,
-    thresholdKt: 17,
+    displayMode,
+    thresholdKt,
     days: dayNames.map((day, dayIndex) => ({
       day,
       date: dates[dayIndex],
@@ -56,12 +57,12 @@ describe('shared WebAssembly renderer', () => {
   it('matches every full native palette fixture byte for byte', async () => {
     const renderer = await loadRealRenderer()
     const fixtureNames = (await readdir(fixtureDirectory)).filter((name) => name.endsWith('.bin'))
-    const fixturesByIndex = [
-      'background-fade-17.bin',
-      'threshold-05.bin',
-      'threshold-17.bin',
-      'threshold-35.bin',
-      'solid-17.bin',
+    const fixtures = [
+      ['background-fade-17.bin', fixtureInput(0, 17)],
+      ['threshold-05.bin', fixtureInput(1, 5)],
+      ['threshold-17.bin', fixtureInput(1, 17)],
+      ['threshold-35.bin', fixtureInput(1, 35)],
+      ['solid-17.bin', fixtureInput(2, 17)],
     ]
 
     expect(fixtureNames.sort()).toEqual([
@@ -75,9 +76,9 @@ describe('shared WebAssembly renderer', () => {
     expect(renderer.height).toBe(480)
     expect(renderer.paletteBytes).toBe(RENDERER_PALETTE_BYTES)
 
-    for (const [fixtureIndex, fixtureName] of fixturesByIndex.entries()) {
+    for (const [fixtureName, input] of fixtures) {
       const expected = new Uint8Array(await readFile(join(fixtureDirectory, fixtureName)))
-      const actual = renderer.renderFixture(fixtureIndex)
+      const actual = renderer.render(input)
       expect(actual).toHaveLength(RENDERER_PALETTE_BYTES)
       expect(actual).toEqual(expected)
     }
@@ -85,19 +86,42 @@ describe('shared WebAssembly renderer', () => {
 
   it('preserves red threshold pixels and output across repeated renders', async () => {
     const renderer = await loadRealRenderer()
-    const first = renderer.renderFixture(3)
-    const second = renderer.renderFixture(3)
+    const first = renderer.render(fixtureInput(1, 35))
+    renderer.renderPreview(fixtureInput(1, 35))
+    const second = renderer.render(fixtureInput(1, 35))
 
     expect(first).toEqual(second)
     expect(first.filter((value) => value === 3).length).toBeGreaterThan(0)
+  })
+
+  it('returns a clean grayscale preview with red accents from the same renderer', async () => {
+    const renderer = await loadRealRenderer()
+    const background = renderer.renderPreview(fixtureInput(0, 17))
+    const threshold = renderer.renderPreview(fixtureInput(1, 17))
+
+    expect(background).toHaveLength(RENDERER_RGBA_BYTES)
+    let hasContinuousGray = false
+    let hasRed = false
+    let allAlphaOpaque = true
+    for (let offset = 0; offset < background.length; offset += 4) {
+      allAlphaOpaque &&= background[offset + 3] === 255
+      if (background[offset] === background[offset + 1] &&
+          background[offset + 1] === background[offset + 2] &&
+          background[offset] > 0 && background[offset] < 255) hasContinuousGray = true
+      if (threshold[offset] === 255 && threshold[offset + 1] === 0 &&
+          threshold[offset + 2] === 0 && threshold[offset + 3] === 255) hasRed = true
+    }
+    expect(allAlphaOpaque).toBe(true)
+    expect(hasContinuousGray).toBe(true)
+    expect(hasRed).toBe(true)
   })
 
   it('crosses the flat setter bridge without depending on native struct layout', async () => {
     const renderer = await loadRealRenderer()
     const expected = new Uint8Array(await readFile(join(fixtureDirectory, 'background-fade-17.bin')))
 
-    const first = renderer.render(backgroundFixtureInput())
-    const second = renderer.render(backgroundFixtureInput())
+    const first = renderer.render(fixtureInput())
+    const second = renderer.render(fixtureInput())
 
     expect(first).toEqual(expected)
     expect(second).toEqual(expected)
@@ -113,7 +137,7 @@ describe('shared WebAssembly renderer', () => {
 
   it('rejects values outside the bounded string bridge', async () => {
     const renderer = await loadRealRenderer()
-    const input = backgroundFixtureInput()
+    const input = fixtureInput()
     input.spotName = 'x'.repeat(96)
 
     expect(() => renderer.render(input)).toThrowError(
@@ -127,6 +151,16 @@ describe('shared WebAssembly renderer', () => {
 
     await expect(attempt).rejects.toBeInstanceOf(SharedRendererError)
     await expect(attempt).rejects.toMatchObject({ code: 'LOAD_FAILED' })
+  })
+
+  it('bounds a renderer request that never completes', async () => {
+    const fetchImpl = (_url, { signal }) => new Promise((_resolve, reject) => {
+      signal.addEventListener('abort', () => reject(new Error('aborted')), { once: true })
+    })
+
+    await expect(loadSharedRenderer({ fetchImpl, timeoutMs: 1 })).rejects.toMatchObject({
+      code: 'LOAD_TIMEOUT',
+    })
   })
 
   it('rejects an incompatible renderer module during loading', async () => {
