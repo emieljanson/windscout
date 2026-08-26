@@ -71,9 +71,9 @@ async function initialize() {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     renderer.outputColorSpace = THREE.SRGBColorSpace
     renderer.toneMapping = THREE.ACESFilmicToneMapping
-    renderer.toneMappingExposure = 0.92
+    renderer.toneMappingExposure = 0.8
     renderer.shadowMap.enabled = true
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap
+    renderer.shadowMap.type = THREE.PCFShadowMap
     renderer.domElement.setAttribute('aria-hidden', 'true')
     host.value.append(renderer.domElement)
 
@@ -82,7 +82,7 @@ async function initialize() {
     resetView()
 
     scene.add(new THREE.HemisphereLight(0xf5f8f5, 0x67716d, 2.4))
-    const keyLight = new THREE.DirectionalLight(0xffffff, 4.2)
+    const keyLight = new THREE.DirectionalLight(0xffffff, 3.4)
     keyLight.position.set(-0.22, 0.32, 0.42)
     keyLight.castShadow = true
     scene.add(keyLight)

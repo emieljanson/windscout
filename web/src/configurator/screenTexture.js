@@ -15,10 +15,9 @@ export function createScreenTexture(config) {
   texture.magFilter = THREE.NearestFilter
   texture.minFilter = THREE.LinearFilter
   texture.generateMipmaps = false
-  texture.flipY = false
+  texture.flipY = true
 
   return {
-    canvas,
     texture,
     update(nextConfig) {
       renderForecastPreview(context, brouwersdamForecast, nextConfig)
@@ -29,4 +28,3 @@ export function createScreenTexture(config) {
     },
   }
 }
-

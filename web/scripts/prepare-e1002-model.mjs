@@ -48,12 +48,16 @@ function geometryFromOcct(mesh) {
   return geometry
 }
 
-function materialForRole(role) {
+function materialForRole(role, materials) {
+  if (materials.has(role)) return materials.get(role)
   const shared = { roughness: 0.72, metalness: 0.02 }
-  if (role === 'PORTS') return new THREE.MeshStandardMaterial({ ...shared, color: 0x242826, name: 'port-black' })
-  if (role === 'CONTROLS') return new THREE.MeshStandardMaterial({ ...shared, color: 0x717773, name: 'control-grey' })
-  if (role === 'STAND') return new THREE.MeshStandardMaterial({ ...shared, color: 0xaeb1ac, name: 'stand-grey' })
-  return new THREE.MeshStandardMaterial({ ...shared, color: 0xd1d2cc, name: 'shell-grey' })
+  let material
+  if (role === 'PORTS') material = new THREE.MeshStandardMaterial({ ...shared, color: 0x242826, name: 'port-black' })
+  else if (role === 'CONTROLS') material = new THREE.MeshStandardMaterial({ ...shared, color: 0x626965, name: 'control-grey' })
+  else if (role === 'STAND') material = new THREE.MeshStandardMaterial({ ...shared, color: 0x9a9e99, name: 'stand-grey' })
+  else material = new THREE.MeshStandardMaterial({ ...shared, color: 0xb9bcb7, name: 'shell-grey' })
+  materials.set(role, material)
+  return material
 }
 
 function createScreen() {
@@ -76,6 +80,7 @@ function buildScene(imported) {
   }
 
   const roleGroups = new Map()
+  const materials = new Map()
   for (const role of Object.keys(meshRoles)) {
     const group = new THREE.Group()
     group.name = role
@@ -88,7 +93,7 @@ function buildScene(imported) {
     if (excludedInternalMeshes.has(index)) return
     const role = roleForMesh(index)
     if (!role) return
-    const object = new THREE.Mesh(geometryFromOcct(mesh), materialForRole(role))
+    const object = new THREE.Mesh(geometryFromOcct(mesh), materialForRole(role, materials))
     object.name = `${role}_${String(index).padStart(2, '0')}`
     object.userData = { role, sourceMesh: index }
     roleGroups.get(role).add(object)
@@ -166,7 +171,7 @@ async function main() {
     await writeFile(sourcePath, sourceBytes)
 
     const occt = await require('occt-import-js')()
-    const imported = occt.ReadStepFile(await readFile(sourcePath), {
+    const imported = occt.ReadStepFile(sourceBytes, {
       linearUnit: 'millimeter',
       linearDeflectionType: 'absolute_value',
       linearDeflection: 0.5,

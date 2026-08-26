@@ -83,11 +83,13 @@ export function renderForecastPreview(context, forecast, config) {
   line(context, 14, 102, 786, 102, 2)
 
   drawThresholdTreatment(context, frame)
+  context.strokeStyle = '#171a18'
 
   const dayWidth = 154.4
   forecast.days.forEach((day, dayIndex) => {
     const left = 14 + dayIndex * dayWidth
     if (dayIndex > 0) line(context, left, 103, left, 466)
+    context.fillStyle = '#171a18'
     context.font = '700 14px "JetBrains Mono Variable", monospace'
     context.textAlign = 'center'
     context.fillText(day.day, left + dayWidth / 2, 124)
@@ -118,4 +120,3 @@ export function renderForecastPreview(context, forecast, config) {
   context.restore()
   return frame
 }
-
