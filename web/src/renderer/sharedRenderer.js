@@ -33,6 +33,7 @@ const EXPECTED_EXPORTS = [
   'wind_wasm_set_metadata_field',
   'wind_wasm_set_status',
   'wind_wasm_set_display_rows',
+  'wind_wasm_set_preferences',
   'wind_wasm_set_day_field',
   'wind_wasm_set_sample_label',
   'wind_wasm_set_sample_values',
@@ -88,6 +89,8 @@ function validateInput(input) {
   for (const name of ['showWeather', 'showTemperature', 'showTide', 'tideAvailable']) {
     requireFlag(input[name], name)
   }
+  requireFlag(input.use24Hour, 'use24Hour')
+  requireFlag(input.temperatureFahrenheit, 'temperatureFahrenheit')
   if (!Array.isArray(input.tideSamples) || input.tideSamples.length > 121) {
     fail('INVALID_INPUT', 'Renderer input tideSamples must contain at most 121 samples')
   }
@@ -186,6 +189,11 @@ class SharedRenderer {
       input.showTemperature ? 1 : 0,
       input.showTide ? 1 : 0,
       input.tideAvailable ? 1 : 0,
+    )
+    this.#call(
+      'wind_wasm_set_preferences',
+      input.use24Hour ? 1 : 0,
+      input.temperatureFahrenheit ? 1 : 0,
     )
 
     input.days.forEach((day, dayIndex) => {

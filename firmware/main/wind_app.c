@@ -387,7 +387,7 @@ static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast
     char coordinates[64] = "";
     char updated[32] = "";
     char dates[WIND_RENDERER_DAY_COUNT][16] = {{0}};
-    char times[WIND_RENDERER_DAY_COUNT][WIND_RENDERER_SAMPLES_PER_DAY][3] = {{{0}}};
+    char times[WIND_RENDERER_DAY_COUNT][WIND_RENDERER_SAMPLES_PER_DAY][8] = {{{0}}};
     struct tm local = {0};
 
     dashboard.spot_name = forecast ? forecast->spot_name : spot->display_name;
@@ -405,6 +405,8 @@ static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast
     dashboard.show_weather = display.show_weather;
     dashboard.show_temperature = display.show_temperature;
     dashboard.show_tide = display.show_tide;
+    dashboard.use_24_hour = display.use_24_hour;
+    dashboard.temperature_fahrenheit = display.temperature_fahrenheit;
     format_coordinates(coordinates, sizeof(coordinates),
                        forecast ? forecast->latitude : spot->latitude,
                        forecast ? forecast->longitude : spot->longitude);
@@ -414,9 +416,14 @@ static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast
         localtime_r(&retrieved, &local);
         char update_date[16] = "";
         strftime(update_date, sizeof(update_date), "%d %b", &local);
-        const int hour_12 = local.tm_hour % 12 == 0 ? 12 : local.tm_hour % 12;
-        snprintf(updated, sizeof(updated), "%s %d%s", update_date, hour_12,
-                 local.tm_hour < 12 ? "AM" : "PM");
+        if (display.use_24_hour) {
+            snprintf(updated, sizeof(updated), "%s %02d:%02d", update_date,
+                     local.tm_hour, local.tm_min);
+        } else {
+            const int hour_12 = local.tm_hour % 12 == 0 ? 12 : local.tm_hour % 12;
+            snprintf(updated, sizeof(updated), "%s %d%s", update_date, hour_12,
+                     local.tm_hour < 12 ? "AM" : "PM");
+        }
         for (char *cursor = updated; *cursor; ++cursor) {
             *cursor = (char) toupper((unsigned char) *cursor);
         }
@@ -430,9 +437,13 @@ static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast
             for (int sample = 0; sample < WIND_RENDERER_SAMPLES_PER_DAY; ++sample) {
                 const wind_forecast_sample_t *source = &source_day->samples[sample];
                 const unsigned hour = source->local_hour <= 23 ? source->local_hour : 0;
-                times[day][sample][0] = (char) ('0' + (hour / 10));
-                times[day][sample][1] = (char) ('0' + (hour % 10));
-                times[day][sample][2] = '\0';
+                if (display.use_24_hour) {
+                    snprintf(times[day][sample], sizeof(times[day][sample]), "%02u", hour);
+                } else {
+                    const unsigned hour_12 = hour % 12 == 0 ? 12 : hour % 12;
+                    snprintf(times[day][sample], sizeof(times[day][sample]), "%u%s",
+                             hour_12, hour < 12 ? "AM" : "PM");
+                }
                 dashboard.days[day].samples[sample] = (wind_renderer_sample_t) {
                     .time = times[day][sample],
                     .sustained_kt = source->wind_knots,

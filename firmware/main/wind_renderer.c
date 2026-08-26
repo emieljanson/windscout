@@ -31,8 +31,11 @@ enum {
     SAMPLE_FIRST_CENTER = 26,
     SUSTAINED_BAR_WIDTH = 16,
     WEATHER_ROW_HEIGHT = 35,
-    TEMPERATURE_ROW_HEIGHT = 26,
-    TIDE_ROW_HEIGHT = 58,
+    TEMPERATURE_ROW_HEIGHT = 35,
+    COMBINED_CONDITIONS_ROW_HEIGHT = 54,
+    TIDE_ROW_HEIGHT = 60,
+    TIDE_FIRST_HOUR = 8,
+    TIDE_LAST_HOUR = 20,
 };
 
 typedef struct {
@@ -40,10 +43,12 @@ typedef struct {
     int chart_scale_height;
     int weather_top;
     int weather_bottom;
+    int weather_center;
     int temperature_top;
     int temperature_bottom;
     int tide_top;
     int tide_bottom;
+    bool combined_conditions;
 } dashboard_layout_t;
 
 typedef struct {
@@ -79,15 +84,23 @@ static dashboard_layout_t dashboard_layout(const wind_renderer_dashboard_t *dash
         cursor -= TIDE_ROW_HEIGHT;
         layout.tide_top = cursor;
     }
-    if (dashboard->show_temperature) {
+    if (dashboard->show_weather && dashboard->show_temperature) {
+        layout.combined_conditions = true;
+        cursor -= COMBINED_CONDITIONS_ROW_HEIGHT;
+        layout.weather_top = cursor;
+        layout.weather_bottom = cursor + 27;
+        layout.weather_center = cursor + 16;
+        layout.temperature_top = cursor + 28;
+        layout.temperature_bottom = cursor + COMBINED_CONDITIONS_ROW_HEIGHT - 1;
+    } else if (dashboard->show_temperature) {
         layout.temperature_bottom = cursor - 1;
         cursor -= TEMPERATURE_ROW_HEIGHT;
         layout.temperature_top = cursor;
-    }
-    if (dashboard->show_weather) {
+    } else if (dashboard->show_weather) {
         layout.weather_bottom = cursor - 1;
         cursor -= WEATHER_ROW_HEIGHT;
         layout.weather_top = cursor;
+        layout.weather_center = cursor + 18;
     }
     layout.wind_baseline = cursor - 8;
     layout.chart_scale_height = layout.wind_baseline - BAR_GRAPH_TOP;
@@ -127,6 +140,9 @@ static int dashboard_valid(const wind_renderer_dashboard_t *dashboard) {
         (dashboard->show_weather != 0 && dashboard->show_weather != 1) ||
         (dashboard->show_temperature != 0 && dashboard->show_temperature != 1) ||
         (dashboard->show_tide != 0 && dashboard->show_tide != 1) ||
+        (dashboard->use_24_hour != 0 && dashboard->use_24_hour != 1) ||
+        (dashboard->temperature_fahrenheit != 0 &&
+         dashboard->temperature_fahrenheit != 1) ||
         (dashboard->tide_available != 0 && dashboard->tide_available != 1) ||
         dashboard->tide_sample_count < 0 ||
         dashboard->tide_sample_count > WIND_RENDERER_MAX_TIDE_SAMPLES ||
@@ -441,15 +457,24 @@ static void draw_sample(canvas_t *canvas, int center_x,
                               WIND_FONT_SIZE_STATUS, value);
 }
 
-static void draw_temperature(canvas_t *canvas, int center_x, int baseline,
-                             const wind_renderer_sample_t *sample) {
+static void draw_temperature(canvas_t *canvas, int center_x,
+                             int row_top, int row_bottom,
+                             const wind_renderer_sample_t *sample,
+                             int temperature_fahrenheit) {
     if (!sample->temperature_available) return;
     char value[12];
-    snprintf(value, sizeof(value), "%d°", divide_rounded(sample->temperature_tenths_c, 10));
-    const wind_text_metrics_t metrics = wind_font_measure(
+    const int whole_degrees = temperature_fahrenheit
+        ? divide_rounded(sample->temperature_tenths_c * 9, 50) + 32
+        : divide_rounded(sample->temperature_tenths_c, 10);
+    snprintf(value, sizeof(value), "%d°", whole_degrees);
+    const wind_text_metrics_t value_metrics = wind_font_measure(
         WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, WIND_FONT_SIZE_STATUS, value);
-    draw_text(canvas, center_x - metrics.width / 2, baseline,
-              WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, WIND_FONT_SIZE_STATUS, value);
+    const int row_height = row_bottom - row_top + 1;
+    const int baseline = row_top +
+        (row_height + value_metrics.ascent - value_metrics.descent) / 2;
+    draw_text(canvas, center_x - value_metrics.width / 2, baseline,
+              WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, WIND_FONT_SIZE_STATUS,
+              value);
 }
 
 static void draw_line(canvas_t *canvas, int x0, int y0, int x1, int y1) {
@@ -465,60 +490,238 @@ static void draw_line(canvas_t *canvas, int x0, int y0, int x1, int y1) {
     }
 }
 
-static void draw_tide(canvas_t *canvas, const wind_renderer_dashboard_t *dashboard,
-                      const dashboard_layout_t *layout) {
-    if (!dashboard->tide_available || dashboard->tide_sample_count < 2) return;
-    int minimum = dashboard->tide_samples[0].sea_level_mm;
-    int maximum = minimum;
-    for (int index = 0; index < dashboard->tide_sample_count; ++index) {
-        if (!dashboard->tide_samples[index].available) continue;
-        const int value = dashboard->tide_samples[index].sea_level_mm;
-        if (value < minimum) minimum = value;
-        if (value > maximum) maximum = value;
-    }
-    const int curve_top = layout->tide_top + 22;
-    const int curve_bottom = layout->tide_bottom - 5;
-    const int curve_height = curve_bottom - curve_top;
-    const int curve_left = OUTER_X + 1;
-    const int curve_right = OUTER_RIGHT - 1;
-    int previous_x = 0, previous_y = 0;
-    bool has_previous = false;
-    int high_index[WIND_RENDERER_DAY_COUNT];
-    int low_index[WIND_RENDERER_DAY_COUNT];
-    for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day) high_index[day] = low_index[day] = -1;
-    for (int index = 0; index < dashboard->tide_sample_count; ++index) {
-        const wind_renderer_tide_sample_t *sample = &dashboard->tide_samples[index];
-        if (!sample->available) { has_previous = false; continue; }
-        const int x = curve_left + index * (curve_right - curve_left) /
-                                   (dashboard->tide_sample_count - 1);
-        const int y = maximum == minimum ? (curve_top + curve_bottom) / 2
-            : curve_bottom - (sample->sea_level_mm - minimum) * curve_height /
-                                 (maximum - minimum);
-        if (has_previous) draw_line(canvas, previous_x, previous_y, x, y);
+static void draw_eased_tide_segment(canvas_t *canvas,
+                                    int x0, int y0, int x1, int y1,
+                                    int clip_left, int clip_right) {
+    if (x1 <= x0) return;
+    const int first_x = clamp_int(clip_left, x0, x1);
+    const int last_x = clamp_int(clip_right, x0, x1);
+    if (last_x < first_x) return;
+    int previous_x = first_x;
+    const float first_t = (float)(first_x - x0) / (float)(x1 - x0);
+    const float first_ease = 0.5f - 0.5f * cosf(3.14159265359f * first_t);
+    int previous_y = (int) lroundf(y0 + (y1 - y0) * first_ease);
+    for (int x = first_x + 1; x <= last_x; ++x) {
+        const float t = (float)(x - x0) / (float)(x1 - x0);
+        const float ease = 0.5f - 0.5f * cosf(3.14159265359f * t);
+        const int y = (int) lroundf(y0 + (y1 - y0) * ease);
+        draw_line(canvas, previous_x, previous_y, x, y);
         previous_x = x;
         previous_y = y;
-        has_previous = true;
-        const int day = sample->day_index;
-        if (high_index[day] < 0 || sample->sea_level_mm >
-            dashboard->tide_samples[high_index[day]].sea_level_mm) high_index[day] = index;
-        if (low_index[day] < 0 || sample->sea_level_mm <
-            dashboard->tide_samples[low_index[day]].sea_level_mm) low_index[day] = index;
-    }
-    for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day) {
-        if (high_index[day] < 0 || low_index[day] < 0 || high_index[day] == low_index[day]) continue;
-        char high[12], low[12];
-        snprintf(high, sizeof(high), "H %02d:00", dashboard->tide_samples[high_index[day]].local_hour);
-        snprintf(low, sizeof(low), "L %02d:00", dashboard->tide_samples[low_index[day]].local_hour);
-        const int left = OUTER_X + day * DAY_WIDTH + 5;
-        const int right = OUTER_X + (day + 1) * DAY_WIDTH - 6;
-        draw_text(canvas, left, layout->tide_top + 16, WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED,
-                  WIND_FONT_SIZE_STATUS, high);
-        draw_text_right(canvas, right, layout->tide_top + 16,
-                        WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED,
-                        WIND_FONT_SIZE_STATUS, low);
     }
 }
 
+static void draw_tide(canvas_t *canvas, const wind_renderer_dashboard_t *dashboard,
+                      const dashboard_layout_t *layout) {
+    if (!dashboard->tide_available || dashboard->tide_sample_count < 2) return;
+
+    const int curve_top = layout->tide_top + 25;
+    const int curve_bottom = layout->tide_bottom - 25;
+    const int curve_middle = (curve_top + curve_bottom) / 2;
+    const int visible_width =
+        (WIND_RENDERER_SAMPLES_PER_DAY - 1) * SAMPLE_STEP;
+    const int visible_hours = TIDE_LAST_HOUR - TIDE_FIRST_HOUR;
+
+    for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day) {
+        int visible[WIND_RENDERER_MAX_TIDE_SAMPLES] = {0};
+        int visible_x[WIND_RENDERER_MAX_TIDE_SAMPLES] = {0};
+        int visible_count = 0;
+        int minimum = 0;
+        int maximum = 0;
+
+        for (int index = 0; index < dashboard->tide_sample_count; ++index) {
+            const wind_renderer_tide_sample_t *sample =
+                &dashboard->tide_samples[index];
+            if (!sample->available || sample->day_index != day ||
+                sample->local_hour < TIDE_FIRST_HOUR ||
+                sample->local_hour > TIDE_LAST_HOUR) {
+                continue;
+            }
+
+            visible[visible_count] = index;
+            visible_x[visible_count] =
+                OUTER_X + day * DAY_WIDTH + SAMPLE_FIRST_CENTER +
+                divide_rounded(
+                    (sample->local_hour - TIDE_FIRST_HOUR) * visible_width,
+                    visible_hours);
+            if (visible_count == 0) minimum = maximum = sample->sea_level_mm;
+            if (sample->sea_level_mm < minimum) minimum = sample->sea_level_mm;
+            if (sample->sea_level_mm > maximum) maximum = sample->sea_level_mm;
+            visible_count++;
+        }
+        if (visible_count < 2) continue;
+
+        int extrema[WIND_RENDERER_MAX_TIDE_SAMPLES] = {0};
+        bool extrema_is_high[WIND_RENDERER_MAX_TIDE_SAMPLES] = {false};
+        int extrema_count = 0;
+        const int turn_threshold =
+            clamp_int((maximum - minimum) / 10, 10, 500);
+        int direction = 0;
+        int high_candidate = 0;
+        int low_candidate = 0;
+
+        for (int position = 1; position < visible_count; ++position) {
+            const int value =
+                dashboard->tide_samples[visible[position]].sea_level_mm;
+            if (direction >= 0 &&
+                value >= dashboard->tide_samples[
+                             visible[high_candidate]].sea_level_mm) {
+                high_candidate = position;
+            }
+            if (direction <= 0 &&
+                value <= dashboard->tide_samples[
+                             visible[low_candidate]].sea_level_mm) {
+                low_candidate = position;
+            }
+
+            if (direction == 0) {
+                if (value - dashboard->tide_samples[
+                                visible[low_candidate]].sea_level_mm >=
+                    turn_threshold) {
+                    if (low_candidate > 0) {
+                        extrema[extrema_count] = low_candidate;
+                        extrema_is_high[extrema_count++] = false;
+                    }
+                    direction = 1;
+                    high_candidate = position;
+                } else if (
+                    dashboard->tide_samples[
+                        visible[high_candidate]].sea_level_mm - value >=
+                    turn_threshold) {
+                    if (high_candidate > 0) {
+                        extrema[extrema_count] = high_candidate;
+                        extrema_is_high[extrema_count++] = true;
+                    }
+                    direction = -1;
+                    low_candidate = position;
+                }
+            } else if (
+                direction > 0 &&
+                dashboard->tide_samples[
+                    visible[high_candidate]].sea_level_mm - value >=
+                    turn_threshold) {
+                extrema[extrema_count] = high_candidate;
+                extrema_is_high[extrema_count++] = true;
+                direction = -1;
+                low_candidate = position;
+            } else if (
+                direction < 0 &&
+                value - dashboard->tide_samples[
+                            visible[low_candidate]].sea_level_mm >=
+                    turn_threshold) {
+                extrema[extrema_count] = low_candidate;
+                extrema_is_high[extrema_count++] = false;
+                direction = 1;
+                high_candidate = position;
+            }
+        }
+
+        if (extrema_count > 0) {
+            const int previous = extrema[extrema_count - 1];
+            if (direction > 0 && high_candidate > previous &&
+                high_candidate < visible_count - 1) {
+                extrema[extrema_count] = high_candidate;
+                extrema_is_high[extrema_count++] = true;
+            } else if (direction < 0 && low_candidate > previous &&
+                       low_candidate < visible_count - 1) {
+                extrema[extrema_count] = low_candidate;
+                extrema_is_high[extrema_count++] = false;
+            }
+        }
+
+        /* Fill the complete day cell. The actual extrema and labels remain
+         * anchored to the visible 08:00-20:00 wind window. */
+        const int first_x = OUTER_X + day * DAY_WIDTH + 1;
+        const int last_x = OUTER_X + (day + 1) * DAY_WIDTH - 1;
+        if (extrema_count == 0) {
+            draw_line(canvas, first_x, curve_middle, last_x, curve_middle);
+            continue;
+        }
+
+        const int default_span = 2 * SAMPLE_STEP;
+        const int first_position = extrema[0];
+        const int first_y = extrema_is_high[0] ? curve_top : curve_bottom;
+        const int leading_span =
+            extrema_count > 1
+                ? visible_x[extrema[1]] - visible_x[first_position]
+                : default_span;
+        const int leading_start =
+            visible_x[first_position] - leading_span < first_x
+                ? visible_x[first_position] - leading_span
+                : first_x;
+        draw_eased_tide_segment(
+            canvas,
+            leading_start,
+            extrema_is_high[0] ? curve_bottom : curve_top,
+            visible_x[first_position], first_y,
+            first_x, visible_x[first_position]);
+
+        for (int extremum = 0; extremum + 1 < extrema_count; ++extremum) {
+            const int from = extrema[extremum];
+            const int to = extrema[extremum + 1];
+            draw_eased_tide_segment(
+                canvas, visible_x[from],
+                extrema_is_high[extremum] ? curve_top : curve_bottom,
+                visible_x[to],
+                extrema_is_high[extremum + 1] ? curve_top : curve_bottom,
+                visible_x[from], visible_x[to]);
+        }
+
+        const int last_extremum = extrema_count - 1;
+        const int last_position = extrema[last_extremum];
+        const int trailing_span =
+            extrema_count > 1
+                ? visible_x[last_position] -
+                      visible_x[extrema[last_extremum - 1]]
+                : default_span;
+        const int trailing_end =
+            visible_x[last_position] + trailing_span > last_x
+                ? visible_x[last_position] + trailing_span
+                : last_x;
+        draw_eased_tide_segment(
+            canvas, visible_x[last_position],
+            extrema_is_high[last_extremum] ? curve_top : curve_bottom,
+            trailing_end,
+            extrema_is_high[last_extremum] ? curve_bottom : curve_top,
+            visible_x[last_position], last_x);
+
+        for (int extremum = 0; extremum < extrema_count; ++extremum) {
+            const int position = extrema[extremum];
+            const int index = visible[position];
+            const bool is_high = extrema_is_high[extremum];
+
+            char time[8];
+            const int hour = dashboard->tide_samples[index].local_hour;
+            if (dashboard->use_24_hour) {
+                snprintf(time, sizeof(time), "%02d:00", hour);
+            } else {
+                const int hour_12 = hour % 12 == 0 ? 12 : hour % 12;
+                snprintf(time, sizeof(time), "%d%s", hour_12,
+                         hour < 12 ? "AM" : "PM");
+            }
+
+            const wind_text_metrics_t metrics = wind_font_measure(
+                WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED,
+                WIND_FONT_SIZE_STATUS, time);
+            const int label_margin = metrics.width / 2 + 10;
+            const int label_center = clamp_int(
+                visible_x[position],
+                OUTER_X + day * DAY_WIDTH + label_margin,
+                OUTER_X + (day + 1) * DAY_WIDTH - label_margin);
+            const int point_y = is_high ? curve_top : curve_bottom;
+            /* Both labels share the same optical shift so their outside
+             * margins read equally against the top and bottom borders. */
+            const int baseline = clamp_int(
+                is_high ? point_y - 3 : point_y + 16,
+                layout->tide_top + 14,
+                layout->tide_bottom - 5);
+            draw_outlined_text_center(
+                canvas, label_center, baseline,
+                WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED,
+                WIND_FONT_SIZE_STATUS, time);
+        }
+    }
+}
 static void build_status(const wind_renderer_dashboard_t *dashboard,
                          char *model, size_t model_size, char *update,
                          size_t update_size) {
@@ -827,6 +1030,19 @@ int wind_renderer_input_v2_set_display_rows(wind_renderer_input_v2_t *input,
     return 0;
 }
 
+int wind_renderer_input_v2_set_preferences(wind_renderer_input_v2_t *input,
+                                           int use_24_hour,
+                                           int temperature_fahrenheit) {
+    if (!input || input->version != WIND_RENDERER_CONTRACT_VERSION ||
+        (use_24_hour != 0 && use_24_hour != 1) ||
+        (temperature_fahrenheit != 0 && temperature_fahrenheit != 1)) {
+        return -1;
+    }
+    input->use_24_hour = use_24_hour;
+    input->temperature_fahrenheit = temperature_fahrenheit;
+    return 0;
+}
+
 int wind_renderer_input_v2_set_day(wind_renderer_input_v2_t *input,
                                    int day_index, const char *day,
                                    const char *date) {
@@ -915,6 +1131,8 @@ int wind_renderer_input_v2_to_dashboard(const wind_renderer_input_v2_t *input,
     result.show_weather = input->show_weather;
     result.show_temperature = input->show_temperature;
     result.show_tide = input->show_tide;
+    result.use_24_hour = input->use_24_hour;
+    result.temperature_fahrenheit = input->temperature_fahrenheit;
     result.tide_available = input->tide_available;
     result.tide_sample_count = input->tide_sample_count;
     for (int index = 0; index < input->tide_sample_count; ++index) {
@@ -1057,12 +1275,13 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
 
     horizontal_line(&canvas, OUTER_X, OUTER_RIGHT, DAY_HEADER_BOTTOM,
                     CANVAS_BLACK);
-    if (dashboard->show_weather)
-        horizontal_line(&canvas, OUTER_X, OUTER_RIGHT, layout.weather_top,
+    if (dashboard->show_weather || dashboard->show_temperature) {
+        const int conditions_top = dashboard->show_weather
+                                       ? layout.weather_top
+                                       : layout.temperature_top;
+        horizontal_line(&canvas, OUTER_X, OUTER_RIGHT, conditions_top,
                         CANVAS_BLACK);
-    if (dashboard->show_temperature)
-        horizontal_line(&canvas, OUTER_X, OUTER_RIGHT, layout.temperature_top,
-                        CANVAS_BLACK);
+    }
     if (dashboard->show_tide)
         horizontal_line(&canvas, OUTER_X, OUTER_RIGHT, layout.tide_top,
                         CANVAS_BLACK);
@@ -1083,12 +1302,14 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
             if (dashboard->state != WIND_RENDERER_UNAVAILABLE &&
                 dashboard->show_weather)
                 draw_weather(&canvas, center_x,
-                             layout.weather_top + 18,
+                             layout.weather_center,
                              slot->weather);
             if (dashboard->state != WIND_RENDERER_UNAVAILABLE &&
                 dashboard->show_temperature)
                 draw_temperature(&canvas, center_x,
-                                 layout.temperature_top + 18, slot);
+                                 layout.temperature_top,
+                                 layout.temperature_bottom, slot,
+                                 dashboard->temperature_fahrenheit);
         }
     }
 

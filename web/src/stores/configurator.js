@@ -8,7 +8,11 @@ import {
 import { fetchOpenMeteoForecasts } from '../forecast/openMeteo'
 import { fetchOpenMeteoTide } from '../forecast/openMeteoMarine'
 import { readCachedTide, writeCachedTide } from '../forecast/tideCache'
-import { DEFAULT_DISPLAY_CONFIGURATION } from '../config/configuration'
+import {
+  DEFAULT_DISPLAY_CONFIGURATION,
+  TEMPERATURE_UNITS,
+  TIME_FORMATS,
+} from '../config/configuration'
 import {
   DEFAULT_THRESHOLD,
   DISPLAY_TREATMENTS,
@@ -26,6 +30,8 @@ export const useConfiguratorStore = defineStore('configurator', {
     showWeather: DEFAULT_DISPLAY_CONFIGURATION.showWeather,
     showTemperature: DEFAULT_DISPLAY_CONFIGURATION.showTemperature,
     showTide: DEFAULT_DISPLAY_CONFIGURATION.showTide,
+    timeFormat: DEFAULT_DISPLAY_CONFIGURATION.timeFormat,
+    temperatureUnit: DEFAULT_DISPLAY_CONFIGURATION.temperatureUnit,
     selectedSpotId: DEFAULT_SPOT_ID,
     selectedModelId: DEFAULT_FORECAST_MODEL_ID,
     forecastsByModel: { [DEFAULT_FORECAST_MODEL_ID]: brouwersdamForecast },
@@ -85,6 +91,16 @@ export const useConfiguratorStore = defineStore('configurator', {
     setShowTide(value) {
       if (typeof value !== 'boolean' || (value && !this.tideAvailable)) return false
       this.showTide = value
+      return true
+    },
+    setTimeFormat(value) {
+      if (!TIME_FORMATS.includes(value)) return false
+      this.timeFormat = value
+      return true
+    },
+    setTemperatureUnit(value) {
+      if (!TEMPERATURE_UNITS.includes(value)) return false
+      this.temperatureUnit = value
       return true
     },
     reportConfigurationRenderFailure() {

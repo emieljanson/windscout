@@ -15,6 +15,8 @@ TEST(WindDisplayConfig, UsesSettledDefaults)
     EXPECT_TRUE(config.show_weather);
     EXPECT_FALSE(config.show_temperature);
     EXPECT_FALSE(config.show_tide);
+    EXPECT_TRUE(config.use_24_hour);
+    EXPECT_FALSE(config.temperature_fahrenheit);
 }
 
 TEST(WindDisplayConfig, AcceptsEveryVisibilityCombinationAndRejectsBadBounds)
@@ -43,6 +45,16 @@ TEST(WindDisplayConfig, DisplayOnlyChangesProduceDifferentPanelSignatures)
     wind_display_config_default(&first);
     auto second = first;
     second.show_temperature = true;
+    EXPECT_NE(wind_display_config_signature(&first),
+              wind_display_config_signature(&second));
+
+    second = first;
+    second.use_24_hour = false;
+    EXPECT_NE(wind_display_config_signature(&first),
+              wind_display_config_signature(&second));
+
+    second = first;
+    second.temperature_fahrenheit = true;
     EXPECT_NE(wind_display_config_signature(&first),
               wind_display_config_signature(&second));
 }

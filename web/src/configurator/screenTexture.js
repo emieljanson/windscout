@@ -36,6 +36,24 @@ function rendererTideSamples(tide, days) {
   })
 }
 
+function formatUpdatedTime(forecast, timeFormat) {
+  if (!Number.isFinite(forecast.retrievedAt) || !forecast.timezone) return forecast.updatedTime
+  const twelveHour = timeFormat === '12-hour'
+  const parts = new Intl.DateTimeFormat(twelveHour ? 'en-US' : 'en-GB', {
+    timeZone: forecast.timezone,
+    day: '2-digit',
+    month: 'short',
+    hour: twelveHour ? 'numeric' : '2-digit',
+    minute: '2-digit',
+    hourCycle: twelveHour ? 'h12' : 'h23',
+  }).formatToParts(new Date(forecast.retrievedAt))
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]))
+  const date = `${values.day} ${values.month.toUpperCase()}`
+  return twelveHour
+    ? `${date} ${values.hour}${values.dayPeriod.toUpperCase()}`
+    : `${date} ${values.hour}:${values.minute}`
+}
+
 export function createRendererInput(forecast, config) {
   const displayMode = DISPLAY_MODES[config.treatment]
   if (displayMode === undefined) throw new Error(`Unknown display treatment: ${config.treatment}`)
@@ -47,7 +65,7 @@ export function createRendererInput(forecast, config) {
     spotName: forecast.spotName,
     coordinates: forecast.coordinates,
     provider: forecast.model ?? forecast.provider ?? 'OPEN-METEO',
-    updatedTime: forecast.updatedTime,
+    updatedTime: formatUpdatedTime(forecast, config.timeFormat),
     state: forecast.state ?? 0,
     refreshFailed: forecast.refreshFailed ?? false,
     ageHours: forecast.ageHours ?? 0,
@@ -57,6 +75,8 @@ export function createRendererInput(forecast, config) {
     showWeather: config.showWeather ?? true,
     showTemperature: config.showTemperature ?? false,
     showTide: config.showTide ?? false,
+    use24Hour: config.timeFormat !== '12-hour',
+    temperatureFahrenheit: config.temperatureUnit === 'fahrenheit',
     tideAvailable: tide?.capability === 'available' && tideSamples.length >= 2,
     tideSamples,
     days: forecast.days.map((day) => ({

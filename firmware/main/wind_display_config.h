@@ -9,7 +9,7 @@
 extern "C" {
 #endif
 
-#define WIND_DISPLAY_CONFIG_VERSION 1u
+#define WIND_DISPLAY_CONFIG_VERSION 2u
 
 typedef struct {
     uint32_t version;
@@ -18,6 +18,8 @@ typedef struct {
     bool show_weather;
     bool show_temperature;
     bool show_tide;
+    bool use_24_hour;
+    bool temperature_fahrenheit;
 } wind_display_config_t;
 
 void wind_display_config_default(wind_display_config_t *config);

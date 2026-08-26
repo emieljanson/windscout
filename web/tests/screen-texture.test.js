@@ -98,6 +98,8 @@ describe('canonical screen texture', () => {
       showWeather: false,
       showTemperature: true,
       showTide: true,
+      timeFormat: '12-hour',
+      temperatureUnit: 'fahrenheit',
       tide,
     })
 
@@ -106,9 +108,23 @@ describe('canonical screen texture', () => {
       showTemperature: true,
       showTide: true,
       tideAvailable: true,
+      use24Hour: false,
+      temperatureFahrenheit: true,
     })
     expect(input.tideSamples).toHaveLength(120)
     expect(input.tideSamples[24]).toMatchObject({ dayIndex: 1, localHour: 0 })
+  })
+
+  it('formats the update time from one timestamp using the selected clock', () => {
+    const twentyFourHour = createRendererInput(brouwersdamForecast, {
+      treatment: 'solid', threshold: 17, timeFormat: '24-hour', temperatureUnit: 'celsius',
+    })
+    const twelveHour = createRendererInput(brouwersdamForecast, {
+      treatment: 'solid', threshold: 17, timeFormat: '12-hour', temperatureUnit: 'celsius',
+    })
+
+    expect(twentyFourHour.updatedTime).toMatch(/^\d{2} [A-Z]{3} \d{2}:\d{2}$/)
+    expect(twelveHour.updatedTime).toMatch(/^\d{2} [A-Z]{3} \d{1,2}(AM|PM)$/)
   })
 
   it('does not publish an incomplete frame during rapid updates', async () => {

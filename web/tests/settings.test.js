@@ -6,6 +6,7 @@ import { ref, nextTick } from 'vue'
 const dialValues = ref({
   spot: 'brouwersdam', model: 'best_match', treatment: 'background-fade', windThreshold: 17,
   weather: true, airTemperature: false, tide: false,
+  timeFormat: '24-hour', temperatureUnit: 'celsius',
 })
 const controllerCalls = []
 
@@ -26,6 +27,7 @@ describe('WindScout settings adapter', () => {
     dialValues.value = {
       spot: 'brouwersdam', model: 'best_match', treatment: 'background-fade', windThreshold: 17,
       weather: true, airTemperature: false, tide: false,
+      timeFormat: '24-hour', temperatureUnit: 'celsius',
     }
     controllerCalls.length = 0
   })
@@ -36,12 +38,15 @@ describe('WindScout settings adapter', () => {
     dialValues.value = {
       spot: 'brouwersdam', model: 'best_match', treatment: 'threshold-line', windThreshold: 23,
       weather: false, airTemperature: true, tide: false,
+      timeFormat: '12-hour', temperatureUnit: 'fahrenheit',
     }
     await nextTick()
     expect(store.treatment).toBe('threshold-line')
     expect(store.threshold).toBe(23)
     expect(store.showWeather).toBe(false)
     expect(store.showTemperature).toBe(true)
+    expect(store.timeFormat).toBe('12-hour')
+    expect(store.temperatureUnit).toBe('fahrenheit')
   })
 
   it('leaves persistence disabled so Pinia remains the only configuration owner', () => {
@@ -51,6 +56,8 @@ describe('WindScout settings adapter', () => {
       weather: true,
       airTemperature: false,
       tide: false,
+      timeFormat: expect.objectContaining({ default: '24-hour' }),
+      temperatureUnit: expect.objectContaining({ default: 'celsius' }),
     })
   })
 
@@ -66,6 +73,7 @@ describe('WindScout settings adapter', () => {
     dialValues.value = {
       spot: 'edam', model: 'best_match', treatment: 'background-fade', windThreshold: 17,
       weather: true, airTemperature: false, tide: false,
+      timeFormat: '24-hour', temperatureUnit: 'celsius',
     }
     await nextTick()
     expect(selectSpot).toHaveBeenCalledWith('edam')
@@ -87,6 +95,7 @@ describe('WindScout settings adapter', () => {
     dialValues.value = {
       spot: 'brouwersdam', model: 'gfs_seamless', treatment: 'background-fade', windThreshold: 17,
       weather: true, airTemperature: false, tide: false,
+      timeFormat: '24-hour', temperatureUnit: 'celsius',
     }
     await nextTick()
     expect(selectModel).toHaveBeenCalledWith('gfs_seamless')
@@ -115,5 +124,7 @@ describe('WindScout settings adapter', () => {
 
     expect(toggle.attributes('disabled')).toBeUndefined()
     expect(toggle.attributes('aria-disabled')).toBe('false')
+    expect(toggle.attributes('aria-describedby')).toBeUndefined()
+    expect(wrapper.find('#tide-capability-message').exists()).toBe(false)
   })
 })

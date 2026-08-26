@@ -88,6 +88,8 @@ describe('configurator store', () => {
     expect(store.showWeather).toBe(true)
     expect(store.showTemperature).toBe(false)
     expect(store.showTide).toBe(false)
+    expect(store.timeFormat).toBe('24-hour')
+    expect(store.temperatureUnit).toBe('celsius')
     expect(store.selectedSpotId).toBe('brouwersdam')
     expect(store.selectedModelId).toBe('best_match')
     expect(store.forecastSource).toBe('demo')
@@ -167,6 +169,16 @@ describe('configurator store', () => {
     expect(store.setThreshold(5)).toBe(true)
     expect(store.setThreshold(35)).toBe(true)
     expect(store.threshold).toBe(35)
+  })
+
+  it('accepts only supported time and temperature formats', () => {
+    const store = useConfiguratorStore()
+    expect(store.setTimeFormat('12-hour')).toBe(true)
+    expect(store.setTemperatureUnit('fahrenheit')).toBe(true)
+    expect(store.setTimeFormat('clock')).toBe(false)
+    expect(store.setTemperatureUnit('kelvin')).toBe(false)
+    expect(store.timeFormat).toBe('12-hour')
+    expect(store.temperatureUnit).toBe('fahrenheit')
   })
 
   it('preserves the last valid configuration after invalid input', () => {

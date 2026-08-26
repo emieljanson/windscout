@@ -367,6 +367,7 @@ TEST(WindRenderer, ConvertsVersionedBoundedInputToTheCanonicalDashboard) {
                   WIND_RENDERER_MODE_THRESHOLD, 23),
               0);
     EXPECT_EQ(wind_renderer_input_v2_set_display_rows(&input, 1, 1, 1, 1), 0);
+    EXPECT_EQ(wind_renderer_input_v2_set_preferences(&input, 1, 1), 0);
     EXPECT_EQ(wind_renderer_input_v2_set_day(&input, 0, "TODAY", "24 AUG"), 0);
     EXPECT_EQ(wind_renderer_input_v2_set_sample(
                   &input, 0, 0, "08", 18, 24, 245, 1,
@@ -379,6 +380,8 @@ TEST(WindRenderer, ConvertsVersionedBoundedInputToTheCanonicalDashboard) {
     EXPECT_EQ(wind_renderer_input_v2_to_dashboard(&input, &dashboard), 0);
     EXPECT_STREQ(dashboard.spot_name, "Brouwersdam");
     EXPECT_EQ(dashboard.threshold_kt, 23);
+    EXPECT_EQ(dashboard.use_24_hour, 1);
+    EXPECT_EQ(dashboard.temperature_fahrenheit, 1);
     EXPECT_EQ(dashboard.days[0].samples[0].sustained_kt, 18);
     EXPECT_EQ(dashboard.days[0].samples[0].temperature_tenths_c, -24);
     EXPECT_EQ(dashboard.tide_samples[0].sea_level_mm, -350);
@@ -432,10 +435,13 @@ TEST(WindRenderer, AllocatesEveryOptionalRowCombinationAndKeepsWindFlexible) {
         wind_renderer_stats_t stats{};
         const Frame frame = Render(dashboard, &stats);
         EXPECT_EQ(stats.clipped_primitives, 0) << mask;
+        const int conditions_height =
+            dashboard.show_weather && dashboard.show_temperature
+                ? 54
+                : dashboard.show_weather || dashboard.show_temperature ? 35 : 0;
         EXPECT_EQ(stats.wind_baseline,
-                  459 - (dashboard.show_weather ? 35 : 0) -
-                      (dashboard.show_temperature ? 26 : 0) -
-                      (dashboard.show_tide ? 58 : 0)) << mask;
+                  459 - conditions_height -
+                      (dashboard.show_tide ? 60 : 0)) << mask;
         EXPECT_EQ(frame[(stats.wind_baseline - 1) * 800 + 38], 0) << mask;
     }
 }
@@ -468,6 +474,29 @@ TEST(WindRenderer, DrawsTemperatureAndTideWithoutMovingEnabledRowsWhenDataIsMiss
     EXPECT_EQ(missing_stats.tide_row_top, populated_stats.tide_row_top);
 }
 
+TEST(WindRenderer, AppliesClockAndTemperaturePreferencesInTheSharedComposition) {
+    auto dashboard = Dashboard();
+    dashboard.show_temperature = 1;
+    dashboard.show_tide = 1;
+    dashboard.tide_available = 1;
+    dashboard.tide_sample_count = 120;
+    for (int index = 0; index < 120; ++index) {
+        dashboard.tide_samples[index] = {
+            index / 24, index % 24,
+            static_cast<int>(std::sin(index / 6.0) * 800), 1,
+        };
+    }
+
+    const Frame metricTwelveHour = Render(dashboard);
+    dashboard.use_24_hour = 1;
+    const Frame metricTwentyFourHour = Render(dashboard);
+    dashboard.temperature_fahrenheit = 1;
+    const Frame imperialTwentyFourHour = Render(dashboard);
+
+    EXPECT_NE(metricTwentyFourHour, metricTwelveHour);
+    EXPECT_NE(imperialTwentyFourHour, metricTwentyFourHour);
+}
+
 TEST(WindRenderer, KeepsStraightStructuralPixelsAtFullLumaInCleanPreview) {
     auto dashboard = Dashboard();
     dashboard.show_temperature = 1;
@@ -476,7 +505,7 @@ TEST(WindRenderer, KeepsStraightStructuralPixelsAtFullLumaInCleanPreview) {
     const auto channel = [&preview](int x, int y) { return preview[(y * 800 + x) * 4]; };
     for (int x = 12; x <= 787; ++x) {
         EXPECT_TRUE(channel(x, 12) == 0 || channel(x, 12) == 255);
-        EXPECT_TRUE(channel(x, 348) == 0 || channel(x, 348) == 255);
+        EXPECT_TRUE(channel(x, 359) == 0 || channel(x, 359) == 255);
     }
 }
 

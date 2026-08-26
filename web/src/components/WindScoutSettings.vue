@@ -13,7 +13,6 @@ const {
   forecastLabel,
   forecastMessage,
   forecastStatus,
-  showTide,
   tideAvailable,
   tideMessage,
   tideStatus,
@@ -43,6 +42,22 @@ const dial = useDialKitController('Display', {
   weather: store.showWeather,
   airTemperature: store.showTemperature,
   tide: store.showTide,
+  timeFormat: {
+    type: 'select',
+    options: [
+      { value: '24-hour', label: '24-hour' },
+      { value: '12-hour', label: '12-hour' },
+    ],
+    default: store.timeFormat,
+  },
+  temperatureUnit: {
+    type: 'select',
+    options: [
+      { value: 'celsius', label: '°C · Celsius' },
+      { value: 'fahrenheit', label: '°F · Fahrenheit' },
+    ],
+    default: store.temperatureUnit,
+  },
 }, {
   id: 'windscout-display',
 })
@@ -69,7 +84,11 @@ function syncTideAccessibility() {
   if (!toggle) return
   toggle.toggleAttribute('disabled', !tideAvailable.value)
   toggle.setAttribute('aria-disabled', String(!tideAvailable.value))
-  toggle.setAttribute('aria-describedby', 'tide-capability-message')
+  if (['available', 'cached'].includes(tideStatus.value)) {
+    toggle.removeAttribute('aria-describedby')
+  } else {
+    toggle.setAttribute('aria-describedby', 'tide-capability-message')
+  }
 }
 
 watch(
@@ -79,13 +98,17 @@ watch(
     dial.values.value.weather,
     dial.values.value.airTemperature,
     dial.values.value.tide,
+    dial.values.value.timeFormat,
+    dial.values.value.temperatureUnit,
   ],
-  ([treatment, threshold, weather, airTemperature, tide]) => {
+  ([treatment, threshold, weather, airTemperature, tide, timeFormat, temperatureUnit]) => {
     store.setTreatment(treatment)
     store.setThreshold(threshold)
     store.setShowWeather(weather)
     store.setShowTemperature(airTemperature)
     store.setShowTide(tide)
+    store.setTimeFormat(timeFormat)
+    store.setTemperatureUnit(temperatureUnit)
   },
   { immediate: true },
 )
@@ -148,7 +171,7 @@ onBeforeUnmount(() => {
       <DialRoot mode="inline" theme="light" production-enabled />
     </div>
     <p
-      v-if="tideStatus !== 'available' || showTide"
+      v-if="!['available', 'cached'].includes(tideStatus)"
       id="tide-capability-message"
       class="tide-capability-message"
       :data-state="tideStatus"

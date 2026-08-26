@@ -140,6 +140,13 @@ EMSCRIPTEN_KEEPALIVE int wind_wasm_set_display_rows(
         tide_available));
 }
 
+EMSCRIPTEN_KEEPALIVE int wind_wasm_set_preferences(
+    int use_24_hour, int temperature_fahrenheit) {
+    if (!input_ready || input_error) return -1;
+    return accept_result(wind_renderer_input_v2_set_preferences(
+        &renderer_input, use_24_hour, temperature_fahrenheit));
+}
+
 EMSCRIPTEN_KEEPALIVE int wind_wasm_set_day_field(int day_index, int field) {
     if (!input_ready || input_error || day_index < 0 ||
         day_index >= WIND_RENDERER_DAY_COUNT) {

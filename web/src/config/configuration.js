@@ -1,4 +1,7 @@
-export const CONFIGURATION_VERSION = 1
+export const CONFIGURATION_VERSION = 2
+
+export const TIME_FORMATS = Object.freeze(['24-hour', '12-hour'])
+export const TEMPERATURE_UNITS = Object.freeze(['celsius', 'fahrenheit'])
 
 export const DEFAULT_DISPLAY_CONFIGURATION = Object.freeze({
   version: CONFIGURATION_VERSION,
@@ -7,6 +10,8 @@ export const DEFAULT_DISPLAY_CONFIGURATION = Object.freeze({
   showWeather: true,
   showTemperature: false,
   showTide: false,
+  timeFormat: '24-hour',
+  temperatureUnit: 'celsius',
 })
 
 export function displayConfigurationFromStore(store) {
@@ -17,5 +22,7 @@ export function displayConfigurationFromStore(store) {
     showWeather: store.showWeather,
     showTemperature: store.showTemperature,
     showTide: store.showTide,
+    timeFormat: store.timeFormat,
+    temperatureUnit: store.temperatureUnit,
   }
 }

@@ -10,6 +10,8 @@ void wind_display_config_default(wind_display_config_t *config)
         .show_weather = true,
         .show_temperature = false,
         .show_tide = false,
+        .use_24_hour = true,
+        .temperature_fahrenheit = false,
     };
 }
 
@@ -30,5 +32,7 @@ uint64_t wind_display_config_signature(const wind_display_config_t *config)
     value = value * 131u + (config->show_weather ? 1u : 0u);
     value = value * 131u + (config->show_temperature ? 1u : 0u);
     value = value * 131u + (config->show_tide ? 1u : 0u);
+    value = value * 131u + (config->use_24_hour ? 1u : 0u);
+    value = value * 131u + (config->temperature_fahrenheit ? 1u : 0u);
     return value;
 }

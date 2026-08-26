@@ -35,6 +35,8 @@ function fixtureInput(displayMode = 0, thresholdKt = 17, rowMask = 1, missingDat
     batteryPercent: 74,
     displayMode,
     thresholdKt,
+    use24Hour: false,
+    temperatureFahrenheit: false,
     showWeather: Boolean(rowMask & 1),
     showTemperature: Boolean(rowMask & 2),
     showTide: Boolean(rowMask & 4),
@@ -179,6 +181,16 @@ describe('shared WebAssembly renderer', () => {
 
     expect(first).toHaveLength(RENDERER_RGBA_BYTES)
     expect(second).toEqual(first)
+  })
+
+  it('renders clock and temperature-unit preferences through the shared bridge', async () => {
+    const renderer = await loadRealRenderer()
+    const metric = fixtureInput(0, 17, 7)
+    const imperial = structuredClone(metric)
+    imperial.use24Hour = true
+    imperial.temperatureFahrenheit = true
+
+    expect(renderer.renderPreview(imperial)).not.toEqual(renderer.renderPreview(metric))
   })
 
   it('rejects an incompatible contract before returning any bitmap', async () => {

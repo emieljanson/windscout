@@ -15,7 +15,7 @@ enum {
     WIND_RENDERER_SAMPLES_PER_DAY = 5,
     WIND_RENDERER_PALETTE_BYTES = WIND_RENDERER_WIDTH * WIND_RENDERER_HEIGHT,
     WIND_RENDERER_RGBA_BYTES = WIND_RENDERER_PALETTE_BYTES * 4,
-    WIND_RENDERER_CONTRACT_VERSION = 2,
+    WIND_RENDERER_CONTRACT_VERSION = 3,
     WIND_RENDERER_MAX_TIDE_SAMPLES = 121,
     WIND_RENDERER_MIN_THRESHOLD_KT = 5,
     WIND_RENDERER_DEFAULT_THRESHOLD_KT = 17,
@@ -94,6 +94,8 @@ typedef struct {
     int show_weather;
     int show_temperature;
     int show_tide;
+    int use_24_hour;
+    int temperature_fahrenheit;
     int tide_available;
     int tide_sample_count;
     wind_renderer_tide_sample_t tide_samples[WIND_RENDERER_MAX_TIDE_SAMPLES];
@@ -144,6 +146,8 @@ typedef struct {
     int32_t show_weather;
     int32_t show_temperature;
     int32_t show_tide;
+    int32_t use_24_hour;
+    int32_t temperature_fahrenheit;
     int32_t tide_available;
     int32_t tide_sample_count;
     wind_renderer_input_tide_sample_v2_t tide_samples[WIND_RENDERER_MAX_TIDE_SAMPLES];
@@ -201,6 +205,10 @@ int wind_renderer_input_v2_set_display_rows(wind_renderer_input_v2_t *input,
                                             int show_temperature,
                                             int show_tide,
                                             int tide_available);
+
+int wind_renderer_input_v2_set_preferences(wind_renderer_input_v2_t *input,
+                                           int use_24_hour,
+                                           int temperature_fahrenheit);
 
 int wind_renderer_input_v2_set_day(wind_renderer_input_v2_t *input,
                                    int day_index, const char *day,
