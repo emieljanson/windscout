@@ -1,11 +1,13 @@
+import { resolveTimeFormat } from './localeTimeFormat'
+
 export const CONFIGURATION_VERSION = 2
 
 export const TIME_FORMATS = Object.freeze(['24-hour', '12-hour'])
 export const TEMPERATURE_UNITS = Object.freeze(['celsius', 'fahrenheit'])
+export const TEMPERATURE_CHOICES = Object.freeze(['hide', ...TEMPERATURE_UNITS])
 
 export const DEFAULT_DISPLAY_CONFIGURATION = Object.freeze({
-  version: CONFIGURATION_VERSION,
-  treatment: 'background-fade',
+  showThreshold: false,
   threshold: 17,
   showWeather: true,
   showTemperature: false,
@@ -14,10 +16,17 @@ export const DEFAULT_DISPLAY_CONFIGURATION = Object.freeze({
   temperatureUnit: 'celsius',
 })
 
+export function createDefaultDisplayConfiguration(locale) {
+  return {
+    ...DEFAULT_DISPLAY_CONFIGURATION,
+    timeFormat: resolveTimeFormat(locale),
+  }
+}
+
 export function displayConfigurationFromStore(store) {
   return {
     version: CONFIGURATION_VERSION,
-    treatment: store.treatment,
+    treatment: store.showThreshold ? 'threshold-line' : 'solid',
     threshold: store.threshold,
     showWeather: store.showWeather,
     showTemperature: store.showTemperature,

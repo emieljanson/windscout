@@ -9,13 +9,13 @@ import { fetchOpenMeteoForecasts } from '../forecast/openMeteo'
 import { fetchOpenMeteoTide } from '../forecast/openMeteoMarine'
 import { readCachedTide, writeCachedTide } from '../forecast/tideCache'
 import {
-  DEFAULT_DISPLAY_CONFIGURATION,
+  createDefaultDisplayConfiguration,
+  TEMPERATURE_CHOICES,
   TEMPERATURE_UNITS,
   TIME_FORMATS,
 } from '../config/configuration'
 import {
   DEFAULT_THRESHOLD,
-  DISPLAY_TREATMENTS,
   MAX_THRESHOLD,
   MIN_THRESHOLD,
 } from '../renderer/contract'
@@ -24,39 +24,45 @@ import { DEFAULT_SPOT_ID, getSpot } from '../spots'
 export { DEFAULT_THRESHOLD, DISPLAY_TREATMENTS, MAX_THRESHOLD, MIN_THRESHOLD } from '../renderer/contract'
 
 export const useConfiguratorStore = defineStore('configurator', {
-  state: () => ({
-    treatment: DEFAULT_DISPLAY_CONFIGURATION.treatment,
-    threshold: DEFAULT_THRESHOLD,
-    showWeather: DEFAULT_DISPLAY_CONFIGURATION.showWeather,
-    showTemperature: DEFAULT_DISPLAY_CONFIGURATION.showTemperature,
-    showTide: DEFAULT_DISPLAY_CONFIGURATION.showTide,
-    timeFormat: DEFAULT_DISPLAY_CONFIGURATION.timeFormat,
-    temperatureUnit: DEFAULT_DISPLAY_CONFIGURATION.temperatureUnit,
-    selectedSpotId: DEFAULT_SPOT_ID,
-    selectedModelId: DEFAULT_FORECAST_MODEL_ID,
-    forecastsByModel: { [DEFAULT_FORECAST_MODEL_ID]: brouwersdamForecast },
-    forecast: brouwersdamForecast,
-    publishedForecast: brouwersdamForecast,
-    forecastRevision: 0,
-    pendingForecastRevision: null,
-    pendingForecastSpotId: null,
-    pendingForecastModelId: null,
-    pendingForecastSource: null,
-    forecastStatus: 'idle',
-    forecastSource: 'demo',
-    forecastMessage: 'Demo forecast. Loading current Brouwersdam weather…',
-    forecastLabel: 'Demo',
-    forecastInitialized: false,
-    forecastRequestId: 0,
-    forecastRequestInFlight: false,
-    tide: null,
-    tideStatus: 'idle',
-    tideMessage: 'Tide availability has not been checked yet.',
-    tideInitialized: false,
-    tideRequestId: 0,
-    tideRequestInFlight: false,
-  }),
+  state: () => {
+    const displayConfiguration = createDefaultDisplayConfiguration()
+    return {
+      showThreshold: displayConfiguration.showThreshold,
+      threshold: DEFAULT_THRESHOLD,
+      showWeather: displayConfiguration.showWeather,
+      showTemperature: displayConfiguration.showTemperature,
+      showTide: displayConfiguration.showTide,
+      timeFormat: displayConfiguration.timeFormat,
+      temperatureUnit: displayConfiguration.temperatureUnit,
+      selectedSpotId: DEFAULT_SPOT_ID,
+      selectedModelId: DEFAULT_FORECAST_MODEL_ID,
+      forecastsByModel: { [DEFAULT_FORECAST_MODEL_ID]: brouwersdamForecast },
+      forecast: brouwersdamForecast,
+      publishedForecast: brouwersdamForecast,
+      forecastRevision: 0,
+      pendingForecastRevision: null,
+      pendingForecastSpotId: null,
+      pendingForecastModelId: null,
+      pendingForecastSource: null,
+      forecastStatus: 'idle',
+      forecastSource: 'demo',
+      forecastMessage: 'Demo forecast. Loading current Brouwersdam weather…',
+      forecastLabel: 'Demo',
+      forecastInitialized: false,
+      forecastRequestId: 0,
+      forecastRequestInFlight: false,
+      tide: null,
+      tideStatus: 'idle',
+      tideMessage: 'Tide availability has not been checked yet.',
+      tideInitialized: false,
+      tideRequestId: 0,
+      tideRequestInFlight: false,
+    }
+  },
   getters: {
+    // Temporary bridge while the existing settings panel and preview move to showThreshold.
+    treatment: (state) => state.showThreshold ? 'threshold-line' : 'solid',
+    temperatureChoice: (state) => state.showTemperature ? state.temperatureUnit : 'hide',
     tideAvailable: (state) =>
       ['available', 'cached'].includes(state.tideStatus) &&
       state.tide?.capability === 'available',
@@ -66,8 +72,15 @@ export const useConfiguratorStore = defineStore('configurator', {
   },
   actions: {
     setTreatment(treatment) {
-      if (!DISPLAY_TREATMENTS.includes(treatment)) return false
-      this.treatment = treatment
+      if (treatment === 'threshold-line') return this.setShowThreshold(true)
+      if (treatment === 'solid' || treatment === 'background-fade') {
+        return this.setShowThreshold(false)
+      }
+      return false
+    },
+    setShowThreshold(value) {
+      if (typeof value !== 'boolean') return false
+      this.showThreshold = value
       return true
     },
     setThreshold(value) {
@@ -101,6 +114,16 @@ export const useConfiguratorStore = defineStore('configurator', {
     setTemperatureUnit(value) {
       if (!TEMPERATURE_UNITS.includes(value)) return false
       this.temperatureUnit = value
+      return true
+    },
+    setTemperatureChoice(value) {
+      if (!TEMPERATURE_CHOICES.includes(value)) return false
+      if (value === 'hide') {
+        this.showTemperature = false
+      } else {
+        this.temperatureUnit = value
+        this.showTemperature = true
+      }
       return true
     },
     reportConfigurationRenderFailure() {

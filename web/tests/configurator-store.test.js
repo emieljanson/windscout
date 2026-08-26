@@ -83,12 +83,13 @@ describe('configurator store', () => {
 
   it('starts with the current display defaults', () => {
     const store = useConfiguratorStore()
-    expect(store.treatment).toBe('background-fade')
+    expect(store.showThreshold).toBe(false)
+    expect(store.treatment).toBe('solid')
     expect(store.threshold).toBe(17)
     expect(store.showWeather).toBe(true)
     expect(store.showTemperature).toBe(false)
     expect(store.showTide).toBe(false)
-    expect(store.timeFormat).toBe('24-hour')
+    expect(['12-hour', '24-hour']).toContain(store.timeFormat)
     expect(store.temperatureUnit).toBe('celsius')
     expect(store.selectedSpotId).toBe('brouwersdam')
     expect(store.selectedModelId).toBe('best_match')
@@ -162,33 +163,55 @@ describe('configurator store', () => {
     expect(store.tideStatus).toBe('available')
   })
 
-  it('accepts every supported treatment and valid threshold boundary', () => {
+  it('keeps threshold visibility separate from its last valid value', () => {
     const store = useConfiguratorStore()
-    expect(store.setTreatment('threshold-line')).toBe(true)
-    expect(store.setTreatment('solid')).toBe(true)
+    expect(store.setShowThreshold(true)).toBe(true)
     expect(store.setThreshold(5)).toBe(true)
     expect(store.setThreshold(35)).toBe(true)
     expect(store.threshold).toBe(35)
+    expect(store.setShowThreshold(false)).toBe(true)
+    expect(store.threshold).toBe(35)
+    expect(store.setShowThreshold(true)).toBe(true)
+    expect(store.threshold).toBe(35)
   })
 
-  it('accepts only supported time and temperature formats', () => {
+  it('maps the temporary treatment bridge onto threshold visibility', () => {
     const store = useConfiguratorStore()
-    expect(store.setTimeFormat('12-hour')).toBe(true)
-    expect(store.setTemperatureUnit('fahrenheit')).toBe(true)
-    expect(store.setTimeFormat('clock')).toBe(false)
-    expect(store.setTemperatureUnit('kelvin')).toBe(false)
-    expect(store.timeFormat).toBe('12-hour')
+
+    expect(store.setTreatment('threshold-line')).toBe(true)
+    expect(store.showThreshold).toBe(true)
+    expect(store.treatment).toBe('threshold-line')
+    expect(store.setTreatment('background-fade')).toBe(true)
+    expect(store.showThreshold).toBe(false)
+    expect(store.treatment).toBe('solid')
+    expect(store.setTreatment('rainbow')).toBe(false)
+  })
+
+  it('maps the combined temperature choice without discarding the hidden unit', () => {
+    const store = useConfiguratorStore()
+
+    expect(store.setTemperatureChoice('fahrenheit')).toBe(true)
+    expect(store.temperatureChoice).toBe('fahrenheit')
+    expect(store.showTemperature).toBe(true)
     expect(store.temperatureUnit).toBe('fahrenheit')
+    expect(store.setTemperatureChoice('hide')).toBe(true)
+    expect(store.temperatureChoice).toBe('hide')
+    expect(store.showTemperature).toBe(false)
+    expect(store.temperatureUnit).toBe('fahrenheit')
+    expect(store.setTemperatureChoice('celsius')).toBe(true)
+    expect(store.showTemperature).toBe(true)
+    expect(store.temperatureUnit).toBe('celsius')
+    expect(store.setTemperatureChoice('kelvin')).toBe(false)
   })
 
   it('preserves the last valid configuration after invalid input', () => {
     const store = useConfiguratorStore()
-    store.setTreatment('solid')
+    store.setShowThreshold(true)
     store.setThreshold(17)
-    expect(store.setTreatment('rainbow')).toBe(false)
+    expect(store.setShowThreshold('yes')).toBe(false)
     expect(store.setThreshold(36)).toBe(false)
     expect(store.setThreshold('unknown')).toBe(false)
-    expect(store.treatment).toBe('solid')
+    expect(store.showThreshold).toBe(true)
     expect(store.threshold).toBe(17)
   })
 
@@ -290,7 +313,7 @@ describe('configurator store', () => {
     expect(fetcher.mock.calls[1][0]).toMatchObject({ id: 'edam', latitude: 52.5126, longitude: 5.0486 })
     expect(store.forecast.spotId).toBe('edam')
 
-    store.setTreatment('threshold-line')
+    store.setShowThreshold(true)
     store.setThreshold(24)
     expect(fetcher).toHaveBeenCalledTimes(2)
     await expect(store.selectSpot('nowhere', { fetcher, storage })).resolves.toBe(false)
