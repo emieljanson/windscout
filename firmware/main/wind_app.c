@@ -206,29 +206,88 @@ esp_err_t wind_app_show_cached(wind_app_t *app, int64_t now, wind_app_outcome_t 
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "open_meteo_knmi_provider.h"
+#include "open_meteo_marine_provider.h"
 #include "wind_config.h"
 #include "wind_spots.h"
+#include "wind_tide_cache.h"
 
 #include "wind_renderer.h"
 
 // Bump this whenever layout, typography, palette encoding, or final bitmap semantics change.
-#define WIND_DASHBOARD_RENDER_SIGNATURE UINT64_C(0x57494E440000000B)
+#define WIND_DASHBOARD_RENDER_SIGNATURE UINT64_C(0x57494E440000000C)
 
 static const char *TAG = "wind_app";
 typedef struct {
     wind_app_t app;
     open_meteo_knmi_config_t provider_config;
+    open_meteo_marine_config_t marine_config;
+    wind_tide_provider_t tide_provider;
+    wind_tide_t tide;
+    bool have_tide;
     const wind_spot_t *spot;
     char forecast_path[96];
     char schedule_path[96];
+    char tide_path[96];
 } wind_spot_runtime_t;
 
 static wind_spot_runtime_t s_spots[3];
 static size_t s_selected_index;
 static SemaphoreHandle_t s_app_lock;
 static bool s_ready;
-static wind_renderer_display_mode_t s_display_mode =
-    WIND_RENDERER_MODE_THRESHOLD;
+
+static uint64_t current_render_signature(void)
+{
+    const wind_display_config_t config = config_manager_get_wind_display_config();
+    return WIND_DASHBOARD_RENDER_SIGNATURE ^ wind_display_config_signature(&config);
+}
+
+static void refresh_render_signatures(void)
+{
+    const uint64_t signature = current_render_signature();
+    for (size_t index = 0; index < wind_spots_count(); ++index) {
+        s_spots[index].app.config.render_signature = signature;
+    }
+}
+
+static void load_or_refresh_tide(wind_spot_runtime_t *runtime, bool allow_fetch, int64_t now)
+{
+    const wind_display_config_t display = config_manager_get_wind_display_config();
+    runtime->have_tide = false;
+    wind_tide_clear(&runtime->tide);
+    if (!display.show_tide) {
+        return;
+    }
+
+    const wind_tide_cache_identity_t identity = {
+        .spot_id = runtime->spot->id,
+        .timezone = runtime->spot->timezone,
+    };
+    wind_tide_t cached;
+    if (wind_tide_cache_load(runtime->tide_path, &identity, &cached) == ESP_OK) {
+        runtime->tide = cached;
+        runtime->have_tide = true;
+    }
+
+    if (!allow_fetch) {
+        return;
+    }
+    wind_tide_t fetched;
+    wind_tide_clear(&fetched);
+    const esp_err_t result = runtime->tide_provider.fetch(
+        runtime->tide_provider.context, now, &fetched);
+    if (result == ESP_OK && wind_tide_validate(&fetched)) {
+        runtime->tide = fetched;
+        runtime->have_tide = true;
+        if (wind_tide_cache_store(runtime->tide_path, &fetched) != ESP_OK) {
+            ESP_LOGW(TAG, "Could not persist tide data for %s", runtime->spot->id);
+        }
+    } else if (runtime->have_tide) {
+        ESP_LOGW(TAG, "Tide refresh failed for %s; using cached data",
+                 runtime->spot->id);
+    } else {
+        ESP_LOGW(TAG, "Tide unavailable for %s", runtime->spot->id);
+    }
+}
 
 static const char *day_name(int weekday)
 {
@@ -318,7 +377,9 @@ static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast
                                   wind_freshness_t freshness, bool refresh_failed, int64_t now,
                                   uint8_t *bitmap, size_t bitmap_size)
 {
-    const wind_spot_t *spot = (const wind_spot_t *) context;
+    const wind_spot_runtime_t *runtime = (const wind_spot_runtime_t *) context;
+    const wind_spot_t *spot = runtime->spot;
+    const wind_display_config_t display = config_manager_get_wind_display_config();
     wind_renderer_dashboard_t dashboard = {0};
     char coordinates[64] = "";
     char updated[32] = "";
@@ -336,8 +397,11 @@ static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast
                               ? (int) ((now - forecast->retrieved_at) / 3600)
                               : 0;
     dashboard.battery_percent = board_hal_get_battery_percent();
-    dashboard.display_mode = s_display_mode;
-    dashboard.threshold_kt = WIND_RENDERER_DEFAULT_THRESHOLD_KT;
+    dashboard.display_mode = (wind_renderer_display_mode_t) display.display_mode;
+    dashboard.threshold_kt = display.threshold_kt;
+    dashboard.show_weather = display.show_weather;
+    dashboard.show_temperature = display.show_temperature;
+    dashboard.show_tide = display.show_tide;
     format_coordinates(coordinates, sizeof(coordinates),
                        forecast ? forecast->latitude : spot->latitude,
                        forecast ? forecast->longitude : spot->longitude);
@@ -373,7 +437,33 @@ static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast
                     .destination_degrees = source->destination_degrees,
                     .available = source->timestamp > 0,
                     .weather = (wind_renderer_weather_t) wind_forecast_weather_state(source),
+                    .temperature_tenths_c = source->temperature_tenths_c,
+                    .temperature_available = source->temperature_available,
                 };
+            }
+        }
+
+        if (display.show_tide && runtime->have_tide &&
+            runtime->tide.capability == WIND_TIDE_AVAILABLE) {
+            dashboard.tide_available = 1;
+            for (size_t tide_index = 0;
+                 tide_index < runtime->tide.sample_count &&
+                 dashboard.tide_sample_count < WIND_RENDERER_MAX_TIDE_SAMPLES;
+                 ++tide_index) {
+                const wind_tide_sample_t *source = &runtime->tide.samples[tide_index];
+                for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day) {
+                    if (strcmp(source->local_date, forecast->days[day].local_date) != 0) {
+                        continue;
+                    }
+                    dashboard.tide_samples[dashboard.tide_sample_count++] =
+                        (wind_renderer_tide_sample_t) {
+                            .day_index = day,
+                            .local_hour = source->local_hour,
+                            .sea_level_mm = source->sea_level_mm,
+                            .available = 1,
+                        };
+                    break;
+                }
             }
         }
     }
@@ -455,8 +545,14 @@ static esp_err_t ensure_ready(void)
                                   : snprintf(runtime->schedule_path,
                                              sizeof(runtime->schedule_path),
                                              "/storage/wind-%s.schedule", runtime->spot->id);
+        int tide_length = index == 0
+                              ? snprintf(runtime->tide_path, sizeof(runtime->tide_path), "%s",
+                                         WIND_TIDE_CACHE_PATH)
+                              : snprintf(runtime->tide_path, sizeof(runtime->tide_path),
+                                         "/storage/wind-%s.tide", runtime->spot->id);
         if (forecast_length < 0 || forecast_length >= (int) sizeof(runtime->forecast_path) ||
-            schedule_length < 0 || schedule_length >= (int) sizeof(runtime->schedule_path)) {
+            schedule_length < 0 || schedule_length >= (int) sizeof(runtime->schedule_path) ||
+            tide_length < 0 || tide_length >= (int) sizeof(runtime->tide_path)) {
             return ESP_ERR_INVALID_SIZE;
         }
         runtime->provider_config = (open_meteo_knmi_config_t) {
@@ -475,6 +571,21 @@ static esp_err_t ensure_ready(void)
             ESP_LOGE(TAG, "Provider configuration rejected for %s", runtime->spot->id);
             return ESP_ERR_INVALID_STATE;
         }
+        runtime->marine_config = (open_meteo_marine_config_t) {
+            .endpoint = OPEN_METEO_MARINE_FREE_ENDPOINT,
+            .api_key = WIND_PROVIDER_API_KEY,
+            .development_mode = WIND_PROVIDER_DEVELOPMENT_MODE,
+            .commercial_mode = WIND_PROVIDER_COMMERCIAL_MODE,
+            .spot_id = runtime->spot->id,
+            .latitude = runtime->spot->latitude,
+            .longitude = runtime->spot->longitude,
+            .timezone = runtime->spot->timezone,
+        };
+        if (!open_meteo_marine_config_valid(&runtime->marine_config)) {
+            ESP_LOGE(TAG, "Marine provider configuration rejected for %s", runtime->spot->id);
+            return ESP_ERR_INVALID_STATE;
+        }
+        open_meteo_marine_provider_init(&runtime->tide_provider, &runtime->marine_config);
         wind_provider_t provider;
         open_meteo_knmi_provider_init(&provider, &runtime->provider_config);
         wind_app_config_t config = {
@@ -485,11 +596,11 @@ static esp_err_t ensure_ready(void)
             .forecast_cache_path = runtime->forecast_path,
             .panel_cache_path = WIND_PANEL_CACHE_PATH,
             .schedule_path = runtime->schedule_path,
-            .render_signature = WIND_DASHBOARD_RENDER_SIGNATURE,
+            .render_signature = current_render_signature(),
             .bitmap_size = WIND_RENDERER_PALETTE_BYTES,
             .render = render_dashboard,
             .display = display_dashboard,
-            .io_context = (void *) runtime->spot,
+            .io_context = runtime,
         };
         esp_err_t result = wind_app_init(&runtime->app, &config);
         if (result != ESP_OK) {
@@ -518,6 +629,8 @@ esp_err_t wind_app_refresh(bool force_refresh)
     xSemaphoreTake(s_app_lock, portMAX_DELAY);
     time_t now;
     time(&now);
+    refresh_render_signatures();
+    load_or_refresh_tide(&s_spots[s_selected_index], true, now);
     for (size_t index = 0; index < wind_spots_count(); ++index) {
         wind_app_outcome_t outcome;
         esp_err_t spot_result = index == s_selected_index
@@ -549,6 +662,8 @@ static esp_err_t navigate(int direction)
                                             &cached) == ESP_OK;
     time_t now;
     time(&now);
+    refresh_render_signatures();
+    load_or_refresh_tide(runtime, !have_cache, now);
     wind_app_outcome_t outcome;
     result = have_cache ? wind_app_show_cached(&runtime->app, now, &outcome)
                         : wind_app_run(&runtime->app, true, now, &outcome);
@@ -576,10 +691,15 @@ esp_err_t wind_app_select_next_display_mode(void)
         return ESP_ERR_TIMEOUT;
     }
 
-    s_display_mode = (wind_renderer_display_mode_t)
-        ((s_display_mode + 1) % WIND_RENDERER_MODE_COUNT);
+    wind_display_config_t display = config_manager_get_wind_display_config();
+    display.display_mode = (uint8_t) ((display.display_mode + 1) % WIND_RENDERER_MODE_COUNT);
+    if (!config_manager_set_wind_display_config(&display)) {
+        xSemaphoreGive(s_app_lock);
+        return ESP_FAIL;
+    }
+    refresh_render_signatures();
     wind_cache_panel_invalidate(WIND_PANEL_CACHE_PATH);
-    ESP_LOGI(TAG, "Selected display mode %d", (int) s_display_mode);
+    ESP_LOGI(TAG, "Selected display mode %d", (int) display.display_mode);
 
     time_t now;
     time(&now);

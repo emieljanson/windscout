@@ -45,5 +45,6 @@
 #include "wind_config_validate.h"
 
 #define WIND_FORECAST_CACHE_PATH "/storage/wind-forecast.cache"
+#define WIND_TIDE_CACHE_PATH "/storage/wind-tide.cache"
 #define WIND_PANEL_CACHE_PATH "/storage/wind-panel.cache"
 #define WIND_SCHEDULE_CACHE_PATH "/storage/wind-schedule.cache"

@@ -116,6 +116,12 @@ typedef enum { IP_MODE_DHCP = 0, IP_MODE_STATIC = 1 } ip_mode_t;
 #define NVS_TIMEZONE_KEY "timezone"
 #define NVS_DISPLAY_ORIENTATION_KEY "disp_orient"
 #define NVS_DISPLAY_ROTATION_DEG_KEY "disp_rot_deg"
+#define NVS_WIND_CONFIG_VERSION_KEY "wind_cfg_ver"
+#define NVS_WIND_DISPLAY_MODE_KEY "wind_mode"
+#define NVS_WIND_THRESHOLD_KEY "wind_thresh"
+#define NVS_WIND_WEATHER_KEY "wind_weather"
+#define NVS_WIND_TEMPERATURE_KEY "wind_temp"
+#define NVS_WIND_TIDE_KEY "wind_tide"
 
 // Advanced network settings (collapsed section in the UI): custom NTP server,
 // static IP instead of DHCP, and DNS override (#43)

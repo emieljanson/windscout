@@ -41,6 +41,7 @@ set(SOURCES
     "fonts/inter_16.c"
     "fonts/inter_28.c"
     "wind_renderer.c"
+    "wind_display_config.c"
     "wind_app.c"
 )
 

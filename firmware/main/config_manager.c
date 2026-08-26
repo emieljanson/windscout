@@ -17,6 +17,7 @@ static char device_name[DEVICE_NAME_MAX_LEN] = {0};
 static char tz_string[TIMEZONE_MAX_LEN] = {0};
 static display_orientation_t display_orientation = DISPLAY_ORIENTATION_LANDSCAPE;
 static int display_rotation_deg = BOARD_HAL_DISPLAY_ROTATION_DEG;
+static wind_display_config_t wind_display_config;
 static char wifi_ssid[WIFI_SSID_MAX_LEN] = {0};
 static char wifi_password[WIFI_PASS_MAX_LEN] = {0};
 
@@ -146,6 +147,7 @@ static void cron_from_legacy_interval(int seconds, char *out, size_t out_len)
 esp_err_t config_manager_init(void)
 {
     ESP_LOGI(TAG, "Initializing config manager");
+    wind_display_config_default(&wind_display_config);
 
     // Rotation-schedule load is resolved after the read-only NVS handle closes
     // (migration / default seeding may need a read-write handle).
@@ -225,6 +227,30 @@ esp_err_t config_manager_init(void)
             } else {
                 ESP_LOGW(TAG, "Ignoring unsupported stored display rotation %ld degrees",
                          (long) stored_display_rotation_deg);
+            }
+        }
+
+        uint32_t stored_wind_version = 0;
+        if (nvs_get_u32(nvs_handle, NVS_WIND_CONFIG_VERSION_KEY,
+                        &stored_wind_version) == ESP_OK &&
+            stored_wind_version == WIND_DISPLAY_CONFIG_VERSION) {
+            wind_display_config_t stored = {.version = stored_wind_version};
+            nvs_get_u8(nvs_handle, NVS_WIND_DISPLAY_MODE_KEY, &stored.display_mode);
+            nvs_get_u8(nvs_handle, NVS_WIND_THRESHOLD_KEY, &stored.threshold_kt);
+            uint8_t flag = 0;
+            if (nvs_get_u8(nvs_handle, NVS_WIND_WEATHER_KEY, &flag) == ESP_OK)
+                stored.show_weather = flag != 0;
+            flag = 0;
+            if (nvs_get_u8(nvs_handle, NVS_WIND_TEMPERATURE_KEY, &flag) == ESP_OK)
+                stored.show_temperature = flag != 0;
+            flag = 0;
+            if (nvs_get_u8(nvs_handle, NVS_WIND_TIDE_KEY, &flag) == ESP_OK)
+                stored.show_tide = flag != 0;
+            if (wind_display_config_validate(&stored)) {
+                wind_display_config = stored;
+                ESP_LOGI(TAG, "Loaded WindScout display configuration");
+            } else {
+                ESP_LOGW(TAG, "Ignoring invalid WindScout display configuration");
             }
         }
 
@@ -655,6 +681,43 @@ void config_manager_set_display_rotation_deg(int rotation_deg)
 int config_manager_get_display_rotation_deg(void)
 {
     return display_rotation_deg;
+}
+
+bool config_manager_set_wind_display_config(const wind_display_config_t *config)
+{
+    if (!wind_display_config_validate(config)) return false;
+    nvs_handle_t nvs_handle;
+    if (nvs_open(NVS_NAMESPACE, NVS_READWRITE, &nvs_handle) != ESP_OK) return false;
+    esp_err_t result = nvs_set_u8(nvs_handle, NVS_WIND_DISPLAY_MODE_KEY,
+                                  config->display_mode);
+    if (result == ESP_OK)
+        result = nvs_set_u8(nvs_handle, NVS_WIND_THRESHOLD_KEY,
+                            config->threshold_kt);
+    if (result == ESP_OK)
+        result = nvs_set_u8(nvs_handle, NVS_WIND_WEATHER_KEY,
+                            config->show_weather ? 1 : 0);
+    if (result == ESP_OK)
+        result = nvs_set_u8(nvs_handle, NVS_WIND_TEMPERATURE_KEY,
+                            config->show_temperature ? 1 : 0);
+    if (result == ESP_OK)
+        result = nvs_set_u8(nvs_handle, NVS_WIND_TIDE_KEY,
+                            config->show_tide ? 1 : 0);
+    if (result == ESP_OK)
+        result = nvs_set_u32(nvs_handle, NVS_WIND_CONFIG_VERSION_KEY,
+                             WIND_DISPLAY_CONFIG_VERSION);
+    if (result == ESP_OK) result = nvs_commit(nvs_handle);
+    nvs_close(nvs_handle);
+    if (result != ESP_OK) return false;
+    wind_display_config = *config;
+    config_manager_touch_config();
+    return true;
+}
+
+wind_display_config_t config_manager_get_wind_display_config(void)
+{
+    if (!wind_display_config_validate(&wind_display_config))
+        wind_display_config_default(&wind_display_config);
+    return wind_display_config;
 }
 
 void config_manager_set_wifi_ssid(const char *ssid)

@@ -165,6 +165,12 @@ add_wind_test(wind_forecast_test test_wind_forecast.cpp ../main/wind_forecast.c)
 add_wind_test(wind_tide_test test_wind_tide.cpp ../main/wind_tide.c)
 
 add_wind_test(
+  wind_display_config_test
+  test_wind_display_config.cpp
+  ../main/wind_display_config.c
+)
+
+add_wind_test(
   open_meteo_marine_provider_test
   test_open_meteo_marine_provider.cpp
   ../main/wind_tide.c

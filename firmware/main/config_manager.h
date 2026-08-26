@@ -8,6 +8,7 @@
 #include "config.h"
 #include "cron.h"
 #include "esp_err.h"
+#include "wind_display_config.h"
 
 esp_err_t config_manager_init(void);
 
@@ -43,6 +44,9 @@ display_orientation_t config_manager_get_display_orientation(void);
 
 void config_manager_set_display_rotation_deg(int rotation_deg);
 int config_manager_get_display_rotation_deg(void);
+
+bool config_manager_set_wind_display_config(const wind_display_config_t *config);
+wind_display_config_t config_manager_get_wind_display_config(void);
 
 void config_manager_set_wifi_ssid(const char *ssid);
 const char *config_manager_get_wifi_ssid(void);
