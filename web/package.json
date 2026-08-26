@@ -9,6 +9,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "renderer:build": "node scripts/build-wind-renderer.mjs",
     "model:prepare": "node scripts/prepare-e1002-model.mjs"
   },
   "dependencies": {
