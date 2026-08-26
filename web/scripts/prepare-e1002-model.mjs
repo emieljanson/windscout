@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { createRequire } from 'node:module'
 import * as THREE from 'three'
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { E1002_MODEL } from '../src/assets/e1002.js'
 
 const require = createRequire(import.meta.url)
@@ -76,7 +77,7 @@ function buildScene(imported) {
   root.userData = {
     source: E1002_MODEL.sourceUrl,
     enclosureMm: E1002_MODEL.enclosureMm,
-    publicationRestricted: true,
+    publicationRestricted: false,
   }
 
   const roleGroups = new Map()
@@ -136,7 +137,19 @@ function inspectScene(scene) {
     throw new Error(`Model stand depth ${measured.totalStandDepthMm} mm does not match the documented assembly`)
   }
   for (const role of E1002_MODEL.requiredRoles) {
-    if (!scene.getObjectByName(role)) throw new Error(`Model is missing the ${role} scene role`)
+    const roleObject = scene.getObjectByName(role)
+    if (!roleObject) throw new Error(`Model is missing the ${role} scene role`)
+    let meshCount = 0
+    roleObject.traverse((child) => { if (child.isMesh) meshCount += 1 })
+    if (!meshCount) throw new Error(`Model role ${role} contains no renderable mesh`)
+    const bounds = new THREE.Box3().setFromObject(roleObject)
+    if (bounds.isEmpty() || !bounds.min.toArray().every(Number.isFinite) || !bounds.max.toArray().every(Number.isFinite)) {
+      throw new Error(`Model role ${role} has invalid bounds`)
+    }
+  }
+  const screenSize = new THREE.Box3().setFromObject(scene.getObjectByName('SCREEN')).getSize(new THREE.Vector3())
+  if (Math.abs(screenSize.x / screenSize.y - E1002_MODEL.screenAspect) > 0.01 || screenSize.z > 0.0001) {
+    throw new Error('Model screen does not preserve the outward 800:480 plane')
   }
   return measured
 }
@@ -160,14 +173,24 @@ async function exportBinary(scene) {
   }))
 }
 
+async function verifyExport(binary) {
+  const buffer = binary.buffer.slice(binary.byteOffset, binary.byteOffset + binary.byteLength)
+  const exported = await new GLTFLoader().parseAsync(buffer, '')
+  return inspectScene(exported.scene)
+}
+
 async function main() {
   const temporaryDirectory = await mkdtemp(join(tmpdir(), 'windscout-e1002-'))
   try {
     await mkdir(outputDirectory, { recursive: true })
     const sourcePath = join(temporaryDirectory, 'e1002.stp')
-    const response = await fetch(E1002_MODEL.sourceUrl)
+    const response = await fetch(E1002_MODEL.sourceUrl, { signal: AbortSignal.timeout(30_000) })
     if (!response.ok) throw new Error(`CAD download failed with HTTP ${response.status}`)
     const sourceBytes = new Uint8Array(await response.arrayBuffer())
+    const sourceSha256 = hash(sourceBytes)
+    if (sourceSha256 !== E1002_MODEL.sourceSha256) {
+      throw new Error(`CAD source changed unexpectedly (${sourceSha256}); review its mesh mapping before converting`)
+    }
     await writeFile(sourcePath, sourceBytes)
 
     const occt = await require('occt-import-js')()
@@ -185,6 +208,7 @@ async function main() {
     if (binary.byteLength > E1002_MODEL.maxBytes) {
       throw new Error(`Generated model is ${(binary.byteLength / 1024 / 1024).toFixed(2)} MB; limit is 3 MB`)
     }
+    await verifyExport(binary)
 
     await writeFile(modelPath, binary)
     const packageJson = JSON.parse(await readFile(join(projectRoot, 'package.json'), 'utf8'))
@@ -192,7 +216,7 @@ async function main() {
       generatedAt: new Date().toISOString(),
       source: {
         url: E1002_MODEL.sourceUrl,
-        sha256: hash(sourceBytes),
+        sha256: sourceSha256,
         documentedDimensionsMm: E1002_MODEL.enclosureMm,
       },
       conversion: {
@@ -212,8 +236,8 @@ async function main() {
         measured,
       },
       publication: {
-        redistributionConfirmed: false,
-        restriction: 'Local design development only until Seeed confirms CAD redistribution terms.',
+        redistributionConfirmed: true,
+        permissionBasis: 'Project owner confirmed direct permission from Seeed Studio on 2026-08-26.',
       },
     }
     await writeFile(provenancePath, `${JSON.stringify(provenance, null, 2)}\n`)

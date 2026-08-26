@@ -6,9 +6,10 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { useConfiguratorStore } from '../stores/configurator'
 import { loadE1002Model } from '../configurator/modelLoader'
 import { applyHeroPose, configureOrbitControls, isWebGLAvailable } from '../configurator/sceneController'
+import { createResourceLifetime } from '../configurator/sceneLifetime'
 import { createScreenTexture } from '../configurator/screenTexture'
 
-const emit = defineEmits(['ready', 'fallback'])
+const emit = defineEmits(['ready', 'error'])
 const host = ref(null)
 const status = ref('loading')
 const store = useConfiguratorStore()
@@ -22,6 +23,7 @@ let animationFrame
 let resizeObserver
 let screenSource
 let model
+const lifetime = createResourceLifetime()
 
 function disposeObject(object) {
   object?.traverse((child) => {
@@ -38,29 +40,42 @@ function resize() {
   renderer.setSize(width, height, false)
   camera.aspect = width / height
   camera.updateProjectionMatrix()
+  requestRender()
 }
 
-function renderLoop() {
-  controls?.update()
+function renderFrame() {
+  animationFrame = undefined
+  const changed = controls?.update() ?? false
   renderer?.render(scene, camera)
-  animationFrame = requestAnimationFrame(renderLoop)
+  if (changed) requestRender()
+}
+
+function requestRender() {
+  if (!lifetime.active || animationFrame !== undefined) return
+  animationFrame = requestAnimationFrame(renderFrame)
 }
 
 function resetView() {
-  if (camera && controls) applyHeroPose(camera, controls)
+  if (camera && controls) {
+    const aspect = host.value ? host.value.clientWidth / Math.max(host.value.clientHeight, 1) : 1.5
+    applyHeroPose(camera, controls, aspect)
+    requestRender()
+  }
 }
 
 function showFront() {
   if (!camera || !controls) return
-  camera.position.set(0, 0, 0.39)
+  const narrow = host.value && host.value.clientWidth / Math.max(host.value.clientHeight, 1) < 0.9
+  camera.position.set(0, 0, narrow ? 0.66 : 0.39)
   controls.target.set(0, 0, 0)
   controls.update()
+  requestRender()
 }
 
 async function initialize() {
   if (!host.value || !isWebGLAvailable()) {
-    status.value = 'fallback'
-    emit('fallback', 'webgl')
+    status.value = 'error'
+    emit('error', 'This browser cannot show the 3D model.')
     return
   }
 
@@ -79,6 +94,7 @@ async function initialize() {
 
     controls = new OrbitControls(camera, renderer.domElement)
     configureOrbitControls(controls)
+    controls.addEventListener('change', requestRender)
     resetView()
 
     scene.add(new THREE.HemisphereLight(0xf5f8f5, 0x67716d, 2.4))
@@ -99,7 +115,9 @@ async function initialize() {
     ground.receiveShadow = true
     scene.add(ground)
 
-    model = await loadE1002Model()
+    const loadedModel = await loadE1002Model()
+    if (!lifetime.adopt(loadedModel, disposeObject)) return
+    model = loadedModel
     model.traverse((child) => {
       if (child.isMesh) {
         child.castShadow = child.name !== 'SCREEN'
@@ -117,21 +135,25 @@ async function initialize() {
     resize()
     status.value = 'ready'
     emit('ready')
-    renderLoop()
+    requestRender()
   } catch (error) {
-    status.value = 'fallback'
-    emit('fallback', error instanceof Error ? error.message : 'model')
+    if (!lifetime.active) return
+    status.value = 'error'
+    emit('error', error instanceof Error ? error.message : 'The 3D model could not be loaded.')
   }
 }
 
 watch([treatment, threshold], () => {
   screenSource?.update({ treatment: treatment.value, threshold: threshold.value })
+  requestRender()
 })
 
 onMounted(initialize)
 onBeforeUnmount(() => {
-  cancelAnimationFrame(animationFrame)
+  lifetime.cancel()
+  if (animationFrame !== undefined) cancelAnimationFrame(animationFrame)
   resizeObserver?.disconnect()
+  controls?.removeEventListener('change', requestRender)
   controls?.dispose()
   screenSource?.dispose()
   disposeObject(model)

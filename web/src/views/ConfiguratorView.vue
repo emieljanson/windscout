@@ -1,53 +1,19 @@
 <script setup>
-import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref } from 'vue'
+import { defineAsyncComponent, ref } from 'vue'
 import ConfiguratorHeader from '../components/ConfiguratorHeader.vue'
 import InstallContinuation from '../components/InstallContinuation.vue'
-import WindScoutPreview from '../components/WindScoutPreview.vue'
 import WindScoutSettings from '../components/WindScoutSettings.vue'
-import { shouldUse2DMode } from '../configurator/sceneController'
 
 const WindScoutScene = defineAsyncComponent(() => import('../components/WindScoutScene.vue'))
 
 const scene = ref(null)
-const flatViewRequested = ref(false)
 const sceneFailed = ref(false)
-const viewportWidth = ref(0)
-const reducedMotion = ref(false)
-let motionQuery
+const sceneError = ref('')
 
-const narrowViewport = computed(() => viewportWidth.value < 960)
-const useFlatPreview = computed(() => (
-  flatViewRequested.value || sceneFailed.value || shouldUse2DMode({
-    width: viewportWidth.value,
-    reducedMotion: reducedMotion.value,
-    webglAvailable: true,
-  })
-))
-
-function updateCapabilities() {
-  viewportWidth.value = window.innerWidth
-  reducedMotion.value = motionQuery?.matches ?? false
-}
-
-function handleSceneFallback() {
+function handleSceneError(reason) {
   sceneFailed.value = true
+  sceneError.value = reason || 'The 3D model could not be loaded.'
 }
-
-function toggleView() {
-  flatViewRequested.value = !flatViewRequested.value
-}
-
-onMounted(() => {
-  motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-  updateCapabilities()
-  window.addEventListener('resize', updateCapabilities)
-  motionQuery.addEventListener?.('change', updateCapabilities)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('resize', updateCapabilities)
-  motionQuery?.removeEventListener?.('change', updateCapabilities)
-})
 </script>
 
 <template>
@@ -66,30 +32,23 @@ onBeforeUnmount(() => {
         </div>
 
         <WindScoutScene
-          v-if="!useFlatPreview"
+          v-if="!sceneFailed"
           ref="scene"
           class="device-scene"
-          @fallback="handleSceneFallback"
+          @error="handleSceneError"
         />
 
-        <div v-else class="flat-preview-wrap" data-testid="flat-preview">
-          <div class="flat-device">
-            <WindScoutPreview />
-          </div>
+        <div v-else class="scene-error" data-testid="scene-error" role="alert">
+          <p class="panel-kicker">3D unavailable</p>
+          <h2>The virtual WindScout could not start.</h2>
+          <p>{{ sceneError }} Refresh the page to try again.</p>
         </div>
 
         <div class="stage-toolbar" aria-label="Product view controls">
           <span class="live-label"><i aria-hidden="true"></i> Live screen</span>
           <div class="view-actions">
-            <button
-              v-if="!narrowViewport && !reducedMotion && !sceneFailed"
-              type="button"
-              @click="toggleView"
-            >
-              {{ useFlatPreview ? 'View in 3D' : 'View flat' }}
-            </button>
-            <button v-if="!useFlatPreview" type="button" @click="scene?.resetView()">Reset view</button>
-            <button v-if="!useFlatPreview" type="button" @click="scene?.showFront()">Front</button>
+            <button v-if="!sceneFailed" type="button" @click="scene?.resetView()">Reset view</button>
+            <button v-if="!sceneFailed" type="button" @click="scene?.showFront()">Front</button>
           </div>
         </div>
       </section>

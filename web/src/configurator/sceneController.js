@@ -3,22 +3,24 @@ export const HERO_CAMERA = Object.freeze({
   target: Object.freeze([0, 0, 0]),
 })
 
+export const NARROW_CAMERA = Object.freeze({
+  position: Object.freeze([0.1, 0.07, 0.66]),
+  target: Object.freeze([0, 0, 0]),
+})
+
 export const ORBIT_LIMITS = Object.freeze({
   minAzimuth: -0.68,
   maxAzimuth: 0.68,
   minPolar: 0.94,
   maxPolar: 1.72,
   minDistance: 0.29,
-  maxDistance: 0.58,
+  maxDistance: 0.75,
 })
 
-export function shouldUse2DMode({ width, reducedMotion, webglAvailable }) {
-  return width < 960 || reducedMotion || !webglAvailable
-}
-
-export function applyHeroPose(camera, controls) {
-  camera.position.set(...HERO_CAMERA.position)
-  controls.target.set(...HERO_CAMERA.target)
+export function applyHeroPose(camera, controls, aspect = 1.5) {
+  const pose = aspect < 0.9 ? NARROW_CAMERA : HERO_CAMERA
+  camera.position.set(...pose.position)
+  controls.target.set(...pose.target)
   controls.update()
 }
 
@@ -44,4 +46,3 @@ export function isWebGLAvailable() {
     return false
   }
 }
-

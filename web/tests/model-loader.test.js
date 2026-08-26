@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { E1002_MODEL } from '../src/assets/e1002'
-import { findMissingModelRoles } from '../src/configurator/modelLoader'
+import { findMissingModelRoles, loadE1002Model } from '../src/configurator/modelLoader'
 
 function modelWithRoles(roles) {
   return {
@@ -17,5 +17,17 @@ describe('E1002 model loader contract', () => {
 
   it('reports every missing role before the scene becomes interactive', () => {
     expect(findMissingModelRoles(modelWithRoles(['BODY', 'SCREEN']))).toEqual(['CONTROLS', 'PORTS', 'STAND'])
+  })
+
+  it('aborts a model request that never settles', async () => {
+    vi.useFakeTimers()
+    const request = loadE1002Model({
+      loaderFactory: () => ({ loadAsync: () => new Promise(() => {}) }),
+      timeoutMs: 25,
+    })
+    const expectation = expect(request).rejects.toThrow('took too long')
+    await vi.advanceTimersByTimeAsync(25)
+    await expectation
+    vi.useRealTimers()
   })
 })

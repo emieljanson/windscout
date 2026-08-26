@@ -1,19 +1,12 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   HERO_CAMERA,
+  NARROW_CAMERA,
   ORBIT_LIMITS,
   applyHeroPose,
-  shouldUse2DMode,
 } from '../src/configurator/sceneController'
 
 describe('scene controller', () => {
-  it('selects the 2D composition for narrow, reduced-motion, or unsupported contexts', () => {
-    expect(shouldUse2DMode({ width: 959, reducedMotion: false, webglAvailable: true })).toBe(true)
-    expect(shouldUse2DMode({ width: 1200, reducedMotion: true, webglAvailable: true })).toBe(true)
-    expect(shouldUse2DMode({ width: 1200, reducedMotion: false, webglAvailable: false })).toBe(true)
-    expect(shouldUse2DMode({ width: 1200, reducedMotion: false, webglAvailable: true })).toBe(false)
-  })
-
   it('restores the designed camera and orbit target', () => {
     const camera = { position: { set: (...values) => { camera.values = values } } }
     const controls = { target: { set: (...values) => { controls.values = values } }, update: () => { controls.updated = true } }
@@ -23,10 +16,16 @@ describe('scene controller', () => {
     expect(controls.updated).toBe(true)
   })
 
+  it('fits the same 3D product into a narrow stage', () => {
+    const camera = { position: { set: (...values) => { camera.values = values } } }
+    const controls = { target: { set: vi.fn() }, update: vi.fn() }
+    applyHeroPose(camera, controls, 0.7)
+    expect(camera.values).toEqual(NARROW_CAMERA.position)
+  })
+
   it('keeps orbit and zoom inside a modest product-inspection range', () => {
     expect(ORBIT_LIMITS.maxAzimuth - ORBIT_LIMITS.minAzimuth).toBeLessThan(Math.PI)
     expect(ORBIT_LIMITS.minDistance).toBeGreaterThan(0)
     expect(ORBIT_LIMITS.maxDistance).toBeLessThan(1)
   })
 })
-

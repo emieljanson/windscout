@@ -10,4 +10,4 @@ The configurator's local product model is derived from Seeed Studio's official s
 
 Run `npm run model:prepare` from `web/` to download the source into a temporary directory and create the local `public/devices/e1002/e1002.glb` plus `provenance.json`. The converter removes selected internal assembly parts, preserves exterior roles, and adds a measured 800:480 screen plane.
 
-The generated files are deliberately ignored by Git. Seeed's public download does not currently include explicit CAD redistribution terms. Keep the derived GLB local until written redistribution permission or an applicable licence is recorded here. The app must retain a model-failure fallback so that the source code remains useful without distributing that asset.
+The project owner confirmed direct permission from Seeed Studio to use the CAD file on 26 August 2026. The optimized GLB and its provenance record are therefore included in the public app. Regenerating the model still verifies the pinned source hash, dimensions, scene roles, screen plane, and exported GLB before replacing those files.

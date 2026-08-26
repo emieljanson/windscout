@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia } from 'pinia'
 
@@ -10,19 +10,35 @@ vi.mock('dialkit/vue', () => ({
 import ConfiguratorView from '../src/views/ConfiguratorView.vue'
 
 describe('configurator experience', () => {
-  beforeEach(() => {
-    window.matchMedia = vi.fn().mockReturnValue({
-      matches: true,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
+  it('keeps the 3D product and controls as the only configurator view', () => {
+    const wrapper = mount(ConfiguratorView, {
+      global: {
+        plugins: [createPinia()],
+        stubs: { WindScoutScene: { template: '<div data-testid="3d-scene"></div>' } },
+      },
     })
+    expect(wrapper.find('[data-testid="3d-scene"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="flat-preview"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="dial-root"]').exists()).toBe(true)
+    expect(wrapper.text()).not.toContain('View flat')
   })
 
-  it('keeps the same controls and native preview in the reduced-motion fallback', () => {
-    const wrapper = mount(ConfiguratorView, { global: { plugins: [createPinia()] } })
-    expect(wrapper.find('[data-testid="flat-preview"]').exists()).toBe(true)
-    expect(wrapper.find('[data-testid="dial-root"]').exists()).toBe(true)
-    expect(wrapper.text()).toContain('Brouwersdam')
+  it('shows an honest error instead of replacing a failed 3D scene', async () => {
+    const wrapper = mount(ConfiguratorView, {
+      global: {
+        plugins: [createPinia()],
+        stubs: {
+          WindScoutScene: {
+            emits: ['error'],
+            mounted() { this.$emit('error', 'The model is unavailable.') },
+            template: '<div></div>',
+          },
+        },
+      },
+    })
+    await wrapper.vm.$nextTick()
+    expect(wrapper.get('[data-testid="scene-error"]').text()).toContain('The model is unavailable.')
+    expect(wrapper.find('[data-testid="flat-preview"]').exists()).toBe(false)
   })
 
   it('reveals a truthful next-slice explanation without starting installation', async () => {

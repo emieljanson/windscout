@@ -103,38 +103,20 @@
 
 .device-scene { z-index: 2; align-self: stretch; margin: -7rem -2rem -2rem; }
 
-.flat-preview-wrap {
+.scene-error {
   position: relative;
   z-index: 2;
   display: grid;
+  max-width: 32rem;
   align-items: center;
-  justify-items: center;
-  padding: 3rem 0 2rem;
+  align-content: center;
+  margin: auto;
+  padding: 2rem;
+  border: 1px solid rgba(20, 25, 23, 0.16);
+  background: rgba(244, 245, 241, 0.62);
 }
-.flat-device {
-  position: relative;
-  width: min(92%, 57rem);
-  padding: clamp(0.55rem, 1.15vw, 0.95rem);
-  border: 1px solid rgba(20, 25, 23, 0.38);
-  border-radius: clamp(0.65rem, 1.1vw, 1rem);
-  background: linear-gradient(145deg, #e1e1dc, #bfc3be);
-  box-shadow: 0 3rem 4rem -2.4rem rgba(31, 43, 39, 0.42), inset 0 1px rgba(255,255,255,0.7);
-  transform: perspective(1000px) rotateX(1deg) rotateY(-2deg);
-}
-.flat-device::after {
-  position: absolute;
-  z-index: -1;
-  top: 72%;
-  left: 44%;
-  width: 12%;
-  height: 32%;
-  border-radius: 0 0 0.5rem 0.5rem;
-  background: #aeb3ae;
-  box-shadow: 0.5rem 1rem 1.5rem rgba(31, 43, 39, 0.22);
-  content: '';
-  transform: skewX(-14deg);
-}
-.flat-device .forecast-canvas { border: 0; border-radius: 0.18rem; box-shadow: none; }
+.scene-error h2 { margin: 0; font-size: clamp(1.8rem, 3vw, 2.8rem); line-height: 1; letter-spacing: -0.055em; }
+.scene-error > p:last-child { margin: 1rem 0 0; color: var(--muted); line-height: 1.55; }
 
 .stage-toolbar {
   position: relative;
@@ -218,7 +200,8 @@
   .product-stage { min-height: auto; grid-template-rows: auto auto auto; padding: 2rem 1rem 1rem; }
   .stage-copy { padding-inline: 0.25rem; }
   .stage-copy h1 { max-width: 10ch; font-size: clamp(2.7rem, 12vw, 5rem); }
-  .flat-preview-wrap { min-height: 45vw; padding: 3rem 0; }
+  .device-scene { min-height: 28rem; margin: -4rem -2rem -1rem; }
+  .scene-error { min-height: 22rem; }
   .settings-panel { grid-template-rows: minmax(18rem, auto) auto; border-top: 1px solid var(--line); border-left: 0; padding: 2rem 1rem 1rem; }
   .settings-intro > p:last-child { max-width: 36ch; }
 }
@@ -226,12 +209,7 @@
 @media (max-width: 38rem) {
   .device-label { display: none; }
   .configurator-header { display: flex; justify-content: space-between; }
-  .flat-preview-wrap { min-height: 17rem; padding-block: 2.5rem 3.5rem; }
-  .flat-device { width: 100%; padding: 0.35rem; border-radius: 0.5rem; transform: none; }
+  .device-scene { min-height: 24rem; margin: -2rem 0 -1rem; }
   .stage-toolbar { align-items: flex-start; }
   .live-label { padding-top: 0.55rem; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .flat-device { transform: none; }
 }
