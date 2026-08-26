@@ -27,7 +27,7 @@ static wind_forecast_t cache_forecast(int64_t retrieved_at = 1787544000)
         for (int s = 0; s < 5; ++s) {
             value.days[d].samples[s] = {retrieved_at + d * 86400 + s * 10800,
                                         static_cast<uint8_t>(hours[s]), 12, 18, 90,
-                                        35, 25, 1, 1};
+                                        35, 25, 1, 1, 125, 1};
         }
     }
     return value;
@@ -56,6 +56,7 @@ TEST_F(WindCacheTest, StoresAndLoadsCompatibleForecastAtomically)
     EXPECT_EQ(loaded.retrieved_at, forecast.retrieved_at);
     EXPECT_EQ(loaded.days[0].samples[0].cloud_cover_percent, 35);
     EXPECT_EQ(loaded.days[0].samples[0].precipitation_hundredths_mm, 25);
+    EXPECT_EQ(loaded.days[0].samples[0].temperature_tenths_c, 125);
     EXPECT_FALSE(std::filesystem::exists(path + ".a.tmp"));
     EXPECT_FALSE(std::filesystem::exists(path + ".b.tmp"));
 }

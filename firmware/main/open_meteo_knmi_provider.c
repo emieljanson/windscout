@@ -122,6 +122,7 @@ esp_err_t open_meteo_knmi_parse_json(const open_meteo_knmi_config_t *config, con
     cJSON *direction_unit = units ? cJSON_GetObjectItemCaseSensitive(units, "wind_direction_10m") : NULL;
     cJSON *cloud_unit = units ? cJSON_GetObjectItemCaseSensitive(units, "cloud_cover") : NULL;
     cJSON *precipitation_unit = units ? cJSON_GetObjectItemCaseSensitive(units, "precipitation") : NULL;
+    cJSON *temperature_unit = units ? cJSON_GetObjectItemCaseSensitive(units, "temperature_2m") : NULL;
     if (!cJSON_IsString(timezone) || strcmp(timezone->valuestring, config->timezone) != 0 ||
         !cJSON_IsString(speed_unit) || strcmp(speed_unit->valuestring, "kn") != 0 ||
         !cJSON_IsString(gust_unit) || strcmp(gust_unit->valuestring, "kn") != 0 ||
@@ -136,6 +137,7 @@ esp_err_t open_meteo_knmi_parse_json(const open_meteo_knmi_config_t *config, con
     cJSON *cloud_cover = required_array(hourly, "cloud_cover");
     cJSON *precipitation = required_array(hourly, "precipitation");
     cJSON *is_day = required_array(hourly, "is_day");
+    cJSON *temperature = required_array(hourly, "temperature_2m");
     int count = times ? cJSON_GetArraySize(times) : 0;
     if (count <= 0 || cJSON_GetArraySize(speeds) != count || cJSON_GetArraySize(gusts) != count ||
         cJSON_GetArraySize(directions) != count) {
@@ -147,6 +149,9 @@ esp_err_t open_meteo_knmi_parse_json(const open_meteo_knmi_config_t *config, con
         strcmp(precipitation_unit->valuestring, "mm") == 0 &&
         cJSON_GetArraySize(cloud_cover) == count &&
         cJSON_GetArraySize(precipitation) == count && cJSON_GetArraySize(is_day) == count;
+    const bool temperature_array_aligned = temperature && cJSON_IsString(temperature_unit) &&
+        strcmp(temperature_unit->valuestring, "°C") == 0 &&
+        cJSON_GetArraySize(temperature) == count;
 
     if (!copy_text(parsed.spot_id, sizeof(parsed.spot_id), config->spot_id) ||
         !copy_text(parsed.spot_name, sizeof(parsed.spot_name), config->spot_name) ||
@@ -235,6 +240,16 @@ esp_err_t open_meteo_knmi_parse_json(const open_meteo_knmi_config_t *config, con
                 normalized.weather_available = 1;
             }
         }
+        if (temperature_array_aligned) {
+            cJSON *temperature_item = cJSON_GetArrayItem(temperature, i);
+            if (cJSON_IsNumber(temperature_item) && isfinite(temperature_item->valuedouble) &&
+                temperature_item->valuedouble >= -3276.8 &&
+                temperature_item->valuedouble <= 3276.7) {
+                normalized.temperature_tenths_c =
+                    (int16_t) lround(temperature_item->valuedouble * 10.0);
+                normalized.temperature_available = 1;
+            }
+        }
         parsed.days[day].samples[target_slot] = normalized;
         ++selected;
     }
@@ -285,7 +300,7 @@ static esp_err_t fetch_forecast(void *context, int64_t retrieved_at, wind_foreca
     char url[768];
     int written = snprintf(
         url, sizeof(url),
-        "%s?latitude=%.6f&longitude=%.6f&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m,cloud_cover,precipitation,is_day&"
+        "%s?latitude=%.6f&longitude=%.6f&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m,cloud_cover,precipitation,is_day,temperature_2m&"
         "wind_speed_unit=kn&timezone=Europe%%2FAmsterdam&models=knmi_seamless&forecast_days=5",
         config->endpoint, config->latitude, config->longitude);
     if (written <= 0 || (size_t) written >= sizeof(url)) {

@@ -18,6 +18,7 @@ function minimalResponse(modelIds = FORECAST_MODEL_IDS) {
       [`cloud_cover_${modelId}`]: '%',
       [`precipitation_${modelId}`]: 'mm',
       [`is_day_${modelId}`]: '',
+      [`temperature_2m_${modelId}`]: '°C',
     })
     Object.assign(hourly, {
       [`wind_speed_10m_${modelId}`]: times.map((_, index) => 10 + modelIndex * 4 + index / 10),
@@ -26,6 +27,7 @@ function minimalResponse(modelIds = FORECAST_MODEL_IDS) {
       [`cloud_cover_${modelId}`]: times.map(() => 10),
       [`precipitation_${modelId}`]: times.map(() => 0),
       [`is_day_${modelId}`]: times.map(() => 1),
+      [`temperature_2m_${modelId}`]: times.map((_, index) => 8 + modelIndex + index / 10),
     })
   })
   return {
@@ -48,6 +50,7 @@ describe('Open-Meteo forecast client', () => {
     expect(url.searchParams.get('hourly')?.split(',')).toEqual([
       'wind_speed_10m', 'wind_gusts_10m', 'wind_direction_10m',
       'cloud_cover', 'precipitation', 'is_day',
+      'temperature_2m',
     ])
   })
 

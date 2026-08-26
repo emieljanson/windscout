@@ -8,7 +8,7 @@ export function buildForecastUrl(spot, modelIds = FORECAST_MODEL_IDS) {
   const parameters = new URLSearchParams({
     latitude: Number(spot.latitude).toFixed(6),
     longitude: Number(spot.longitude).toFixed(6),
-    hourly: 'wind_speed_10m,wind_gusts_10m,wind_direction_10m,cloud_cover,precipitation,is_day',
+    hourly: 'wind_speed_10m,wind_gusts_10m,wind_direction_10m,cloud_cover,precipitation,is_day,temperature_2m',
     wind_speed_unit: 'kn',
     timezone: 'Europe/Amsterdam',
     models: modelIds.join(','),

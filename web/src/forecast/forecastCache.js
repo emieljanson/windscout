@@ -1,7 +1,7 @@
 import { isNormalizedForecast } from './normalizeForecast'
 
 export const FORECAST_CACHE_KEY = 'windscout.forecasts'
-export const FORECAST_CACHE_VERSION = 2
+export const FORECAST_CACHE_VERSION = 3
 
 function availableStorage(storage) {
   if (storage) return storage

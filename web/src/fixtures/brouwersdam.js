@@ -8,11 +8,13 @@ function samples(values) {
     destinationDegrees,
     available: true,
     weather: 1,
+    temperatureTenthsC: 120 + index * 5,
+    temperatureAvailable: true,
   }))
 }
 
 export const brouwersdamForecast = Object.freeze({
-  schemaVersion: 1,
+  schemaVersion: 2,
   spotId: 'brouwersdam',
   spotName: 'Brouwersdam',
   coordinates: '51.767°N · 3.859°E',

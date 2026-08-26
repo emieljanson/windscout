@@ -16,6 +16,7 @@ function responseFor({ hours = [8, 11, 14, 17, 20], speedUnit = 'kn', omit = '' 
     cloud_cover: times.map((_, index) => index === 0 ? 21 : 70),
     precipitation: times.map((_, index) => index === 1 ? 1 : 0),
     is_day: times.map(() => 1),
+    temperature_2m: times.map((_, index) => index === 0 ? -2.35 : 12.04 + index),
   }
   delete hourly[omit]
   return {
@@ -26,6 +27,7 @@ function responseFor({ hours = [8, 11, 14, 17, 20], speedUnit = 'kn', omit = '' 
       wind_direction_10m: '°',
       cloud_cover: '%',
       precipitation: 'mm',
+      temperature_2m: '°C',
     },
     hourly,
   }
@@ -38,7 +40,7 @@ describe('forecast normalizer', () => {
       retrievedAt: Date.parse('2026-08-26T12:05:00Z'),
     })
     expect(forecast).toMatchObject({
-      schemaVersion: 1,
+      schemaVersion: 2,
       spotId: 'brouwersdam',
       spotName: 'BROUWERSDAM',
       timezone: 'Europe/Amsterdam',
@@ -52,6 +54,7 @@ describe('forecast normalizer', () => {
     expect(forecast.days[0].samples.map((sample) => sample.time)).toEqual(['08', '11', '14', '17', '20'])
     expect(forecast.days[0].samples[0]).toMatchObject({
       sustainedKt: 10, gustKt: 17, destinationDegrees: 10, weather: 3, available: true,
+      temperatureTenthsC: -24, temperatureAvailable: true,
     })
     expect(forecast.days[0].samples[1].weather).toBe(7)
   })
@@ -73,6 +76,24 @@ describe('forecast normalizer', () => {
     expect(forecast.days.flatMap((day) => day.samples).every((sample) => sample.weather === 0)).toBe(true)
   })
 
+  it('keeps temperature independently unavailable when a value or the full array is missing', () => {
+    const partial = responseFor()
+    partial.hourly.temperature_2m[2] = null
+    const forecast = normalizeForecast(partial, SPOTS[1], {
+      firstDate: '2026-08-26', retrievedAt: 1_777_000_000_000,
+    })
+    expect(forecast.days[0].samples[1].temperatureAvailable).toBe(true)
+    expect(forecast.days[0].samples[2]).toMatchObject({
+      temperatureTenthsC: 0, temperatureAvailable: false,
+    })
+
+    const absent = normalizeForecast(responseFor({ omit: 'temperature_2m' }), SPOTS[1], {
+      firstDate: '2026-08-26', retrievedAt: 1_777_000_000_000,
+    })
+    expect(absent.days.flatMap((day) => day.samples)
+      .every((sample) => sample.temperatureAvailable === false)).toBe(true)
+  })
+
   it('rounds cloud cover before applying the firmware weather boundaries', () => {
     const response = responseFor()
     response.hourly.cloud_cover[0] = 20.4
@@ -91,6 +112,7 @@ describe('forecast normalizer', () => {
       for (const field of [
         'wind_speed_10m', 'wind_gusts_10m', 'wind_direction_10m',
         'cloud_cover', 'precipitation', 'is_day',
+        'temperature_2m',
       ]) {
         response.hourly[`${field}_${modelId}`] = response.hourly[field].map((value) => (
           modelId === 'gfs_seamless' && field === 'wind_speed_10m' ? value + 8 : value

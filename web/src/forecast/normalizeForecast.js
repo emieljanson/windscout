@@ -96,6 +96,10 @@ function modelField(field, modelId, suffixed) {
   return suffixed ? `${field}_${modelId}` : field
 }
 
+function roundSymmetric(value) {
+  return value < 0 ? -Math.round(-value) : Math.round(value)
+}
+
 function responseFields(modelId, suffixed) {
   return {
     wind: modelField('wind_speed_10m', modelId, suffixed),
@@ -104,6 +108,7 @@ function responseFields(modelId, suffixed) {
     cloud: modelField('cloud_cover', modelId, suffixed),
     precipitation: modelField('precipitation', modelId, suffixed),
     isDay: modelField('is_day', modelId, suffixed),
+    temperature: modelField('temperature_2m', modelId, suffixed),
   }
 }
 
@@ -145,6 +150,8 @@ export function normalizeForecast(response, spot, {
   const weatherAvailable = [fields.cloud, fields.precipitation, fields.isDay]
     .every((field) => Array.isArray(hourly[field]) && hourly[field].length === count) &&
     units[fields.cloud] === '%' && units[fields.precipitation] === 'mm'
+  const temperatureAvailable = Array.isArray(hourly[fields.temperature]) &&
+    hourly[fields.temperature].length === count && units[fields.temperature] === '°C'
   const sampleByLocalTime = new Map()
   let previousTime = ''
 
@@ -160,6 +167,7 @@ export function normalizeForecast(response, spot, {
         wind > 32767 || gust > 32767) fail(`invalid wind value at ${localTime}`)
     const hour = Number(match[2])
     if (!REQUIRED_HOURS.includes(hour) || match[1] < firstDate) continue
+    const temperature = temperatureAvailable ? hourly[fields.temperature][index] : null
     sampleByLocalTime.set(localTime, {
       time: match[2],
       sustainedKt: Math.round(wind),
@@ -173,6 +181,11 @@ export function normalizeForecast(response, spot, {
           hourly[fields.isDay][index],
         )
         : 0,
+      temperatureTenthsC: Number.isFinite(temperature) && temperature >= -3276.8 && temperature <= 3276.7
+        ? roundSymmetric(temperature * 10)
+        : 0,
+      temperatureAvailable: Number.isFinite(temperature) &&
+        temperature >= -3276.8 && temperature <= 3276.7,
     })
   }
 
@@ -192,7 +205,7 @@ export function normalizeForecast(response, spot, {
   })
 
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     spotId: spot.id,
     spotName: spot.displayName,
     coordinates: `${dms(spot.latitude, 'N', 'S')} ${dms(spot.longitude, 'E', 'W')}`,
@@ -218,7 +231,7 @@ export function normalizeForecastModels(response, spot, {
 
 export function isNormalizedForecast(value) {
   const model = getForecastModel(value?.modelId)
-  if (!value || value.schemaVersion !== 1 || typeof value.spotId !== 'string' || !value.spotId ||
+  if (!value || value.schemaVersion !== 2 || typeof value.spotId !== 'string' || !value.spotId ||
       typeof value.spotName !== 'string' || !value.spotName || typeof value.coordinates !== 'string' ||
       value.timezone !== 'Europe/Amsterdam' || value.provider !== 'OPEN-METEO' ||
       !model || value.model !== model.screenLabel ||
@@ -246,7 +259,9 @@ export function isNormalizedForecast(value) {
       Number.isInteger(sample.sustainedKt) && sample.sustainedKt >= 0 && sample.sustainedKt <= 32767 &&
       Number.isInteger(sample.gustKt) && sample.gustKt >= 0 && sample.gustKt <= 32767 &&
       Number.isInteger(sample.destinationDegrees) && sample.destinationDegrees >= 0 && sample.destinationDegrees < 360 &&
-      sample.available === true && Number.isInteger(sample.weather) && sample.weather >= 0 && sample.weather <= 8)
+      sample.available === true && Number.isInteger(sample.weather) && sample.weather >= 0 && sample.weather <= 8 &&
+      typeof sample.temperatureAvailable === 'boolean' && Number.isInteger(sample.temperatureTenthsC) &&
+      sample.temperatureTenthsC >= -32768 && sample.temperatureTenthsC <= 32767)
   })
 }
 

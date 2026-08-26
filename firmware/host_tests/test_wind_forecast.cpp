@@ -35,9 +35,21 @@ static wind_forecast_t complete_forecast()
 TEST(WindForecast, ValidatesExactlyFiveOrderedDaysAndSamples)
 {
     auto forecast = complete_forecast();
+    forecast.days[0].samples[0].temperature_available = 1;
+    forecast.days[0].samples[0].temperature_tenths_c = -24;
     EXPECT_TRUE(wind_forecast_validate(&forecast));
     EXPECT_EQ(wind_forecast_sample(&forecast, 4, 4)->local_hour, 20);
     EXPECT_EQ(wind_forecast_sample(&forecast, 5, 0), nullptr);
+}
+
+TEST(WindForecast, ValidatesOptionalSignedTemperature)
+{
+    auto forecast = complete_forecast();
+    forecast.days[0].samples[0].temperature_available = 1;
+    forecast.days[0].samples[0].temperature_tenths_c = -32768;
+    EXPECT_TRUE(wind_forecast_validate(&forecast));
+    forecast.days[0].samples[0].temperature_available = 2;
+    EXPECT_FALSE(wind_forecast_validate(&forecast));
 }
 
 TEST(WindForecast, RejectsMissingDuplicateAndOutOfOrderSamples)

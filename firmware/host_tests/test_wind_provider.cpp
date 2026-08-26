@@ -43,6 +43,24 @@ TEST(WindProvider, ParsesCompleteLocalFiveDayForecast)
     EXPECT_EQ(wind_forecast_weather_state(&forecast.days[0].samples[2]),
               WIND_WEATHER_LIGHT_RAIN);
     EXPECT_EQ(wind_forecast_weather_state(&forecast.days[0].samples[4]), WIND_WEATHER_RAIN);
+    EXPECT_TRUE(forecast.days[0].samples[0].temperature_available);
+    EXPECT_EQ(forecast.days[0].samples[0].temperature_tenths_c, -24);
+}
+
+TEST(WindProvider, KeepsTemperatureIndependentWhenOneValueIsNull)
+{
+    setenv("TZ", "Europe/Amsterdam", 1);
+    tzset();
+    auto config = development_config();
+    auto json = fixture();
+    const auto value = json.find("-2.35");
+    ASSERT_NE(value, std::string::npos);
+    json.replace(value, 5, "null ");
+    wind_forecast_t forecast;
+    ASSERT_EQ(open_meteo_knmi_parse_json(&config, json.data(), json.size(), 1787544000,
+                                         "2026-08-24", &forecast), ESP_OK);
+    EXPECT_FALSE(forecast.days[0].samples[0].temperature_available);
+    EXPECT_TRUE(forecast.days[0].samples[1].temperature_available);
 }
 
 TEST(WindProvider, RejectsTimezoneUnitsAndArrayLengthMismatch)

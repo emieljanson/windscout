@@ -12,7 +12,7 @@ function memoryStorage() {
 
 function forecast(modelId = 'best_match', model = 'BEST FIT') {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     spotId: 'brouwersdam',
     spotName: 'BROUWERSDAM',
     coordinates: `51°45'02"N 3°51'28"E`,
@@ -29,6 +29,7 @@ function forecast(modelId = 'best_match', model = 'BEST FIT') {
       samples: [8, 11, 14, 17, 20].map((hour) => ({
         time: String(hour).padStart(2, '0'), sustainedKt: 12, gustKt: 18,
         destinationDegrees: 270, available: true, weather: 1,
+        temperatureTenthsC: 125, temperatureAvailable: true,
       })),
     })),
   }

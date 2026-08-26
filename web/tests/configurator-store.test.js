@@ -31,7 +31,7 @@ function liveForecast(
   const spot = getSpot(spotId)
   const model = getForecastModel(modelId)
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     spotId,
     spotName: spot.displayName,
     coordinates: '52°00\'00"N 4°00\'00"E',
@@ -48,6 +48,7 @@ function liveForecast(
       samples: [8, 11, 14, 17, 20].map((hour) => ({
         time: String(hour).padStart(2, '0'), sustainedKt: 12, gustKt: 18,
         destinationDegrees: 270, available: true, weather: 1,
+        temperatureTenthsC: 125, temperatureAvailable: true,
       })),
     })),
   }

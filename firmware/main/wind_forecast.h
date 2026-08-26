@@ -8,7 +8,7 @@
 extern "C" {
 #endif
 
-#define WIND_FORECAST_SCHEMA_VERSION 2u
+#define WIND_FORECAST_SCHEMA_VERSION 3u
 #define WIND_FORECAST_DAY_COUNT 5
 #define WIND_FORECAST_SAMPLES_PER_DAY 5
 #define WIND_FORECAST_SAMPLE_COUNT 25
@@ -29,6 +29,8 @@ typedef struct {
     uint16_t precipitation_hundredths_mm;
     uint8_t is_day;
     uint8_t weather_available;
+    int16_t temperature_tenths_c;
+    uint8_t temperature_available;
 } wind_forecast_sample_t;
 
 typedef enum {
