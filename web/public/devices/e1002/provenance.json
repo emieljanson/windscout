@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-26T06:19:22.536Z",
+  "generatedAt": "2026-08-26T06:50:36.955Z",
   "source": {
     "url": "https://files.seeedstudio.com/wiki/reterminal_e10xx/res/reTerminal_E1001_E1002_3D.stp",
     "sha256": "d007d0db5ecd78f2109ee9115aa562b31d058fc054172b7237a4692c6e30a6b1",
@@ -36,7 +36,7 @@
   "output": {
     "file": "e1002.glb",
     "bytes": 561824,
-    "sha256": "a0213e0e2622d9ac9ecfd2cf1b0fd6245a8d4bec01c89dc70ff1d80a83dd2d83",
+    "sha256": "3961139cfa4cf2c156ba2f283050e1dfdb0870fdeb2433beb3b3192b8827ddc5",
     "roles": [
       "BODY",
       "CONTROLS",

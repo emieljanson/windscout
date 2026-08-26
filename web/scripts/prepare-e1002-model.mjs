@@ -62,11 +62,14 @@ function materialForRole(role, materials) {
 }
 
 function createScreen() {
+  // The display opening is vertically asymmetric: the lower bezel is deeper
+  // than the upper bezel, so the visible panel sits 6 mm above enclosure center.
+  const displayCenterOffsetY = 0.006
   const geometry = new THREE.PlaneGeometry(0.159, 0.0954)
   const material = new THREE.MeshBasicMaterial({ color: 0xebece4, toneMapped: false, name: 'screen-preview' })
   const screen = new THREE.Mesh(geometry, material)
   screen.name = 'SCREEN'
-  screen.position.set(0, 0.06, 0.0042)
+  screen.position.set(0, 0.06 + displayCenterOffsetY, 0.0042)
   screen.userData.role = 'SCREEN'
   return screen
 }

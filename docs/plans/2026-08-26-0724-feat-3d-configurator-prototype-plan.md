@@ -51,7 +51,7 @@ The complete WindScout roadmap combines design, firmware installation, location 
 - R3. The optimized web model shall keep the body, screen, controls, and stand as independently addressable meshes.
 - R4. The E1002 screen shall display an unfiltered 800 x 480 WindScout preview with the correct aspect ratio and orientation.
 - R5. Pointer users shall be able to rotate and modestly zoom the device without losing the intended hero composition.
-- R6. Camera limits, reset behavior, lighting, materials, and shadows shall make the object feel physical without creating a decorative 3D world.
+- R6. Camera limits, initial framing, lighting, materials, shadows, and one view-dependent screen glare shall make the object feel physical without adding scene chrome.
 
 **Display configuration**
 
@@ -66,11 +66,11 @@ The complete WindScout roadmap combines design, firmware installation, location 
 - R12. The page shall keep the virtual device dominant while the settings panel remains compact, understandable, and always reachable.
 - R13. The E1002 shall remain a restrained 3D view at narrow widths and with reduced motion; unavailable WebGL or a failed model load shall show a labelled error state with retry guidance.
 - R14. All settings shall remain keyboard-operable and labelled independently of the 3D canvas.
-- R15. The page shall show an “Install on my WindScout” continuation that opens an inline next-slice explanation and performs no USB action.
+- R15. The floating inspector shall include an “Install on device” continuation that opens an inline next-slice explanation and performs no USB action.
 
 ### Acceptance Examples
 
-- AE1. **Covers R1-R6.** Given the configurator is ready on a desktop viewport, when the visitor drags and zooms, then the E1002 moves within constrained angles while the screen remains readable and a reset returns the designed hero pose.
+- AE1. **Covers R1-R6.** Given the configurator is ready, when the visitor drags and zooms, then the E1002 moves within constrained angles while the screen remains readable and the accurate CAD geometry stays unchanged.
 - AE2. **Covers R7-R11.** Given the fixture forecast is visible, when the visitor changes treatment or threshold in DialKit, then the screen updates immediately without reloading the model or page.
 - AE3. **Covers R9-R14.** Given a keyboard-only visitor, when focus moves through the display controls, then every setting can be changed and its current value is announced without entering the 3D canvas.
 - AE4. **Covers R13-R14.** Given a narrow or reduced-motion environment, when the configurator opens, then the E1002 remains available in a restrained 3D composition; if 3D cannot start, the page clearly explains that failure without presenting a substitute view as the configured device.
@@ -123,11 +123,11 @@ The complete WindScout roadmap combines design, firmware installation, location 
 
 - KTD1. **Create a root `web/` Vue/Vite application.** The prototype uses the final public-app boundary instead of modifying the firmware-embedded photo-frame UI. This implements R1 and R12-R15.
 - KTD2. **Convert the official STEP model into a small GLB offline.** A Node asset script uses `occt-import-js` only as a development converter and Three.js `GLTFExporter` for the binary output. It inventories the assembly, keeps exterior geometry, creates a measured screen plane, verifies the exported GLB, and emits a provenance record. The permitted optimized GLB ships with the public app. This implements R2-R4.
-- KTD3. **Keep the product scene intentionally minimal.** Three.js owns the camera, lights, contact shadow, orbit constraints, and model loading. The page shell owns all product controls and copy. This implements R1, R5-R6, and R12-R14.
+- KTD3. **Keep the product scene intentionally minimal.** Three.js owns the camera, lights, contact shadow, orbit constraints, and model loading. The page shell contains only the scene and one floating DialKit inspector. This implements R1, R5-R6, and R12-R14.
 - KTD4. **Use an 800 x 480 browser preview adapter for this slice.** The adapter renders the deterministic fixture into a crisp screen canvas and supports the three modes plus adjustable threshold. Its boundary is designed for later replacement by the shared WASM renderer without changing the scene or settings contract. This implements R4 and R7-R11.
 - KTD5. **Use DialKit directly but not as a second state owner.** WindScout Vue components translate DialKit changes into one Pinia store, and DialKit persistence remains disabled. This implements R9-R11 and R14.
 - KTD6. **Keep this slice 3D-only.** Responsive layouts preserve the same scene and controls. WebGL and model-load failures expose a labelled error state, while reduced motion avoids ornamental animation rather than replacing the product. This implements R10 and R13-R15.
-- KTD7. **Self-host only redistributable fonts.** Use Inter and a compatible OFL mono face in the prototype rather than copying Berkeley Mono or its derived assets. This keeps the design review publishable apart from the separately gated CAD model.
+- KTD7. **Self-host only redistributable fonts.** Use Inter and a compatible OFL mono face in the prototype rather than copying Berkeley Mono or its derived assets.
 
 ### High-Level Technical Design
 
@@ -180,7 +180,7 @@ web/
 | --- | --- | --- |
 | The converted CAD model is too heavy | Loading and orbit feel sluggish | Remove internal parts, simplify hidden surfaces, compress geometry, and keep the generated GLB at or below 3 MB. |
 | CAD permission becomes hard to trace later | A future maintainer may unnecessarily remove or replace the model | Keep the project owner's Seeed permission confirmation, pinned source hash, and transformation provenance beside the shipped GLB. |
-| DialKit reads as a developer panel | The product feels like a demo tool | Limit it to one short display group and wrap it in WindScout hierarchy, copy, spacing, and responsive behavior. |
+| DialKit reads as a separate settings page | The device stops feeling like the product | Keep one compact rounded inspector floating over the preview on wide screens and overlapping below it on narrow screens. |
 | The 3D object competes with its screen | Settings changes become hard to judge | Keep a designed hero angle, modest orbit limits, and screen-aware lighting. |
 | Fixture rendering drifts from firmware | Later integration requires visual rework | Mirror current layout and modes, keep the preview behind a replaceable adapter, and avoid claiming pixel parity in this slice. |
 | Mobile layout becomes a compressed desktop scene | The experience feels broken on small screens | Give the 3D stage its own mobile composition and keep controls below it without adding a second view mode. |
@@ -240,12 +240,12 @@ web/
 - **Approach:**
   1. Load the GLB lazily and apply product materials, restrained studio lighting, and a contact shadow.
   2. Feed the preview canvas into the dedicated screen material without texture filtering, tone mapping, or scene lighting.
-  3. Constrain orbit and zoom around a designed hero pose, and provide reset plus front-view actions outside the canvas.
+  3. Constrain orbit and zoom around a designed hero pose without adding view-control buttons outside the canvas.
   4. Release render resources and listeners when the scene unmounts.
 - **Execution note:** Establish the hero pose and screen legibility before adding material nuance or motion polish.
 - **Patterns to follow:** Three.js GLTF loading, color-management, and texture-disposal guidance for the pinned dependency version.
 - **Test scenarios:**
-  - Covers AE1. Drag and zoom remain within their limits, and reset restores the approved camera pose.
+  - Covers AE1. Drag and zoom remain within their limits while the approved initial pose keeps the screen readable.
   - A store update changes the screen texture without reloading the GLB or resetting the orbit.
   - The screen keeps crisp edges and correct color while the enclosure responds to light.
   - A model-load or WebGL failure exposes the labelled 3D error state; reduced motion retains a static-on-idle scene.
@@ -257,7 +257,7 @@ web/
 - **Goal:** Combine the scene, DialKit panel, error state, and next-slice continuation into one coherent design prototype.
 - **Requirements:** R1, R7-R15; AE2-AE5; KTD1, KTD3, KTD5-KTD7.
 - **Dependencies:** U1-U3.
-- **Files:** `web/src/views/ConfiguratorView.vue`, `web/src/components/WindScoutSettings.vue`, `web/src/components/ConfiguratorHeader.vue`, `web/src/components/InstallContinuation.vue`, `web/src/styles/configurator.css`, `web/tests/settings.test.js`, `web/tests/configurator-view.test.js`, `web/tests/e2e/configurator.spec.js`, `web/playwright.config.js`.
+- **Files:** `web/src/views/ConfiguratorView.vue`, `web/src/components/WindScoutSettings.vue`, `web/src/components/InstallContinuation.vue`, `web/src/styles/configurator.css`, `web/tests/settings.test.js`, `web/tests/configurator-view.test.js`, `web/tests/e2e/configurator.spec.js`, `web/playwright.config.js`.
 - **Approach:**
   1. Make the E1002 the dominant desktop region and place one compact DialKit display group beside it.
   2. Bind treatment and threshold controls through the canonical store and disable DialKit persistence.
@@ -268,7 +268,7 @@ web/
 - **Patterns to follow:** The standalone WindScout site's restrained visual language, not its paid copy or restricted font files.
 - **Test scenarios:**
   - Covers AE2. Changing either DialKit control updates the preview while leaving the scene pose unchanged.
-  - Covers AE3. A keyboard user can reach, understand, and change both settings, reset the scene, and activate the continuation.
+  - Covers AE3. A keyboard user can reach, understand, and change both settings and activate the continuation.
   - Covers AE4. Reduced motion and small screens retain the 3D device and controls; unavailable 3D shows a clear error.
   - Covers AE5. The continuation names installation as upcoming and makes no serial or network request.
   - Loading, error, hover, focus, dragging, and narrow-layout states remain visually coherent in browser snapshots.

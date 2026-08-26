@@ -1,5 +1,5 @@
 export const HERO_CAMERA = Object.freeze({
-  position: Object.freeze([0.235, 0.115, 0.34]),
+  position: Object.freeze([0.19, 0.095, 0.29]),
   target: Object.freeze([0, 0, 0]),
 })
 
