@@ -1,6 +1,40 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useConfiguratorStore } from '../src/stores/configurator'
+import { getSpot } from '../src/spots'
+
+function memoryStorage() {
+  const values = new Map()
+  return {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, value),
+    removeItem: (key) => values.delete(key),
+  }
+}
+
+function liveForecast(spotId = 'brouwersdam', retrievedAt = 1_777_000_000_000) {
+  const spot = getSpot(spotId)
+  return {
+    schemaVersion: 1,
+    spotId,
+    spotName: spot.displayName,
+    coordinates: '52°00\'00"N 4°00\'00"E',
+    timezone: spot.timezone,
+    provider: 'OPEN-METEO',
+    model: 'KNMI SEAMLESS',
+    updatedTime: '26 AUG 2PM',
+    retrievedAt,
+    days: Array.from({ length: 5 }, (_, day) => ({
+      localDate: `2026-08-${26 + day}`,
+      day: day === 0 ? 'TODAY' : 'THURSDAY',
+      date: `${26 + day} AUG`,
+      samples: [8, 11, 14, 17, 20].map((hour) => ({
+        time: String(hour).padStart(2, '0'), sustainedKt: 12, gustKt: 18,
+        destinationDegrees: 270, available: true, weather: 1,
+      })),
+    })),
+  }
+}
 
 describe('configurator store', () => {
   beforeEach(() => setActivePinia(createPinia()))
@@ -9,6 +43,10 @@ describe('configurator store', () => {
     const store = useConfiguratorStore()
     expect(store.treatment).toBe('background-fade')
     expect(store.threshold).toBe(17)
+    expect(store.selectedSpotId).toBe('brouwersdam')
+    expect(store.forecastSource).toBe('demo')
+    expect(store.forecastLabel).toBe('Demo')
+    expect(store.showDemoLabel).toBe(true)
   })
 
   it('accepts every supported treatment and valid threshold boundary', () => {
@@ -30,5 +68,98 @@ describe('configurator store', () => {
     expect(store.treatment).toBe('solid')
     expect(store.threshold).toBe(17)
   })
-})
 
+  it('keeps the demo label until the current forecast bitmap is published', async () => {
+    const store = useConfiguratorStore()
+    const forecast = liveForecast()
+    await expect(store.initializeForecast({
+      fetcher: vi.fn().mockResolvedValue(forecast),
+      storage: memoryStorage(),
+    })).resolves.toBe(true)
+    expect(store.forecast).toEqual(forecast)
+    expect(store.forecastStatus).toBe('rendering')
+    expect(store.showDemoLabel).toBe(true)
+    expect(store.pendingForecastRevision).toBe(store.forecastRevision)
+
+    expect(store.publishForecast(store.forecastRevision)).toBe(true)
+    expect(store.forecastStatus).toBe('ready')
+    expect(store.showDemoLabel).toBe(false)
+  })
+
+  it('shows an explicit demo fallback when the first request fails', async () => {
+    const store = useConfiguratorStore()
+    await expect(store.initializeForecast({
+      fetcher: vi.fn().mockRejectedValue(new Error('offline')),
+      storage: memoryStorage(),
+    })).resolves.toBe(false)
+    expect(store.forecastSource).toBe('demo')
+    expect(store.forecastStatus).toBe('warning')
+    expect(store.showDemoLabel).toBe(true)
+    expect(store.forecastMessage).toContain('demo')
+  })
+
+  it('keeps the last successful forecast when a later refresh fails', async () => {
+    const store = useConfiguratorStore()
+    const first = liveForecast()
+    const fetcher = vi.fn()
+      .mockResolvedValueOnce(first)
+      .mockRejectedValueOnce(new Error('offline'))
+    await store.initializeForecast({ fetcher, storage: memoryStorage() })
+    store.publishForecast(store.forecastRevision)
+    await expect(store.refreshForecast({ fetcher, storage: memoryStorage() })).resolves.toBe(false)
+    expect(store.forecast).toEqual(first)
+    expect(store.forecastStatus).toBe('warning')
+    expect(store.showDemoLabel).toBe(false)
+    expect(store.forecastMessage).toContain('last forecast')
+  })
+
+  it('uses cached data without mislabeling it as demo data', async () => {
+    const storage = memoryStorage()
+    const firstStore = useConfiguratorStore()
+    const current = liveForecast()
+    await firstStore.initializeForecast({ fetcher: vi.fn().mockResolvedValue(current), storage })
+    firstStore.$dispose()
+
+    setActivePinia(createPinia())
+    const store = useConfiguratorStore()
+    await store.initializeForecast({ fetcher: vi.fn().mockRejectedValue(new Error('offline')), storage })
+    expect(store.forecast).toEqual(current)
+    expect(store.forecastSource).toBe('cache')
+    expect(store.forecastLabel).toBe('Cached')
+    expect(store.showDemoLabel).toBe(false)
+  })
+
+  it('labels the old spot honestly if a newly selected spot cannot load', async () => {
+    const store = useConfiguratorStore()
+    const fetcher = vi.fn()
+      .mockResolvedValueOnce(liveForecast('brouwersdam'))
+      .mockRejectedValueOnce(new Error('offline'))
+    await store.initializeForecast({ fetcher, storage: memoryStorage() })
+    store.publishForecast(store.forecastRevision)
+
+    await store.selectSpot('edam', { fetcher, storage: memoryStorage() })
+    expect(store.selectedSpotId).toBe('edam')
+    expect(store.forecast.spotId).toBe('brouwersdam')
+    expect(store.forecastSource).toBe('previous')
+    expect(store.forecastLabel).toBe('Previous spot')
+    expect(store.forecastMessage).toContain('Still showing BROUWERSDAM')
+  })
+
+  it('loads another supported spot but display-only settings never fetch', async () => {
+    const store = useConfiguratorStore()
+    const fetcher = vi.fn(async (spot) => liveForecast(spot.id))
+    const storage = memoryStorage()
+    await store.initializeForecast({ fetcher, storage })
+    store.publishForecast(store.forecastRevision)
+    expect(await store.selectSpot('edam', { fetcher, storage })).toBe(true)
+    expect(fetcher).toHaveBeenCalledTimes(2)
+    expect(fetcher.mock.calls[1][0]).toMatchObject({ id: 'edam', latitude: 52.5126, longitude: 5.0486 })
+    expect(store.forecast.spotId).toBe('edam')
+
+    store.setTreatment('threshold-line')
+    store.setThreshold(24)
+    expect(fetcher).toHaveBeenCalledTimes(2)
+    await expect(store.selectSpot('nowhere', { fetcher, storage })).resolves.toBe(false)
+    expect(fetcher).toHaveBeenCalledTimes(2)
+  })
+})

@@ -38,7 +38,7 @@ export function createRendererInput(forecast, config) {
     version: RENDERER_CONTRACT_VERSION,
     spotName: forecast.spotName ?? forecast.spot,
     coordinates: forecast.coordinates,
-    provider: forecast.provider ?? 'OPEN-METEO',
+    provider: forecast.model ?? forecast.provider ?? 'OPEN-METEO',
     updatedTime: forecast.updatedTime ?? forecast.updated,
     state: forecast.state ?? 0,
     refreshFailed: forecast.refreshFailed ?? false,

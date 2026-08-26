@@ -2,6 +2,14 @@ import { describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia } from 'pinia'
 
+const { fetchForecast } = vi.hoisted(() => ({
+  fetchForecast: vi.fn().mockRejectedValue(new Error('offline')),
+}))
+
+vi.mock('../src/forecast/openMeteo', () => ({
+  fetchOpenMeteoForecast: fetchForecast,
+}))
+
 vi.mock('dialkit/vue', () => ({
   DialRoot: { template: '<div data-testid="dial-root">Display controls</div>' },
   useDialKitController: () => ({ values: { value: { treatment: 'background-fade', windThreshold: 17 } }, setValue: vi.fn() }),
@@ -20,7 +28,22 @@ describe('configurator experience', () => {
     expect(wrapper.find('[data-testid="3d-scene"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="flat-preview"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="dial-root"]').exists()).toBe(true)
-    expect(wrapper.text()).not.toContain('View flat')
+    expect(wrapper.text()).not.toContain('See your next session')
+    expect(wrapper.text()).not.toContain('Reset view')
+  })
+
+  it('starts the default Brouwersdam forecast without a device connection', async () => {
+    fetchForecast.mockRejectedValueOnce(new Error('offline'))
+    const wrapper = mount(ConfiguratorView, {
+      global: {
+        plugins: [createPinia()],
+        stubs: { WindScoutScene: { template: '<div data-testid="3d-scene"></div>' } },
+      },
+    })
+    await vi.waitFor(() => expect(fetchForecast).toHaveBeenCalled())
+    expect(fetchForecast.mock.calls.at(-1)[0]).toMatchObject({ id: 'brouwersdam' })
+    expect(wrapper.get('[data-testid="forecast-label"]').text()).toBe('Demo')
+    await vi.waitFor(() => expect(wrapper.get('[role="status"]').text()).toContain('demo data'))
   })
 
   it('shows an honest error instead of replacing a failed 3D scene', async () => {

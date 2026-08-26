@@ -13,7 +13,14 @@ const emit = defineEmits(['ready', 'error'])
 const host = ref(null)
 const status = ref('loading')
 const store = useConfiguratorStore()
-const { treatment, threshold } = storeToRefs(store)
+const {
+  forecast,
+  forecastRevision,
+  pendingForecastRevision,
+  selectedSpotId,
+  treatment,
+  threshold,
+} = storeToRefs(store)
 
 let renderer
 let scene
@@ -162,12 +169,19 @@ async function initialize() {
       }
     })
     const initialConfig = { treatment: treatment.value, threshold: threshold.value }
-    const loadedScreenSource = await createScreenTexture({ config: initialConfig })
+    const initialForecast = forecast.value
+    const initialForecastRevision = forecastRevision.value
+    const loadedScreenSource = await createScreenTexture({ forecast: initialForecast, config: initialConfig })
     if (!lifetime.adopt(loadedScreenSource, (source) => source.dispose())) return
     screenSource = loadedScreenSource
-    if (treatment.value !== initialConfig.treatment || threshold.value !== initialConfig.threshold) {
-      screenSource.update({ config: { treatment: treatment.value, threshold: threshold.value } })
+    if (treatment.value !== initialConfig.treatment || threshold.value !== initialConfig.threshold ||
+        forecastRevision.value !== initialForecastRevision) {
+      screenSource.update({
+        forecast: forecast.value,
+        config: { treatment: treatment.value, threshold: threshold.value },
+      })
     }
+    if (pendingForecastRevision.value === forecastRevision.value) store.publishForecast(forecastRevision.value)
     const screen = model.getObjectByName('SCREEN')
     screen.material.dispose()
     screen.material = new THREE.MeshBasicMaterial({ map: screenSource.texture, toneMapped: false, name: 'live-forecast' })
@@ -192,6 +206,21 @@ watch([treatment, threshold], () => {
   requestRender()
 })
 
+watch(forecastRevision, () => {
+  if (!screenSource) return
+  try {
+    screenSource.update({
+      forecast: forecast.value,
+      config: { treatment: treatment.value, threshold: threshold.value },
+    })
+    store.publishForecast(forecastRevision.value)
+    requestRender()
+  } catch (error) {
+    status.value = 'error'
+    emit('error', error instanceof Error ? error.message : 'The forecast preview could not be updated.')
+  }
+})
+
 onMounted(initialize)
 onBeforeUnmount(() => {
   lifetime.cancel()
@@ -209,7 +238,13 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="host" class="scene-host" :data-scene-status="status">
+  <div
+    ref="host"
+    class="scene-host"
+    :data-scene-status="status"
+    :data-forecast-spot="selectedSpotId"
+    :data-forecast-revision="forecastRevision"
+  >
     <span v-if="status === 'loading'" class="scene-status" role="status">Building your WindScout…</span>
   </div>
 </template>

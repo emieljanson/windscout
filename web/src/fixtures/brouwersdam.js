@@ -1,6 +1,8 @@
 export const brouwersdamForecast = Object.freeze({
   spot: 'Brouwersdam',
   coordinates: '51.767°N · 3.859°E',
+  provider: 'OPEN-METEO',
+  model: 'KNMI SEAMLESS',
   updated: '07:40',
   days: [
     { day: 'WED', date: '26 AUG', samples: [[8, 13, 250], [12, 18, 258], [16, 24, 264], [19, 28, 270], [15, 22, 274]] },
@@ -10,4 +12,3 @@ export const brouwersdamForecast = Object.freeze({
     { day: 'SUN', date: '30 AUG', samples: [[7, 11, 198], [10, 15, 204], [12, 18, 210], [14, 21, 214], [11, 17, 220]] },
   ],
 })
-
