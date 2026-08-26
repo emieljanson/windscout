@@ -17,6 +17,7 @@ const {
   forecast,
   forecastRevision,
   pendingForecastRevision,
+  selectedModelId,
   selectedSpotId,
   treatment,
   threshold,
@@ -243,6 +244,7 @@ onBeforeUnmount(() => {
     class="scene-host"
     :data-scene-status="status"
     :data-forecast-spot="selectedSpotId"
+    :data-forecast-model="selectedModelId"
     :data-forecast-revision="forecastRevision"
   >
     <span v-if="status === 'loading'" class="scene-status" role="status">Building your WindScout…</span>

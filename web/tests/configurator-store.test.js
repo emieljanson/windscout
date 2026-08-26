@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useConfiguratorStore } from '../src/stores/configurator'
+import { DEFAULT_FORECAST_MODEL_ID, getForecastModel } from '../src/forecast/models'
 import { getSpot } from '../src/spots'
 
 function memoryStorage() {
@@ -22,8 +23,13 @@ function deferred() {
   return { promise, resolve, reject }
 }
 
-function liveForecast(spotId = 'brouwersdam', retrievedAt = 1_777_000_000_000) {
+function liveForecast(
+  spotId = 'brouwersdam',
+  retrievedAt = 1_777_000_000_000,
+  modelId = DEFAULT_FORECAST_MODEL_ID,
+) {
   const spot = getSpot(spotId)
+  const model = getForecastModel(modelId)
   return {
     schemaVersion: 1,
     spotId,
@@ -31,7 +37,8 @@ function liveForecast(spotId = 'brouwersdam', retrievedAt = 1_777_000_000_000) {
     coordinates: '52°00\'00"N 4°00\'00"E',
     timezone: spot.timezone,
     provider: 'OPEN-METEO',
-    model: 'KNMI SEAMLESS',
+    modelId,
+    model: model.screenLabel,
     updatedTime: '26 AUG 2PM',
     retrievedAt,
     days: Array.from({ length: 5 }, (_, day) => ({
@@ -46,6 +53,10 @@ function liveForecast(spotId = 'brouwersdam', retrievedAt = 1_777_000_000_000) {
   }
 }
 
+function forecastSet(...forecasts) {
+  return Object.fromEntries(forecasts.map((forecast) => [forecast.modelId, forecast]))
+}
+
 describe('configurator store', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
@@ -54,6 +65,7 @@ describe('configurator store', () => {
     expect(store.treatment).toBe('background-fade')
     expect(store.threshold).toBe(17)
     expect(store.selectedSpotId).toBe('brouwersdam')
+    expect(store.selectedModelId).toBe('best_match')
     expect(store.forecastSource).toBe('demo')
     expect(store.forecastLabel).toBe('Demo')
   })
@@ -82,7 +94,7 @@ describe('configurator store', () => {
     const store = useConfiguratorStore()
     const forecast = liveForecast()
     await expect(store.initializeForecast({
-      fetcher: vi.fn().mockResolvedValue(forecast),
+      fetcher: vi.fn().mockResolvedValue(forecastSet(forecast)),
       storage: memoryStorage(),
     })).resolves.toBe(true)
     expect(store.forecast).toEqual(forecast)
@@ -111,7 +123,7 @@ describe('configurator store', () => {
     const store = useConfiguratorStore()
     const first = liveForecast()
     const fetcher = vi.fn()
-      .mockResolvedValueOnce(first)
+      .mockResolvedValueOnce(forecastSet(first))
       .mockRejectedValueOnce(new Error('offline'))
     await store.initializeForecast({ fetcher, storage: memoryStorage() })
     store.publishForecast(store.forecastRevision)
@@ -126,7 +138,7 @@ describe('configurator store', () => {
     const storage = memoryStorage()
     const firstStore = useConfiguratorStore()
     const current = liveForecast()
-    await firstStore.initializeForecast({ fetcher: vi.fn().mockResolvedValue(current), storage })
+    await firstStore.initializeForecast({ fetcher: vi.fn().mockResolvedValue(forecastSet(current)), storage })
     firstStore.$dispose()
 
     setActivePinia(createPinia())
@@ -140,7 +152,7 @@ describe('configurator store', () => {
   it('labels the old spot honestly if a newly selected spot cannot load', async () => {
     const store = useConfiguratorStore()
     const fetcher = vi.fn()
-      .mockResolvedValueOnce(liveForecast('brouwersdam'))
+      .mockResolvedValueOnce(forecastSet(liveForecast('brouwersdam')))
       .mockRejectedValueOnce(new Error('offline'))
     await store.initializeForecast({ fetcher, storage: memoryStorage() })
     store.publishForecast(store.forecastRevision)
@@ -155,7 +167,7 @@ describe('configurator store', () => {
 
   it('loads another supported spot but display-only settings never fetch', async () => {
     const store = useConfiguratorStore()
-    const fetcher = vi.fn(async (spot) => liveForecast(spot.id))
+    const fetcher = vi.fn(async (spot) => forecastSet(liveForecast(spot.id)))
     const storage = memoryStorage()
     await store.initializeForecast({ fetcher, storage })
     store.publishForecast(store.forecastRevision)
@@ -171,24 +183,129 @@ describe('configurator store', () => {
     expect(fetcher).toHaveBeenCalledTimes(2)
   })
 
+  it('switches between already loaded models without another network request', async () => {
+    const store = useConfiguratorStore()
+    const fetcher = vi.fn().mockResolvedValue(forecastSet(
+      liveForecast(),
+      liveForecast('brouwersdam', 1_777_000_000_000, 'gfs_seamless'),
+    ))
+    await store.initializeForecast({ fetcher, storage: memoryStorage() })
+    store.publishForecast(store.forecastRevision)
+
+    expect(await store.selectModel('gfs_seamless', { fetcher, storage: memoryStorage() })).toBe(true)
+    expect(fetcher).toHaveBeenCalledOnce()
+    expect(store.selectedModelId).toBe('gfs_seamless')
+    expect(store.forecast).toMatchObject({ modelId: 'gfs_seamless', model: 'NOAA GFS' })
+    expect(store.forecastStatus).toBe('rendering')
+    expect(store.publishForecast(store.forecastRevision)).toBe(true)
+    expect(store.forecastMessage).toBe('Live GFS forecast for Brouwersdam.')
+  })
+
+  it('changes the requested model during initial loading without duplicating the API call', async () => {
+    const store = useConfiguratorStore()
+    const request = deferred()
+    const fetcher = vi.fn(() => request.promise)
+    const loading = store.initializeForecast({ fetcher, storage: memoryStorage() })
+
+    const selecting = store.selectModel('gfs_seamless', {
+      fetcher,
+      storage: memoryStorage(),
+    })
+    await Promise.resolve()
+    expect(fetcher).toHaveBeenCalledOnce()
+
+    request.resolve(forecastSet(
+      liveForecast(),
+      liveForecast('brouwersdam', 1_777_000_000_000, 'gfs_seamless'),
+    ))
+    await expect(selecting).resolves.toBe(true)
+    await expect(loading).resolves.toBe(true)
+    expect(store.forecast.modelId).toBe('gfs_seamless')
+  })
+
+  it('keeps a cached model labelled as cached while the live refresh is pending or fails', async () => {
+    const storage = memoryStorage()
+    const cachedBestFit = liveForecast()
+    const cachedGfs = liveForecast('brouwersdam', 1_777_000_000_000, 'gfs_seamless')
+    const seedStore = useConfiguratorStore()
+    await seedStore.initializeForecast({
+      fetcher: vi.fn().mockResolvedValue(forecastSet(cachedBestFit, cachedGfs)),
+      storage,
+    })
+    seedStore.$dispose()
+
+    setActivePinia(createPinia())
+    const store = useConfiguratorStore()
+    const request = deferred()
+    const fetcher = vi.fn(() => request.promise)
+    const loading = store.initializeForecast({ fetcher, storage })
+
+    await store.selectModel('gfs_seamless', { fetcher, storage })
+    expect(store.forecast.modelId).toBe('gfs_seamless')
+    expect(store.publishForecast(store.forecastRevision)).toBe(true)
+    expect(store.forecastSource).toBe('cache')
+    expect(store.forecastLabel).toBe('Cached')
+    expect(store.forecastMessage).toContain('Refreshing current data')
+    expect(fetcher).toHaveBeenCalledOnce()
+
+    request.reject(new Error('offline'))
+    await expect(loading).resolves.toBe(false)
+    expect(store.forecastSource).toBe('cache')
+    expect(store.forecastLabel).toBe('Cached')
+    expect(store.forecastMessage).toBe('Could not refresh. Showing the cached forecast.')
+  })
+
+  it('rejects unknown models without changing the current preview', async () => {
+    const store = useConfiguratorStore()
+    const current = store.forecast
+    await expect(store.selectModel('magic-wind')).resolves.toBe(false)
+    expect(store.selectedModelId).toBe('best_match')
+    expect(store.forecast).toBe(current)
+  })
+
+  it('labels the previous model honestly when a requested model cannot load', async () => {
+    const store = useConfiguratorStore()
+    const fetcher = vi.fn()
+      .mockResolvedValueOnce(forecastSet(liveForecast()))
+      .mockRejectedValueOnce(new Error('offline'))
+    await store.initializeForecast({ fetcher, storage: memoryStorage() })
+    store.publishForecast(store.forecastRevision)
+
+    await expect(store.selectModel('gfs_seamless', {
+      fetcher,
+      storage: memoryStorage(),
+    })).resolves.toBe(false)
+
+    expect(store.selectedModelId).toBe('gfs_seamless')
+    expect(store.forecast.modelId).toBe('best_match')
+    expect(store.forecastLabel).toBe('Previous model')
+    expect(store.forecastMessage).toBe('Could not load GFS. Still showing BEST FIT.')
+  })
+
   it('does not publish an old pending forecast under a newly selected spot', async () => {
     const store = useConfiguratorStore()
-    await store.initializeForecast({ fetcher: vi.fn().mockResolvedValue(liveForecast()), storage: memoryStorage() })
+    await store.initializeForecast({
+      fetcher: vi.fn().mockResolvedValue(forecastSet(liveForecast())),
+      storage: memoryStorage(),
+    })
     const oldRevision = store.forecastRevision
     const edam = deferred()
 
     const selectingEdam = store.selectSpot('edam', { fetcher: () => edam.promise, storage: memoryStorage() })
 
     expect(store.publishForecast(oldRevision)).toBe(false)
-    edam.resolve(liveForecast('edam'))
+    edam.resolve(forecastSet(liveForecast('edam')))
     await selectingEdam
     expect(store.publishForecast(store.forecastRevision)).toBe(true)
-    expect(store.forecastMessage).toBe('Live forecast for Edam.')
+    expect(store.forecastMessage).toBe('Live Best fit forecast for Edam.')
   })
 
   it('ignores an older spot request that resolves after the newest one', async () => {
     const store = useConfiguratorStore()
-    await store.initializeForecast({ fetcher: vi.fn().mockResolvedValue(liveForecast()), storage: memoryStorage() })
+    await store.initializeForecast({
+      fetcher: vi.fn().mockResolvedValue(forecastSet(liveForecast())),
+      storage: memoryStorage(),
+    })
     store.publishForecast(store.forecastRevision)
     const edam = deferred()
     const castricum = deferred()
@@ -198,21 +315,21 @@ describe('configurator store', () => {
       fetcher: () => castricum.promise,
       storage: memoryStorage(),
     })
-    castricum.resolve(liveForecast('castricum-aan-zee'))
+    castricum.resolve(forecastSet(liveForecast('castricum-aan-zee')))
     await secondSelection
     store.publishForecast(store.forecastRevision)
-    edam.resolve(liveForecast('edam'))
+    edam.resolve(forecastSet(liveForecast('edam')))
 
     await expect(firstSelection).resolves.toBe(false)
     expect(store.forecast.spotId).toBe('castricum-aan-zee')
-    expect(store.forecastMessage).toBe('Live forecast for Castricum aan Zee.')
+    expect(store.forecastMessage).toBe('Live Best fit forecast for Castricum aan Zee.')
   })
 
   it('restores the last published forecast when a new bitmap is rejected', async () => {
     const store = useConfiguratorStore()
     const fetcher = vi.fn()
-      .mockResolvedValueOnce(liveForecast())
-      .mockResolvedValueOnce(liveForecast('edam'))
+      .mockResolvedValueOnce(forecastSet(liveForecast()))
+      .mockResolvedValueOnce(forecastSet(liveForecast('edam')))
     await store.initializeForecast({ fetcher, storage: memoryStorage() })
     store.publishForecast(store.forecastRevision)
     await store.selectSpot('edam', { fetcher, storage: memoryStorage() })
@@ -222,5 +339,23 @@ describe('configurator store', () => {
     expect(store.pendingForecastRevision).toBeNull()
     expect(store.forecastStatus).toBe('warning')
     expect(store.forecastLabel).toBe('Previous spot')
+  })
+
+  it('restores the published model when a selected model bitmap is rejected', async () => {
+    const store = useConfiguratorStore()
+    const bestFit = liveForecast()
+    const gfs = liveForecast('brouwersdam', 1_777_000_000_000, 'gfs_seamless')
+    await store.initializeForecast({
+      fetcher: vi.fn().mockResolvedValue(forecastSet(bestFit, gfs)),
+      storage: memoryStorage(),
+    })
+    store.publishForecast(store.forecastRevision)
+    await store.selectModel('gfs_seamless', { storage: memoryStorage() })
+
+    expect(store.rejectForecastPublication(store.forecastRevision)).toBe(true)
+    expect(store.selectedModelId).toBe('gfs_seamless')
+    expect(store.forecast.modelId).toBe('best_match')
+    expect(store.forecastLabel).toBe('Previous model')
+    expect(store.forecastMessage).toBe('Could not show GFS. Still showing BEST FIT.')
   })
 })

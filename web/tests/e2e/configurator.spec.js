@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { FORECAST_MODEL_IDS } from '../../src/forecast/models'
 
 function amsterdamDate(offset = 0) {
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -13,21 +14,30 @@ function responseFor(latitude) {
   const times = Array.from({ length: 5 }, (_, day) => [8, 11, 14, 17, 20]
     .map((hour) => `${amsterdamDate(day)}T${String(hour).padStart(2, '0')}:00`)).flat()
   const offset = latitude > 52 ? 4 : 0
+  const hourlyUnits = { time: 'iso8601' }
+  const hourly = { time: times }
+  FORECAST_MODEL_IDS.forEach((modelId, modelIndex) => {
+    Object.assign(hourlyUnits, {
+      [`wind_speed_10m_${modelId}`]: 'kn',
+      [`wind_gusts_10m_${modelId}`]: 'kn',
+      [`wind_direction_10m_${modelId}`]: '°',
+      [`cloud_cover_${modelId}`]: '%',
+      [`precipitation_${modelId}`]: 'mm',
+      [`is_day_${modelId}`]: '',
+    })
+    Object.assign(hourly, {
+      [`wind_speed_10m_${modelId}`]: times.map((_, index) => 11 + offset + modelIndex * 3 + (index % 5)),
+      [`wind_gusts_10m_${modelId}`]: times.map((_, index) => 17 + offset + modelIndex * 3 + (index % 5)),
+      [`wind_direction_10m_${modelId}`]: times.map(() => 90 + modelIndex * 15),
+      [`cloud_cover_${modelId}`]: times.map(() => 20 + modelIndex * 10),
+      [`precipitation_${modelId}`]: times.map(() => 0),
+      [`is_day_${modelId}`]: times.map(() => 1),
+    })
+  })
   return {
     timezone: 'Europe/Amsterdam',
-    hourly_units: {
-      wind_speed_10m: 'kn', wind_gusts_10m: 'kn', wind_direction_10m: '°',
-      cloud_cover: '%', precipitation: 'mm',
-    },
-    hourly: {
-      time: times,
-      wind_speed_10m: times.map((_, index) => 11 + offset + (index % 5)),
-      wind_gusts_10m: times.map((_, index) => 17 + offset + (index % 5)),
-      wind_direction_10m: times.map(() => 90),
-      cloud_cover: times.map(() => 35),
-      precipitation: times.map(() => 0),
-      is_day: times.map(() => 1),
-    },
+    hourly_units: hourlyUnits,
+    hourly,
   }
 }
 
@@ -58,7 +68,7 @@ test('configures the live display with actual DialKit controls', async ({ page }
 
   await expect(page.getByRole('region', { name: 'WindScout 3D preview' })).toBeVisible()
   await expect(page.locator('.configurator-header')).toHaveCount(0)
-  await expect(forecastStatus(page)).toContainText('Live forecast for Brouwersdam', { timeout: 15_000 })
+  await expect(forecastStatus(page)).toContainText('Live Best fit forecast for Brouwersdam', { timeout: 15_000 })
   await expect(page.getByTestId('forecast-label')).toHaveCount(0)
   expect(requests).toHaveLength(1)
   const treatment = page.getByRole('button', { name: /Treatment/ })
@@ -86,6 +96,13 @@ test('keeps the 3D product and controls usable in the narrow composition', async
   await expect(page.locator('[data-scene-status="ready"]')).toBeVisible()
   await expect(page.getByRole('slider', { name: 'Wind threshold' })).toBeVisible()
   await expect(page.locator('.settings-panel')).toHaveCSS('border-radius', '16px')
+
+  await page.getByRole('button', { name: 'Model Best fit' }).click()
+  for (const name of ['Best fit', 'KNMI', 'ECMWF', 'ICON', 'GFS']) {
+    await expect(page.getByRole('button', { name, exact: true })).toBeVisible()
+  }
+  await page.getByRole('button', { name: 'ECMWF', exact: true }).click()
+  await expect(forecastStatus(page)).toContainText('Live ECMWF forecast')
 })
 
 test('loads the local CAD model into the constrained 3D scene', async ({ page }) => {
@@ -103,17 +120,34 @@ test('switches the live preview to another supported spot without a page reload'
   const requests = await mockForecastApi(page)
   await page.setViewportSize({ width: 1200, height: 900 })
   await page.goto('/')
-  await expect(forecastStatus(page)).toContainText('Live forecast for Brouwersdam', { timeout: 15_000 })
+  await expect(forecastStatus(page)).toContainText('Live Best fit forecast for Brouwersdam', { timeout: 15_000 })
 
   const spot = page.getByRole('button', { name: /Spot/ })
   await spot.click()
   await page.getByRole('button', { name: 'Edam' }).click()
 
-  await expect(forecastStatus(page)).toContainText('Live forecast for Edam', { timeout: 15_000 })
+  await expect(forecastStatus(page)).toContainText('Live Best fit forecast for Edam', { timeout: 15_000 })
   await expect(page.locator('.scene-host')).toHaveAttribute('data-forecast-spot', 'edam')
   await expect(page.getByTestId('forecast-label')).toHaveCount(0)
   expect(requests).toHaveLength(2)
   expect(requests[1].searchParams.get('latitude')).toBe('52.512600')
+})
+
+test('switches forecast model instantly and redraws the 3D screen', async ({ page }) => {
+  const requests = await mockForecastApi(page)
+  await page.setViewportSize({ width: 1200, height: 900 })
+  await page.goto('/')
+  await expect(forecastStatus(page)).toContainText('Live Best fit forecast for Brouwersdam', { timeout: 15_000 })
+  const before = await page.locator('canvas').screenshot()
+
+  await page.getByRole('button', { name: /Model/ }).click()
+  await page.getByRole('button', { name: 'GFS' }).click()
+
+  await expect(forecastStatus(page)).toContainText('Live GFS forecast for Brouwersdam')
+  await expect(page.locator('.scene-host')).toHaveAttribute('data-forecast-model', 'gfs_seamless')
+  const after = await page.locator('canvas').screenshot()
+  expect(after.equals(before)).toBe(false)
+  expect(requests).toHaveLength(1)
 })
 
 test('labels a first network failure as demo outside the device screen', async ({ page }) => {

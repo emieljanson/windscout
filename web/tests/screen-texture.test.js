@@ -37,7 +37,7 @@ describe('canonical screen texture', () => {
     expect(renderer.renderPreview.mock.calls[0][0]).toMatchObject({
       version: 1,
       spotName: 'Brouwersdam',
-      provider: 'KNMI SEAMLESS',
+      provider: 'BEST FIT',
       displayMode: 0,
       thresholdKt: 17,
       days: expect.arrayContaining([

@@ -18,7 +18,8 @@ export const brouwersdamForecast = Object.freeze({
   coordinates: '51.767°N · 3.859°E',
   timezone: 'Europe/Amsterdam',
   provider: 'OPEN-METEO',
-  model: 'KNMI SEAMLESS',
+  modelId: 'best_match',
+  model: 'BEST FIT',
   updatedTime: '07:40',
   retrievedAt: 1787722800000,
   days: [

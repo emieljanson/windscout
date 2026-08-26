@@ -1,7 +1,7 @@
 import { isNormalizedForecast } from './normalizeForecast'
 
 export const FORECAST_CACHE_KEY = 'windscout.forecasts'
-export const FORECAST_CACHE_VERSION = 1
+export const FORECAST_CACHE_VERSION = 2
 
 function availableStorage(storage) {
   if (storage) return storage
@@ -25,23 +25,32 @@ function readEnvelope(storage) {
   }
 }
 
-export function readCachedForecast(spotId, storage) {
-  const forecast = readEnvelope(storage)?.spots?.[spotId]
-  return isNormalizedForecast(forecast) && forecast.spotId === spotId ? forecast : null
+export function readCachedForecast(spotId, modelId, storage) {
+  const forecast = readEnvelope(storage)?.spots?.[spotId]?.[modelId]
+  return isNormalizedForecast(forecast) && forecast.spotId === spotId &&
+    forecast.modelId === modelId ? forecast : null
 }
 
-export function writeCachedForecast(forecast, storage) {
-  if (!isNormalizedForecast(forecast)) return false
+export function writeCachedForecasts(forecasts, storage) {
+  const values = Array.isArray(forecasts) ? forecasts : Object.values(forecasts ?? {})
+  if (!values.length || !values.every(isNormalizedForecast)) return false
   const target = availableStorage(storage)
   if (!target) return false
   try {
     const envelope = readEnvelope(target) ?? { version: FORECAST_CACHE_VERSION, spots: {} }
-    envelope.spots[forecast.spotId] = forecast
+    values.forEach((forecast) => {
+      envelope.spots[forecast.spotId] ??= {}
+      envelope.spots[forecast.spotId][forecast.modelId] = forecast
+    })
     target.setItem(FORECAST_CACHE_KEY, JSON.stringify(envelope))
     return true
   } catch {
     return false
   }
+}
+
+export function writeCachedForecast(forecast, storage) {
+  return writeCachedForecasts([forecast], storage)
 }
 
 export function clearCachedForecast(storage) {

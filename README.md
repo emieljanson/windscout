@@ -40,6 +40,11 @@ npm run renderer:check
 npm test -- --run tests/shared-renderer.test.js
 ```
 
+The configurator retrieves Best fit, KNMI, ECMWF, ICON, and GFS in one
+Open-Meteo request. Best fit is the default, while the DialKit model control can
+switch the 3D preview instantly between the already normalized forecasts.
+Cached forecasts are separated by spot and model.
+
 The parity test still compares every one of the 384,000 device-palette bytes,
 including red threshold pixels, so compiling to WebAssembly cannot change what
 the device would receive. A separate preview test verifies that the same

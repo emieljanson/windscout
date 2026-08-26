@@ -7,12 +7,19 @@ const { fetchForecast } = vi.hoisted(() => ({
 }))
 
 vi.mock('../src/forecast/openMeteo', () => ({
-  fetchOpenMeteoForecast: fetchForecast,
+  fetchOpenMeteoForecasts: fetchForecast,
 }))
 
 vi.mock('dialkit/vue', () => ({
   DialRoot: { template: '<div data-testid="dial-root">Display controls</div>' },
-  useDialKitController: () => ({ values: { value: { treatment: 'background-fade', windThreshold: 17 } }, setValue: vi.fn() }),
+  useDialKitController: () => ({
+    values: {
+      value: {
+        spot: 'brouwersdam', model: 'best_match', treatment: 'background-fade', windThreshold: 17,
+      },
+    },
+    setValue: vi.fn(),
+  }),
 }))
 
 import ConfiguratorView from '../src/views/ConfiguratorView.vue'

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { normalizeForecast } from '../src/forecast/normalizeForecast'
+import { normalizeForecast, normalizeForecastModels } from '../src/forecast/normalizeForecast'
+import { getForecastModel } from '../src/forecast/models'
 import { SPOTS } from '../src/spots'
 
 function responseFor({ hours = [8, 11, 14, 17, 20], speedUnit = 'kn', omit = '' } = {}) {
@@ -82,5 +83,31 @@ describe('forecast normalizer', () => {
 
     expect(forecast.days[0].samples[0].weather).toBe(1)
     expect(forecast.days[0].samples[2].weather).toBe(3)
+  })
+
+  it('normalizes suffixed model arrays into independently selectable forecasts', () => {
+    const response = responseFor()
+    for (const modelId of ['best_match', 'gfs_seamless']) {
+      for (const field of [
+        'wind_speed_10m', 'wind_gusts_10m', 'wind_direction_10m',
+        'cloud_cover', 'precipitation', 'is_day',
+      ]) {
+        response.hourly[`${field}_${modelId}`] = response.hourly[field].map((value) => (
+          modelId === 'gfs_seamless' && field === 'wind_speed_10m' ? value + 8 : value
+        ))
+        response.hourly_units[`${field}_${modelId}`] = response.hourly_units[field] ?? ''
+      }
+    }
+
+    const forecasts = normalizeForecastModels(response, SPOTS[1], {
+      models: [getForecastModel('best_match'), getForecastModel('gfs_seamless')],
+      firstDate: '2026-08-26',
+      retrievedAt: 1_777_000_000_000,
+    })
+
+    expect(forecasts.best_match).toMatchObject({ modelId: 'best_match', model: 'BEST FIT' })
+    expect(forecasts.gfs_seamless).toMatchObject({ modelId: 'gfs_seamless', model: 'NOAA GFS' })
+    expect(forecasts.gfs_seamless.days[0].samples[0].sustainedKt)
+      .toBe(forecasts.best_match.days[0].samples[0].sustainedKt + 8)
   })
 })

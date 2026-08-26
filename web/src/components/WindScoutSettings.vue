@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia'
 import { DialRoot, useDialKitController } from 'dialkit/vue'
 import { useConfiguratorStore } from '../stores/configurator'
 import { enhanceDialKitSlider } from '../configurator/dialKitAccessibility'
+import { FORECAST_MODELS } from '../forecast/models'
 import { MAX_THRESHOLD, MIN_THRESHOLD } from '../renderer/contract'
 import { SPOTS } from '../spots'
 
@@ -15,6 +16,11 @@ const dial = useDialKitController('Display', {
     type: 'select',
     options: SPOTS.map((spot) => ({ value: spot.id, label: spot.name })),
     default: store.selectedSpotId,
+  },
+  model: {
+    type: 'select',
+    options: FORECAST_MODELS.map((model) => ({ value: model.id, label: model.label })),
+    default: store.selectedModelId,
   },
   treatment: {
     type: 'select',
@@ -60,6 +66,13 @@ watch(
   () => dial.values.value.spot,
   (spotId) => {
     if (spotId && spotId !== store.selectedSpotId) void store.selectSpot(spotId)
+  },
+)
+
+watch(
+  () => dial.values.value.model,
+  (modelId) => {
+    if (modelId && modelId !== store.selectedModelId) void store.selectModel(modelId)
   },
 )
 

@@ -1,8 +1,8 @@
 import { RENDERER_TEXT_CAPACITIES, textFitsRenderer } from '../renderer/contract'
+import { FORECAST_MODELS, getForecastModel } from './models'
 
 const REQUIRED_HOURS = Object.freeze([8, 11, 14, 17, 20])
-const CORE_FIELDS = Object.freeze([
-  'time',
+const CORE_WIND_FIELDS = Object.freeze([
   'wind_speed_10m',
   'wind_gusts_10m',
   'wind_direction_10m',
@@ -92,35 +92,59 @@ function weatherState(cloudCover, precipitation, isDay) {
   return 5
 }
 
-function validateCoreResponse(response) {
+function modelField(field, modelId, suffixed) {
+  return suffixed ? `${field}_${modelId}` : field
+}
+
+function responseFields(modelId, suffixed) {
+  return {
+    wind: modelField('wind_speed_10m', modelId, suffixed),
+    gust: modelField('wind_gusts_10m', modelId, suffixed),
+    direction: modelField('wind_direction_10m', modelId, suffixed),
+    cloud: modelField('cloud_cover', modelId, suffixed),
+    precipitation: modelField('precipitation', modelId, suffixed),
+    isDay: modelField('is_day', modelId, suffixed),
+  }
+}
+
+function validateCoreResponse(response, modelId, suffixed) {
   if (!response || typeof response !== 'object') fail('response is missing')
   if (response.timezone !== 'Europe/Amsterdam') fail('timezone must be Europe/Amsterdam')
   const units = response.hourly_units
-  if (!units || units.wind_speed_10m !== 'kn' || units.wind_gusts_10m !== 'kn' ||
-      units.wind_direction_10m !== '\u00b0') fail('wind units do not match the renderer contract')
+  const fields = responseFields(modelId, suffixed)
+  if (!units || units[fields.wind] !== 'kn' || units[fields.gust] !== 'kn' ||
+      units[fields.direction] !== '\u00b0') fail('wind units do not match the renderer contract')
   const hourly = response.hourly
   if (!hourly || typeof hourly !== 'object') fail('hourly data is missing')
   const count = Array.isArray(hourly.time) ? hourly.time.length : 0
-  if (!count || CORE_FIELDS.some((field) => !Array.isArray(hourly[field]) || hourly[field].length !== count)) {
+  if (!count || CORE_WIND_FIELDS.some((field) => {
+    const key = modelField(field, modelId, suffixed)
+    return !Array.isArray(hourly[key]) || hourly[key].length !== count
+  })) {
     fail('core hourly arrays are missing or misaligned')
   }
-  return { hourly, units, count }
+  return { hourly, units, count, fields }
 }
 
 export function normalizeForecast(response, spot, {
   retrievedAt = Date.now(),
   firstDate = localDateAt(retrievedAt, spot?.timezone ?? 'Europe/Amsterdam'),
+  model = getForecastModel('knmi_seamless'),
+  suffixed = false,
 } = {}) {
   if (!spot || !spot.id || !Number.isFinite(spot.latitude) || !Number.isFinite(spot.longitude)) {
     fail('spot is invalid')
   }
   if (!Number.isFinite(retrievedAt) || retrievedAt <= 0) fail('retrieval time is invalid')
   dateParts(firstDate)
-  const { hourly, units, count } = validateCoreResponse(response)
+  if (!model || !getForecastModel(model.id)) fail('model is invalid')
+  const {
+    hourly, units, count, fields,
+  } = validateCoreResponse(response, model.id, suffixed)
 
-  const weatherAvailable = ['cloud_cover', 'precipitation', 'is_day']
+  const weatherAvailable = [fields.cloud, fields.precipitation, fields.isDay]
     .every((field) => Array.isArray(hourly[field]) && hourly[field].length === count) &&
-    units.cloud_cover === '%' && units.precipitation === 'mm'
+    units[fields.cloud] === '%' && units[fields.precipitation] === 'mm'
   const sampleByLocalTime = new Map()
   let previousTime = ''
 
@@ -130,7 +154,7 @@ export function normalizeForecast(response, spot, {
     if (!match || (previousTime && previousTime >= localTime)) fail('hourly times are invalid or not ascending')
     previousTime = localTime
     const [wind, gust, sourceDirection] = [
-      hourly.wind_speed_10m[index], hourly.wind_gusts_10m[index], hourly.wind_direction_10m[index],
+      hourly[fields.wind][index], hourly[fields.gust][index], hourly[fields.direction][index],
     ]
     if (![wind, gust, sourceDirection].every(Number.isFinite) || wind < 0 || gust < 0 ||
         wind > 32767 || gust > 32767) fail(`invalid wind value at ${localTime}`)
@@ -143,7 +167,11 @@ export function normalizeForecast(response, spot, {
       destinationDegrees: Math.round(((sourceDirection + 180) % 360 + 360) % 360) % 360,
       available: true,
       weather: weatherAvailable
-        ? weatherState(hourly.cloud_cover[index], hourly.precipitation[index], hourly.is_day[index])
+        ? weatherState(
+          hourly[fields.cloud][index],
+          hourly[fields.precipitation][index],
+          hourly[fields.isDay][index],
+        )
         : 0,
     })
   }
@@ -170,18 +198,31 @@ export function normalizeForecast(response, spot, {
     coordinates: `${dms(spot.latitude, 'N', 'S')} ${dms(spot.longitude, 'E', 'W')}`,
     timezone: spot.timezone,
     provider: 'OPEN-METEO',
-    model: 'KNMI SEAMLESS',
+    modelId: model.id,
+    model: model.screenLabel,
     updatedTime: updatedTimeAt(retrievedAt, spot.timezone),
     retrievedAt,
     days,
   }
 }
 
+export function normalizeForecastModels(response, spot, {
+  models = FORECAST_MODELS,
+  ...options
+} = {}) {
+  return Object.fromEntries(models.map((model) => [
+    model.id,
+    normalizeForecast(response, spot, { ...options, model, suffixed: true }),
+  ]))
+}
+
 export function isNormalizedForecast(value) {
+  const model = getForecastModel(value?.modelId)
   if (!value || value.schemaVersion !== 1 || typeof value.spotId !== 'string' || !value.spotId ||
       typeof value.spotName !== 'string' || !value.spotName || typeof value.coordinates !== 'string' ||
       value.timezone !== 'Europe/Amsterdam' || value.provider !== 'OPEN-METEO' ||
-      value.model !== 'KNMI SEAMLESS' || typeof value.updatedTime !== 'string' ||
+      !model || value.model !== model.screenLabel ||
+      typeof value.updatedTime !== 'string' ||
       !Number.isFinite(value.retrievedAt) || value.retrievedAt <= 0 ||
       !Array.isArray(value.days) || value.days.length !== 5) return false
   if (!textFitsRenderer(value.spotName, RENDERER_TEXT_CAPACITIES.spotName) ||

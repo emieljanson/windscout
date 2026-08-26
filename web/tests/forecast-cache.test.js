@@ -10,7 +10,7 @@ function memoryStorage() {
   }
 }
 
-function forecast() {
+function forecast(modelId = 'best_match', model = 'BEST FIT') {
   return {
     schemaVersion: 1,
     spotId: 'brouwersdam',
@@ -18,7 +18,8 @@ function forecast() {
     coordinates: `51°45'02"N 3°51'28"E`,
     timezone: 'Europe/Amsterdam',
     provider: 'OPEN-METEO',
-    model: 'KNMI SEAMLESS',
+    modelId,
+    model,
     updatedTime: '26 AUG 2PM',
     retrievedAt: 1_777_000_000_000,
     days: Array.from({ length: 5 }, (_, day) => ({
@@ -34,28 +35,31 @@ function forecast() {
 }
 
 describe('forecast cache', () => {
-  it('round-trips a versioned last-good forecast per spot', () => {
+  it('round-trips independent model forecasts for the same spot', () => {
     const storage = memoryStorage()
     expect(writeCachedForecast(forecast(), storage)).toBe(true)
-    expect(readCachedForecast('brouwersdam', storage)).toEqual(forecast())
-    expect(readCachedForecast('edam', storage)).toBeNull()
+    expect(writeCachedForecast(forecast('gfs_seamless', 'NOAA GFS'), storage)).toBe(true)
+    expect(readCachedForecast('brouwersdam', 'best_match', storage)).toEqual(forecast())
+    expect(readCachedForecast('brouwersdam', 'gfs_seamless', storage))
+      .toEqual(forecast('gfs_seamless', 'NOAA GFS'))
+    expect(readCachedForecast('edam', 'best_match', storage)).toBeNull()
   })
 
   it.each([
     '{not-json',
     JSON.stringify({ version: 99, spots: {} }),
-    JSON.stringify({ version: 1, spots: { brouwersdam: { schemaVersion: 1 } } }),
+    JSON.stringify({ version: 2, spots: { brouwersdam: { best_match: { schemaVersion: 1 } } } }),
   ])('rejects malformed or incompatible cache content', (value) => {
     const storage = memoryStorage()
     storage.setItem('windscout.forecasts', value)
-    expect(readCachedForecast('brouwersdam', storage)).toBeNull()
+    expect(readCachedForecast('brouwersdam', 'best_match', storage)).toBeNull()
   })
 
   it('can clear a stale cache safely', () => {
     const storage = memoryStorage()
     writeCachedForecast(forecast(), storage)
     clearCachedForecast(storage)
-    expect(readCachedForecast('brouwersdam', storage)).toBeNull()
+    expect(readCachedForecast('brouwersdam', 'best_match', storage)).toBeNull()
   })
 
   it('rejects structurally valid data that cannot cross the renderer bridge', () => {

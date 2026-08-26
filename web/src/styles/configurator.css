@@ -231,6 +231,11 @@
     width: min(30rem, calc(100% - 2rem));
     max-height: none;
     margin: -3rem auto 0;
+    overflow: visible;
+  }
+
+  .dialkit-frame {
+    overflow: visible;
   }
 }
 
