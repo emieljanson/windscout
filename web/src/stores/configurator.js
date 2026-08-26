@@ -6,6 +6,9 @@ import {
   getForecastModel,
 } from '../forecast/models'
 import { fetchOpenMeteoForecasts } from '../forecast/openMeteo'
+import { fetchOpenMeteoTide } from '../forecast/openMeteoMarine'
+import { readCachedTide, writeCachedTide } from '../forecast/tideCache'
+import { DEFAULT_DISPLAY_CONFIGURATION } from '../config/configuration'
 import {
   DEFAULT_THRESHOLD,
   DISPLAY_TREATMENTS,
@@ -18,8 +21,11 @@ export { DEFAULT_THRESHOLD, DISPLAY_TREATMENTS, MAX_THRESHOLD, MIN_THRESHOLD } f
 
 export const useConfiguratorStore = defineStore('configurator', {
   state: () => ({
-    treatment: 'background-fade',
+    treatment: DEFAULT_DISPLAY_CONFIGURATION.treatment,
     threshold: DEFAULT_THRESHOLD,
+    showWeather: DEFAULT_DISPLAY_CONFIGURATION.showWeather,
+    showTemperature: DEFAULT_DISPLAY_CONFIGURATION.showTemperature,
+    showTide: DEFAULT_DISPLAY_CONFIGURATION.showTide,
     selectedSpotId: DEFAULT_SPOT_ID,
     selectedModelId: DEFAULT_FORECAST_MODEL_ID,
     forecastsByModel: { [DEFAULT_FORECAST_MODEL_ID]: brouwersdamForecast },
@@ -37,7 +43,21 @@ export const useConfiguratorStore = defineStore('configurator', {
     forecastInitialized: false,
     forecastRequestId: 0,
     forecastRequestInFlight: false,
+    tide: null,
+    tideStatus: 'idle',
+    tideMessage: 'Tide availability has not been checked yet.',
+    tideInitialized: false,
+    tideRequestId: 0,
+    tideRequestInFlight: false,
   }),
+  getters: {
+    tideAvailable: (state) =>
+      ['available', 'cached'].includes(state.tideStatus) &&
+      state.tide?.capability === 'available',
+    effectiveShowTide() {
+      return this.showTide && this.tideAvailable
+    },
+  },
   actions: {
     setTreatment(treatment) {
       if (!DISPLAY_TREATMENTS.includes(treatment)) return false
@@ -51,6 +71,81 @@ export const useConfiguratorStore = defineStore('configurator', {
       }
       this.threshold = Math.round(threshold)
       return true
+    },
+    setShowWeather(value) {
+      if (typeof value !== 'boolean') return false
+      this.showWeather = value
+      return true
+    },
+    setShowTemperature(value) {
+      if (typeof value !== 'boolean') return false
+      this.showTemperature = value
+      return true
+    },
+    setShowTide(value) {
+      if (typeof value !== 'boolean' || (value && !this.tideAvailable)) return false
+      this.showTide = value
+      return true
+    },
+    reportConfigurationRenderFailure() {
+      this.forecastStatus = 'warning'
+      this.forecastLabel = 'Preview unchanged'
+      this.forecastMessage = 'Could not apply that display change. Showing the last valid preview.'
+    },
+    async initializeTide(options = {}) {
+      if (this.tideInitialized) return false
+      this.tideInitialized = true
+      return this.refreshTide(options)
+    },
+    async refreshTide({
+      fetcher = fetchOpenMeteoTide,
+      storage,
+      ...fetchOptions
+    } = {}) {
+      const spot = getSpot(this.selectedSpotId)
+      if (!spot) return false
+      const requestId = ++this.tideRequestId
+      this.tideRequestInFlight = true
+      const cached = readCachedTide(spot.id, spot.timezone, storage)
+      if (cached) {
+        this.tide = cached
+        this.tideStatus = cached.capability === 'available' ? 'cached' : 'unsupported'
+        this.tideMessage = cached.capability === 'available'
+          ? 'Showing cached tide timing while current data loads.'
+          : 'Tide is not available for this spot.'
+      } else {
+        this.tide = null
+        this.tideStatus = 'loading'
+        this.tideMessage = `Checking tide availability for ${spot.name}…`
+      }
+      try {
+        const tide = await fetcher(spot, fetchOptions)
+        if (requestId !== this.tideRequestId || this.selectedSpotId !== spot.id) return false
+        writeCachedTide(tide, storage)
+        this.tide = tide
+        if (tide.capability === 'available') {
+          this.tideStatus = 'available'
+          this.tideMessage = 'Indicative tide timing from Open-Meteo. Not for navigation.'
+        } else {
+          this.tideStatus = 'unsupported'
+          this.tideMessage = 'Tide is not available for this spot.'
+        }
+        return true
+      } catch {
+        if (requestId !== this.tideRequestId || this.selectedSpotId !== spot.id) return false
+        if (cached?.capability === 'available') {
+          this.tide = cached
+          this.tideStatus = 'cached'
+          this.tideMessage = 'Could not refresh tide timing. Showing cached data; not for navigation.'
+        } else {
+          this.tide = null
+          this.tideStatus = 'failed'
+          this.tideMessage = 'Could not check tide availability. Try again later.'
+        }
+        return false
+      } finally {
+        if (requestId === this.tideRequestId) this.tideRequestInFlight = false
+      }
     },
     async initializeForecast(options = {}) {
       if (this.forecastInitialized) return false
@@ -137,11 +232,18 @@ export const useConfiguratorStore = defineStore('configurator', {
         if (requestId === this.forecastRequestId) this.forecastRequestInFlight = false
       }
     },
-    async selectSpot(spotId, options = {}) {
+    async selectSpot(spotId, { tideFetcher, ...options } = {}) {
       if (!getSpot(spotId)) return false
       if (spotId === this.selectedSpotId) return true
       this.selectedSpotId = spotId
-      return this.refreshForecast(options)
+      const forecastResult = this.refreshForecast(options)
+      if (this.tideInitialized) {
+        void this.refreshTide({
+          fetcher: tideFetcher ?? fetchOpenMeteoTide,
+          storage: options.storage,
+        })
+      }
+      return forecastResult
     },
     async selectModel(modelId, { storage, ...refreshOptions } = {}) {
       const model = getForecastModel(modelId)

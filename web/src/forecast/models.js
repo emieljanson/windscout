@@ -1,5 +1,5 @@
 export const FORECAST_MODELS = Object.freeze([
-  Object.freeze({ id: 'best_match', label: 'Best fit', screenLabel: 'BEST FIT' }),
+  Object.freeze({ id: 'best_match', label: 'Best Match', screenLabel: 'BEST MATCH' }),
   Object.freeze({ id: 'knmi_seamless', label: 'KNMI', screenLabel: 'KNMI SEAMLESS' }),
   Object.freeze({ id: 'ecmwf_ifs025', label: 'ECMWF', screenLabel: 'ECMWF IFS' }),
   Object.freeze({ id: 'icon_seamless', label: 'ICON', screenLabel: 'DWD ICON' }),

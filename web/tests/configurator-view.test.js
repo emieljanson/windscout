@@ -2,12 +2,17 @@ import { describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia } from 'pinia'
 
-const { fetchForecast } = vi.hoisted(() => ({
+const { fetchForecast, fetchTide } = vi.hoisted(() => ({
   fetchForecast: vi.fn().mockRejectedValue(new Error('offline')),
+  fetchTide: vi.fn().mockRejectedValue(new Error('offline')),
 }))
 
 vi.mock('../src/forecast/openMeteo', () => ({
   fetchOpenMeteoForecasts: fetchForecast,
+}))
+
+vi.mock('../src/forecast/openMeteoMarine', () => ({
+  fetchOpenMeteoTide: fetchTide,
 }))
 
 vi.mock('dialkit/vue', () => ({
@@ -16,6 +21,7 @@ vi.mock('dialkit/vue', () => ({
     values: {
       value: {
         spot: 'brouwersdam', model: 'best_match', treatment: 'background-fade', windThreshold: 17,
+        weather: true, airTemperature: false, tide: false,
       },
     },
     setValue: vi.fn(),

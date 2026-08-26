@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-26T06:50:36.955Z",
+  "generatedAt": "2026-08-26T15:56:55.936Z",
   "source": {
     "url": "https://files.seeedstudio.com/wiki/reterminal_e10xx/res/reTerminal_E1001_E1002_3D.stp",
     "sha256": "d007d0db5ecd78f2109ee9115aa562b31d058fc054172b7237a4692c6e30a6b1",
@@ -13,8 +13,9 @@
   "conversion": {
     "importer": "occt-import-js@0.0.23",
     "exporter": "three@^0.185.0",
-    "linearDeflectionMm": 0.5,
-    "angularDeflection": 0.5,
+    "linearDeflectionMm": 0.2,
+    "angularDeflection": 0.25,
+    "normalTreatment": "45-degree crease-aware normals with a planar front-face lock",
     "excludedInternalMeshes": [
       23,
       24,
@@ -27,6 +28,12 @@
       48,
       56
     ],
+    "excludedVariantMeshes": [
+      14,
+      15,
+      16,
+      17
+    ],
     "addedScreenMm": {
       "width": 159,
       "height": 95.4,
@@ -35,8 +42,8 @@
   },
   "output": {
     "file": "e1002.glb",
-    "bytes": 561824,
-    "sha256": "3961139cfa4cf2c156ba2f283050e1dfdb0870fdeb2433beb3b3192b8827ddc5",
+    "bytes": 2406364,
+    "sha256": "87de04f1ee9948028ebbcce6478e6d55d36ec9619836693bd7d33458d1dd3cbd",
     "roles": [
       "BODY",
       "CONTROLS",
@@ -51,7 +58,7 @@
         "height": 120.4,
         "depth": 17
       },
-      "totalStandDepthMm": 53.5
+      "totalStandDepthMm": 53.3
     }
   },
   "publication": {

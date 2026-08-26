@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createScreenTexture } from '../src/configurator/screenTexture'
+import { createRendererInput, createScreenTexture } from '../src/configurator/screenTexture'
 import { brouwersdamForecast } from '../src/fixtures/brouwersdam'
 import { RENDERER_CONTRACT_VERSION, RENDERER_RGBA_BYTES } from '../src/renderer/sharedRenderer'
 
@@ -79,6 +79,36 @@ describe('canonical screen texture', () => {
     expect([...source.texture.image.data.slice(0, 4)]).toEqual([255, 0, 0, 255])
     expect(secondFrame).not.toBe(firstFrame)
     expect(source.texture.image.data).not.toBe(secondFrame)
+  })
+
+  it('maps row choices and five local tide days into renderer input', () => {
+    const tide = {
+      capability: 'available',
+      samples: brouwersdamForecast.days.flatMap((day, dayIndex) =>
+        Array.from({ length: 24 }, (_, hour) => ({
+          localDate: day.localDate,
+          localTime: `${String(hour).padStart(2, '0')}:00`,
+          seaLevelMm: dayIndex * 100 + hour,
+        }))),
+    }
+
+    const input = createRendererInput(brouwersdamForecast, {
+      treatment: 'solid',
+      threshold: 17,
+      showWeather: false,
+      showTemperature: true,
+      showTide: true,
+      tide,
+    })
+
+    expect(input).toMatchObject({
+      showWeather: false,
+      showTemperature: true,
+      showTide: true,
+      tideAvailable: true,
+    })
+    expect(input.tideSamples).toHaveLength(120)
+    expect(input.tideSamples[24]).toMatchObject({ dayIndex: 1, localHour: 0 })
   })
 
   it('does not publish an incomplete frame during rapid updates', async () => {

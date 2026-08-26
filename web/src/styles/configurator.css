@@ -1,7 +1,7 @@
 .configurator-page {
   min-height: 100dvh;
   overflow-x: hidden;
-  background: #dce2df;
+  background: #ffffff;
 }
 
 .configurator-layout {
@@ -14,23 +14,7 @@
   min-height: 100dvh;
   overflow: hidden;
   isolation: isolate;
-  background:
-    radial-gradient(circle at 42% 34%, rgba(255, 255, 255, 0.82), rgba(235, 240, 237, 0.38) 38%, transparent 66%),
-    linear-gradient(155deg, #e5e9e7 0%, #d9e0dd 55%, #cbd4d1 100%);
-}
-
-.product-stage::before {
-  position: absolute;
-  z-index: 0;
-  inset: 42% -28% -30%;
-  background-image: radial-gradient(circle, rgba(43, 57, 52, 0.34) 0 1.15px, transparent 1.5px);
-  background-size: 34px 34px;
-  content: '';
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 28%, #000 64%, transparent 96%);
-  mask-image: linear-gradient(to bottom, transparent 0%, #000 28%, #000 64%, transparent 96%);
-  opacity: 0.42;
-  transform: perspective(620px) rotateX(62deg) scale(1.35);
-  transform-origin: 50% 0%;
+  background: #ffffff;
 }
 
 .device-scene {
@@ -77,17 +61,19 @@
   width: min(20rem, calc(100% - 2rem));
   max-height: calc(100dvh - 2rem);
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid rgba(20, 25, 23, 0.1);
   border-radius: 16px;
-  background: rgba(249, 250, 247, 0.92);
+  background: rgba(255, 255, 255, 0.94);
   box-shadow: 0 18px 54px rgba(38, 49, 45, 0.16);
   backdrop-filter: blur(20px) saturate(1.08);
 }
 
-.settings-surface,
-.dialkit-frame {
+.settings-surface {
+  position: relative;
+  z-index: 2;
   min-height: 0;
+  overflow: visible;
 }
 
 .forecast-status {
@@ -130,8 +116,19 @@
   min-width: 0;
 }
 
+.forecast-status.is-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .dialkit-frame {
-  overflow: auto;
+  overflow: visible;
   padding-top: 2px;
 }
 
@@ -140,6 +137,8 @@
 }
 
 .dialkit-frame .dialkit-root {
+  position: relative;
+  z-index: 2;
   --dial-glass-bg: transparent;
   --dial-dropdown-bg: #ffffff;
   --dial-radius: 10px;
@@ -155,6 +154,18 @@
   padding: 10px 10px 2px;
 }
 
+.dialkit-frame .dialkit-panel-header,
+.dialkit-frame .dialkit-folder,
+.dialkit-frame .dialkit-folder:not(.dialkit-folder-root) {
+  border-top: 0;
+  border-bottom: 0;
+}
+
+.dialkit-frame .dialkit-select-dropdown {
+  z-index: 10001;
+  background: #ffffff;
+}
+
 .dialkit-frame .dialkit-panel-toolbar,
 .dialkit-frame .dialkit-panel-section-toolbar {
   display: none;
@@ -166,9 +177,10 @@
 }
 
 .install-continuation {
+  position: relative;
+  z-index: 1;
   margin: 0 10px 10px;
   padding-top: 10px;
-  border-top: 1px solid rgba(20, 25, 23, 0.08);
 }
 
 .install-button {
@@ -216,22 +228,24 @@
 
 @media (max-width: 56rem) {
   .configurator-layout {
-    padding-bottom: 1rem;
-    background: #dce2df;
+    background: #ffffff;
   }
 
   .product-stage {
-    min-height: clamp(35rem, 72dvh, 44rem);
+    min-height: 100dvh;
   }
 
   .settings-panel {
-    position: relative;
+    position: absolute;
     top: auto;
     right: auto;
+    bottom: 1rem;
+    left: 50%;
     width: min(30rem, calc(100% - 2rem));
     max-height: none;
-    margin: -3rem auto 0;
+    margin: 0;
     overflow: visible;
+    transform: translateX(-50%);
   }
 
   .dialkit-frame {
@@ -241,16 +255,11 @@
 
 @media (max-width: 38rem) {
   .product-stage {
-    min-height: clamp(30rem, 65dvh, 36rem);
-  }
-
-  .product-stage::before {
-    inset: 40% -55% -35%;
-    background-size: 30px 30px;
+    min-height: 100dvh;
   }
 
   .settings-panel {
     width: calc(100% - 1.5rem);
-    margin-top: -2.25rem;
+    bottom: 0.75rem;
   }
 }

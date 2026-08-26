@@ -127,7 +127,7 @@ describe('forecast normalizer', () => {
       retrievedAt: 1_777_000_000_000,
     })
 
-    expect(forecasts.best_match).toMatchObject({ modelId: 'best_match', model: 'BEST FIT' })
+    expect(forecasts.best_match).toMatchObject({ modelId: 'best_match', model: 'BEST MATCH' })
     expect(forecasts.gfs_seamless).toMatchObject({ modelId: 'gfs_seamless', model: 'NOAA GFS' })
     expect(forecasts.gfs_seamless.days[0].samples[0].sustainedKt)
       .toBe(forecasts.best_match.days[0].samples[0].sustainedKt + 8)

@@ -21,7 +21,7 @@ export const brouwersdamForecast = Object.freeze({
   timezone: 'Europe/Amsterdam',
   provider: 'OPEN-METEO',
   modelId: 'best_match',
-  model: 'BEST FIT',
+  model: 'BEST MATCH',
   updatedTime: '07:40',
   retrievedAt: 1787722800000,
   days: [

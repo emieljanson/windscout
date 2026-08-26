@@ -2,12 +2,12 @@
   color-scheme: light;
   font-family: 'Inter Variable', Inter, system-ui, sans-serif;
   color: #151817;
-  background: #dfe3e1;
+  background: #ffffff;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   --ink: #151817;
   --muted: #68716e;
-  --mist: #dfe3e1;
+  --mist: #ffffff;
   --signal: #e74d32;
   --line: rgba(21, 24, 23, 0.16);
   --focus: #135f56;

@@ -7,6 +7,7 @@ import { createRequire } from 'node:module'
 import * as THREE from 'three'
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { toCreasedNormals } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { E1002_MODEL } from '../src/assets/e1002.js'
 
 const require = createRequire(import.meta.url)
@@ -22,7 +23,16 @@ const meshRoles = Object.freeze({
   STAND: new Set([58]),
 })
 
+// The shared E1001/E1002 CAD contains two overlapping display stacks. Meshes
+// 14–17 belong to the monochrome E1001 and caused z-fighting when rendered on
+// top of the E1002 front. Keep the E1002 stack (18–21) only.
+const excludedVariantMeshes = new Set([14, 15, 16, 17])
 const excludedInternalMeshes = new Set([23, 24, 26, 27, 36, 42, 46, 47, 48, 56])
+const excludedMeshes = new Set([...excludedVariantMeshes, ...excludedInternalMeshes])
+const frontPanelMeshes = new Set([18, 19, 20, 21])
+const displayBedMeshes = new Set([25])
+const wakeButtonMeshes = new Set([13, 28, 55])
+const navigationButtonMeshes = new Set([12, 29, 30, 53, 54])
 
 function hash(content) {
   return createHash('sha256').update(content).digest('hex')
@@ -35,29 +45,133 @@ function roleForMesh(index) {
   return null
 }
 
-function geometryFromOcct(mesh) {
-  const geometry = new THREE.BufferGeometry()
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(mesh.attributes.position.array.flat(), 3))
-  if (mesh.attributes.normal) {
-    geometry.setAttribute('normal', new THREE.Float32BufferAttribute(mesh.attributes.normal.array.flat(), 3))
-  } else {
-    geometry.computeVertexNormals()
+function materialRoleForMesh(role, index) {
+  if (wakeButtonMeshes.has(index)) return 'WAKE_BUTTON'
+  if (navigationButtonMeshes.has(index)) return 'NAVIGATION_BUTTONS'
+  if (role !== 'BODY') return role
+  if (frontPanelMeshes.has(index)) return 'FRONT_PANEL'
+  if (displayBedMeshes.has(index)) return 'DISPLAY_BED'
+  return role
+}
+
+function lockPlanarFrontNormals(geometry) {
+  const position = geometry.attributes.position
+  const normal = geometry.attributes.normal
+  const frontZ = geometry.boundingBox.max.z
+  const tolerance = 0.000001
+
+  // toCreasedNormals returns non-indexed triangles. Keep the visible face of
+  // the single-piece plastic ring perfectly planar, rather than averaging its
+  // normals with the rounded outer and display-opening edges. That averaging
+  // created diagonal highlight wedges in the corners that looked like folds.
+  for (let index = 0; index < position.count; index += 3) {
+    const isFrontFace = [index, index + 1, index + 2]
+      .every((vertex) => Math.abs(position.getZ(vertex) - frontZ) <= tolerance)
+    if (!isFrontFace) continue
+    for (let vertex = index; vertex < index + 3; vertex += 1) normal.setXYZ(vertex, 0, 0, 1)
   }
-  geometry.setIndex(mesh.index.array.flat())
-  geometry.scale(0.001, 0.001, 0.001)
-  geometry.computeBoundingBox()
+  normal.needsUpdate = true
   return geometry
 }
 
-function materialForRole(role, materials) {
-  if (materials.has(role)) return materials.get(role)
-  const shared = { roughness: 0.72, metalness: 0.02 }
+function geometryFromOcct(mesh, { planarFront = false } = {}) {
+  const geometry = new THREE.BufferGeometry()
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(mesh.attributes.position.array.flat(), 3))
+  geometry.setIndex(mesh.index.array.flat())
+  // Rebuild CAD normals before scaling to metres. At millimetre scale the
+  // helper can reliably match coincident vertices, smooth the real STEP
+  // fillets and retain intentional sharp seams above the crease angle.
+  const treated = toCreasedNormals(geometry, THREE.MathUtils.degToRad(45))
+  if (treated !== geometry) geometry.dispose()
+  treated.scale(0.001, 0.001, 0.001)
+  treated.computeBoundingBox()
+  if (planarFront) lockPlanarFrontNormals(treated)
+  return treated
+}
+
+function materialForMesh(role, index, materials) {
+  const materialRole = materialRoleForMesh(role, index)
+  if (materials.has(materialRole)) return materials.get(materialRole)
   let material
-  if (role === 'PORTS') material = new THREE.MeshStandardMaterial({ ...shared, color: 0x242826, name: 'port-black' })
-  else if (role === 'CONTROLS') material = new THREE.MeshStandardMaterial({ ...shared, color: 0x626965, name: 'control-grey' })
-  else if (role === 'STAND') material = new THREE.MeshStandardMaterial({ ...shared, color: 0x9a9e99, name: 'stand-grey' })
-  else material = new THREE.MeshStandardMaterial({ ...shared, color: 0xb9bcb7, name: 'shell-grey' })
-  materials.set(role, material)
+  if (materialRole === 'PORTS') {
+    material = new THREE.MeshPhysicalMaterial({
+      color: 0x252826,
+      roughness: 0.54,
+      metalness: 0.08,
+      name: 'port-dark',
+    })
+  } else if (materialRole === 'CONTROLS') {
+    material = new THREE.MeshPhysicalMaterial({
+      color: 0xd9dad4,
+      roughness: 0.66,
+      metalness: 0,
+      ior: 1.48,
+      name: 'control-matte-plastic',
+    })
+  } else if (materialRole === 'WAKE_BUTTON') {
+    material = new THREE.MeshPhysicalMaterial({
+      color: 0x86c942,
+      roughness: 0.46,
+      metalness: 0,
+      ior: 1.48,
+      specularIntensity: 0.48,
+      clearcoat: 0.08,
+      clearcoatRoughness: 0.52,
+      name: 'wake-button-green',
+    })
+  } else if (materialRole === 'NAVIGATION_BUTTONS') {
+    material = new THREE.MeshPhysicalMaterial({
+      color: 0xf0f1ec,
+      roughness: 0.42,
+      metalness: 0,
+      ior: 1.48,
+      specularIntensity: 0.5,
+      name: 'navigation-button-white',
+    })
+  } else if (materialRole === 'STAND') {
+    material = new THREE.MeshPhysicalMaterial({
+      color: 0x777b77,
+      roughness: 0.78,
+      metalness: 0,
+      ior: 1.46,
+      name: 'stand-printed-polymer',
+    })
+  } else if (materialRole === 'FRONT_PANEL') {
+    material = new THREE.MeshPhysicalMaterial({
+      color: 0xe7e8e4,
+      roughness: 0.2,
+      metalness: 0,
+      ior: 1.47,
+      specularIntensity: 0.7,
+      clearcoat: 0.42,
+      clearcoatRoughness: 0.24,
+      name: 'front-satin-plastic',
+    })
+  } else if (materialRole === 'DISPLAY_BED') {
+    material = new THREE.MeshPhysicalMaterial({
+      color: 0xdedfdc,
+      roughness: 0.4,
+      metalness: 0,
+      ior: 1.46,
+      specularIntensity: 0.44,
+      name: 'display-recess-trim',
+    })
+  } else {
+    // Powder coat behaves optically like a dielectric paint layer rather than
+    // bare metal, so metalness stays at zero. The web viewer adds the very
+    // fine orange-peel relief at runtime where it can be scaled consistently.
+    material = new THREE.MeshPhysicalMaterial({
+      color: 0xd9dad7,
+      roughness: 0.48,
+      metalness: 0,
+      ior: 1.52,
+      specularIntensity: 0.52,
+      clearcoat: 0.08,
+      clearcoatRoughness: 0.56,
+      name: 'enclosure-white-powder-coat',
+    })
+  }
+  materials.set(materialRole, material)
   return material
 }
 
@@ -69,7 +183,8 @@ function createScreen() {
   const material = new THREE.MeshBasicMaterial({ color: 0xebece4, toneMapped: false, name: 'screen-preview' })
   const screen = new THREE.Mesh(geometry, material)
   screen.name = 'SCREEN'
-  screen.position.set(0, 0.06 + displayCenterOffsetY, 0.0042)
+  // The e-paper panel sits behind the front trim instead of on top of it.
+  screen.position.set(0, 0.06 + displayCenterOffsetY, 0.00278)
   screen.userData.role = 'SCREEN'
   return screen
 }
@@ -94,12 +209,16 @@ function buildScene(imported) {
   }
 
   imported.meshes.forEach((mesh, index) => {
-    if (excludedInternalMeshes.has(index)) return
+    if (excludedMeshes.has(index)) return
     const role = roleForMesh(index)
     if (!role) return
-    const object = new THREE.Mesh(geometryFromOcct(mesh), materialForRole(role, materials))
+    const materialRole = materialRoleForMesh(role, index)
+    const object = new THREE.Mesh(
+      geometryFromOcct(mesh, { planarFront: frontPanelMeshes.has(index) }),
+      materialForMesh(role, index, materials),
+    )
     object.name = `${role}_${String(index).padStart(2, '0')}`
-    object.userData = { role, sourceMesh: index }
+    object.userData = { role, materialRole, sourceMesh: index }
     roleGroups.get(role).add(object)
   })
 
@@ -200,8 +319,8 @@ async function main() {
     const imported = occt.ReadStepFile(sourceBytes, {
       linearUnit: 'millimeter',
       linearDeflectionType: 'absolute_value',
-      linearDeflection: 0.5,
-      angularDeflection: 0.5,
+      linearDeflection: 0.2,
+      angularDeflection: 0.25,
     })
     if (!imported.success) throw new Error('OpenCascade could not read the STEP assembly')
 
@@ -225,9 +344,11 @@ async function main() {
       conversion: {
         importer: `occt-import-js@${packageJson.devDependencies['occt-import-js']}`,
         exporter: `three@${packageJson.dependencies.three}`,
-        linearDeflectionMm: 0.5,
-        angularDeflection: 0.5,
+        linearDeflectionMm: 0.2,
+        angularDeflection: 0.25,
+        normalTreatment: '45-degree crease-aware normals with a planar front-face lock',
         excludedInternalMeshes: [...excludedInternalMeshes],
+        excludedVariantMeshes: [...excludedVariantMeshes],
         addedScreenMm: { width: 159, height: 95.4, aspect: E1002_MODEL.screenAspect },
       },
       output: {

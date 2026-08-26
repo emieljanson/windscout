@@ -17,6 +17,7 @@ function handleSceneError(reason) {
 
 onMounted(() => {
   void store.initializeForecast()
+  void store.initializeTide()
 })
 </script>
 

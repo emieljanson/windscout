@@ -68,7 +68,7 @@ test('configures the live display with actual DialKit controls', async ({ page }
 
   await expect(page.getByRole('region', { name: 'WindScout 3D preview' })).toBeVisible()
   await expect(page.locator('.configurator-header')).toHaveCount(0)
-  await expect(forecastStatus(page)).toContainText('Live Best fit forecast for Brouwersdam', { timeout: 15_000 })
+  await expect(forecastStatus(page)).toContainText('Live Best Match forecast for Brouwersdam', { timeout: 15_000 })
   await expect(page.getByTestId('forecast-label')).toHaveCount(0)
   expect(requests).toHaveLength(1)
   const treatment = page.getByRole('button', { name: /Treatment/ })
@@ -93,12 +93,12 @@ test('keeps the 3D product and controls usable in the narrow composition', async
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
 
-  await expect(page.locator('[data-scene-status="ready"]')).toBeVisible()
+  await expect(page.locator('[data-scene-status="ready"]')).toBeVisible({ timeout: 15_000 })
   await expect(page.getByRole('slider', { name: 'Wind threshold' })).toBeVisible()
   await expect(page.locator('.settings-panel')).toHaveCSS('border-radius', '16px')
 
-  await page.getByRole('button', { name: 'Model Best fit' }).click()
-  for (const name of ['Best fit', 'KNMI', 'ECMWF', 'ICON', 'GFS']) {
+  await page.getByRole('button', { name: 'Model Best Match' }).click()
+  for (const name of ['Best Match', 'KNMI', 'ECMWF', 'ICON', 'GFS']) {
     await expect(page.getByRole('button', { name, exact: true })).toBeVisible()
   }
   await page.getByRole('button', { name: 'ECMWF', exact: true }).click()
@@ -110,7 +110,7 @@ test('loads the local CAD model into the constrained 3D scene', async ({ page })
   await page.setViewportSize({ width: 1200, height: 900 })
   await page.goto('/')
 
-  await expect(page.locator('[data-scene-status="ready"]')).toBeVisible()
+  await expect(page.locator('[data-scene-status="ready"]')).toBeVisible({ timeout: 15_000 })
   await expect(page.getByRole('button', { name: 'Reset view' })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Front' })).toHaveCount(0)
   await expect(page.getByTestId('install-continuation')).toBeVisible()
@@ -120,13 +120,13 @@ test('switches the live preview to another supported spot without a page reload'
   const requests = await mockForecastApi(page)
   await page.setViewportSize({ width: 1200, height: 900 })
   await page.goto('/')
-  await expect(forecastStatus(page)).toContainText('Live Best fit forecast for Brouwersdam', { timeout: 15_000 })
+  await expect(forecastStatus(page)).toContainText('Live Best Match forecast for Brouwersdam', { timeout: 15_000 })
 
   const spot = page.getByRole('button', { name: /Spot/ })
   await spot.click()
   await page.getByRole('button', { name: 'Edam' }).click()
 
-  await expect(forecastStatus(page)).toContainText('Live Best fit forecast for Edam', { timeout: 15_000 })
+  await expect(forecastStatus(page)).toContainText('Live Best Match forecast for Edam', { timeout: 15_000 })
   await expect(page.locator('.scene-host')).toHaveAttribute('data-forecast-spot', 'edam')
   await expect(page.getByTestId('forecast-label')).toHaveCount(0)
   expect(requests).toHaveLength(2)
@@ -137,7 +137,7 @@ test('switches forecast model instantly and redraws the 3D screen', async ({ pag
   const requests = await mockForecastApi(page)
   await page.setViewportSize({ width: 1200, height: 900 })
   await page.goto('/')
-  await expect(forecastStatus(page)).toContainText('Live Best fit forecast for Brouwersdam', { timeout: 15_000 })
+  await expect(forecastStatus(page)).toContainText('Live Best Match forecast for Brouwersdam', { timeout: 15_000 })
   const before = await page.locator('canvas').screenshot()
 
   await page.getByRole('button', { name: /Model/ }).click()

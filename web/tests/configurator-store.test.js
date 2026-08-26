@@ -58,6 +58,26 @@ function forecastSet(...forecasts) {
   return Object.fromEntries(forecasts.map((forecast) => [forecast.modelId, forecast]))
 }
 
+function tideFor(spotId = 'brouwersdam', capability = 'available') {
+  const spot = getSpot(spotId)
+  return {
+    schemaVersion: 1,
+    spotId,
+    timezone: spot.timezone,
+    provider: 'OPEN-METEO MARINE',
+    retrievedAt: 1_777_000_000_000,
+    capability,
+    samples: capability === 'available'
+      ? Array.from({ length: 120 }, (_, index) => ({
+        timestamp: 1_777_000_000 + index * 3600,
+        localDate: `2026-08-${String(26 + Math.floor(index / 24)).padStart(2, '0')}`,
+        localTime: `${String(index % 24).padStart(2, '0')}:00`,
+        seaLevelMm: Math.round(Math.sin(index / 6) * 800),
+      }))
+      : [],
+  }
+}
+
 describe('configurator store', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
@@ -65,10 +85,79 @@ describe('configurator store', () => {
     const store = useConfiguratorStore()
     expect(store.treatment).toBe('background-fade')
     expect(store.threshold).toBe(17)
+    expect(store.showWeather).toBe(true)
+    expect(store.showTemperature).toBe(false)
+    expect(store.showTide).toBe(false)
     expect(store.selectedSpotId).toBe('brouwersdam')
     expect(store.selectedModelId).toBe('best_match')
     expect(store.forecastSource).toBe('demo')
     expect(store.forecastLabel).toBe('Demo')
+  })
+
+  it('keeps row preferences separate and only enables tide after a supported result', async () => {
+    const store = useConfiguratorStore()
+    expect(store.setShowWeather(false)).toBe(true)
+    expect(store.setShowTemperature(true)).toBe(true)
+    expect(store.setShowTide(true)).toBe(false)
+
+    await expect(store.initializeTide({
+      fetcher: vi.fn().mockResolvedValue(tideFor()),
+      storage: memoryStorage(),
+    })).resolves.toBe(true)
+
+    expect(store.tideStatus).toBe('available')
+    expect(store.tideAvailable).toBe(true)
+    expect(store.setShowTide(true)).toBe(true)
+    expect(store.effectiveShowTide).toBe(true)
+  })
+
+  it('distinguishes unsupported tide from a failed capability check', async () => {
+    const unsupported = useConfiguratorStore()
+    await unsupported.initializeTide({
+      fetcher: vi.fn().mockResolvedValue(tideFor('brouwersdam', 'unsupported')),
+      storage: memoryStorage(),
+    })
+    expect(unsupported.tideStatus).toBe('unsupported')
+    expect(unsupported.tideMessage).toContain('not available')
+
+    unsupported.$dispose()
+    setActivePinia(createPinia())
+    const failed = useConfiguratorStore()
+    await failed.initializeTide({
+      fetcher: vi.fn().mockRejectedValue(new Error('offline')),
+      storage: memoryStorage(),
+    })
+    expect(failed.tideStatus).toBe('failed')
+    expect(failed.tideMessage).toContain('Could not check')
+  })
+
+  it('keeps cached tide timing when a refresh fails', async () => {
+    const storage = memoryStorage()
+    const seed = useConfiguratorStore()
+    await seed.initializeTide({ fetcher: vi.fn().mockResolvedValue(tideFor()), storage })
+    seed.$dispose()
+    setActivePinia(createPinia())
+    const store = useConfiguratorStore()
+
+    await store.initializeTide({ fetcher: vi.fn().mockRejectedValue(new Error('offline')), storage })
+
+    expect(store.tideStatus).toBe('cached')
+    expect(store.tideAvailable).toBe(true)
+    expect(store.tideMessage).toContain('cached')
+  })
+
+  it('ignores a late marine response from the previous spot', async () => {
+    const store = useConfiguratorStore()
+    const first = deferred()
+    const loading = store.initializeTide({ fetcher: vi.fn(() => first.promise) })
+    store.selectedSpotId = 'edam'
+    await store.refreshTide({ fetcher: vi.fn().mockResolvedValue(tideFor('edam')) })
+
+    first.resolve(tideFor('brouwersdam'))
+    await expect(loading).resolves.toBe(false)
+
+    expect(store.tide.spotId).toBe('edam')
+    expect(store.tideStatus).toBe('available')
   })
 
   it('accepts every supported treatment and valid threshold boundary', () => {
@@ -89,6 +178,18 @@ describe('configurator store', () => {
     expect(store.setThreshold('unknown')).toBe(false)
     expect(store.treatment).toBe('solid')
     expect(store.threshold).toBe(17)
+  })
+
+  it('announces a rejected display render without replacing the current preview', () => {
+    const store = useConfiguratorStore()
+    const published = store.publishedForecast
+
+    store.reportConfigurationRenderFailure()
+
+    expect(store.publishedForecast).toBe(published)
+    expect(store.forecastStatus).toBe('warning')
+    expect(store.forecastLabel).toBe('Preview unchanged')
+    expect(store.forecastMessage).toContain('last valid preview')
   })
 
   it('keeps the demo label until the current forecast bitmap is published', async () => {
@@ -280,7 +381,7 @@ describe('configurator store', () => {
     expect(store.selectedModelId).toBe('gfs_seamless')
     expect(store.forecast.modelId).toBe('best_match')
     expect(store.forecastLabel).toBe('Previous model')
-    expect(store.forecastMessage).toBe('Could not load GFS. Still showing BEST FIT.')
+    expect(store.forecastMessage).toBe('Could not load GFS. Still showing BEST MATCH.')
   })
 
   it('does not publish an old pending forecast under a newly selected spot', async () => {
@@ -298,7 +399,7 @@ describe('configurator store', () => {
     edam.resolve(forecastSet(liveForecast('edam')))
     await selectingEdam
     expect(store.publishForecast(store.forecastRevision)).toBe(true)
-    expect(store.forecastMessage).toBe('Live Best fit forecast for Edam.')
+    expect(store.forecastMessage).toBe('Live Best Match forecast for Edam.')
   })
 
   it('ignores an older spot request that resolves after the newest one', async () => {
@@ -323,7 +424,7 @@ describe('configurator store', () => {
 
     await expect(firstSelection).resolves.toBe(false)
     expect(store.forecast.spotId).toBe('castricum-aan-zee')
-    expect(store.forecastMessage).toBe('Live Best fit forecast for Castricum aan Zee.')
+    expect(store.forecastMessage).toBe('Live Best Match forecast for Castricum aan Zee.')
   })
 
   it('restores the last published forecast when a new bitmap is rejected', async () => {
@@ -357,6 +458,6 @@ describe('configurator store', () => {
     expect(store.selectedModelId).toBe('gfs_seamless')
     expect(store.forecast.modelId).toBe('best_match')
     expect(store.forecastLabel).toBe('Previous model')
-    expect(store.forecastMessage).toBe('Could not show GFS. Still showing BEST FIT.')
+    expect(store.forecastMessage).toBe('Could not show GFS. Still showing BEST MATCH.')
   })
 })

@@ -9,6 +9,15 @@ describe('E1002 model contract', () => {
     expect(E1002_MODEL.sourceSha256).toMatch(/^[a-f0-9]{64}$/)
   })
 
+  it('records the fine CAD edge and normal treatment used by the product render', async () => {
+    const provenance = await import('../public/devices/e1002/provenance.json', { with: { type: 'json' } })
+
+    expect(provenance.default.conversion.linearDeflectionMm).toBeLessThanOrEqual(0.2)
+    expect(provenance.default.conversion.angularDeflection).toBeLessThanOrEqual(0.25)
+    expect(provenance.default.conversion.normalTreatment).toMatch(/crease/i)
+    expect(provenance.default.conversion.normalTreatment).toMatch(/planar front-face/i)
+  })
+
   it('requires every scene role and recorded publication permission', () => {
     const provenance = {
       source: { url: E1002_MODEL.sourceUrl, sha256: E1002_MODEL.sourceSha256 },

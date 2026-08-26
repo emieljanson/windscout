@@ -38,7 +38,7 @@ function minimalResponse(modelIds = FORECAST_MODEL_IDS) {
 }
 
 describe('Open-Meteo forecast client', () => {
-  it('requests best fit plus every curated comparison model in one call', () => {
+  it('requests Best Match plus every curated comparison model in one call', () => {
     const url = new URL(buildForecastUrl(SPOTS[1]))
     expect(url.origin + url.pathname).toBe('https://api.open-meteo.com/v1/forecast')
     expect(url.searchParams.get('latitude')).toBe('51.750600')
@@ -64,7 +64,7 @@ describe('Open-Meteo forecast client', () => {
     expect(fetchImpl).toHaveBeenCalledOnce()
     expect(Object.keys(forecasts)).toEqual(FORECAST_MODEL_IDS)
     expect(forecasts.best_match).toMatchObject({
-      spotId: 'brouwersdam', modelId: 'best_match', model: 'BEST FIT',
+      spotId: 'brouwersdam', modelId: 'best_match', model: 'BEST MATCH',
     })
     expect(forecasts.gfs_seamless.model).toBe(getForecastModel('gfs_seamless').screenLabel)
     expect(forecasts.gfs_seamless.days[0].samples[0].sustainedKt)

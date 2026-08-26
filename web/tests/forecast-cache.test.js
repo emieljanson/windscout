@@ -10,7 +10,7 @@ function memoryStorage() {
   }
 }
 
-function forecast(modelId = 'best_match', model = 'BEST FIT') {
+function forecast(modelId = 'best_match', model = 'BEST MATCH') {
   return {
     schemaVersion: 2,
     spotId: 'brouwersdam',

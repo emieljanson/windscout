@@ -1,18 +1,22 @@
 export const HERO_CAMERA = Object.freeze({
-  position: Object.freeze([0.19, 0.095, 0.29]),
+  position: Object.freeze([-0.18, 0.09, 0.42]),
   target: Object.freeze([0, 0, 0]),
 })
 
 export const NARROW_CAMERA = Object.freeze({
-  position: Object.freeze([0.1, 0.07, 0.66]),
+  position: Object.freeze([-0.075, 0.045, 0.67]),
   target: Object.freeze([0, 0, 0]),
 })
 
 export const ORBIT_LIMITS = Object.freeze({
-  minAzimuth: -0.68,
-  maxAzimuth: 0.68,
-  minPolar: 0.94,
-  maxPolar: 1.72,
+  // Reveal the enclosure depth and side controls while keeping the active
+  // display comfortably readable throughout the inspection range.
+  minAzimuth: -0.9,
+  maxAzimuth: 0.9,
+  minPolar: 0.72,
+  // Keep the camera above the surface so the product always retains a visible
+  // ground plane instead of being viewed from underneath against empty space.
+  maxPolar: 1.43,
   minDistance: 0.29,
   maxDistance: 0.75,
 })
