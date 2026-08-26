@@ -32,6 +32,7 @@ wind_renderer_dashboard_t Dashboard(wind_renderer_state_t state = WIND_RENDERER_
     result.age_hours = state == WIND_RENDERER_STALE ? 25 : 1;
     result.battery_percent = 74;
     result.threshold_kt = WIND_RENDERER_DEFAULT_THRESHOLD_KT;
+    result.show_weather = 1;
     for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day) {
         result.days[day].day = days[day];
         result.days[day].date = dates[day];
@@ -43,6 +44,8 @@ wind_renderer_dashboard_t Dashboard(wind_renderer_state_t state = WIND_RENDERER_
             slot.destination_degrees = day * 55 + sample * 27;
             slot.available = 1;
             slot.weather = static_cast<wind_renderer_weather_t>(1 + (day * 5 + sample) % 8);
+            slot.temperature_tenths_c = 120 + day * 5 + sample;
+            slot.temperature_available = 1;
         }
     }
     return result;
@@ -350,55 +353,60 @@ TEST(WindRenderer, RejectsInvalidConfigurationAndIncompleteAvailableSamples) {
 }
 
 TEST(WindRenderer, ConvertsVersionedBoundedInputToTheCanonicalDashboard) {
-    wind_renderer_input_v1_t input{};
-    wind_renderer_input_v1_init(&input);
+    wind_renderer_input_v2_t input{};
+    wind_renderer_input_v2_init(&input);
     EXPECT_EQ(wind_renderer_contract_version(), WIND_RENDERER_CONTRACT_VERSION);
     EXPECT_EQ(input.version, WIND_RENDERER_CONTRACT_VERSION);
     EXPECT_EQ(input.threshold_kt, WIND_RENDERER_DEFAULT_THRESHOLD_KT);
 
-    EXPECT_EQ(wind_renderer_input_v1_set_metadata(
+    EXPECT_EQ(wind_renderer_input_v2_set_metadata(
                   &input, "Brouwersdam", "51.7506N 3.8577E", "KNMI", "11:05"),
               0);
-    EXPECT_EQ(wind_renderer_input_v1_set_status(
+    EXPECT_EQ(wind_renderer_input_v2_set_status(
                   &input, WIND_RENDERER_FRESH, 0, 1, 74,
                   WIND_RENDERER_MODE_THRESHOLD, 23),
               0);
-    EXPECT_EQ(wind_renderer_input_v1_set_day(&input, 0, "TODAY", "24 AUG"), 0);
-    EXPECT_EQ(wind_renderer_input_v1_set_sample(
+    EXPECT_EQ(wind_renderer_input_v2_set_display_rows(&input, 1, 1, 1, 1), 0);
+    EXPECT_EQ(wind_renderer_input_v2_set_day(&input, 0, "TODAY", "24 AUG"), 0);
+    EXPECT_EQ(wind_renderer_input_v2_set_sample(
                   &input, 0, 0, "08", 18, 24, 245, 1,
-                  WIND_RENDERER_WEATHER_CLEAR_DAY),
+                  WIND_RENDERER_WEATHER_CLEAR_DAY, -24, 1),
               0);
+    EXPECT_EQ(wind_renderer_input_v2_set_tide_sample(&input, 0, 0, 8, -350, 1), 0);
+    EXPECT_EQ(wind_renderer_input_v2_set_tide_sample(&input, 1, 0, 9, -300, 1), 0);
 
     wind_renderer_dashboard_t dashboard{};
-    EXPECT_EQ(wind_renderer_input_v1_to_dashboard(&input, &dashboard), 0);
+    EXPECT_EQ(wind_renderer_input_v2_to_dashboard(&input, &dashboard), 0);
     EXPECT_STREQ(dashboard.spot_name, "Brouwersdam");
     EXPECT_EQ(dashboard.threshold_kt, 23);
     EXPECT_EQ(dashboard.days[0].samples[0].sustained_kt, 18);
+    EXPECT_EQ(dashboard.days[0].samples[0].temperature_tenths_c, -24);
+    EXPECT_EQ(dashboard.tide_samples[0].sea_level_mm, -350);
 
     const std::string oversized(WIND_RENDERER_SPOT_NAME_CAPACITY, 'W');
-    EXPECT_NE(wind_renderer_input_v1_set_metadata(
+    EXPECT_NE(wind_renderer_input_v2_set_metadata(
                   &input, oversized.c_str(), "", "KNMI", "11:05"),
               0);
-    EXPECT_NE(wind_renderer_input_v1_set_status(
+    EXPECT_NE(wind_renderer_input_v2_set_status(
                   &input, WIND_RENDERER_FRESH, 0, 1, 74,
                   WIND_RENDERER_MODE_COUNT, 23),
               0);
-    EXPECT_NE(wind_renderer_input_v1_set_sample(
+    EXPECT_NE(wind_renderer_input_v2_set_sample(
                   &input, 0, 0, "", 18, 24, 245, 1,
-                  WIND_RENDERER_WEATHER_CLEAR_DAY),
+                  WIND_RENDERER_WEATHER_CLEAR_DAY, 120, 1),
               0);
 
     input.version = WIND_RENDERER_CONTRACT_VERSION + 1;
-    EXPECT_NE(wind_renderer_input_v1_to_dashboard(&input, &dashboard), 0);
+    EXPECT_NE(wind_renderer_input_v2_to_dashboard(&input, &dashboard), 0);
 }
 
 TEST(WindRenderer, MatchesEveryFullPaletteCrossRuntimeFixture) {
     for (std::size_t fixture_index = 0;
          fixture_index < WIND_RENDERER_FIXTURE_COUNT; ++fixture_index) {
-        wind_renderer_input_v1_t input{};
+        wind_renderer_input_v2_t input{};
         ASSERT_EQ(wind_renderer_fixture_build(fixture_index, &input), 0);
         Frame actual(WIND_RENDERER_PALETTE_BYTES);
-        ASSERT_EQ(wind_renderer_input_v1_render(
+        ASSERT_EQ(wind_renderer_input_v2_render(
                       &input, actual.data(), actual.size(), nullptr),
                   0);
         const char *name = wind_renderer_fixture_name(fixture_index);
@@ -411,6 +419,64 @@ TEST(WindRenderer, MatchesEveryFullPaletteCrossRuntimeFixture) {
                       0)
                 << name;
         }
+    }
+}
+
+TEST(WindRenderer, AllocatesEveryOptionalRowCombinationAndKeepsWindFlexible) {
+    for (int mask = 0; mask < 8; ++mask) {
+        auto dashboard = Dashboard();
+        dashboard.show_weather = mask & 1;
+        dashboard.show_temperature = (mask >> 1) & 1;
+        dashboard.show_tide = (mask >> 2) & 1;
+        dashboard.tide_available = 0;
+        wind_renderer_stats_t stats{};
+        const Frame frame = Render(dashboard, &stats);
+        EXPECT_EQ(stats.clipped_primitives, 0) << mask;
+        EXPECT_EQ(stats.wind_baseline,
+                  459 - (dashboard.show_weather ? 35 : 0) -
+                      (dashboard.show_temperature ? 26 : 0) -
+                      (dashboard.show_tide ? 58 : 0)) << mask;
+        EXPECT_EQ(frame[(stats.wind_baseline - 1) * 800 + 38], 0) << mask;
+    }
+}
+
+TEST(WindRenderer, DrawsTemperatureAndTideWithoutMovingEnabledRowsWhenDataIsMissing) {
+    auto dashboard = Dashboard();
+    dashboard.show_temperature = 1;
+    dashboard.show_tide = 1;
+    dashboard.tide_available = 1;
+    dashboard.tide_sample_count = 120;
+    for (int index = 0; index < 120; ++index) {
+        dashboard.tide_samples[index] = {
+            index / 24, index % 24,
+            static_cast<int>(std::sin(index / 6.0) * 800), 1,
+        };
+    }
+    wind_renderer_stats_t populated_stats{};
+    const Frame populated = Render(dashboard, &populated_stats);
+    EXPECT_GT(CountBlack(populated, 13, populated_stats.temperature_row_top + 1, 786,
+                         populated_stats.tide_row_top - 1), 0);
+    EXPECT_GT(CountBlack(populated, 13, populated_stats.tide_row_top + 1, 786, 466), 0);
+
+    for (auto &day : dashboard.days)
+        for (auto &sample : day.samples) sample.temperature_available = 0;
+    dashboard.tide_available = 0;
+    wind_renderer_stats_t missing_stats{};
+    (void)Render(dashboard, &missing_stats);
+    EXPECT_EQ(missing_stats.wind_baseline, populated_stats.wind_baseline);
+    EXPECT_EQ(missing_stats.temperature_row_top, populated_stats.temperature_row_top);
+    EXPECT_EQ(missing_stats.tide_row_top, populated_stats.tide_row_top);
+}
+
+TEST(WindRenderer, KeepsStraightStructuralPixelsAtFullLumaInCleanPreview) {
+    auto dashboard = Dashboard();
+    dashboard.show_temperature = 1;
+    dashboard.show_tide = 1;
+    const Frame preview = RenderPreview(dashboard);
+    const auto channel = [&preview](int x, int y) { return preview[(y * 800 + x) * 4]; };
+    for (int x = 12; x <= 787; ++x) {
+        EXPECT_TRUE(channel(x, 12) == 0 || channel(x, 12) == 255);
+        EXPECT_TRUE(channel(x, 348) == 0 || channel(x, 348) == 255);
     }
 }
 

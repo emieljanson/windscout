@@ -19,12 +19,12 @@ namespace {
 
 bool WriteFixture(const std::filesystem::path &output_directory,
                   std::size_t fixture_index) {
-    wind_renderer_input_v1_t input{};
+    wind_renderer_input_v2_t input{};
     if (wind_renderer_fixture_build(fixture_index, &input) != 0) return false;
 
     std::vector<std::uint8_t> palette(WIND_RENDERER_PALETTE_BYTES, 0xff);
     wind_renderer_stats_t stats{};
-    if (wind_renderer_input_v1_render(
+    if (wind_renderer_input_v2_render(
             &input, palette.data(), palette.size(), &stats) != 0 ||
         stats.dither_passes != 1 || stats.clipped_primitives != 0) {
         return false;

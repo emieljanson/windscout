@@ -27,11 +27,11 @@ const char *wind_renderer_fixture_name(size_t fixture_index) {
 }
 
 int wind_renderer_fixture_build(size_t fixture_index,
-                                wind_renderer_input_v1_t *input) {
+                                wind_renderer_input_v2_t *input) {
     if (!input || fixture_index >= WIND_RENDERER_FIXTURE_COUNT) return -1;
 
-    wind_renderer_input_v1_init(input);
-    if (wind_renderer_input_v1_set_metadata(
+    wind_renderer_input_v2_init(input);
+    if (wind_renderer_input_v2_set_metadata(
             input, "Brouwersdam", "51.7506N 3.8577E", "KNMI SEAMLESS",
             "26 AUG 11AM") != 0) {
         return -2;
@@ -57,23 +57,27 @@ int wind_renderer_fixture_build(size_t fixture_index,
         default:
             break;
     }
-    if (wind_renderer_input_v1_set_status(
+    if (wind_renderer_input_v2_set_status(
             input, WIND_RENDERER_FRESH, 0, 1, 74, mode, threshold_kt) != 0) {
         return -3;
     }
+    if (wind_renderer_input_v2_set_display_rows(input, 1, 0, 0, 0) != 0) {
+        return -6;
+    }
 
     for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day) {
-        if (wind_renderer_input_v1_set_day(
+        if (wind_renderer_input_v2_set_day(
                 input, day, DAY_NAMES[day], DAY_DATES[day]) != 0) {
             return -4;
         }
         for (int sample = 0; sample < WIND_RENDERER_SAMPLES_PER_DAY; ++sample) {
             const int sustained = 7 + day * 2 + sample * 3;
-            if (wind_renderer_input_v1_set_sample(
+            if (wind_renderer_input_v2_set_sample(
                     input, day, sample, SAMPLE_TIMES[sample], sustained,
                     sustained + 5, day * 55 + sample * 27, 1,
                     (wind_renderer_weather_t)(
-                        1 + (day * WIND_RENDERER_SAMPLES_PER_DAY + sample) % 8)) != 0) {
+                        1 + (day * WIND_RENDERER_SAMPLES_PER_DAY + sample) % 8),
+                    120 + day * 5 + sample, 1) != 0) {
                 return -5;
             }
         }

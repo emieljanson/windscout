@@ -21,7 +21,7 @@ enum {
 const char *wind_renderer_fixture_name(size_t fixture_index);
 
 int wind_renderer_fixture_build(size_t fixture_index,
-                                wind_renderer_input_v1_t *input);
+                                wind_renderer_input_v2_t *input);
 
 #ifdef __cplusplus
 }

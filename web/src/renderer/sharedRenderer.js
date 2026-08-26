@@ -32,9 +32,11 @@ const EXPECTED_EXPORTS = [
   'wind_wasm_reset',
   'wind_wasm_set_metadata_field',
   'wind_wasm_set_status',
+  'wind_wasm_set_display_rows',
   'wind_wasm_set_day_field',
   'wind_wasm_set_sample_label',
   'wind_wasm_set_sample_values',
+  'wind_wasm_set_tide_sample',
   'wind_wasm_render',
   'wind_wasm_render_preview',
 ]
@@ -83,6 +85,21 @@ function validateInput(input) {
     requireInteger(input[name], name)
   }
   requireFlag(input.refreshFailed, 'refreshFailed')
+  for (const name of ['showWeather', 'showTemperature', 'showTide', 'tideAvailable']) {
+    requireFlag(input[name], name)
+  }
+  if (!Array.isArray(input.tideSamples) || input.tideSamples.length > 121) {
+    fail('INVALID_INPUT', 'Renderer input tideSamples must contain at most 121 samples')
+  }
+  if (input.tideAvailable && input.tideSamples.length < 2) {
+    fail('INVALID_INPUT', 'Available tide data must contain at least two samples')
+  }
+  input.tideSamples.forEach((sample, index) => {
+    for (const name of ['dayIndex', 'localHour', 'seaLevelMm']) {
+      requireInteger(sample?.[name], `tideSamples[${index}].${name}`)
+    }
+    requireFlag(sample?.available, `tideSamples[${index}].available`)
+  })
   if (!Array.isArray(input.days) || input.days.length !== 5) {
     fail('INVALID_INPUT', 'Renderer input must contain exactly five days')
   }
@@ -94,10 +111,11 @@ function validateInput(input) {
     }
     day.samples.forEach((sample, sampleIndex) => {
       requireString(sample?.time, `days[${dayIndex}].samples[${sampleIndex}].time`, RENDERER_TEXT_CAPACITIES.time)
-      for (const name of ['sustainedKt', 'gustKt', 'destinationDegrees', 'weather']) {
+      for (const name of ['sustainedKt', 'gustKt', 'destinationDegrees', 'weather', 'temperatureTenthsC']) {
         requireInteger(sample[name], `days[${dayIndex}].samples[${sampleIndex}].${name}`)
       }
       requireFlag(sample.available, `days[${dayIndex}].samples[${sampleIndex}].available`)
+      requireFlag(sample.temperatureAvailable, `days[${dayIndex}].samples[${sampleIndex}].temperatureAvailable`)
     })
   })
 }
@@ -162,6 +180,13 @@ class SharedRenderer {
       input.displayMode,
       input.thresholdKt,
     )
+    this.#call(
+      'wind_wasm_set_display_rows',
+      input.showWeather ? 1 : 0,
+      input.showTemperature ? 1 : 0,
+      input.showTide ? 1 : 0,
+      input.tideAvailable ? 1 : 0,
+    )
 
     input.days.forEach((day, dayIndex) => {
       for (const [field, name] of ['day', 'date'].entries()) {
@@ -180,8 +205,20 @@ class SharedRenderer {
           sample.destinationDegrees,
           sample.available ? 1 : 0,
           sample.weather,
+          sample.temperatureTenthsC,
+          sample.temperatureAvailable ? 1 : 0,
         )
       })
+    })
+    input.tideSamples.forEach((sample, tideIndex) => {
+      this.#call(
+        'wind_wasm_set_tide_sample',
+        tideIndex,
+        sample.dayIndex,
+        sample.localHour,
+        sample.seaLevelMm,
+        sample.available ? 1 : 0,
+      )
     })
   }
 

@@ -15,7 +15,7 @@ enum {
     DAY_LABEL_DATE,
 };
 
-static wind_renderer_input_v1_t renderer_input;
+static wind_renderer_input_v2_t renderer_input;
 static uint8_t renderer_output[WIND_RENDERER_PALETTE_BYTES];
 static uint8_t renderer_preview_output[WIND_RENDERER_RGBA_BYTES];
 static char string_scratch[WIND_RENDERER_SPOT_NAME_CAPACITY];
@@ -91,7 +91,7 @@ EMSCRIPTEN_KEEPALIVE int wind_wasm_reset(uint32_t contract_version) {
     output_valid = 0;
     preview_output_valid = 0;
     if (contract_version != WIND_RENDERER_CONTRACT_VERSION) return -1;
-    wind_renderer_input_v1_init(&renderer_input);
+    wind_renderer_input_v2_init(&renderer_input);
     input_ready = 1;
     return 0;
 }
@@ -126,10 +126,18 @@ EMSCRIPTEN_KEEPALIVE int wind_wasm_set_status(
     int state, int refresh_failed, int age_hours, int battery_percent,
     int display_mode, int threshold_kt) {
     if (!input_ready || input_error) return -1;
-    return accept_result(wind_renderer_input_v1_set_status(
+    return accept_result(wind_renderer_input_v2_set_status(
         &renderer_input, (wind_renderer_state_t)state, refresh_failed,
         age_hours, battery_percent,
         (wind_renderer_display_mode_t)display_mode, threshold_kt));
+}
+
+EMSCRIPTEN_KEEPALIVE int wind_wasm_set_display_rows(
+    int show_weather, int show_temperature, int show_tide, int tide_available) {
+    if (!input_ready || input_error) return -1;
+    return accept_result(wind_renderer_input_v2_set_display_rows(
+        &renderer_input, show_weather, show_temperature, show_tide,
+        tide_available));
 }
 
 EMSCRIPTEN_KEEPALIVE int wind_wasm_set_day_field(int day_index, int field) {
@@ -164,23 +172,34 @@ EMSCRIPTEN_KEEPALIVE int wind_wasm_set_sample_label(int day_index,
 
 EMSCRIPTEN_KEEPALIVE int wind_wasm_set_sample_values(
     int day_index, int sample_index, int sustained_kt, int gust_kt,
-    int destination_degrees, int available, int weather) {
+    int destination_degrees, int available, int weather,
+    int temperature_tenths_c, int temperature_available) {
     if (!input_ready || input_error) return -1;
     const char *time = NULL;
     if (day_index >= 0 && day_index < WIND_RENDERER_DAY_COUNT &&
         sample_index >= 0 && sample_index < WIND_RENDERER_SAMPLES_PER_DAY) {
         time = renderer_input.days[day_index].samples[sample_index].time;
     }
-    return accept_result(wind_renderer_input_v1_set_sample(
+    return accept_result(wind_renderer_input_v2_set_sample(
         &renderer_input, day_index, sample_index, time, sustained_kt, gust_kt,
-        destination_degrees, available, (wind_renderer_weather_t)weather));
+        destination_degrees, available, (wind_renderer_weather_t)weather,
+        temperature_tenths_c, temperature_available));
+}
+
+EMSCRIPTEN_KEEPALIVE int wind_wasm_set_tide_sample(
+    int tide_index, int day_index, int local_hour, int sea_level_mm,
+    int available) {
+    if (!input_ready || input_error) return -1;
+    return accept_result(wind_renderer_input_v2_set_tide_sample(
+        &renderer_input, tide_index, day_index, local_hour, sea_level_mm,
+        available));
 }
 
 EMSCRIPTEN_KEEPALIVE int wind_wasm_render(void) {
     output_valid = 0;
     if (!input_ready || input_error) return -1;
     wind_renderer_stats_t stats;
-    const int result = wind_renderer_input_v1_render(
+    const int result = wind_renderer_input_v2_render(
         &renderer_input, renderer_output, sizeof(renderer_output), &stats);
     if (result != 0 || stats.dither_passes != 1 ||
         stats.clipped_primitives != 0) {
@@ -195,7 +214,7 @@ EMSCRIPTEN_KEEPALIVE int wind_wasm_render_preview(void) {
     preview_output_valid = 0;
     if (!input_ready || input_error) return -1;
     wind_renderer_stats_t stats;
-    const int result = wind_renderer_input_v1_render_preview_rgba(
+    const int result = wind_renderer_input_v2_render_preview_rgba(
         &renderer_input, renderer_preview_output,
         sizeof(renderer_preview_output), &stats);
     if (result != 0 || stats.dither_passes != 0 ||

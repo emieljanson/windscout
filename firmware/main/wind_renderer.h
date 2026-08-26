@@ -15,7 +15,8 @@ enum {
     WIND_RENDERER_SAMPLES_PER_DAY = 5,
     WIND_RENDERER_PALETTE_BYTES = WIND_RENDERER_WIDTH * WIND_RENDERER_HEIGHT,
     WIND_RENDERER_RGBA_BYTES = WIND_RENDERER_PALETTE_BYTES * 4,
-    WIND_RENDERER_CONTRACT_VERSION = 1,
+    WIND_RENDERER_CONTRACT_VERSION = 2,
+    WIND_RENDERER_MAX_TIDE_SAMPLES = 121,
     WIND_RENDERER_MIN_THRESHOLD_KT = 5,
     WIND_RENDERER_DEFAULT_THRESHOLD_KT = 17,
     WIND_RENDERER_MAX_THRESHOLD_KT = 35,
@@ -61,7 +62,16 @@ typedef struct {
     int destination_degrees;
     int available;
     wind_renderer_weather_t weather;
+    int temperature_tenths_c;
+    int temperature_available;
 } wind_renderer_sample_t;
+
+typedef struct {
+    int day_index;
+    int local_hour;
+    int sea_level_mm;
+    int available;
+} wind_renderer_tide_sample_t;
 
 typedef struct {
     const char *day;
@@ -81,6 +91,12 @@ typedef struct {
     int battery_percent;
     wind_renderer_display_mode_t display_mode;
     int threshold_kt;
+    int show_weather;
+    int show_temperature;
+    int show_tide;
+    int tide_available;
+    int tide_sample_count;
+    wind_renderer_tide_sample_t tide_samples[WIND_RENDERER_MAX_TIDE_SAMPLES];
     wind_renderer_day_t days[WIND_RENDERER_DAY_COUNT];
 } wind_renderer_dashboard_t;
 
@@ -96,13 +112,22 @@ typedef struct {
     int32_t destination_degrees;
     int32_t available;
     int32_t weather;
-} wind_renderer_input_sample_v1_t;
+    int32_t temperature_tenths_c;
+    int32_t temperature_available;
+} wind_renderer_input_sample_v2_t;
 
 typedef struct {
     char day[WIND_RENDERER_DAY_LABEL_CAPACITY];
     char date[WIND_RENDERER_DATE_LABEL_CAPACITY];
-    wind_renderer_input_sample_v1_t samples[WIND_RENDERER_SAMPLES_PER_DAY];
-} wind_renderer_input_day_v1_t;
+    wind_renderer_input_sample_v2_t samples[WIND_RENDERER_SAMPLES_PER_DAY];
+} wind_renderer_input_day_v2_t;
+
+typedef struct {
+    int32_t day_index;
+    int32_t local_hour;
+    int32_t sea_level_mm;
+    int32_t available;
+} wind_renderer_input_tide_sample_v2_t;
 
 typedef struct {
     uint32_t version;
@@ -116,14 +141,24 @@ typedef struct {
     int32_t battery_percent;
     int32_t display_mode;
     int32_t threshold_kt;
-    wind_renderer_input_day_v1_t days[WIND_RENDERER_DAY_COUNT];
-} wind_renderer_input_v1_t;
+    int32_t show_weather;
+    int32_t show_temperature;
+    int32_t show_tide;
+    int32_t tide_available;
+    int32_t tide_sample_count;
+    wind_renderer_input_tide_sample_v2_t tide_samples[WIND_RENDERER_MAX_TIDE_SAMPLES];
+    wind_renderer_input_day_v2_t days[WIND_RENDERER_DAY_COUNT];
+} wind_renderer_input_v2_t;
 
 typedef struct {
     int dither_passes;
     int coordinates_included;
     int status_right;
     int clipped_primitives;
+    int wind_baseline;
+    int weather_row_top;
+    int temperature_row_top;
+    int tide_row_top;
 } wind_renderer_stats_t;
 
 /*
@@ -146,45 +181,58 @@ int wind_renderer_render_preview_rgba(
 
 uint32_t wind_renderer_contract_version(void);
 
-void wind_renderer_input_v1_init(wind_renderer_input_v1_t *input);
+void wind_renderer_input_v2_init(wind_renderer_input_v2_t *input);
 
-int wind_renderer_input_v1_set_metadata(wind_renderer_input_v1_t *input,
+int wind_renderer_input_v2_set_metadata(wind_renderer_input_v2_t *input,
                                         const char *spot_name,
                                         const char *coordinates,
                                         const char *provider,
                                         const char *updated_time);
 
-int wind_renderer_input_v1_set_status(wind_renderer_input_v1_t *input,
+int wind_renderer_input_v2_set_status(wind_renderer_input_v2_t *input,
                                       wind_renderer_state_t state,
                                       int refresh_failed, int age_hours,
                                       int battery_percent,
                                       wind_renderer_display_mode_t display_mode,
                                       int threshold_kt);
 
-int wind_renderer_input_v1_set_day(wind_renderer_input_v1_t *input,
+int wind_renderer_input_v2_set_display_rows(wind_renderer_input_v2_t *input,
+                                            int show_weather,
+                                            int show_temperature,
+                                            int show_tide,
+                                            int tide_available);
+
+int wind_renderer_input_v2_set_day(wind_renderer_input_v2_t *input,
                                    int day_index, const char *day,
                                    const char *date);
 
-int wind_renderer_input_v1_set_sample(wind_renderer_input_v1_t *input,
+int wind_renderer_input_v2_set_sample(wind_renderer_input_v2_t *input,
                                       int day_index, int sample_index,
                                       const char *time, int sustained_kt,
                                       int gust_kt, int destination_degrees,
                                       int available,
-                                      wind_renderer_weather_t weather);
+                                      wind_renderer_weather_t weather,
+                                      int temperature_tenths_c,
+                                      int temperature_available);
+
+int wind_renderer_input_v2_set_tide_sample(wind_renderer_input_v2_t *input,
+                                           int tide_index, int day_index,
+                                           int local_hour, int sea_level_mm,
+                                           int available);
 
 /*
  * Creates the canonical pointer-based dashboard view over input. The returned
  * dashboard remains valid only while input remains alive and unchanged.
  */
-int wind_renderer_input_v1_to_dashboard(const wind_renderer_input_v1_t *input,
+int wind_renderer_input_v2_to_dashboard(const wind_renderer_input_v2_t *input,
                                         wind_renderer_dashboard_t *dashboard);
 
-int wind_renderer_input_v1_render(const wind_renderer_input_v1_t *input,
+int wind_renderer_input_v2_render(const wind_renderer_input_v2_t *input,
                                   uint8_t *palette_out, size_t palette_size,
                                   wind_renderer_stats_t *stats);
 
-int wind_renderer_input_v1_render_preview_rgba(
-    const wind_renderer_input_v1_t *input, uint8_t *rgba_out,
+int wind_renderer_input_v2_render_preview_rgba(
+    const wind_renderer_input_v2_t *input, uint8_t *rgba_out,
     size_t rgba_size, wind_renderer_stats_t *stats);
 
 /*

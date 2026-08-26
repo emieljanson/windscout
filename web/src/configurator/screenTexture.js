@@ -16,13 +16,32 @@ function rendererSample(sample) {
     destinationDegrees: sample.destinationDegrees,
     available: sample.available,
     weather: sample.weather,
+    temperatureTenthsC: sample.temperatureTenthsC ?? 0,
+    temperatureAvailable: sample.temperatureAvailable ?? false,
   }
+}
+
+function rendererTideSamples(tide, days) {
+  if (tide?.capability !== 'available') return []
+  const dayIndexes = new Map(days.map((day, index) => [day.localDate, index]))
+  return tide.samples.flatMap((sample) => {
+    const dayIndex = dayIndexes.get(sample.localDate)
+    if (dayIndex === undefined) return []
+    return [{
+      dayIndex,
+      localHour: Number(sample.localTime.slice(0, 2)),
+      seaLevelMm: sample.seaLevelMm,
+      available: true,
+    }]
+  })
 }
 
 export function createRendererInput(forecast, config) {
   const displayMode = DISPLAY_MODES[config.treatment]
   if (displayMode === undefined) throw new Error(`Unknown display treatment: ${config.treatment}`)
 
+  const tide = config.tide ?? forecast.tide
+  const tideSamples = rendererTideSamples(tide, forecast.days)
   return {
     version: RENDERER_CONTRACT_VERSION,
     spotName: forecast.spotName,
@@ -35,6 +54,11 @@ export function createRendererInput(forecast, config) {
     batteryPercent: forecast.batteryPercent ?? -1,
     displayMode,
     thresholdKt: config.threshold,
+    showWeather: config.showWeather ?? true,
+    showTemperature: config.showTemperature ?? false,
+    showTide: config.showTide ?? false,
+    tideAvailable: tide?.capability === 'available' && tideSamples.length >= 2,
+    tideSamples,
     days: forecast.days.map((day) => ({
       day: day.day,
       date: day.date,

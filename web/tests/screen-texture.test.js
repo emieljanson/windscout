@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createScreenTexture } from '../src/configurator/screenTexture'
 import { brouwersdamForecast } from '../src/fixtures/brouwersdam'
-import { RENDERER_RGBA_BYTES } from '../src/renderer/sharedRenderer'
+import { RENDERER_CONTRACT_VERSION, RENDERER_RGBA_BYTES } from '../src/renderer/sharedRenderer'
 
 function completeFrame(red = 255, green = 255, blue = 255) {
   const frame = new Uint8Array(RENDERER_RGBA_BYTES)
@@ -35,9 +35,9 @@ describe('canonical screen texture', () => {
     expect(rendererLoader).toHaveBeenCalledOnce()
     expect(renderer.renderPreview).toHaveBeenCalledOnce()
     expect(renderer.renderPreview.mock.calls[0][0]).toMatchObject({
-      version: 1,
+      version: RENDERER_CONTRACT_VERSION,
       spotName: 'Brouwersdam',
-      provider: 'BEST FIT',
+      provider: 'BEST MATCH',
       displayMode: 0,
       thresholdKt: 17,
       days: expect.arrayContaining([

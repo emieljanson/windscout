@@ -35,6 +35,11 @@ function fixtureInput(displayMode = 0, thresholdKt = 17) {
     batteryPercent: 74,
     displayMode,
     thresholdKt,
+    showWeather: true,
+    showTemperature: false,
+    showTide: false,
+    tideAvailable: false,
+    tideSamples: [],
     days: dayNames.map((day, dayIndex) => ({
       day,
       date: dates[dayIndex],
@@ -47,6 +52,8 @@ function fixtureInput(displayMode = 0, thresholdKt = 17) {
           destinationDegrees: dayIndex * 55 + sampleIndex * 27,
           available: true,
           weather: 1 + (dayIndex * 5 + sampleIndex) % 8,
+          temperatureTenthsC: 120 + sampleIndex * 5,
+          temperatureAvailable: true,
         }
       }),
     })),
@@ -125,6 +132,26 @@ describe('shared WebAssembly renderer', () => {
 
     expect(first).toEqual(expected)
     expect(second).toEqual(expected)
+  })
+
+  it('passes temperature and tide through the shared bridge', async () => {
+    const renderer = await loadRealRenderer()
+    const input = fixtureInput()
+    input.showTemperature = true
+    input.showTide = true
+    input.tideAvailable = true
+    input.tideSamples = Array.from({ length: 120 }, (_, index) => ({
+      dayIndex: Math.floor(index / 24),
+      localHour: index % 24,
+      seaLevelMm: Math.round(Math.sin(index / 6) * 800),
+      available: true,
+    }))
+
+    const first = renderer.renderPreview(input)
+    const second = renderer.renderPreview(input)
+
+    expect(first).toHaveLength(RENDERER_RGBA_BYTES)
+    expect(second).toEqual(first)
   })
 
   it('rejects an incompatible contract before returning any bitmap', async () => {
