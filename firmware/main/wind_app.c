@@ -266,7 +266,7 @@ static void load_or_refresh_tide(wind_spot_runtime_t *runtime, bool allow_fetch,
         runtime->have_tide = true;
     }
 
-    if (!allow_fetch) {
+    if (!allow_fetch && runtime->have_tide) {
         return;
     }
     wind_tide_t *fetched = malloc(sizeof(*fetched));
