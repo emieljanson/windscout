@@ -15,7 +15,6 @@ import {
   TIME_FORMATS,
 } from '../config/configuration'
 import {
-  DEFAULT_THRESHOLD,
   MAX_THRESHOLD,
   MIN_THRESHOLD,
 } from '../renderer/contract'
@@ -28,7 +27,7 @@ export const useConfiguratorStore = defineStore('configurator', {
     const displayConfiguration = createDefaultDisplayConfiguration()
     return {
       showThreshold: displayConfiguration.showThreshold,
-      threshold: DEFAULT_THRESHOLD,
+      threshold: displayConfiguration.threshold,
       showWeather: displayConfiguration.showWeather,
       showTemperature: displayConfiguration.showTemperature,
       showTide: displayConfiguration.showTide,

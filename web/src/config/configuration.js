@@ -1,4 +1,5 @@
 import { resolveTimeFormat } from './localeTimeFormat'
+import { DEFAULT_THRESHOLD } from '../renderer/contract'
 
 export const CONFIGURATION_VERSION = 2
 
@@ -8,7 +9,7 @@ export const TEMPERATURE_CHOICES = Object.freeze(['hide', ...TEMPERATURE_UNITS])
 
 export const DEFAULT_DISPLAY_CONFIGURATION = Object.freeze({
   showThreshold: false,
-  threshold: 17,
+  threshold: DEFAULT_THRESHOLD,
   showWeather: true,
   showTemperature: false,
   showTide: false,

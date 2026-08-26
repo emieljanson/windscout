@@ -1,5 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
+import { displayConfigurationFromStore } from '../src/config/configuration'
 import { useConfiguratorStore } from '../src/stores/configurator'
 import { DEFAULT_FORECAST_MODEL_ID, getForecastModel } from '../src/forecast/models'
 import { getSpot } from '../src/spots'
@@ -80,6 +81,7 @@ function tideFor(spotId = 'brouwersdam', capability = 'available') {
 
 describe('configurator store', () => {
   beforeEach(() => setActivePinia(createPinia()))
+  afterEach(() => vi.restoreAllMocks())
 
   it('starts with the current display defaults', () => {
     const store = useConfiguratorStore()
@@ -94,6 +96,21 @@ describe('configurator store', () => {
     expect(store.selectedModelId).toBe('best_match')
     expect(store.forecastSource).toBe('demo')
     expect(store.forecastLabel).toBe('Demo')
+  })
+
+  it.each([
+    [true, '12-hour'],
+    [false, '24-hour'],
+  ])('writes the browser hour12=%s convention into active configuration', (hour12, expected) => {
+    vi.spyOn(Intl, 'DateTimeFormat').mockImplementation(function MockDateTimeFormat() {
+      return { resolvedOptions: () => ({ hour12 }) }
+    })
+    setActivePinia(createPinia())
+
+    const store = useConfiguratorStore()
+
+    expect(store.timeFormat).toBe(expected)
+    expect(displayConfigurationFromStore(store).timeFormat).toBe(expected)
   })
 
   it('keeps row preferences separate and only enables tide after a supported result', async () => {

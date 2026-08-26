@@ -79,7 +79,7 @@ async function mockForecastApi(page, state = { fail: false, tideUnsupported: fal
 }
 
 function forecastStatus(page) {
-  return page.locator('.settings-panel [role="status"]')
+  return page.locator('.forecast-status')
 }
 
 async function selectWithKeyboard(page, name, search) {
@@ -308,6 +308,21 @@ for (const viewport of [
       return { outlineStyle: style.outlineStyle, outlineWidth: style.outlineWidth }
     })
     expect(focusStyle).toEqual({ outlineStyle: 'solid', outlineWidth: '2px' })
+
+    const spot = page.getByRole('combobox', { name: 'Spot' })
+    await spot.focus()
+    const spotPopup = page.getByRole('listbox')
+    await expect(spotPopup).toBeVisible()
+    const spotTriggerWidth = await spotPopup.evaluate((element) => {
+      const value = getComputedStyle(element).getPropertyValue('--reka-combobox-trigger-width')
+      return Number.parseFloat(value)
+    })
+    const spotPopupBox = await spotPopup.boundingBox()
+    expect(spotPopupBox.x).toBeGreaterThanOrEqual(0)
+    expect(spotPopupBox.x + spotPopupBox.width).toBeLessThanOrEqual(viewport.width)
+    expect(spotPopupBox.width).toBeGreaterThanOrEqual(spotTriggerWidth - 1)
+    await page.keyboard.press('Escape')
+    await expect(spot).toBeFocused()
   })
 }
 

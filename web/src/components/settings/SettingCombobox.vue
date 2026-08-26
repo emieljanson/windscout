@@ -35,6 +35,7 @@ const row = inject('windscout-setting-row', null)
 const isDisabled = computed(() => props.disabled || row?.disabled?.value || false)
 const open = ref(false)
 const input = ref(null)
+const selectionPending = ref(false)
 const cachedValue = ref(undefined)
 const cachedLabel = ref('')
 
@@ -75,21 +76,22 @@ function restoreCommittedLabel() {
 function setOpen(value) {
   open.value = value
   emit('update:open', value)
-  if (!value) restoreCommittedLabel()
+  if (!value && !selectionPending.value) restoreCommittedLabel()
 }
 
 async function selectValue(value) {
+  selectionPending.value = true
   emit('update:modelValue', value)
   const label = committedLabel(value)
   emit('update:searchTerm', label)
   setOpen(false)
   await nextTick()
+  selectionPending.value = false
   input.value?.$el?.focus()
 }
 
 function dismiss() {
   setOpen(false)
-  restoreCommittedLabel()
 }
 </script>
 

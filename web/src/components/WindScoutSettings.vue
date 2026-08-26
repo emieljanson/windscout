@@ -53,7 +53,6 @@ watch(selectedSpotId, (spotId) => {
 function selectSpot(spotId) {
   const spot = getSpot(spotId)
   if (!spot) return
-  spotSearchTerm.value = spot.name
   if (spotId !== selectedSpotId.value) void store.selectSpot(spotId)
 }
 

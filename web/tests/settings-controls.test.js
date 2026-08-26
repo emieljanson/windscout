@@ -127,6 +127,7 @@ describe('WindScout setting controls', () => {
     await wrapper.vm.$nextTick()
 
     expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual(['edam'])
+    expect(wrapper.emitted('update:searchTerm')?.at(-1)).toEqual(['Edam'])
     expect(document.activeElement).toBe(input.element)
     wrapper.unmount()
   })
@@ -169,7 +170,9 @@ describe('WindScout setting controls', () => {
     await input.setValue('40')
     expect(onUpdate).not.toHaveBeenCalledWith(40)
     expect(input.attributes('aria-invalid')).toBe('true')
-    expect(wrapper.text()).toContain('Enter a value from 5 to 35 kt')
+    const error = wrapper.get('[role="alert"]')
+    expect(error.text()).toContain('Enter a value from 5 to 35 kt')
+    expect(input.attributes('aria-describedby').split(' ')).toContain(error.attributes('id'))
 
     await input.trigger('keydown', { key: 'Escape' })
     expect(input.element.value).toBe('17')
