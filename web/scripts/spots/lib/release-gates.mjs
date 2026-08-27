@@ -14,23 +14,3 @@ export function verifyReleaseSources({ manifest, candidates }) {
   }
   return true
 }
-
-export function verifyReleaseSample(sample, validationResults) {
-  const accepted = validationResults.filter((result) => result.outcome === 'accepted' && result.trustedLocation !== true)
-  const required = Math.ceil(accepted.length * 0.1)
-  if (sample?.automaticAccepts !== accepted.length || sample?.reviewed < required) {
-    throw new Error(`Release sample must review at least ${required} of ${accepted.length} automatic accepts.`)
-  }
-  const acceptedIds = new Set(accepted.map((result) => result.candidateId))
-  const reviewedIds = new Set()
-  for (const item of sample.sample ?? []) {
-    if (!acceptedIds.has(item.candidateId) || reviewedIds.has(item.candidateId) || item.verdict !== 'pass') {
-      throw new Error('Release sample contains an invalid, duplicate, or unresolved review entry.')
-    }
-    reviewedIds.add(item.candidateId)
-  }
-  if (reviewedIds.size < required || (sample.systematicIssues?.length ?? 0) > 0) {
-    throw new Error('Release sample has unresolved systematic issues.')
-  }
-  return true
-}

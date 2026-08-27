@@ -1,5 +1,7 @@
 import { createHash } from 'node:crypto'
 
+import { textFitsRenderer, RENDERER_TEXT_CAPACITIES } from '../../../src/renderer/contract.js'
+
 const COUNTRY_ALIASES = new Map([
   ['the netherlands', 'nl'],
   ['czech republic', 'cz'],
@@ -7,6 +9,7 @@ const COUNTRY_ALIASES = new Map([
   ['usa', 'us'],
   ['uk', 'gb'],
 ])
+const REJECTION_REASONS = new Set(['source-rights', 'duplicate-suppressed', 'renderer-text-invalid'])
 
 let countryNames
 
@@ -42,9 +45,19 @@ function fingerprint(value) {
   return createHash('sha256').update(JSON.stringify(value)).digest('hex').slice(0, 24)
 }
 
-export function classifyCandidate(candidate, evidence, { duplicateReasons = [], trustedLocation = false } = {}) {
+export function candidateFitsRenderer(candidate) {
+  return textFitsRenderer(String(candidate?.name ?? '').trim().toLocaleUpperCase(), RENDERER_TEXT_CAPACITIES.spotName)
+}
+
+export function classifyCandidate(candidate, evidence, {
+  duplicateReasons = [],
+  duplicateSuppressed = false,
+  trustedLocation = false,
+} = {}) {
   const reasons = []
   if (candidate.releaseEligible !== true) reasons.push('source-rights')
+  if (duplicateSuppressed) reasons.push('duplicate-suppressed')
+  if (!candidateFitsRenderer(candidate)) reasons.push('renderer-text-invalid')
   const observedCountry = countryCode(evidence?.reverse?.countryCode)
   if (!trustedLocation) {
     const sourceCountry = countryCode(candidate.country)
@@ -56,7 +69,7 @@ export function classifyCandidate(candidate, evidence, { duplicateReasons = [], 
   if (!trustedLocation && evidence?.water?.nearby !== true) reasons.push('water-not-found')
   if (!trustedLocation) reasons.push(...(candidate.flags ?? []), ...duplicateReasons)
   const uniqueReasons = [...new Set(reasons)].sort()
-  const outcome = uniqueReasons.includes('source-rights')
+  const outcome = uniqueReasons.some((reason) => REJECTION_REASONS.has(reason))
     ? 'rejected'
     : uniqueReasons.length ? 'needs-review' : 'accepted'
   return {
@@ -79,6 +92,7 @@ export function classifyCandidate(candidate, evidence, { duplicateReasons = [], 
       },
       evidence,
       duplicateReasons: [...duplicateReasons].sort(),
+      duplicateSuppressed,
       trustedLocation,
     }),
   }

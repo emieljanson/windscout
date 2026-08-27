@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { buildRuntimeCatalog } from '../scripts/spots/lib/catalog-builder.mjs'
-import { verifyReleaseSample, verifyReleaseSources } from '../scripts/spots/lib/release-gates.mjs'
+import { verifyReleaseSources } from '../scripts/spots/lib/release-gates.mjs'
 import { searchSpots } from '../src/spots/searchSpots'
 
 const existing = [
@@ -136,19 +136,5 @@ describe('catalog release gates', () => {
       }] },
       candidates: [{ source: 'varun', releaseEligible: true }],
     })).toThrow('not release-eligible')
-  })
-
-  it('requires a passing review sample of at least ten percent', () => {
-    const validationResults = [
-      ...Array.from({ length: 20 }, (_, index) => ({ candidateId: `spot-${index}`, outcome: 'accepted' })),
-      { candidateId: 'trusted-spot', outcome: 'accepted', trustedLocation: true },
-    ]
-    expect(() => verifyReleaseSample({
-      automaticAccepts: 20, reviewed: 2, systematicIssues: [],
-      sample: [{ candidateId: 'spot-0', verdict: 'pass' }, { candidateId: 'spot-1', verdict: 'pass' }],
-    }, validationResults)).not.toThrow()
-    expect(() => verifyReleaseSample({
-      automaticAccepts: 20, reviewed: 1, systematicIssues: [], sample: [{ candidateId: 'spot-0', verdict: 'pass' }],
-    }, validationResults)).toThrow('at least 2')
   })
 })

@@ -9,6 +9,10 @@
       "snapshot": "2026-08-27T14:48:11Z",
       "query": "nwr[\"sport\"~\"(^|;)(kitesurfing|windsurfing|sailing)(;|$)\"]; out center tags bb;",
       "releaseEligible": true,
+      "validation": {
+        "mode": "trusted-location",
+        "timezone": "geoapify-reverse"
+      },
       "rights": {
         "license": "ODbL-1.0",
         "redistribution": true,

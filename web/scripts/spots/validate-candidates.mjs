@@ -4,7 +4,7 @@ import { readFile, rename, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { detectDuplicates } from './lib/duplicate-detection.mjs'
+import { detectDuplicates, selectDuplicateSuppressions } from './lib/duplicate-detection.mjs'
 import { cacheKeyForCandidate, collectGeoapifyEvidence, requiredGeoapifyCredits } from './lib/geoapify-validation.mjs'
 import { classifyCandidate } from './lib/spot-validation.mjs'
 
@@ -91,6 +91,7 @@ if (checkOnly) {
 }
 
 const duplicateGroups = detectDuplicates(candidates)
+const duplicateSuppressions = selectDuplicateSuppressions(candidates, duplicateGroups)
 const duplicateReasons = new Map()
 for (const group of duplicateGroups) {
   for (const id of [group.leftId, group.rightId]) {
@@ -105,6 +106,7 @@ const results = candidates.map((candidate) => classifyCandidate(
   cache[cacheKeyForCandidate(candidate)] ?? {},
   {
     duplicateReasons: duplicateReasons.get(candidate.id) ?? [],
+    duplicateSuppressed: duplicateSuppressions.has(candidate.id),
     trustedLocation: trustedSources.has(candidate.source),
   },
 )).sort((left, right) => left.candidateId.localeCompare(right.candidateId))
@@ -127,5 +129,6 @@ console.log(JSON.stringify({
   ...requestStats,
   outcomes: totals,
   duplicateGroups: duplicateGroups.length,
+  duplicateSuppressions: duplicateSuppressions.size,
   trustedLocations: trustedCandidates.length,
 }, null, 2))

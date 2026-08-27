@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { detectDuplicates } from '../scripts/spots/lib/duplicate-detection.mjs'
+import { detectDuplicates, selectDuplicateSuppressions } from '../scripts/spots/lib/duplicate-detection.mjs'
 import {
   cacheKeyForCandidate,
   collectGeoapifyEvidence,
@@ -64,6 +64,11 @@ describe('deterministic spot validation', () => {
       .toMatchObject({ outcome: 'rejected', reasons: ['source-rights'] })
   })
 
+  it('rejects names that cannot render on the device', () => {
+    expect(classifyCandidate(candidate({ name: 'x'.repeat(100) }), evidence(), { trustedLocation: true }))
+      .toMatchObject({ outcome: 'rejected', reasons: ['renderer-text-invalid'] })
+  })
+
   it('includes evidence changes in the durable fingerprint', () => {
     const first = classifyCandidate(candidate(), evidence())
     const second = classifyCandidate(candidate(), evidence({ water: { nearby: true, distanceMeters: 900 } }))
@@ -81,6 +86,20 @@ describe('deterministic spot validation', () => {
       expect.objectContaining({ leftId: 'osm:node/1', rightId: 'osm:node/2', reasons: expect.arrayContaining(['within-75m', 'equivalent-name-within-5km']) }),
     ]))
     expect(spots).toHaveLength(3)
+  })
+
+  it('automatically keeps one forecast location per duplicate group', () => {
+    const spots = [
+      candidate({ id: 'osm:node/1', source: 'osm', featureType: 'club' }),
+      candidate({ id: 'osm:node/2', source: 'osm', featureType: 'watersport-location', latitude: 52.0001 }),
+      candidate({ id: 'varun:1', source: 'varun', featureType: 'spot-collection', latitude: 52.0002 }),
+    ]
+    const suppressed = selectDuplicateSuppressions(spots, detectDuplicates(spots))
+    expect([...suppressed].sort()).toEqual(['osm:node/1', 'osm:node/2'])
+    expect(classifyCandidate(spots[0], evidence(), {
+      trustedLocation: true,
+      duplicateSuppressed: true,
+    })).toMatchObject({ outcome: 'rejected', reasons: ['duplicate-suppressed'] })
   })
 })
 
