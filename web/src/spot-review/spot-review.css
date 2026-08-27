@@ -21,7 +21,7 @@ h1 { margin-bottom: 0; font-size: 28px; letter-spacing: -.035em; }
 .review-card { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(340px, .7fr); min-height: 640px; }
 .review-empty { padding: 64px; text-align: center; color: #777; }
 .review-map-wrap { position: relative; min-height: 420px; background: #e7e7e4; }
-.review-map { position: absolute; inset: 0; }
+.review-map-wrap > .review-map { position: absolute; inset: 0; }
 .review-pin { position: absolute; inset: 50% auto auto 50%; width: 28px; height: 28px; transform: translate(-50%, -100%); border-radius: 50% 50% 50% 0; rotate: -45deg; background: #ff5c22; box-shadow: 0 2px 8px rgb(0 0 0 / 22%); pointer-events: none; }
 .review-pin span { position: absolute; inset: 8px; border-radius: 50%; background: white; }
 .review-map-error { position: absolute; left: 16px; right: 16px; bottom: 16px; margin: 0; padding: 10px 12px; border-radius: 10px; background: rgb(255 255 255 / 92%); font-size: 12px; }
