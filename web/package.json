@@ -10,6 +10,10 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "spots:import": "node scripts/spots/import-sources.mjs",
+    "spots:validate": "node scripts/spots/validate-candidates.mjs",
+    "spots:review": "vite --config vite.spot-review.config.js --host 127.0.0.1",
+    "spots:catalog": "node scripts/spots/build-catalog.mjs",
+    "spots:catalog:check": "node scripts/spots/check-catalog.mjs --check",
     "renderer:build": "node scripts/build-wind-renderer.mjs",
     "renderer:check": "node scripts/build-wind-renderer.mjs --check",
     "model:prepare": "node scripts/prepare-e1002-model.mjs"

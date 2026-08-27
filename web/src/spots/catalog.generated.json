@@ -1,0 +1,3458 @@
+[
+  {
+    "id": "edam",
+    "name": "Edam",
+    "displayName": "EDAM",
+    "latitude": 52.5126,
+    "longitude": 5.0486,
+    "timezone": "Europe/Amsterdam"
+  },
+  {
+    "id": "brouwersdam",
+    "name": "Brouwersdam",
+    "displayName": "BROUWERSDAM",
+    "latitude": 51.7506,
+    "longitude": 3.8577,
+    "timezone": "Europe/Amsterdam"
+  },
+  {
+    "id": "castricum-aan-zee",
+    "name": "Castricum aan Zee",
+    "displayName": "CASTRICUM AAN ZEE",
+    "latitude": 52.555,
+    "longitude": 4.609,
+    "timezone": "Europe/Amsterdam"
+  },
+  {
+    "id": "spot-1ab3bs8",
+    "name": "'t Vossenhol",
+    "displayName": "'T VOSSENHOL",
+    "latitude": 52.219849,
+    "longitude": 4.553655,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-cmpn6x",
+    "name": "\"Danielino\" Windsurf School",
+    "displayName": "\"DANIELINO\" WINDSURF SCHOOL",
+    "latitude": 37.55862,
+    "longitude": 15.153047,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-o7w56e",
+    "name": "43° Parallelo di Zana Dario e Zuliani Maria Grazia S.n.c.",
+    "displayName": "43° PARALLELO DI ZANA DARIO E ZULIANI MARIA GRAZIA S.N.C.",
+    "latitude": 45.671939,
+    "longitude": 10.652379,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-vgzvem",
+    "name": "8 Milles nautic",
+    "displayName": "8 MILLES NAUTIC",
+    "latitude": 48.834976,
+    "longitude": -1.595064,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-6r0ghp",
+    "name": "Aalborg Sejlklub",
+    "displayName": "AALBORG SEJLKLUB",
+    "latitude": 57.055146,
+    "longitude": 9.875335,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-yao1am",
+    "name": "Aarhus Sejlklub",
+    "displayName": "AARHUS SEJLKLUB",
+    "latitude": 56.166107,
+    "longitude": 10.224194,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-3nagbg",
+    "name": "Absolute Kite Boarding",
+    "displayName": "ABSOLUTE KITE BOARDING",
+    "latitude": 43.421572,
+    "longitude": 4.730603,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1v5fmc7",
+    "name": "Accueil",
+    "displayName": "ACCUEIL",
+    "latitude": 48.441959,
+    "longitude": -4.777836,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1pxeroy",
+    "name": "Adriatico Wind Club",
+    "displayName": "ADRIATICO WIND CLUB",
+    "latitude": 44.497731,
+    "longitude": 12.282517,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-in4asl",
+    "name": "AGSN ski nautique",
+    "displayName": "AGSN SKI NAUTIQUE",
+    "latitude": 16.275331,
+    "longitude": -61.582653,
+    "timezone": "America/Puerto_Rico"
+  },
+  {
+    "id": "spot-1e8cji7",
+    "name": "Akademischer Segel-Verein in Kiel e.V.",
+    "displayName": "AKADEMISCHER SEGEL-VEREIN IN KIEL E.V.",
+    "latitude": 54.328917,
+    "longitude": 10.147527,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1g6buh4",
+    "name": "Albany Park Canoe & Sailing Centre",
+    "displayName": "ALBANY PARK CANOE & SAILING CENTRE",
+    "latitude": 51.422522,
+    "longitude": -0.305262,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-11q87zw",
+    "name": "Aldridge Sailing Club",
+    "displayName": "ALDRIDGE SAILING CLUB",
+    "latitude": 52.612236,
+    "longitude": -1.940313,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1cw8b6m",
+    "name": "Ålesunds Seilforening",
+    "displayName": "ÅLESUNDS SEILFORENING",
+    "latitude": 62.469352,
+    "longitude": 6.202524,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1ybep0o",
+    "name": "All Ride 66",
+    "displayName": "ALL RIDE 66",
+    "latitude": 42.815524,
+    "longitude": 3.019191,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1u0qha6",
+    "name": "Amtoft Lystbådelaug",
+    "displayName": "AMTOFT LYSTBÅDELAUG",
+    "latitude": 57.006305,
+    "longitude": 8.942192,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-f62zii",
+    "name": "ANA sailing school- ANA (academia navalis adriatica)",
+    "displayName": "ANA SAILING SCHOOL- ANA (ACADEMIA NAVALIS ADRIATICA)",
+    "latitude": 43.783649,
+    "longitude": 15.643214,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-qra12",
+    "name": "Antrim Boat Club",
+    "displayName": "ANTRIM BOAT CLUB",
+    "latitude": 54.716133,
+    "longitude": -6.240852,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-t4dvce",
+    "name": "Århus Windsurfing Klub",
+    "displayName": "ÅRHUS WINDSURFING KLUB",
+    "latitude": 56.20257,
+    "longitude": 10.282118,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-eys910",
+    "name": "Årøsund Bådelaug",
+    "displayName": "ÅRØSUND BÅDELAUG",
+    "latitude": 55.262082,
+    "longitude": 9.707464,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1e25rzd",
+    "name": "Assens Sejlklub",
+    "displayName": "ASSENS SEJLKLUB",
+    "latitude": 55.267792,
+    "longitude": 9.883209,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-7t3okf",
+    "name": "Associação Náutica do Seixal",
+    "displayName": "ASSOCIAÇÃO NÁUTICA DO SEIXAL",
+    "latitude": 38.644125,
+    "longitude": -9.10401,
+    "timezone": "Europe/Lisbon"
+  },
+  {
+    "id": "spot-tlscue",
+    "name": "Association Sportive et Nautique de Quiberon",
+    "displayName": "ASSOCIATION SPORTIVE ET NAUTIQUE DE QUIBERON",
+    "latitude": 47.483298,
+    "longitude": -3.096763,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-ncwmp7",
+    "name": "ASV Aachen",
+    "displayName": "ASV AACHEN",
+    "latitude": 50.779409,
+    "longitude": 6.080701,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-e06x8h",
+    "name": "Atelier d'Insertion Nautique",
+    "displayName": "ATELIER D'INSERTION NAUTIQUE",
+    "latitude": 15.988146,
+    "longitude": -61.300444,
+    "timezone": "America/Puerto_Rico"
+  },
+  {
+    "id": "spot-dm6n1s",
+    "name": "Aura Sailing",
+    "displayName": "AURA SAILING",
+    "latitude": 52.963552,
+    "longitude": 5.716253,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1upce1",
+    "name": "Aviron Club de Bourges",
+    "displayName": "AVIRON CLUB DE BOURGES",
+    "latitude": 47.058397,
+    "longitude": 2.396804,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-6um3qu",
+    "name": "Bad Wörishofener Segelclub e. V.",
+    "displayName": "BAD WÖRISHOFENER SEGELCLUB E. V.",
+    "latitude": 48.023728,
+    "longitude": 10.65117,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-6fcs94",
+    "name": "Baie de Carteau",
+    "displayName": "BAIE DE CARTEAU",
+    "latitude": 43.387239,
+    "longitude": 4.851434,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-xr9wyy",
+    "name": "Baltische Seglervereinigung Hamburg",
+    "displayName": "BALTISCHE SEGLERVEREINIGUNG HAMBURG",
+    "latitude": 53.4896,
+    "longitude": 10.092955,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-19iagr7",
+    "name": "Base de loisirs de l'Île Charlemagne",
+    "displayName": "BASE DE LOISIRS DE L'ÎLE CHARLEMAGNE",
+    "latitude": 47.895138,
+    "longitude": 1.940295,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-14f1ugu",
+    "name": "Base de Voile de Pointe-Claire - Grande-Anse",
+    "displayName": "BASE DE VOILE DE POINTE-CLAIRE - GRANDE-ANSE",
+    "latitude": 45.445318,
+    "longitude": -73.798448,
+    "timezone": "America/Toronto"
+  },
+  {
+    "id": "spot-12h6x7g",
+    "name": "Base Nautique",
+    "displayName": "BASE NAUTIQUE",
+    "latitude": 50.637755,
+    "longitude": 3.167108,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-13vemy",
+    "name": "Base Nautique",
+    "displayName": "BASE NAUTIQUE",
+    "latitude": 46.825104,
+    "longitude": 1.694027,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-159junl",
+    "name": "Base nautique de Paimpont",
+    "displayName": "BASE NAUTIQUE DE PAIMPONT",
+    "latitude": 48.018315,
+    "longitude": -2.173907,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1x96w3i",
+    "name": "Base Nautique de Penfret",
+    "displayName": "BASE NAUTIQUE DE PENFRET",
+    "latitude": 47.718408,
+    "longitude": -3.955985,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-16wooqp",
+    "name": "Base Nautique Municipale",
+    "displayName": "BASE NAUTIQUE MUNICIPALE",
+    "latitude": 43.077083,
+    "longitude": 5.899129,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-14ygqxe",
+    "name": "BCM Brühler Club für Motorsport, Abt. Segelsport",
+    "displayName": "BCM BRÜHLER CLUB FÜR MOTORSPORT, ABT. SEGELSPORT",
+    "latitude": 50.832003,
+    "longitude": 6.868255,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-smmi83",
+    "name": "Beach Escolas",
+    "displayName": "BEACH ESCOLAS",
+    "latitude": 42.199,
+    "longitude": -8.788109,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-l9iud6",
+    "name": "Bij Ceulemans",
+    "displayName": "BIJ CEULEMANS",
+    "latitude": 51.732947,
+    "longitude": 5.829268,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-4wtkap",
+    "name": "Bjellandstrand",
+    "displayName": "BJELLANDSTRAND",
+    "latitude": 58.456366,
+    "longitude": 8.884485,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-65paf6",
+    "name": "Black Dog Yacht Club",
+    "displayName": "BLACK DOG YACHT CLUB",
+    "latitude": 41.454296,
+    "longitude": -70.599975,
+    "timezone": "America/New_York"
+  },
+  {
+    "id": "spot-1hrhlq4",
+    "name": "Blackwater Valley Watersports",
+    "displayName": "BLACKWATER VALLEY WATERSPORTS",
+    "latitude": 51.35103,
+    "longitude": -0.837645,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1b1b0oo",
+    "name": "Blauwe Schuit",
+    "displayName": "BLAUWE SCHUIT",
+    "latitude": 52.171426,
+    "longitude": 4.521579,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-u1ydve",
+    "name": "Blindheimsvikå",
+    "displayName": "BLINDHEIMSVIKÅ",
+    "latitude": 62.553614,
+    "longitude": 6.089988,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1euvgb8",
+    "name": "Blue Surf Center",
+    "displayName": "BLUE SURF CENTER",
+    "latitude": 36.769952,
+    "longitude": -2.603241,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-t7rbor",
+    "name": "Bluewater Sailing",
+    "displayName": "BLUEWATER SAILING",
+    "latitude": 33.981844,
+    "longitude": -118.443177,
+    "timezone": "America/Los_Angeles"
+  },
+  {
+    "id": "spot-yinctr",
+    "name": "Bogø Sejlklub",
+    "displayName": "BOGØ SEJLKLUB",
+    "latitude": 54.912866,
+    "longitude": 12.052308,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1skt5gt",
+    "name": "Bootsclub Haselünne e.V.",
+    "displayName": "BOOTSCLUB HASELÜNNE E.V.",
+    "latitude": 52.670481,
+    "longitude": 7.49827,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1jma9kw",
+    "name": "Bootsclub Nordhorn e.V.",
+    "displayName": "BOOTSCLUB NORDHORN E.V.",
+    "latitude": 52.434335,
+    "longitude": 7.081769,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-4n7aoo",
+    "name": "Bosham Sailing Club",
+    "displayName": "BOSHAM SAILING CLUB",
+    "latitude": 50.828193,
+    "longitude": -0.859959,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-g9q29b",
+    "name": "Bractwo Wodniaków",
+    "displayName": "BRACTWO WODNIAKÓW",
+    "latitude": 53.439338,
+    "longitude": 18.734536,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-18qot2f",
+    "name": "Breakwater Yacht Club",
+    "displayName": "BREAKWATER YACHT CLUB",
+    "latitude": 41.001831,
+    "longitude": -72.290888,
+    "timezone": "America/New_York"
+  },
+  {
+    "id": "spot-qiyw2q",
+    "name": "Bregenzer Segel-Club",
+    "displayName": "BREGENZER SEGEL-CLUB",
+    "latitude": 47.50592,
+    "longitude": 9.725803,
+    "timezone": "Europe/Vienna"
+  },
+  {
+    "id": "spot-1lt5vly",
+    "name": "Brühler Surf-Club 1976 e.V.",
+    "displayName": "BRÜHLER SURF-CLUB 1976 E.V.",
+    "latitude": 50.844308,
+    "longitude": 6.860135,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1t6ip0z",
+    "name": "Brusanden",
+    "displayName": "BRUSANDEN",
+    "latitude": 62.510812,
+    "longitude": 6.064367,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-cz2qwe",
+    "name": "Büdelsdorfer Yachtclub e.V.",
+    "displayName": "BÜDELSDORFER YACHTCLUB E.V.",
+    "latitude": 54.311509,
+    "longitude": 9.682199,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1miemuv",
+    "name": "Canary Surf Academy",
+    "displayName": "CANARY SURF ACADEMY",
+    "latitude": 28.3941,
+    "longitude": -13.860342,
+    "timezone": "Atlantic/Canary"
+  },
+  {
+    "id": "spot-3cxdyz",
+    "name": "Caños de Meca Kitesurf Spot",
+    "displayName": "CAÑOS DE MECA KITESURF SPOT",
+    "latitude": 36.186704,
+    "longitude": -6.02625,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-1d5b1n1",
+    "name": "Captain's Watersport",
+    "displayName": "CAPTAIN'S WATERSPORT",
+    "latitude": 18.45412,
+    "longitude": -78.153772,
+    "timezone": "America/Jamaica"
+  },
+  {
+    "id": "spot-3uolh1",
+    "name": "Cataraibe",
+    "displayName": "CATARAIBE",
+    "latitude": 16.162618,
+    "longitude": -61.58405,
+    "timezone": "America/Puerto_Rico"
+  },
+  {
+    "id": "spot-o6wy1s",
+    "name": "Center da Surf",
+    "displayName": "CENTER DA SURF",
+    "latitude": 46.45518,
+    "longitude": 9.791348,
+    "timezone": "Europe/Zurich"
+  },
+  {
+    "id": "spot-pi2w9h",
+    "name": "Centre de Voile de l'Aber Wrac'h",
+    "displayName": "CENTRE DE VOILE DE L'ABER WRAC'H",
+    "latitude": 48.597606,
+    "longitude": -4.562428,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-oobrvi",
+    "name": "Centre Nautique",
+    "displayName": "CENTRE NAUTIQUE",
+    "latitude": 48.817657,
+    "longitude": -3.460884,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1gumvlt",
+    "name": "Centre Nautique Cancale",
+    "displayName": "CENTRE NAUTIQUE CANCALE",
+    "latitude": 48.699503,
+    "longitude": -1.850125,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1eku65e",
+    "name": "Centre Nautique de La Croix Valmer",
+    "displayName": "CENTRE NAUTIQUE DE LA CROIX VALMER",
+    "latitude": 43.18827,
+    "longitude": 6.554683,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1we2xyo",
+    "name": "Centre Nautique Paul Vatine",
+    "displayName": "CENTRE NAUTIQUE PAUL VATINE",
+    "latitude": 49.491523,
+    "longitude": 0.093881,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-v0opbx",
+    "name": "Centre Nautique UCPA",
+    "displayName": "CENTRE NAUTIQUE UCPA",
+    "latitude": 15.86606,
+    "longitude": -61.583897,
+    "timezone": "America/Puerto_Rico"
+  },
+  {
+    "id": "spot-1lslby6",
+    "name": "Centro de Velerismo Teresita Lara",
+    "displayName": "CENTRO DE VELERISMO TERESITA LARA",
+    "latitude": 10.155622,
+    "longitude": -68.800631,
+    "timezone": "America/Caracas"
+  },
+  {
+    "id": "spot-yedpd2",
+    "name": "Cercle de la Voile de Moratel-Cully",
+    "displayName": "CERCLE DE LA VOILE DE MORATEL-CULLY",
+    "latitude": 46.489457,
+    "longitude": 6.738461,
+    "timezone": "Europe/Zurich"
+  },
+  {
+    "id": "spot-1amvlji",
+    "name": "Cercle Nautique de Loctudy",
+    "displayName": "CERCLE NAUTIQUE DE LOCTUDY",
+    "latitude": 47.828352,
+    "longitude": -4.163026,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-7c31i8",
+    "name": "Chichester Yacht Club",
+    "displayName": "CHICHESTER YACHT CLUB",
+    "latitude": 50.804113,
+    "longitude": -0.827405,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-frfv06",
+    "name": "Chipstead Sailing Club",
+    "displayName": "CHIPSTEAD SAILING CLUB",
+    "latitude": 51.287054,
+    "longitude": 0.154027,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1mzdx63",
+    "name": "Circolo nautico “Orlando” Molo Mediceo",
+    "displayName": "CIRCOLO NAUTICO “ORLANDO” MOLO MEDICEO",
+    "latitude": 43.547701,
+    "longitude": 10.297593,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-36oo54",
+    "name": "Circolo Nautico Chioggia",
+    "displayName": "CIRCOLO NAUTICO CHIOGGIA",
+    "latitude": 45.22305,
+    "longitude": 12.281973,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-cibhb7",
+    "name": "Circolo Nautico Torino asd",
+    "displayName": "CIRCOLO NAUTICO TORINO ASD",
+    "latitude": 45.412414,
+    "longitude": 8.0485,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-19y3op1",
+    "name": "Club de Vela Palamós",
+    "displayName": "CLUB DE VELA PALAMÓS",
+    "latitude": 41.842788,
+    "longitude": 3.128883,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-1cezsd1",
+    "name": "Club de voile",
+    "displayName": "CLUB DE VOILE",
+    "latitude": 47.796497,
+    "longitude": 0.994559,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-c30a7q",
+    "name": "Club de Voile d'Épinal",
+    "displayName": "CLUB DE VOILE D'ÉPINAL",
+    "latitude": 48.162148,
+    "longitude": 6.35195,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-6ox8oe",
+    "name": "Club de Voile de Lausanne",
+    "displayName": "CLUB DE VOILE DE LAUSANNE",
+    "latitude": 46.507649,
+    "longitude": 6.622189,
+    "timezone": "Europe/Zurich"
+  },
+  {
+    "id": "spot-1v6cyfc",
+    "name": "Club do Mar Ferrol",
+    "displayName": "CLUB DO MAR FERROL",
+    "latitude": 43.480427,
+    "longitude": -8.24641,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-sodud9",
+    "name": "Club maritim Erfurt",
+    "displayName": "CLUB MARITIM ERFURT",
+    "latitude": 51.071352,
+    "longitude": 11.04173,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-fo0xha",
+    "name": "Club Maritim Torredembarra",
+    "displayName": "CLUB MARITIM TORREDEMBARRA",
+    "latitude": 41.145548,
+    "longitude": 1.416307,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-1ol9o44",
+    "name": "Club Marítimo de Celorio",
+    "displayName": "CLUB MARÍTIMO DE CELORIO",
+    "latitude": 43.434385,
+    "longitude": -4.80825,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-kr02op",
+    "name": "Club Nàutic Fornells",
+    "displayName": "CLUB NÀUTIC FORNELLS",
+    "latitude": 40.040301,
+    "longitude": 4.124027,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-1yt3y8r",
+    "name": "Club Nàutic Vilanova",
+    "displayName": "CLUB NÀUTIC VILANOVA",
+    "latitude": 41.214585,
+    "longitude": 1.727926,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-13thsz9",
+    "name": "Club Náutico de Sanlúcar de Barrameda",
+    "displayName": "CLUB NÁUTICO DE SANLÚCAR DE BARRAMEDA",
+    "latitude": 36.7888,
+    "longitude": -6.353052,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-18dppy1",
+    "name": "Club Náutico Marítimo Benalmádena",
+    "displayName": "CLUB NÁUTICO MARÍTIMO BENALMÁDENA",
+    "latitude": 36.595174,
+    "longitude": -4.514681,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-12chkz9",
+    "name": "Club Nautico Pesaro",
+    "displayName": "CLUB NAUTICO PESARO",
+    "latitude": 43.919236,
+    "longitude": 12.904318,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-oc29e4",
+    "name": "Club nautique d'Arès",
+    "displayName": "CLUB NAUTIQUE D'ARÈS",
+    "latitude": 44.75793,
+    "longitude": -1.136926,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1t1kvx5",
+    "name": "Club Nautique d'Istres",
+    "displayName": "CLUB NAUTIQUE D'ISTRES",
+    "latitude": 43.497283,
+    "longitude": 4.998234,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-hizzvp",
+    "name": "Club Nautique de Coutainville",
+    "displayName": "CLUB NAUTIQUE DE COUTAINVILLE",
+    "latitude": 49.030435,
+    "longitude": -1.595839,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-kltgqd",
+    "name": "Club Nautique de Golfe Juan",
+    "displayName": "CLUB NAUTIQUE DE GOLFE JUAN",
+    "latitude": 43.564167,
+    "longitude": 7.077222,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1d2rnam",
+    "name": "Club Nautique de la Pointe de Saire",
+    "displayName": "CLUB NAUTIQUE DE LA POINTE DE SAIRE",
+    "latitude": 49.60674,
+    "longitude": -1.230858,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-be0z8p",
+    "name": "Club Nautique de Mazerolles",
+    "displayName": "CLUB NAUTIQUE DE MAZEROLLES",
+    "latitude": 47.363225,
+    "longitude": -1.509844,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-hjl5t7",
+    "name": "Club nautique de Pornic",
+    "displayName": "CLUB NAUTIQUE DE PORNIC",
+    "latitude": 47.11051,
+    "longitude": -2.111035,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1ailyp",
+    "name": "Club Nautique de Saint-Raphaël",
+    "displayName": "CLUB NAUTIQUE DE SAINT-RAPHAËL",
+    "latitude": 43.417284,
+    "longitude": 6.775302,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-khusl8",
+    "name": "Club Nautique de Sidi bou Said",
+    "displayName": "CLUB NAUTIQUE DE SIDI BOU SAID",
+    "latitude": 36.867677,
+    "longitude": 10.350431,
+    "timezone": "Africa/Tunis"
+  },
+  {
+    "id": "spot-76tqjm",
+    "name": "Club Nautique Wimereux",
+    "displayName": "CLUB NAUTIQUE WIMEREUX",
+    "latitude": 50.763633,
+    "longitude": 1.605723,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-ghobre",
+    "name": "Club Ocata Vent",
+    "displayName": "CLUB OCATA VENT",
+    "latitude": 41.479733,
+    "longitude": 2.324132,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-maxasx",
+    "name": "Club Patí Vela Barcelona",
+    "displayName": "CLUB PATÍ VELA BARCELONA",
+    "latitude": 41.385185,
+    "longitude": 2.199371,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-1r7c28d",
+    "name": "Club Var Mer",
+    "displayName": "CLUB VAR MER",
+    "latitude": 43.656041,
+    "longitude": 7.198299,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-6kukaj",
+    "name": "Club Vela Calella",
+    "displayName": "CLUB VELA CALELLA",
+    "latitude": 41.888478,
+    "longitude": 3.183597,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-1c99fmj",
+    "name": "Club Voile Éole",
+    "displayName": "CLUB VOILE ÉOLE",
+    "latitude": 47.241343,
+    "longitude": -2.310741,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-176re06",
+    "name": "Club30kite",
+    "displayName": "CLUB30KITE",
+    "latitude": 43.505813,
+    "longitude": 4.138315,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1gx7dbu",
+    "name": "Clubhuis Buutengaets",
+    "displayName": "CLUBHUIS BUUTENGAETS",
+    "latitude": 51.605799,
+    "longitude": 4.106679,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1kz142o",
+    "name": "cnppb",
+    "displayName": "CNPPB",
+    "latitude": 47.262598,
+    "longitude": -2.418857,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-jvarka",
+    "name": "De Maas",
+    "displayName": "DE MAAS",
+    "latitude": 51.933116,
+    "longitude": 4.505804,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1yx3d62",
+    "name": "de Zeilpunter",
+    "displayName": "DE ZEILPUNTER",
+    "latitude": 52.691291,
+    "longitude": 6.089495,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1g6ebk1",
+    "name": "DJH Jugendherberge Bad Malente",
+    "displayName": "DJH JUGENDHERBERGE BAD MALENTE",
+    "latitude": 54.174386,
+    "longitude": 10.576193,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1767y8f",
+    "name": "DJH Jugendherberge Kiel",
+    "displayName": "DJH JUGENDHERBERGE KIEL",
+    "latitude": 54.313931,
+    "longitude": 10.142509,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1x4vyu3",
+    "name": "Downtown Sailing Center",
+    "displayName": "DOWNTOWN SAILING CENTER",
+    "latitude": 39.274069,
+    "longitude": -76.600029,
+    "timezone": "America/New_York"
+  },
+  {
+    "id": "spot-3db0f6",
+    "name": "Dudley Water Sports Centre Ltd",
+    "displayName": "DUDLEY WATER SPORTS CENTRE LTD",
+    "latitude": 52.483151,
+    "longitude": -2.092714,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1ylhg2k",
+    "name": "Duisburger Kanu- und Segel- Club",
+    "displayName": "DUISBURGER KANU- UND SEGEL- CLUB",
+    "latitude": 51.382037,
+    "longitude": 6.804581,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1ci3oab",
+    "name": "Dungarvan Harbour Sailing Club",
+    "displayName": "DUNGARVAN HARBOUR SAILING CLUB",
+    "latitude": 52.090286,
+    "longitude": -7.61869,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-j7d6c",
+    "name": "Dynamique Water en Buitensport",
+    "displayName": "DYNAMIQUE WATER EN BUITENSPORT",
+    "latitude": 52.403945,
+    "longitude": 4.679918,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-17emnbs",
+    "name": "École de voile",
+    "displayName": "ÉCOLE DE VOILE",
+    "latitude": 46.155089,
+    "longitude": -1.157574,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1qxms67",
+    "name": "École de voile",
+    "displayName": "ÉCOLE DE VOILE",
+    "latitude": 16.251695,
+    "longitude": -61.549625,
+    "timezone": "America/Puerto_Rico"
+  },
+  {
+    "id": "spot-y86c5h",
+    "name": "École de voile",
+    "displayName": "ÉCOLE DE VOILE",
+    "latitude": 45.949058,
+    "longitude": -1.090884,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1ffsnu",
+    "name": "École de Voile",
+    "displayName": "ÉCOLE DE VOILE",
+    "latitude": 41.68135,
+    "longitude": 9.374421,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1wf4ha7",
+    "name": "École de Voile",
+    "displayName": "ÉCOLE DE VOILE",
+    "latitude": 45.050523,
+    "longitude": 4.396272,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1h0f3y",
+    "name": "École de Voile - Deauville YatchClub",
+    "displayName": "ÉCOLE DE VOILE - DEAUVILLE YATCHCLUB",
+    "latitude": 49.362032,
+    "longitude": 0.079826,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-rezbqc",
+    "name": "École de Voile de Locquirec",
+    "displayName": "ÉCOLE DE VOILE DE LOCQUIREC",
+    "latitude": 48.690845,
+    "longitude": -3.648068,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-148xwew",
+    "name": "École de voile du Rohu",
+    "displayName": "ÉCOLE DE VOILE DU ROHU",
+    "latitude": 47.518934,
+    "longitude": -2.857191,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1moag7o",
+    "name": "École de voile Honfleur",
+    "displayName": "ÉCOLE DE VOILE HONFLEUR",
+    "latitude": 49.423957,
+    "longitude": 0.211327,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-49xmdg",
+    "name": "École de voile Valentin",
+    "displayName": "ÉCOLE DE VOILE VALENTIN",
+    "latitude": 47.280618,
+    "longitude": -2.497528,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-h5vnnq",
+    "name": "École Française de Voile",
+    "displayName": "ÉCOLE FRANÇAISE DE VOILE",
+    "latitude": 46.993987,
+    "longitude": 4.840808,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-l1uhsy",
+    "name": "École Française de Voile",
+    "displayName": "ÉCOLE FRANÇAISE DE VOILE",
+    "latitude": 48.727183,
+    "longitude": -2.949295,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1m52tpw",
+    "name": "Egå Sejlklub",
+    "displayName": "EGÅ SEJLKLUB",
+    "latitude": 56.209763,
+    "longitude": 10.287937,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-m49fuw",
+    "name": "Ekkerøy",
+    "displayName": "EKKERØY",
+    "latitude": 70.07687,
+    "longitude": 30.097861,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-x9oq8m",
+    "name": "El Kur",
+    "displayName": "EL KUR",
+    "latitude": 53.795438,
+    "longitude": 20.428538,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-4spii9",
+    "name": "Emberton Park Sailing Club",
+    "displayName": "EMBERTON PARK SAILING CLUB",
+    "latitude": 52.143834,
+    "longitude": -0.70799,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-ovhpqi",
+    "name": "Engholmstranda/Langstranda",
+    "displayName": "ENGHOLMSTRANDA/LANGSTRANDA",
+    "latitude": 59.315001,
+    "longitude": 10.681456,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-8a66qr",
+    "name": "Erith Yacht Club",
+    "displayName": "ERITH YACHT CLUB",
+    "latitude": 51.479394,
+    "longitude": 0.199707,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1rcs57i",
+    "name": "Esbjerg Søsport",
+    "displayName": "ESBJERG SØSPORT",
+    "latitude": 55.482093,
+    "longitude": 8.411661,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1mknxec",
+    "name": "Escola de Vela Ribeirão da Ilha",
+    "displayName": "ESCOLA DE VELA RIBEIRÃO DA ILHA",
+    "latitude": -27.795973,
+    "longitude": -48.562501,
+    "timezone": "America/Sao_Paulo"
+  },
+  {
+    "id": "spot-zpq676",
+    "name": "Escola Garbi",
+    "displayName": "ESCOLA GARBI",
+    "latitude": 41.265036,
+    "longitude": 1.964193,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-1o4bwwo",
+    "name": "Escola Municipal de Vela",
+    "displayName": "ESCOLA MUNICIPAL DE VELA",
+    "latitude": 38.732024,
+    "longitude": 1.415941,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-j81a6e",
+    "name": "Espergærde Sejlklub",
+    "displayName": "ESPERGÆRDE SEJLKLUB",
+    "latitude": 55.991828,
+    "longitude": 12.560605,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-alt92",
+    "name": "Exe Sailing Club",
+    "displayName": "EXE SAILING CLUB",
+    "latitude": 50.619241,
+    "longitude": -3.424327,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1giu2ym",
+    "name": "Feisnitz-Stausee Arzberg",
+    "displayName": "FEISNITZ-STAUSEE ARZBERG",
+    "latitude": 50.037131,
+    "longitude": 12.175276,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-12fua4o",
+    "name": "Fiskumvannet",
+    "displayName": "FISKUMVANNET",
+    "latitude": 59.69877,
+    "longitude": 9.841186,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-19y0mg5",
+    "name": "Flatset",
+    "displayName": "FLATSET",
+    "latitude": 68.577201,
+    "longitude": 14.783843,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-255a5w",
+    "name": "FluidW",
+    "displayName": "FLUIDW",
+    "latitude": 43.566764,
+    "longitude": 4.100107,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-95d93j",
+    "name": "Frankfurter Rudergesellschaft Borussia 1896",
+    "displayName": "FRANKFURTER RUDERGESELLSCHAFT BORUSSIA 1896",
+    "latitude": 50.105166,
+    "longitude": 8.717157,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1oiz0az",
+    "name": "Frederikshavn Sejlklub",
+    "displayName": "FREDERIKSHAVN SEJLKLUB",
+    "latitude": 57.425361,
+    "longitude": 10.527608,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-ew3dtj",
+    "name": "FREE SPIRIT WAY D.O.O-škola jedrenja",
+    "displayName": "FREE SPIRIT WAY D.O.O-ŠKOLA JEDRENJA",
+    "latitude": 43.785151,
+    "longitude": 15.641527,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-1kn8j39",
+    "name": "Frosta-Tautra",
+    "displayName": "FROSTA-TAUTRA",
+    "latitude": 63.583695,
+    "longitude": 10.614778,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1swj3c0",
+    "name": "Gillhusodden",
+    "displayName": "GILLHUSODDEN",
+    "latitude": 59.747223,
+    "longitude": 10.267636,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-mc22t6",
+    "name": "Gjerdsvika",
+    "displayName": "GJERDSVIKA",
+    "latitude": 62.25386,
+    "longitude": 5.575819,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-oh8vy7",
+    "name": "Grøtfjord",
+    "displayName": "GRØTFJORD",
+    "latitude": 69.778114,
+    "longitude": 18.538463,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-dkhr99",
+    "name": "Hals Bådelaug",
+    "displayName": "HALS BÅDELAUG",
+    "latitude": 56.991098,
+    "longitude": 10.306271,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-5f3msp",
+    "name": "Hamresanden",
+    "displayName": "HAMRESANDEN",
+    "latitude": 58.190557,
+    "longitude": 8.070464,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-pk47pi",
+    "name": "Haviksanden",
+    "displayName": "HAVIKSANDEN",
+    "latitude": 58.066652,
+    "longitude": 6.734329,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-z886e7",
+    "name": "Helsingør Sejlklub",
+    "displayName": "HELSINGØR SEJLKLUB",
+    "latitude": 56.041562,
+    "longitude": 12.611419,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-x3brok",
+    "name": "Hermanus Yacht Club",
+    "displayName": "HERMANUS YACHT CLUB",
+    "latitude": -34.40918,
+    "longitude": 19.349252,
+    "timezone": "Africa/Johannesburg"
+  },
+  {
+    "id": "spot-vnphg3",
+    "name": "hobbie cat, windsurf rental and lessons",
+    "displayName": "HOBBIE CAT, WINDSURF RENTAL AND LESSONS",
+    "latitude": 41.633877,
+    "longitude": 9.346412,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-19c58e6",
+    "name": "Hobro Sejlklub",
+    "displayName": "HOBRO SEJLKLUB",
+    "latitude": 56.643958,
+    "longitude": 9.811057,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1heeqn4",
+    "name": "Hofstade Zeilclub",
+    "displayName": "HOFSTADE ZEILCLUB",
+    "latitude": 50.984453,
+    "longitude": 4.505945,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1f5dk4n",
+    "name": "Høllen",
+    "displayName": "HØLLEN",
+    "latitude": 58.074197,
+    "longitude": 7.81894,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1t7nwzd",
+    "name": "Hollenderen",
+    "displayName": "HOLLENDEREN",
+    "latitude": 59.1176,
+    "longitude": 11.361513,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-qzc4hh",
+    "name": "Honorable William Wall",
+    "displayName": "HONORABLE WILLIAM WALL",
+    "latitude": 40.701659,
+    "longitude": -74.036588,
+    "timezone": "America/New_York"
+  },
+  {
+    "id": "spot-6yz8qd",
+    "name": "Hookipa Beach",
+    "displayName": "HOOKIPA BEACH",
+    "latitude": 52.728574,
+    "longitude": 4.638247,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1gscqce",
+    "name": "Horizont",
+    "displayName": "HORIZONT",
+    "latitude": 45.23061,
+    "longitude": 13.5987,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-u1myrq",
+    "name": "Hornbæk Bådeklub",
+    "displayName": "HORNBÆK BÅDEKLUB",
+    "latitude": 56.093088,
+    "longitude": 12.457795,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-vumcmf",
+    "name": "Horsens Kite & Windsurf",
+    "displayName": "HORSENS KITE & WINDSURF",
+    "latitude": 55.858174,
+    "longitude": 9.916368,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-d8z7wb",
+    "name": "Horseshoe Lake Activity Centre",
+    "displayName": "HORSESHOE LAKE ACTIVITY CENTRE",
+    "latitude": 51.352503,
+    "longitude": -0.823265,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1i60y6d",
+    "name": "Houlgate assise Kite",
+    "displayName": "HOULGATE ASSISE KITE",
+    "latitude": 49.301204,
+    "longitude": -0.082699,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1tqhwex",
+    "name": "Hvasser syd",
+    "displayName": "HVASSER SYD",
+    "latitude": 59.064842,
+    "longitude": 10.444106,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-b0g5vk",
+    "name": "Iate Clube do Rio de Janeiro",
+    "displayName": "IATE CLUBE DO RIO DE JANEIRO",
+    "latitude": -22.884039,
+    "longitude": -42.006296,
+    "timezone": "America/Sao_Paulo"
+  },
+  {
+    "id": "spot-jrom8e",
+    "name": "ION Club Golf De Roses",
+    "displayName": "ION CLUB GOLF DE ROSES",
+    "latitude": 42.149539,
+    "longitude": 3.114348,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-1b0dy71",
+    "name": "Isala",
+    "displayName": "ISALA",
+    "latitude": 52.151395,
+    "longitude": 6.186861,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1co150o",
+    "name": "Jedriličarski Klub Ada",
+    "displayName": "JEDRILIČARSKI KLUB ADA",
+    "latitude": 44.79552,
+    "longitude": 20.425057,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-3la4ly",
+    "name": "Jedriličarski klub Opatija",
+    "displayName": "JEDRILIČARSKI KLUB OPATIJA",
+    "latitude": 45.336775,
+    "longitude": 14.309743,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-kbcben",
+    "name": "JK Panonija 1975",
+    "displayName": "JK PANONIJA 1975",
+    "latitude": 44.892314,
+    "longitude": 21.407188,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-mmdhwf",
+    "name": "JK Reful",
+    "displayName": "JK REFUL",
+    "latitude": 46.082097,
+    "longitude": 19.761582,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-ymu6g2",
+    "name": "Jolleklubben af 1975",
+    "displayName": "JOLLEKLUBBEN AF 1975",
+    "latitude": 56.191458,
+    "longitude": 10.670271,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1jhc3ae",
+    "name": "Jumbles Sailing Club",
+    "displayName": "JUMBLES SAILING CLUB",
+    "latitude": 53.626863,
+    "longitude": -2.404724,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1mj7qsd",
+    "name": "Karljohansvern",
+    "displayName": "KARLJOHANSVERN",
+    "latitude": 59.435555,
+    "longitude": 10.493813,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-b2gw0",
+    "name": "King George Sailing Club",
+    "displayName": "KING GEORGE SAILING CLUB",
+    "latitude": 51.639365,
+    "longitude": -0.013703,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1be2a89",
+    "name": "Kite Club Btétignollais",
+    "displayName": "KITE CLUB BTÉTIGNOLLAIS",
+    "latitude": 46.607459,
+    "longitude": -1.853473,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-12ipujg",
+    "name": "Kite Club Malcesine",
+    "displayName": "KITE CLUB MALCESINE",
+    "latitude": 45.804416,
+    "longitude": 10.84314,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-vj0y66",
+    "name": "Kite Spot Kourou",
+    "displayName": "KITE SPOT KOUROU",
+    "latitude": 5.178534,
+    "longitude": -52.648776,
+    "timezone": "America/Cayenne"
+  },
+  {
+    "id": "spot-rxpol",
+    "name": "Kite-Surfen",
+    "displayName": "KITE-SURFEN",
+    "latitude": 53.68265,
+    "longitude": 7.008156,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-143eu71",
+    "name": "Kitekriol",
+    "displayName": "KITEKRIOL",
+    "latitude": 16.162057,
+    "longitude": -22.909216,
+    "timezone": "Atlantic/Cape_Verde"
+  },
+  {
+    "id": "spot-d0f5wc",
+    "name": "KiteSurf and WindSurf",
+    "displayName": "KITESURF AND WINDSURF",
+    "latitude": 44.754648,
+    "longitude": -1.133809,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-13oa4bm",
+    "name": "Kitesurf corn Island",
+    "displayName": "KITESURF CORN ISLAND",
+    "latitude": 12.185537,
+    "longitude": -83.047316,
+    "timezone": "America/Managua"
+  },
+  {
+    "id": "spot-gw7l02",
+    "name": "Kitesurf Corn Island",
+    "displayName": "KITESURF CORN ISLAND",
+    "latitude": 12.292724,
+    "longitude": -82.977342,
+    "timezone": "America/Managua"
+  },
+  {
+    "id": "spot-z8cvah",
+    "name": "Kitesurf Spot Hindeloopen",
+    "displayName": "KITESURF SPOT HINDELOOPEN",
+    "latitude": 52.936206,
+    "longitude": 5.402388,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-y4lcps",
+    "name": "Klub am Rupenhorn e.V.",
+    "displayName": "KLUB AM RUPENHORN E.V.",
+    "latitude": 52.505049,
+    "longitude": 13.21069,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-t75lhy",
+    "name": "Klub Sportów Wodnych \"Hutnik\" Pogoria",
+    "displayName": "KLUB SPORTÓW WODNYCH \"HUTNIK\" POGORIA",
+    "latitude": 50.3512,
+    "longitude": 19.24126,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-12jf03u",
+    "name": "Knivsta Opimist och jolleklubb",
+    "displayName": "KNIVSTA OPIMIST OCH JOLLEKLUBB",
+    "latitude": 59.728872,
+    "longitude": 17.810588,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-pn5z0c",
+    "name": "Kolding Bådelaug",
+    "displayName": "KOLDING BÅDELAUG",
+    "latitude": 55.488115,
+    "longitude": 9.499897,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-16eltfe",
+    "name": "Kolding Sejlklub",
+    "displayName": "KOLDING SEJLKLUB",
+    "latitude": 55.494982,
+    "longitude": 9.497756,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-pc9hfj",
+    "name": "Kompleks Sukan Perahu Layar Kebangsaan",
+    "displayName": "KOMPLEKS SUKAN PERAHU LAYAR KEBANGSAAN",
+    "latitude": 6.302792,
+    "longitude": 99.851296,
+    "timezone": "Asia/Singapore"
+  },
+  {
+    "id": "spot-98sw91",
+    "name": "Kongelig Dansk Yachtklub",
+    "displayName": "KONGELIG DANSK YACHTKLUB",
+    "latitude": 55.88545,
+    "longitude": 12.548276,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-34vipo",
+    "name": "Korsør Sejlklub",
+    "displayName": "KORSØR SEJLKLUB",
+    "latitude": 55.326349,
+    "longitude": 11.132147,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1tgiapy",
+    "name": "Kubukta",
+    "displayName": "KUBUKTA",
+    "latitude": 58.85625,
+    "longitude": 9.572053,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-npm2a9",
+    "name": "Kurnell Catamaran Club",
+    "displayName": "KURNELL CATAMARAN CLUB",
+    "latitude": -34.008546,
+    "longitude": 151.195725,
+    "timezone": "Australia/Sydney"
+  },
+  {
+    "id": "spot-qzzlqq",
+    "name": "Kvalneset",
+    "displayName": "KVALNESET",
+    "latitude": 62.509832,
+    "longitude": 6.026967,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1ffd5tm",
+    "name": "Kvavik",
+    "displayName": "KVAVIK",
+    "latitude": 58.138506,
+    "longitude": 7.031035,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-nfzydb",
+    "name": "Kviljosanden",
+    "displayName": "KVILJOSANDEN",
+    "latitude": 58.072861,
+    "longitude": 6.674023,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-g3hrwx",
+    "name": "La Sportive de Vigneux",
+    "displayName": "LA SPORTIVE DE VIGNEUX",
+    "latitude": 48.711382,
+    "longitude": 2.422673,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-i3gs81",
+    "name": "Lago di Alpi - aqua-FUN® Wassersportcenter",
+    "displayName": "LAGO DI ALPI - AQUA-FUN® WASSERSPORTCENTER",
+    "latitude": 51.073132,
+    "longitude": 11.041004,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1uip2jj",
+    "name": "Lake Mahinapua Aquatic Club",
+    "displayName": "LAKE MAHINAPUA AQUATIC CLUB",
+    "latitude": -42.796115,
+    "longitude": 170.902148,
+    "timezone": "Pacific/Auckland"
+  },
+  {
+    "id": "spot-6kzji1",
+    "name": "Lake Sunapee Yacht Club",
+    "displayName": "LAKE SUNAPEE YACHT CLUB",
+    "latitude": 43.396717,
+    "longitude": -72.062676,
+    "timezone": "America/New_York"
+  },
+  {
+    "id": "spot-1nkl1qa",
+    "name": "Leeds Sailing & Activity Centre",
+    "displayName": "LEEDS SAILING & ACTIVITY CENTRE",
+    "latitude": 53.867855,
+    "longitude": -1.677749,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-uhoy3g",
+    "name": "Lega navale italiana",
+    "displayName": "LEGA NAVALE ITALIANA",
+    "latitude": 43.547292,
+    "longitude": 10.305815,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-1sak62x",
+    "name": "Lega Navale Italiana sezione Napoli",
+    "displayName": "LEGA NAVALE ITALIANA SEZIONE NAPOLI",
+    "latitude": 40.834975,
+    "longitude": 14.253095,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-9172cx",
+    "name": "Lochaber Yacht Club",
+    "displayName": "LOCHABER YACHT CLUB",
+    "latitude": 56.810729,
+    "longitude": -5.123802,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-15yi17s",
+    "name": "London Corinthian Sailing Club",
+    "displayName": "LONDON CORINTHIAN SAILING CLUB",
+    "latitude": 51.490586,
+    "longitude": -0.23885,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1lvnl9i",
+    "name": "Longcraig Scout Centre",
+    "displayName": "LONGCRAIG SCOUT CENTRE",
+    "latitude": 55.993687,
+    "longitude": -3.373261,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-outaq5",
+    "name": "Lübecker Segler-Verein von 1885 e.V.",
+    "displayName": "LÜBECKER SEGLER-VEREIN VON 1885 E.V.",
+    "latitude": 53.866398,
+    "longitude": 10.704019,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1hn6y2t",
+    "name": "Lynæs Surfcenter",
+    "displayName": "LYNÆS SURFCENTER",
+    "latitude": 55.944127,
+    "longitude": 11.862645,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1wt4j6j",
+    "name": "Maastrichtsche Watersport Club",
+    "displayName": "MAASTRICHTSCHE WATERSPORT CLUB",
+    "latitude": 50.831509,
+    "longitude": 5.695961,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-z28xbq",
+    "name": "Maison de la Mer",
+    "displayName": "MAISON DE LA MER",
+    "latitude": 47.844434,
+    "longitude": -3.889691,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1bwrlyu",
+    "name": "Manly Sailing Club",
+    "displayName": "MANLY SAILING CLUB",
+    "latitude": -36.62859,
+    "longitude": 174.758357,
+    "timezone": "Pacific/Auckland"
+  },
+  {
+    "id": "spot-1qux2od",
+    "name": "Marakura Yacht Club",
+    "displayName": "MARAKURA YACHT CLUB",
+    "latitude": -45.427317,
+    "longitude": 167.714842,
+    "timezone": "Pacific/Auckland"
+  },
+  {
+    "id": "spot-3ln4xy",
+    "name": "Marina Surf",
+    "displayName": "MARINA SURF",
+    "latitude": 50.442244,
+    "longitude": 19.171953,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-uxuho6",
+    "name": "Markelfinger Wassersport-Club",
+    "displayName": "MARKELFINGER WASSERSPORT-CLUB",
+    "latitude": 47.738228,
+    "longitude": 9.003199,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-3p99th",
+    "name": "Marselisborg Sejlklub",
+    "displayName": "MARSELISBORG SEJLKLUB",
+    "latitude": 56.139123,
+    "longitude": 10.219535,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1fq4zoh",
+    "name": "Meerwijck Naaktstrand",
+    "displayName": "MEERWIJCK NAAKTSTRAND",
+    "latitude": 53.146087,
+    "longitude": 6.697045,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1yg102h",
+    "name": "Michigan Sailing Club",
+    "displayName": "MICHIGAN SAILING CLUB",
+    "latitude": 42.420093,
+    "longitude": -83.895501,
+    "timezone": "America/Detroit"
+  },
+  {
+    "id": "spot-ucixbx",
+    "name": "Mid Atlantic Boat & Sports Club",
+    "displayName": "MID ATLANTIC BOAT & SPORTS CLUB",
+    "latitude": 32.308511,
+    "longitude": -64.768791,
+    "timezone": "Atlantic/Bermuda"
+  },
+  {
+    "id": "spot-qq001r",
+    "name": "Moloen",
+    "displayName": "MOLOEN",
+    "latitude": 62.51159,
+    "longitude": 6.039745,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1uwjdjm",
+    "name": "Mooring field #1",
+    "displayName": "MOORING FIELD #1",
+    "latitude": 43.07891,
+    "longitude": -89.400073,
+    "timezone": "America/Chicago"
+  },
+  {
+    "id": "spot-1wuglef",
+    "name": "Mooring field #2",
+    "displayName": "MOORING FIELD #2",
+    "latitude": 43.079403,
+    "longitude": -89.417134,
+    "timezone": "America/Chicago"
+  },
+  {
+    "id": "spot-1w0kxth",
+    "name": "Mooring field #3",
+    "displayName": "MOORING FIELD #3",
+    "latitude": 43.079529,
+    "longitude": -89.420791,
+    "timezone": "America/Chicago"
+  },
+  {
+    "id": "spot-16qefv9",
+    "name": "Mosiński Klub Żeglarski",
+    "displayName": "MOSIŃSKI KLUB ŻEGLARSKI",
+    "latitude": 52.229908,
+    "longitude": 16.764183,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-1k9f8lj",
+    "name": "Møsvatn",
+    "displayName": "MØSVATN",
+    "latitude": 59.834309,
+    "longitude": 8.103071,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-196ohlf",
+    "name": "Motorbådsklubben Amanda",
+    "displayName": "MOTORBÅDSKLUBBEN AMANDA",
+    "latitude": 55.454081,
+    "longitude": 10.664927,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1z0lv0",
+    "name": "Mouillage collectif du Kelenn",
+    "displayName": "MOUILLAGE COLLECTIF DU KELENN",
+    "latitude": 48.670772,
+    "longitude": -3.909175,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-3v24wl",
+    "name": "Mount Martha Yacht Club",
+    "displayName": "MOUNT MARTHA YACHT CLUB",
+    "latitude": -38.266188,
+    "longitude": 145.013562,
+    "timezone": "Australia/Melbourne"
+  },
+  {
+    "id": "spot-6dsh1x",
+    "name": "MRSV",
+    "displayName": "MRSV",
+    "latitude": 47.991572,
+    "longitude": 11.338384,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1nh1lgz",
+    "name": "Münchener Yacht Club",
+    "displayName": "MÜNCHENER YACHT CLUB",
+    "latitude": 47.98716,
+    "longitude": 11.335643,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-tfxtk8",
+    "name": "Museo Nueva Tabarca",
+    "displayName": "MUSEO NUEVA TABARCA",
+    "latitude": 38.166011,
+    "longitude": -0.478429,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-1hqt9uu",
+    "name": "Nakskov Sejlklub",
+    "displayName": "NAKSKOV SEJLKLUB",
+    "latitude": 54.831243,
+    "longitude": 11.093771,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1tx75bv",
+    "name": "Narodowe Centrum Żeglarstwa AWFiS",
+    "displayName": "NARODOWE CENTRUM ŻEGLARSTWA AWFIS",
+    "latitude": 54.36833,
+    "longitude": 18.778176,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-9k1szb",
+    "name": "Narrabeen Lakes Sailing Club",
+    "displayName": "NARRABEEN LAKES SAILING CLUB",
+    "latitude": -33.718717,
+    "longitude": 151.287665,
+    "timezone": "Australia/Sydney"
+  },
+  {
+    "id": "spot-1ve3ilf",
+    "name": "Natur og sejlklub 1",
+    "displayName": "NATUR OG SEJLKLUB 1",
+    "latitude": 55.768737,
+    "longitude": 12.472068,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-uhz6xs",
+    "name": "Natur og sejlklub 2",
+    "displayName": "NATUR OG SEJLKLUB 2",
+    "latitude": 55.766282,
+    "longitude": 12.472171,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1pzz9up",
+    "name": "NautiCat",
+    "displayName": "NAUTICAT",
+    "latitude": 49.423889,
+    "longitude": 6.239013,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-avjdk0",
+    "name": "Nautilus Hvalpsund",
+    "displayName": "NAUTILUS HVALPSUND",
+    "latitude": 56.70584,
+    "longitude": 9.203639,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1j2vu9c",
+    "name": "Nautique Sèvres",
+    "displayName": "NAUTIQUE SÈVRES",
+    "latitude": 48.831254,
+    "longitude": 2.223492,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-savys2",
+    "name": "Nelson Yacht Club",
+    "displayName": "NELSON YACHT CLUB",
+    "latitude": -41.265522,
+    "longitude": 173.267035,
+    "timezone": "Pacific/Auckland"
+  },
+  {
+    "id": "spot-10ouzqe",
+    "name": "Nivå Surf Klub",
+    "displayName": "NIVÅ SURF KLUB",
+    "latitude": 55.938365,
+    "longitude": 12.527957,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-uz4m9v",
+    "name": "Nordhavnstippen",
+    "displayName": "NORDHAVNSTIPPEN",
+    "latitude": 55.723149,
+    "longitude": 12.609847,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1cmud7t",
+    "name": "Nordjydsk Windsurfing Klub Pelikanen",
+    "displayName": "NORDJYDSK WINDSURFING KLUB PELIKANEN",
+    "latitude": 57.06686,
+    "longitude": 9.887792,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-yemgit",
+    "name": "Nordside Windsurfing",
+    "displayName": "NORDSIDE WINDSURFING",
+    "latitude": 44.638167,
+    "longitude": 33.524003,
+    "timezone": "Europe/Simferopol"
+  },
+  {
+    "id": "spot-1xj55ds",
+    "name": "Nørresundby Sejlklub",
+    "displayName": "NØRRESUNDBY SEJLKLUB",
+    "latitude": 57.056845,
+    "longitude": 9.920505,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-ux4fj4",
+    "name": "Oakcliff Sailing",
+    "displayName": "OAKCLIFF SAILING",
+    "latitude": 40.874393,
+    "longitude": -73.527971,
+    "timezone": "America/New_York"
+  },
+  {
+    "id": "spot-toeznh",
+    "name": "Oceanplayers",
+    "displayName": "OCEANPLAYERS",
+    "latitude": 46.434965,
+    "longitude": -1.658446,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-ko04vx",
+    "name": "OGS Voile",
+    "displayName": "OGS VOILE",
+    "latitude": 50.9993,
+    "longitude": 2.27454,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1u0hi3w",
+    "name": "Ørekroken",
+    "displayName": "ØREKROKEN",
+    "latitude": 59.032498,
+    "longitude": 11.009263,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-9wwdv5",
+    "name": "Orkney Sailing Club",
+    "displayName": "ORKNEY SAILING CLUB",
+    "latitude": 58.984531,
+    "longitude": -2.960172,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-14tnhrl",
+    "name": "Orza Minore",
+    "displayName": "ORZA MINORE",
+    "latitude": 46.068192,
+    "longitude": 9.30865,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-80ovc3",
+    "name": "Österreichischer Segel-Verband",
+    "displayName": "ÖSTERREICHISCHER SEGEL-VERBAND",
+    "latitude": 47.92768,
+    "longitude": 16.83827,
+    "timezone": "Europe/Vienna"
+  },
+  {
+    "id": "spot-1613rwb",
+    "name": "Parchimer Segelfreunde",
+    "displayName": "PARCHIMER SEGELFREUNDE",
+    "latitude": 53.435702,
+    "longitude": 11.854084,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1uhmnh6",
+    "name": "Penzance Sailing Club",
+    "displayName": "PENZANCE SAILING CLUB",
+    "latitude": 50.120348,
+    "longitude": -5.530792,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-z5mj93",
+    "name": "Polygram Segelclub",
+    "displayName": "POLYGRAM SEGELCLUB",
+    "latitude": 53.579858,
+    "longitude": 10.000516,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-ef6a2m",
+    "name": "Port Ohope Yacht Club",
+    "displayName": "PORT OHOPE YACHT CLUB",
+    "latitude": -37.983238,
+    "longitude": 177.108144,
+    "timezone": "Pacific/Auckland"
+  },
+  {
+    "id": "spot-wuft6v",
+    "name": "Prestwick Sailing Club",
+    "displayName": "PRESTWICK SAILING CLUB",
+    "latitude": 55.493921,
+    "longitude": -4.620358,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-fb0111",
+    "name": "Ramton",
+    "displayName": "RAMTON",
+    "latitude": 59.743158,
+    "longitude": 10.511352,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1vof49q",
+    "name": "Refsnes",
+    "displayName": "REFSNES",
+    "latitude": 59.448651,
+    "longitude": 10.615817,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-106txh4",
+    "name": "Richard's Windsurfing Club",
+    "displayName": "RICHARD'S WINDSURFING CLUB",
+    "latitude": 57.002739,
+    "longitude": 24.179283,
+    "timezone": "Europe/Riga"
+  },
+  {
+    "id": "spot-1bbicxp",
+    "name": "Rønbjerg Sejllub",
+    "displayName": "RØNBJERG SEJLLUB",
+    "latitude": 56.891043,
+    "longitude": 9.165726,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-htom2w",
+    "name": "Rønnerhavnens Bådelaug",
+    "displayName": "RØNNERHAVNENS BÅDELAUG",
+    "latitude": 57.462836,
+    "longitude": 10.536297,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-zhm2az",
+    "name": "Røsholmstranda",
+    "displayName": "RØSHOLMSTRANDA",
+    "latitude": 60.121601,
+    "longitude": 10.189538,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1e9jlso",
+    "name": "Royal Akarana Yacht Club",
+    "displayName": "ROYAL AKARANA YACHT CLUB",
+    "latitude": -36.849881,
+    "longitude": 174.810741,
+    "timezone": "Pacific/Auckland"
+  },
+  {
+    "id": "spot-muckwj",
+    "name": "Royal Belgian Sailing Club Heusden",
+    "displayName": "ROYAL BELGIAN SAILING CLUB HEUSDEN",
+    "latitude": 51.046435,
+    "longitude": 3.805233,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1bpl50q",
+    "name": "Royal Docks Watersports Centre",
+    "displayName": "ROYAL DOCKS WATERSPORTS CENTRE",
+    "latitude": 51.5076,
+    "longitude": 0.040974,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-13q9kyu",
+    "name": "Royal Yachting Club Ittre",
+    "displayName": "ROYAL YACHTING CLUB ITTRE",
+    "latitude": 50.652242,
+    "longitude": 4.233652,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-61hrc1",
+    "name": "RWS 1922",
+    "displayName": "RWS 1922",
+    "latitude": 52.663749,
+    "longitude": 12.387002,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-18cbwj5",
+    "name": "S.W.V. Plankenkoorts VB",
+    "displayName": "S.W.V. PLANKENKOORTS VB",
+    "latitude": 52.157406,
+    "longitude": 4.442636,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-9vctoa",
+    "name": "Safety Beach Sailing Club",
+    "displayName": "SAFETY BEACH SAILING CLUB",
+    "latitude": -38.307306,
+    "longitude": 144.994272,
+    "timezone": "Australia/Melbourne"
+  },
+  {
+    "id": "spot-1g89ov7",
+    "name": "Sailcollege",
+    "displayName": "SAILCOLLEGE",
+    "latitude": 51.568012,
+    "longitude": 3.662315,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-y4k4sv",
+    "name": "Sailing and Water Sports Center of the Martime University of Gdynia",
+    "displayName": "SAILING AND WATER SPORTS CENTER OF THE MARTIME UNIVERSITY OF GDYNIA",
+    "latitude": 54.518042,
+    "longitude": 18.554915,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-sgq8ay",
+    "name": "Saint-Barth Yacht Club",
+    "displayName": "SAINT-BARTH YACHT CLUB",
+    "latitude": 17.903756,
+    "longitude": -62.85231,
+    "timezone": "America/Puerto_Rico"
+  },
+  {
+    "id": "spot-dc16a2",
+    "name": "SaLiTrE Club deportivo",
+    "displayName": "SALITRE CLUB DEPORTIVO",
+    "latitude": 42.308078,
+    "longitude": -8.619952,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-56a491",
+    "name": "Salterns Sailing Club",
+    "displayName": "SALTERNS SAILING CLUB",
+    "latitude": 50.744539,
+    "longitude": -1.537762,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-r9z7fp",
+    "name": "Sandvika",
+    "displayName": "SANDVIKA",
+    "latitude": 62.486547,
+    "longitude": 5.966606,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1cs2wbz",
+    "name": "SC Ville",
+    "displayName": "SC VILLE",
+    "latitude": 50.815431,
+    "longitude": 6.834725,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-hxakp2",
+    "name": "scuola vela FIV",
+    "displayName": "SCUOLA VELA FIV",
+    "latitude": 42.992259,
+    "longitude": 10.512333,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-1nsuare",
+    "name": "Segel Verein Ciconia Storkow",
+    "displayName": "SEGEL VEREIN CICONIA STORKOW",
+    "latitude": 52.259685,
+    "longitude": 13.945386,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-wasze3",
+    "name": "Segel- und Motorbootschule Hard",
+    "displayName": "SEGEL- UND MOTORBOOTSCHULE HARD",
+    "latitude": 47.494243,
+    "longitude": 9.689117,
+    "timezone": "Europe/Vienna"
+  },
+  {
+    "id": "spot-1i0ux47",
+    "name": "Segel- und Surfclub Niedernberg 1980 e.V.",
+    "displayName": "SEGEL- UND SURFCLUB NIEDERNBERG 1980 E.V.",
+    "latitude": 49.9017,
+    "longitude": 9.132877,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1q13ga4",
+    "name": "Segel-Club Salzgitter",
+    "displayName": "SEGEL-CLUB SALZGITTER",
+    "latitude": 52.150864,
+    "longitude": 10.311843,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1ue9o03",
+    "name": "Segel-Club-Crefeld - SCCR",
+    "displayName": "SEGEL-CLUB-CREFELD - SCCR",
+    "latitude": 51.379778,
+    "longitude": 6.627493,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-xsrv9c",
+    "name": "Segel-Verein Wedel-Schulau",
+    "displayName": "SEGEL-VEREIN WEDEL-SCHULAU",
+    "latitude": 53.571188,
+    "longitude": 9.693291,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-10xdg0d",
+    "name": "Segelclub Landsberg am Lech e.V. - SCLL",
+    "displayName": "SEGELCLUB LANDSBERG AM LECH E.V. - SCLL",
+    "latitude": 47.965821,
+    "longitude": 11.104946,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-ojy34h",
+    "name": "Segelclub Lindau",
+    "displayName": "SEGELCLUB LINDAU",
+    "latitude": 47.543709,
+    "longitude": 9.686572,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-k4o7ma",
+    "name": "Segelclub Mainspitze",
+    "displayName": "SEGELCLUB MAINSPITZE",
+    "latitude": 49.992579,
+    "longitude": 8.302108,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-if0am2",
+    "name": "Segelclub Preetz e.V.",
+    "displayName": "SEGELCLUB PREETZ E.V.",
+    "latitude": 54.217792,
+    "longitude": 10.281559,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-lg1zuq",
+    "name": "Segelclub Rheinsberg",
+    "displayName": "SEGELCLUB RHEINSBERG",
+    "latitude": 53.108169,
+    "longitude": 12.893092,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-46dglg",
+    "name": "Segelh und Surfscjule Weiss",
+    "displayName": "SEGELH UND SURFSCJULE WEISS",
+    "latitude": 46.61953,
+    "longitude": 14.206265,
+    "timezone": "Europe/Vienna"
+  },
+  {
+    "id": "spot-1abnanx",
+    "name": "Segelschule Marx",
+    "displayName": "SEGELSCHULE MARX",
+    "latitude": 48.025424,
+    "longitude": 11.096756,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1wfhps2",
+    "name": "Segelschule und Segelbootverleih Hans Ernst",
+    "displayName": "SEGELSCHULE UND SEGELBOOTVERLEIH HANS ERNST",
+    "latitude": 47.960579,
+    "longitude": 11.108747,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1trlh3t",
+    "name": "Segelsportklub Uerdingen e.V. (SKBUe)",
+    "displayName": "SEGELSPORTKLUB UERDINGEN E.V. (SKBUE)",
+    "latitude": 51.386516,
+    "longitude": 6.622723,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1c5pa6t",
+    "name": "Segelverein Biblis e.V.",
+    "displayName": "SEGELVEREIN BIBLIS E.V.",
+    "latitude": 49.682792,
+    "longitude": 8.429888,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-b4ffid",
+    "name": "Segelverein Kenterklub Siethen e.V.",
+    "displayName": "SEGELVEREIN KENTERKLUB SIETHEN E.V.",
+    "latitude": 52.288102,
+    "longitude": 13.207932,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1f8dlns",
+    "name": "Segelverein RSV 1952 e.V.",
+    "displayName": "SEGELVEREIN RSV 1952 E.V.",
+    "latitude": 52.663096,
+    "longitude": 12.37261,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-c8jrer",
+    "name": "Segelvereinigung Neptun e.V.",
+    "displayName": "SEGELVEREINIGUNG NEPTUN E.V.",
+    "latitude": 52.437708,
+    "longitude": 13.572994,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-14jfpec",
+    "name": "Segelzentrum der Christian-Albrechts-Universität zu Kiel",
+    "displayName": "SEGELZENTRUM DER CHRISTIAN-ALBRECHTS-UNIVERSITÄT ZU KIEL",
+    "latitude": 54.428197,
+    "longitude": 10.169551,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-bkwijw",
+    "name": "Segler Club Templin e.V.",
+    "displayName": "SEGLER CLUB TEMPLIN E.V.",
+    "latitude": 53.122724,
+    "longitude": 13.514336,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-d61mnb",
+    "name": "Segler Verein Stössensee",
+    "displayName": "SEGLER VEREIN STÖSSENSEE",
+    "latitude": 52.506155,
+    "longitude": 13.211821,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-7ke8qh",
+    "name": "Seglergemeinschaft Thalfingen e.V.",
+    "displayName": "SEGLERGEMEINSCHAFT THALFINGEN E.V.",
+    "latitude": 48.434932,
+    "longitude": 10.063161,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-az87at",
+    "name": "Seglerverein \"Alte Elbe\" e. V.",
+    "displayName": "SEGLERVEREIN \"ALTE ELBE\" E. V.",
+    "latitude": 52.112677,
+    "longitude": 11.656619,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-ofo6gj",
+    "name": "Seglervereinigung Breitbrunn e.V.",
+    "displayName": "SEGLERVEREINIGUNG BREITBRUNN E.V.",
+    "latitude": 48.041197,
+    "longitude": 11.131122,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-w542ck",
+    "name": "Sejl Center Prøstø",
+    "displayName": "SEJL CENTER PRØSTØ",
+    "latitude": 55.124999,
+    "longitude": 12.04583,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-o6lxu9",
+    "name": "Sejl- og Motorbådsklubben Grønsund",
+    "displayName": "SEJL- OG MOTORBÅDSKLUBBEN GRØNSUND",
+    "latitude": 54.890799,
+    "longitude": 12.048135,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-h473wi",
+    "name": "Sejlklub Egensedybet",
+    "displayName": "SEJLKLUB EGENSEDYBET",
+    "latitude": 55.525957,
+    "longitude": 10.471188,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-10afyr8",
+    "name": "Sejlklubben Bugten",
+    "displayName": "SEJLKLUBBEN BUGTEN",
+    "latitude": 56.165304,
+    "longitude": 10.222647,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-70upfx",
+    "name": "Sejlklubben Limfjorden",
+    "displayName": "SEJLKLUBBEN LIMFJORDEN",
+    "latitude": 57.05701,
+    "longitude": 9.901643,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-nxv62p",
+    "name": "Sejlklubben Neptun Vejle",
+    "displayName": "SEJLKLUBBEN NEPTUN VEJLE",
+    "latitude": 55.707651,
+    "longitude": 9.556279,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-11arbn6",
+    "name": "Sejlklubben Sundet Nord",
+    "displayName": "SEJLKLUBBEN SUNDET NORD",
+    "latitude": 55.718489,
+    "longitude": 12.600604,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1m0vq91",
+    "name": "SGU Segler-Gemeinschaft Utting e.V.",
+    "displayName": "SGU SEGLER-GEMEINSCHAFT UTTING E.V.",
+    "latitude": 48.030612,
+    "longitude": 11.095515,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1lye3gp",
+    "name": "Shotwick Lake Sailing Club",
+    "displayName": "SHOTWICK LAKE SAILING CLUB",
+    "latitude": 53.243375,
+    "longitude": -3.030897,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1lk5imm",
+    "name": "Silkeborg Sejlklub",
+    "displayName": "SILKEBORG SEJLKLUB",
+    "latitude": 56.148589,
+    "longitude": 9.5769,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-f10fc2",
+    "name": "Sjøstrand",
+    "displayName": "SJØSTRAND",
+    "latitude": 59.796182,
+    "longitude": 10.497469,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-fusa8o",
+    "name": "Skælskør Amatør-Sejlklub",
+    "displayName": "SKÆLSKØR AMATØR-SEJLKLUB",
+    "latitude": 55.252883,
+    "longitude": 11.285855,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-sfr9tz",
+    "name": "Skanderborg Junior Sejlklub",
+    "displayName": "SKANDERBORG JUNIOR SEJLKLUB",
+    "latitude": 56.02859,
+    "longitude": 9.957618,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1e6opg0",
+    "name": "Skanderborg Sejl- og Motorbådsklub",
+    "displayName": "SKANDERBORG SEJL- OG MOTORBÅDSKLUB",
+    "latitude": 56.043898,
+    "longitude": 9.934765,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-11kplof",
+    "name": "Skipcool - sorties en voilier",
+    "displayName": "SKIPCOOL - SORTIES EN VOILIER",
+    "latitude": 43.654004,
+    "longitude": -1.440979,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-bum733",
+    "name": "Skovshoved Sejlklub",
+    "displayName": "SKOVSHOVED SEJLKLUB",
+    "latitude": 55.763203,
+    "longitude": 12.600411,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-u4no85",
+    "name": "Società Nautica Laguna",
+    "displayName": "SOCIETÀ NAUTICA LAGUNA",
+    "latitude": 45.781867,
+    "longitude": 13.586901,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-1udej14",
+    "name": "Société Nautique Estaque Mourepiane",
+    "displayName": "SOCIÉTÉ NAUTIQUE ESTAQUE MOUREPIANE",
+    "latitude": 43.357306,
+    "longitude": 5.319438,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1w02ub7",
+    "name": "Sopocki Klub Żeglarski",
+    "displayName": "SOPOCKI KLUB ŻEGLARSKI",
+    "latitude": 54.432589,
+    "longitude": 18.586544,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-2ypw5p",
+    "name": "South Beach Yacht Club",
+    "displayName": "SOUTH BEACH YACHT CLUB",
+    "latitude": 37.779976,
+    "longitude": -122.38791,
+    "timezone": "America/Los_Angeles"
+  },
+  {
+    "id": "spot-1ojuqv9",
+    "name": "Spinut",
+    "displayName": "SPINUT",
+    "latitude": 43.515932,
+    "longitude": 16.415073,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-x1994e",
+    "name": "Spot de Kitesurf de Fréjus",
+    "displayName": "SPOT DE KITESURF DE FRÉJUS",
+    "latitude": 43.411935,
+    "longitude": 6.738851,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-slmr2d",
+    "name": "Spot de Kitesurf de Saint-Laurent Du Var",
+    "displayName": "SPOT DE KITESURF DE SAINT-LAURENT DU VAR",
+    "latitude": 43.657458,
+    "longitude": 7.194975,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1scm0ke",
+    "name": "Spot de Kitesurf du PalmBeach",
+    "displayName": "SPOT DE KITESURF DU PALMBEACH",
+    "latitude": 43.535179,
+    "longitude": 7.038287,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-8fyq90",
+    "name": "Spot de kitesurfing de Saint-Pierre",
+    "displayName": "SPOT DE KITESURFING DE SAINT-PIERRE",
+    "latitude": -21.342928,
+    "longitude": 55.465971,
+    "timezone": "Asia/Dubai"
+  },
+  {
+    "id": "spot-3icxd1",
+    "name": "Spot kitesurf Anse du Belley",
+    "displayName": "SPOT KITESURF ANSE DU BELLEY",
+    "latitude": 16.231997,
+    "longitude": -61.36876,
+    "timezone": "America/Puerto_Rico"
+  },
+  {
+    "id": "spot-1iv1q83",
+    "name": "Spot Mama Prada",
+    "displayName": "SPOT MAMA PRADA",
+    "latitude": 40.745019,
+    "longitude": -8.678093,
+    "timezone": "Europe/Lisbon"
+  },
+  {
+    "id": "spot-18o45q8",
+    "name": "SRSV Plön",
+    "displayName": "SRSV PLÖN",
+    "latitude": 54.15162,
+    "longitude": 10.408783,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-6e5gv5",
+    "name": "SSCK Segel-Surf-Club Kempen e.V.",
+    "displayName": "SSCK SEGEL-SURF-CLUB KEMPEN E.V.",
+    "latitude": 51.36996,
+    "longitude": 6.448227,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1s5k461",
+    "name": "Stade Nautique du Roucas Blanc",
+    "displayName": "STADE NAUTIQUE DU ROUCAS BLANC",
+    "latitude": 43.266932,
+    "longitude": 5.36959,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-p28n05",
+    "name": "STCI - Segel- und Tennisclub Rot Weiß Ingolstadt",
+    "displayName": "STCI - SEGEL- UND TENNISCLUB ROT WEISS INGOLSTADT",
+    "latitude": 48.749061,
+    "longitude": 11.404713,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1v5l4u6",
+    "name": "Storsand",
+    "displayName": "STORSAND",
+    "latitude": 63.433451,
+    "longitude": 10.724266,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-p5hbfh",
+    "name": "Storsand",
+    "displayName": "STORSAND",
+    "latitude": 59.641248,
+    "longitude": 10.605716,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1hestnn",
+    "name": "Struer Sejlklub",
+    "displayName": "STRUER SEJLKLUB",
+    "latitude": 56.494231,
+    "longitude": 8.591147,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-7dogfa",
+    "name": "Südsee-Wassersport Windsurfen",
+    "displayName": "SÜDSEE-WASSERSPORT WINDSURFEN",
+    "latitude": 53.821605,
+    "longitude": 8.879083,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1fez7a3",
+    "name": "Surf und Segel-Club Pulheim e.V.",
+    "displayName": "SURF UND SEGEL-CLUB PULHEIM E.V.",
+    "latitude": 50.988994,
+    "longitude": 6.840091,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1gstonl",
+    "name": "Surf-Club Weißenstadt e. V.",
+    "displayName": "SURF-CLUB WEISSENSTADT E. V.",
+    "latitude": 50.096245,
+    "longitude": 11.883016,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-jwcoj",
+    "name": "Surfcenter IJburg",
+    "displayName": "SURFCENTER IJBURG",
+    "latitude": 52.35981,
+    "longitude": 5.013874,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-gljk9o",
+    "name": "Surfcenter Lido Blu",
+    "displayName": "SURFCENTER LIDO BLU",
+    "latitude": 45.872676,
+    "longitude": 10.867867,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-79kzj4",
+    "name": "Surfclub Dormagen",
+    "displayName": "SURFCLUB DORMAGEN",
+    "latitude": 51.104415,
+    "longitude": 6.794923,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-dj81dm",
+    "name": "Surfclub Drusus",
+    "displayName": "SURFCLUB DRUSUS",
+    "latitude": 51.183567,
+    "longitude": 5.952375,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-ax8gx7",
+    "name": "Surfclub Erding e.V.",
+    "displayName": "SURFCLUB ERDING E.V.",
+    "latitude": 48.322678,
+    "longitude": 11.912902,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-pub0to",
+    "name": "Surfclub Otto",
+    "displayName": "SURFCLUB OTTO",
+    "latitude": 48.269642,
+    "longitude": 16.49443,
+    "timezone": "Europe/Vienna"
+  },
+  {
+    "id": "spot-1sy0m67",
+    "name": "Surfclub Warendorf",
+    "displayName": "SURFCLUB WARENDORF",
+    "latitude": 51.962729,
+    "longitude": 7.955994,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-vx8957",
+    "name": "Surfschule",
+    "displayName": "SURFSCHULE",
+    "latitude": 49.685565,
+    "longitude": 8.429182,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-vpbwml",
+    "name": "Surfschule Timmendorfer Strand",
+    "displayName": "SURFSCHULE TIMMENDORFER STRAND",
+    "latitude": 54.008169,
+    "longitude": 10.773113,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-gk1rzg",
+    "name": "Surfstation am Silbersee II",
+    "displayName": "SURFSTATION AM SILBERSEE II",
+    "latitude": 51.79628,
+    "longitude": 7.220243,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-113bd0h",
+    "name": "Surfstrand Uitgeest",
+    "displayName": "SURFSTRAND UITGEEST",
+    "latitude": 52.529751,
+    "longitude": 4.73487,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-rowkd0",
+    "name": "The Watersports Academy",
+    "displayName": "THE WATERSPORTS ACADEMY",
+    "latitude": 50.694417,
+    "longitude": -1.931245,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-14sb5e5",
+    "name": "Thijs Surfschool",
+    "displayName": "THIJS SURFSCHOOL",
+    "latitude": 51.56957,
+    "longitude": 3.656573,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1i6bel9",
+    "name": "Thurø Sejlklub",
+    "displayName": "THURØ SEJLKLUB",
+    "latitude": 55.042421,
+    "longitude": 10.669915,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1gi677z",
+    "name": "Thyborøn Sejlklub",
+    "displayName": "THYBORØN SEJLKLUB",
+    "latitude": 56.689024,
+    "longitude": 8.221325,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-11ds9mt",
+    "name": "TJ RAPID Brno",
+    "displayName": "TJ RAPID BRNO",
+    "latitude": 49.239935,
+    "longitude": 16.5132,
+    "timezone": "Europe/Prague"
+  },
+  {
+    "id": "spot-ea6ldg",
+    "name": "TML Voile",
+    "displayName": "TML VOILE",
+    "latitude": 49.491492,
+    "longitude": 0.10304,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1otodw0",
+    "name": "To Sea base nautique",
+    "displayName": "TO SEA BASE NAUTIQUE",
+    "latitude": 43.001796,
+    "longitude": 6.207357,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1s5j7d8",
+    "name": "Torbay Sailing Club",
+    "displayName": "TORBAY SAILING CLUB",
+    "latitude": -36.701983,
+    "longitude": 174.751224,
+    "timezone": "Pacific/Auckland"
+  },
+  {
+    "id": "spot-flma2o",
+    "name": "Trent Windsurfing Club",
+    "displayName": "TRENT WINDSURFING CLUB",
+    "latitude": 52.882255,
+    "longitude": -1.244972,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-gfhxnm",
+    "name": "Trent Windsurfing Club - Current Lake",
+    "displayName": "TRENT WINDSURFING CLUB - CURRENT LAKE",
+    "latitude": 52.883265,
+    "longitude": -1.245435,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-gphjcl",
+    "name": "Trent Windsurfing Club - West Lake",
+    "displayName": "TRENT WINDSURFING CLUB - WEST LAKE",
+    "latitude": 52.885078,
+    "longitude": -1.255332,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-wcmu9x",
+    "name": "Troense Bådelaug",
+    "displayName": "TROENSE BÅDELAUG",
+    "latitude": 55.034022,
+    "longitude": 10.646054,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-17mm25p",
+    "name": "Trondheim Seilforening",
+    "displayName": "TRONDHEIM SEILFORENING",
+    "latitude": 63.431511,
+    "longitude": 10.373884,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1m9853e",
+    "name": "Trubervika",
+    "displayName": "TRUBERVIKA",
+    "latitude": 59.075307,
+    "longitude": 10.304983,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-34a05e",
+    "name": "Trulsestranda",
+    "displayName": "TRULSESTRANDA",
+    "latitude": 59.603015,
+    "longitude": 10.411973,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-13wvzyb",
+    "name": "Tuusulanjärven Purjehtijat",
+    "displayName": "TUUSULANJÄRVEN PURJEHTIJAT",
+    "latitude": 60.453365,
+    "longitude": 25.056461,
+    "timezone": "Europe/Helsinki"
+  },
+  {
+    "id": "spot-172ffvm",
+    "name": "TV Vennikel Wassersport",
+    "displayName": "TV VENNIKEL WASSERSPORT",
+    "latitude": 51.394494,
+    "longitude": 6.617669,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-kmyk4c",
+    "name": "Upton Warren Sailing Club",
+    "displayName": "UPTON WARREN SAILING CLUB",
+    "latitude": 52.301174,
+    "longitude": -2.101201,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-q0ai6",
+    "name": "USV Potsdam Abteilung Segeln",
+    "displayName": "USV POTSDAM ABTEILUNG SEGELN",
+    "latitude": 52.382578,
+    "longitude": 13.040483,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1urx4vr",
+    "name": "Vejle Windsurf & SUP Klub",
+    "displayName": "VEJLE WINDSURF & SUP KLUB",
+    "latitude": 55.705426,
+    "longitude": 9.602731,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1tk65l1",
+    "name": "Veladoc",
+    "displayName": "VELADOC",
+    "latitude": 43.819888,
+    "longitude": 7.79374,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-1v4j2dr",
+    "name": "Verket",
+    "displayName": "VERKET",
+    "latitude": 59.609778,
+    "longitude": 10.414119,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1qja9jk",
+    "name": "Viborg Sejlklub",
+    "displayName": "VIBORG SEJLKLUB",
+    "latitude": 56.531502,
+    "longitude": 9.320587,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-15jbiuf",
+    "name": "Victoria Sailing Co-Op",
+    "displayName": "VICTORIA SAILING CO-OP",
+    "latitude": 48.425015,
+    "longitude": -123.301662,
+    "timezone": "America/Vancouver"
+  },
+  {
+    "id": "spot-kw4rxs",
+    "name": "Vitavoile",
+    "displayName": "VITAVOILE",
+    "latitude": 48.613891,
+    "longitude": -2.243699,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-14wu86m",
+    "name": "Voile Impulsion",
+    "displayName": "VOILE IMPULSION",
+    "latitude": 43.360379,
+    "longitude": 5.315555,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-wnv9wy",
+    "name": "Vollen",
+    "displayName": "VOLLEN",
+    "latitude": 59.806809,
+    "longitude": 10.494918,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1i57jkm",
+    "name": "Voornse WindSurf-Vereniging",
+    "displayName": "VOORNSE WINDSURF-VERENIGING",
+    "latitude": 51.917899,
+    "longitude": 4.064013,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1aya5mn",
+    "name": "VVW Turnhout",
+    "displayName": "VVW TURNHOUT",
+    "latitude": 51.294455,
+    "longitude": 4.962745,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-19dd83y",
+    "name": "Wallagoot Lake Boat Club",
+    "displayName": "WALLAGOOT LAKE BOAT CLUB",
+    "latitude": -36.779601,
+    "longitude": 149.944699,
+    "timezone": "Australia/Sydney"
+  },
+  {
+    "id": "spot-1midnk6",
+    "name": "Wassersport Charchulla",
+    "displayName": "WASSERSPORT CHARCHULLA",
+    "latitude": 54.413112,
+    "longitude": 11.207141,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-c5j9do",
+    "name": "Wassersport Grömitz",
+    "displayName": "WASSERSPORT GRÖMITZ",
+    "latitude": 54.138126,
+    "longitude": 10.949194,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1nsa3lm",
+    "name": "Wassersport-Vereinigung Mönkeberg e.V.",
+    "displayName": "WASSERSPORT-VEREINIGUNG MÖNKEBERG E.V.",
+    "latitude": 54.353237,
+    "longitude": 10.17803,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-sj56vh",
+    "name": "Wassersportvertein Richterswil",
+    "displayName": "WASSERSPORTVERTEIN RICHTERSWIL",
+    "latitude": 47.211659,
+    "longitude": 8.704605,
+    "timezone": "Europe/Zurich"
+  },
+  {
+    "id": "spot-651spk",
+    "name": "Wassersportzentrum Uni Konstanz",
+    "displayName": "WASSERSPORTZENTRUM UNI KONSTANZ",
+    "latitude": 47.695828,
+    "longitude": 9.192116,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1xmrmzd",
+    "name": "Watersportcentrum Het Bastion",
+    "displayName": "WATERSPORTCENTRUM HET BASTION",
+    "latitude": 51.854415,
+    "longitude": 5.869912,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-9lgkkt",
+    "name": "Watersportcentrum Sloterplas",
+    "displayName": "WATERSPORTCENTRUM SLOTERPLAS",
+    "latitude": 52.360222,
+    "longitude": 4.815652,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1bd2ef5",
+    "name": "Welton Sailing Club",
+    "displayName": "WELTON SAILING CLUB",
+    "latitude": 53.713052,
+    "longitude": -0.544563,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-186v7if",
+    "name": "Weser Yacht Club - Jollenstation",
+    "displayName": "WESER YACHT CLUB - JOLLENSTATION",
+    "latitude": 53.51012,
+    "longitude": 8.576379,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1ljalze",
+    "name": "Wijk aan zee: Pier",
+    "displayName": "WIJK AAN ZEE: PIER",
+    "latitude": 52.470158,
+    "longitude": 4.566933,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-wung7w",
+    "name": "Wilhelmshavener Segelclub e.V.",
+    "displayName": "WILHELMSHAVENER SEGELCLUB E.V.",
+    "latitude": 53.635493,
+    "longitude": 8.050365,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-dt7n2l",
+    "name": "Windsurfcenter Roermond",
+    "displayName": "WINDSURFCENTER ROERMOND",
+    "latitude": 51.184202,
+    "longitude": 5.951799,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-etpzhg",
+    "name": "Windsurfing Center Premantura",
+    "displayName": "WINDSURFING CENTER PREMANTURA",
+    "latitude": 44.797603,
+    "longitude": 13.918864,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-14psjte",
+    "name": "windsurfvereniging Vlietland",
+    "displayName": "WINDSURFVERENIGING VLIETLAND",
+    "latitude": 52.120579,
+    "longitude": 4.457284,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-13t9btx",
+    "name": "Wing & Kite",
+    "displayName": "WING & KITE",
+    "latitude": 43.038323,
+    "longitude": 6.119175,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1va9yp1",
+    "name": "Wioska Surfów",
+    "displayName": "WIOSKA SURFÓW",
+    "latitude": 54.012068,
+    "longitude": 21.738729,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-1mkrwxk",
+    "name": "Wolsztyński Klub Żeglarski",
+    "displayName": "WOLSZTYŃSKI KLUB ŻEGLARSKI",
+    "latitude": 52.106217,
+    "longitude": 16.090623,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-1qo1tnd",
+    "name": "WRK 1961 e.V.",
+    "displayName": "WRK 1961 E.V.",
+    "latitude": 51.399891,
+    "longitude": 6.678033,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-d2rwwh",
+    "name": "WSKLuM Vilvoorde v.z.w.",
+    "displayName": "WSKLUM VILVOORDE V.Z.W.",
+    "latitude": 50.943908,
+    "longitude": 4.437005,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1lu654",
+    "name": "WSV Almere Haven",
+    "displayName": "WSV ALMERE HAVEN",
+    "latitude": 52.332215,
+    "longitude": 5.217004,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-554ok3",
+    "name": "WSVG Windsurf Vereniging Goirle",
+    "displayName": "WSVG WINDSURF VERENIGING GOIRLE",
+    "latitude": 51.531678,
+    "longitude": 5.049239,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-b6ffsg",
+    "name": "XCAT",
+    "displayName": "XCAT",
+    "latitude": 43.653468,
+    "longitude": -1.439302,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-o9zhlo",
+    "name": "Yacht Club Ascona",
+    "displayName": "YACHT CLUB ASCONA",
+    "latitude": 46.148414,
+    "longitude": 8.778005,
+    "timezone": "Europe/Zurich"
+  },
+  {
+    "id": "spot-kv2qvx",
+    "name": "Yacht Club Athis Mons",
+    "displayName": "YACHT CLUB ATHIS MONS",
+    "latitude": 48.701032,
+    "longitude": 2.398038,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1v2rp1h",
+    "name": "Yacht Club Crouesty Arzon YCCA",
+    "displayName": "YACHT CLUB CROUESTY ARZON YCCA",
+    "latitude": 47.54294,
+    "longitude": -2.894588,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-13phmhz",
+    "name": "Yacht Club Landais",
+    "displayName": "YACHT CLUB LANDAIS",
+    "latitude": 43.680627,
+    "longitude": -1.427299,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1odbxmy",
+    "name": "Yacht club Livorno",
+    "displayName": "YACHT CLUB LIVORNO",
+    "latitude": 43.549764,
+    "longitude": 10.295758,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-9ml51",
+    "name": "Yacht Club Sant'Ampelio",
+    "displayName": "YACHT CLUB SANT'AMPELIO",
+    "latitude": 43.778871,
+    "longitude": 7.675195,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-k4eq0m",
+    "name": "Yachtclub Phoenixsee",
+    "displayName": "YACHTCLUB PHOENIXSEE",
+    "latitude": 51.488693,
+    "longitude": 7.513356,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-11qycg6",
+    "name": "You-Kite",
+    "displayName": "YOU-KITE",
+    "latitude": 47.695533,
+    "longitude": -3.346868,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1x06p88",
+    "name": "Zeilschool Aalsmeer",
+    "displayName": "ZEILSCHOOL AALSMEER",
+    "latitude": 52.250611,
+    "longitude": 4.757978,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-7ba06n",
+    "name": "Zeilschool Haven Vinkeveen",
+    "displayName": "ZEILSCHOOL HAVEN VINKEVEEN",
+    "latitude": 52.217665,
+    "longitude": 4.937232,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1y1phha",
+    "name": "Zeilschool Het Nieuwe Meer",
+    "displayName": "ZEILSCHOOL HET NIEUWE MEER",
+    "latitude": 52.333415,
+    "longitude": 4.85215,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-88ywkk",
+    "name": "Zeilschool het Veerse Gat",
+    "displayName": "ZEILSCHOOL HET VEERSE GAT",
+    "latitude": 51.557122,
+    "longitude": 3.65346,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-ho0ugb",
+    "name": "Zeilschool Propsma",
+    "displayName": "ZEILSCHOOL PROPSMA",
+    "latitude": 53.219386,
+    "longitude": 5.86355,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-tecvwf",
+    "name": "Zeilvereniging De Lek",
+    "displayName": "ZEILVERENIGING DE LEK",
+    "latitude": 52.002854,
+    "longitude": 5.086482,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-17xkdw9",
+    "name": "Μoraitis beach",
+    "displayName": "ΜORAITIS BEACH",
+    "latitude": 38.135239,
+    "longitude": 24.016291,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-nptj50",
+    "name": "Ναυτικός Ομιλος Παλαιού Φαλήρου",
+    "displayName": "ΝΑΥΤΙΚΌΣ ΟΜΙΛΟΣ ΠΑΛΑΙΟΎ ΦΑΛΉΡΟΥ",
+    "latitude": 37.931757,
+    "longitude": 23.685724,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-1vtl5zx",
+    "name": "кайт спот \"Жёлтая бухта\"",
+    "displayName": "КАЙТ СПОТ \"ЖЁЛТАЯ БУХТА\"",
+    "latitude": 60.268742,
+    "longitude": 28.92406,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "id": "spot-18d69",
+    "name": "Клуб виндсерфинга Марабу",
+    "displayName": "КЛУБ ВИНДСЕРФИНГА МАРАБУ",
+    "latitude": 55.973288,
+    "longitude": 37.662656,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "id": "spot-ps9mmn",
+    "name": "Морской клуб \"Ейская бора\"",
+    "displayName": "МОРСКОЙ КЛУБ \"ЕЙСКАЯ БОРА\"",
+    "latitude": 46.728265,
+    "longitude": 38.287159,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "id": "spot-1j0bs0h",
+    "name": "Наутички клуб Палилула",
+    "displayName": "НАУТИЧКИ КЛУБ ПАЛИЛУЛА",
+    "latitude": 44.823339,
+    "longitude": 20.508387,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-mouazk",
+    "name": "СДЮСШОР водных видов спорта",
+    "displayName": "СДЮСШОР ВОДНЫХ ВИДОВ СПОРТА",
+    "latitude": 51.675944,
+    "longitude": 39.243065,
+    "timezone": "Europe/Moscow"
+  }
+]
