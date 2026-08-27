@@ -40,9 +40,32 @@ onMounted(() => {
       <aside class="settings-panel" aria-label="WindScout settings">
         <WindScoutSettings />
         <InstallContinuation />
+        <a class="configurator-data-sources" href="/data-sources.html">Data sources</a>
       </aside>
     </main>
   </div>
 </template>
 
 <style src="../styles/configurator.css"></style>
+
+<style scoped>
+.configurator-data-sources {
+  display: block;
+  width: fit-content;
+  margin: -0.15rem auto 0;
+  color: #868b88;
+  font-size: 0.625rem;
+  line-height: 1.4;
+  text-underline-offset: 2px;
+}
+
+.configurator-data-sources:hover {
+  color: #303331;
+}
+
+.configurator-data-sources:focus-visible {
+  outline: 0;
+  color: #303331;
+  box-shadow: 0 2px 0 var(--settings-focus, #000);
+}
+</style>

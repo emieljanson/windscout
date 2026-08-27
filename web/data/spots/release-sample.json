@@ -1,0 +1,353 @@
+{
+  "version": 1,
+  "seed": "windscout-first-release-sample",
+  "automaticAccepts": 429,
+  "reviewed": 43,
+  "systematicIssues": [],
+  "sample": [
+    {
+      "candidateId": "osm:node/12094087419",
+      "name": "El Kur",
+      "activities": [
+        "windsurfing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/7744365474",
+      "name": "Ekkerøy",
+      "activities": [
+        "kitesurfing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/13020429031",
+      "name": "Nakskov Sejlklub",
+      "activities": [
+        "sailing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/4285808240",
+      "name": "Nivå Surf Klub",
+      "activities": [
+        "sailing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/6491298498",
+      "name": "Wassersportvertein Richterswil",
+      "activities": [
+        "sailing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/367944646",
+      "name": "Aldridge Sailing Club",
+      "activities": [
+        "sailing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/921192164",
+      "name": "Blackwater Valley Watersports",
+      "activities": [
+        "sailing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/2918007153",
+      "name": "NautiCat",
+      "activities": [
+        "windsurfing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/7640628054",
+      "name": "Houlgate assise Kite",
+      "activities": [
+        "kitesurfing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/5793955263",
+      "name": "Brusanden",
+      "activities": [
+        "kitesurfing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/458123631",
+      "name": "Kite Club Malcesine",
+      "activities": [
+        "kitesurfing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/13644931384",
+      "name": "Nordside Windsurfing",
+      "activities": [
+        "windsurfing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/7419070239",
+      "name": "Club nautique de Pornic",
+      "activities": [
+        "sailing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/12635357929",
+      "name": "Isala",
+      "activities": [
+        "sailing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/6777922412",
+      "name": "Kvalneset",
+      "activities": [
+        "kitesurfing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/3829809956",
+      "name": "Klub Sportów Wodnych \"Hutnik\" Pogoria",
+      "activities": [
+        "sailing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/13019694138",
+      "name": "Rønnerhavnens Bådelaug",
+      "activities": [
+        "sailing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/5808673766",
+      "name": "Bjellandstrand",
+      "activities": [
+        "kitesurfing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/1359920348",
+      "name": "Stade Nautique du Roucas Blanc",
+      "activities": [
+        "sailing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/2684958864",
+      "name": "Aviron Club de Bourges",
+      "activities": [
+        "sailing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/3223462426",
+      "name": "Skovshoved Sejlklub",
+      "activities": [
+        "sailing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/13090672169",
+      "name": "Centre Nautique UCPA",
+      "activities": [
+        "sailing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/2263167123",
+      "name": "Espergærde Sejlklub",
+      "activities": [
+        "sailing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/1881513812",
+      "name": "Lübecker Segler-Verein von 1885 e.V.",
+      "activities": [
+        "sailing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/11170576175",
+      "name": "Aura Sailing",
+      "activities": [
+        "sailing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/2470907668",
+      "name": "Spot de Kitesurf du PalmBeach",
+      "activities": [
+        "kitesurfing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/339070851",
+      "name": "Club de voile",
+      "activities": [
+        "sailing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/7973030467",
+      "name": "Ramton",
+      "activities": [
+        "kitesurfing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/13993449131",
+      "name": "Club Nautique de la Pointe de Saire",
+      "activities": [
+        "sailing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/6348580869",
+      "name": "Horizont",
+      "activities": [
+        "sailing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/4094923218",
+      "name": "Segel- und Motorbootschule Hard",
+      "activities": [
+        "sailing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/946788627",
+      "name": "Absolute Kite Boarding",
+      "activities": [
+        "kitesurfing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/13009222202",
+      "name": "Sejlklub Egensedybet",
+      "activities": [
+        "sailing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/6348544266",
+      "name": "Windsurfcenter Roermond",
+      "activities": [
+        "windsurfing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/1967666022",
+      "name": "Wassersport-Vereinigung Mönkeberg e.V.",
+      "activities": [
+        "sailing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/2954119219",
+      "name": "Club30kite",
+      "activities": [
+        "kitesurfing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/7773683572",
+      "name": "Haviksanden",
+      "activities": [
+        "kitesurfing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/8503064129",
+      "name": "Yacht Club Landais",
+      "activities": [
+        "sailing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/13271963953",
+      "name": "Base Nautique",
+      "activities": [
+        "sailing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/4780407113",
+      "name": "Surfcenter Lido Blu",
+      "activities": [
+        "windsurfing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/13890595285",
+      "name": "Club do Mar Ferrol",
+      "activities": [
+        "sailing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/4508456414",
+      "name": "Wijk aan zee: Pier",
+      "activities": [
+        "kitesurfing"
+      ],
+      "verdict": "pass"
+    },
+    {
+      "candidateId": "osm:node/9523679995",
+      "name": "Narrabeen Lakes Sailing Club",
+      "activities": [
+        "sailing"
+      ],
+      "verdict": "pass"
+    }
+  ]
+}

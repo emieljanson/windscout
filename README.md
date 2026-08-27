@@ -45,6 +45,21 @@ Open-Meteo request. Best fit is the default, while the Model control can
 switch the 3D preview instantly between the already normalized forecasts.
 Cached forecasts are separated by spot and model.
 
+### Refreshing the spot catalog
+
+The shipped location catalog is generated locally from pinned source snapshots. It never queries a spot provider while a user searches.
+
+```sh
+cd web
+npm run spots:import
+npm run spots:validate
+npm run spots:review
+npm run spots:catalog
+npm run spots:catalog:check
+```
+
+`spots:validate` reads `VITE_GEOAPIFY_API_KEY` from the environment or `web/.env.local`, calculates the complete cold-run credit cost before making requests, and saves every successful response in the compact validation cache. An unchanged warm run makes no Geoapify requests. Source rights, snapshot identifiers, and public attribution are release gates; inspection-only records cannot enter generated output.
+
 Weather is shown by default. Air temperature and tide are independent optional
 rows; wind always remains visible and expands into the space left over. Tide is
 retrieved separately from Open-Meteo Marine only when needed on the device, so
