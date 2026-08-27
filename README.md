@@ -1,5 +1,20 @@
 # WindScout
 
+## Browser installer artifacts
+
+Tagged E1002 firmware releases publish both the existing OTA application binary and a browser-installer bundle. The bundle is generated from ESP-IDF's `flasher_args.json`, contains separate checksummed flash parts, and exposes clean-install and preserving-update write sets. Generate and validate it locally after an E1002 build with:
+
+```sh
+cd firmware
+python3 scripts/generate_installer_manifest.py \
+  --build-dir build \
+  --partitions partitions.csv \
+  --output ../web/public/firmware \
+  --version dev-local
+```
+
+Do not publish a preserving update unless the generator confirms that its ranges avoid NVS and storage.
+
 WindScout turns a Seeed Studio reTerminal E1002 into a quiet, battery-efficient
 wind forecast dashboard. The device downloads forecast data itself and renders
 the complete interface locally; no map service or rendering backend is

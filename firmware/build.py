@@ -5,6 +5,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 # Add scripts to sys.path to import boards
 sys.path.append(os.path.join(os.path.dirname(__file__), "scripts"))
@@ -145,6 +146,15 @@ def main():
         "partition table (adds a coredump partition) — do not ship to users.",
     )
     parser.add_argument(
+        "--installer-output",
+        type=Path,
+        help="After the firmware build, write a validated browser-installer bundle here.",
+    )
+    parser.add_argument(
+        "--installer-version",
+        help="Immutable version used by --installer-output.",
+    )
+    parser.add_argument(
         "--step",
         choices=STEPS,
         action="append",
@@ -176,6 +186,26 @@ def main():
 
     if "firmware" in steps:
         build_firmware(args.board, extra_args, debug=args.debug)
+        if args.installer_output:
+            if not args.installer_version:
+                parser.error("--installer-output requires --installer-version")
+            if args.board != "seeedstudio_reterminal_e1002" or args.debug:
+                parser.error("installer bundles are release-only and currently support E1002")
+            subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/generate_installer_manifest.py",
+                    "--build-dir",
+                    "build",
+                    "--partitions",
+                    "partitions.csv",
+                    "--output",
+                    str(args.installer_output),
+                    "--version",
+                    args.installer_version,
+                ],
+                check=True,
+            )
 
 
 if __name__ == "__main__":
