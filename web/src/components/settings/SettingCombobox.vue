@@ -8,8 +8,11 @@ import {
   ComboboxItemIndicator,
   ComboboxPortal,
   ComboboxRoot,
+  ComboboxSeparator,
   ComboboxViewport,
 } from 'reka-ui'
+
+const CREATE_VALUE = '__windscout-create-option__'
 
 const props = defineProps({
   modelValue: { type: [String, Number, Object], default: undefined },
@@ -23,6 +26,7 @@ const props = defineProps({
   emptyText: { type: String, default: 'No results found' },
   loadingText: { type: String, default: 'Searching…' },
   loading: { type: Boolean, default: false },
+  createActionLabel: { type: String, default: '' },
   disabled: { type: Boolean, default: false },
   name: { type: String, default: undefined },
   ariaLabel: { type: String, default: undefined },
@@ -30,7 +34,7 @@ const props = defineProps({
   ariaDescribedby: { type: String, default: undefined },
 })
 
-const emit = defineEmits(['update:modelValue', 'update:searchTerm', 'update:open'])
+const emit = defineEmits(['update:modelValue', 'update:searchTerm', 'update:open', 'create'])
 const row = inject('windscout-setting-row', null)
 const isDisabled = computed(() => props.disabled || row?.disabled?.value || false)
 const open = ref(false)
@@ -81,6 +85,14 @@ function setOpen(value) {
 
 async function selectValue(value) {
   selectionPending.value = true
+  if (value === CREATE_VALUE) {
+    emit('create', props.searchTerm.trim())
+    setOpen(false)
+    await nextTick()
+    selectionPending.value = false
+    input.value?.$el?.focus()
+    return
+  }
   emit('update:modelValue', value)
   const label = committedLabel(value)
   emit('update:searchTerm', label)
@@ -158,6 +170,18 @@ function dismiss() {
           <p v-else class="setting-popup__message" role="status">
             {{ props.emptyText }}
           </p>
+          <template v-if="!props.loading && props.createActionLabel">
+            <ComboboxSeparator class="setting-popup__separator" />
+            <ComboboxItem
+              class="setting-option setting-option--create"
+              :value="CREATE_VALUE"
+            >
+              <svg class="setting-option__leading-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false">
+                <path d="M8 3.25v9.5M3.25 8h9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+              </svg>
+              <span>{{ props.createActionLabel }}</span>
+            </ComboboxItem>
+          </template>
         </ComboboxViewport>
       </ComboboxContent>
     </ComboboxPortal>

@@ -149,6 +149,31 @@ describe('WindScout setting controls', () => {
     wrapper.unmount()
   })
 
+  it('offers a separated create action for an unmatched search without committing it', async () => {
+    const wrapper = mount(SettingCombobox, {
+      props: {
+        modelValue: 'brouwersdam',
+        searchTerm: 'Edam harbour',
+        options: [],
+        emptyText: 'No existing spots found',
+        createActionLabel: 'Add “Edam harbour” as a spot',
+      },
+      attachTo: document.body,
+    })
+    await wrapper.get('input').trigger('focus')
+
+    const action = [...document.body.querySelectorAll('[role="option"]')]
+      .find((candidate) => candidate.textContent.includes('Add “Edam harbour” as a spot'))
+    expect(action).toBeDefined()
+    expect(action.previousElementSibling?.classList.contains('setting-popup__separator')).toBe(true)
+
+    action.click()
+    await wrapper.vm.$nextTick()
+    expect(wrapper.emitted('create')?.at(-1)).toEqual(['Edam harbour'])
+    expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+    wrapper.unmount()
+  })
+
   it('emits only valid number values and rolls invalid drafts back on Escape and blur', async () => {
     const onUpdate = vi.fn()
     const wrapper = mount({

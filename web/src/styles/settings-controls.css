@@ -168,6 +168,17 @@
 
 .setting-option[data-highlighted] { background: var(--settings-control-surface); }
 .setting-option[data-disabled] { opacity: 0.42; }
+.setting-popup__separator {
+  block-size: 1px;
+  margin: 0.25rem 0.375rem;
+  background: rgba(21, 24, 23, 0.1);
+}
+.setting-option--create { justify-content: flex-start; color: var(--focus, #135f56); }
+.setting-option__leading-icon {
+  flex: none;
+  inline-size: 1rem;
+  block-size: 1rem;
+}
 .setting-popup__message {
   padding: 0.625rem;
   color: var(--settings-control-muted);
