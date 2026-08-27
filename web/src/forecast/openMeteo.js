@@ -10,7 +10,7 @@ export function buildForecastUrl(spot, modelIds = FORECAST_MODEL_IDS) {
     longitude: Number(spot.longitude).toFixed(6),
     hourly: 'wind_speed_10m,wind_gusts_10m,wind_direction_10m,cloud_cover,precipitation,is_day,temperature_2m',
     wind_speed_unit: 'kn',
-    timezone: 'Europe/Amsterdam',
+    timezone: spot.timezone,
     models: modelIds.join(','),
     forecast_days: '5',
   })

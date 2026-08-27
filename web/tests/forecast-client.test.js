@@ -54,6 +54,14 @@ describe('Open-Meteo forecast client', () => {
     ])
   })
 
+  it('uses the confirmed spot timezone instead of assuming Amsterdam', () => {
+    const url = new URL(buildForecastUrl({
+      ...SPOTS[1],
+      timezone: 'Europe/Lisbon',
+    }))
+    expect(url.searchParams.get('timezone')).toBe('Europe/Lisbon')
+  })
+
   it('fetches and normalizes a successful response without a WindScout backend', async () => {
     const fetchImpl = vi.fn().mockResolvedValue({ ok: true, json: async () => minimalResponse() })
     const forecasts = await fetchOpenMeteoForecasts(SPOTS[1], {

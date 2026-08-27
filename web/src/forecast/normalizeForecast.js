@@ -112,9 +112,9 @@ function responseFields(modelId, suffixed) {
   }
 }
 
-function validateCoreResponse(response, modelId, suffixed) {
+function validateCoreResponse(response, modelId, suffixed, timezone) {
   if (!response || typeof response !== 'object') fail('response is missing')
-  if (response.timezone !== 'Europe/Amsterdam') fail('timezone must be Europe/Amsterdam')
+  if (response.timezone !== timezone) fail(`timezone must be ${timezone}`)
   const units = response.hourly_units
   const fields = responseFields(modelId, suffixed)
   if (!units || units[fields.wind] !== 'kn' || units[fields.gust] !== 'kn' ||
@@ -145,7 +145,7 @@ export function normalizeForecast(response, spot, {
   if (!model || !getForecastModel(model.id)) fail('model is invalid')
   const {
     hourly, units, count, fields,
-  } = validateCoreResponse(response, model.id, suffixed)
+  } = validateCoreResponse(response, model.id, suffixed, spot.timezone)
 
   const weatherAvailable = [fields.cloud, fields.precipitation, fields.isDay]
     .every((field) => Array.isArray(hourly[field]) && hourly[field].length === count) &&

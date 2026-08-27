@@ -98,6 +98,28 @@ describe('configurator store', () => {
     expect(store.forecastLabel).toBe('Demo')
   })
 
+  it('adds a confirmed personal spot to the selectable catalog and local storage', () => {
+    const storage = memoryStorage()
+    const store = useConfiguratorStore()
+    const spot = store.addPersonalSpot({
+      name: 'Edam harbour',
+      latitude: 52.50673,
+      longitude: 5.07729,
+      timezone: 'Europe/Amsterdam',
+      providerRef: 'geoapify:edam-id',
+    }, { storage })
+
+    expect(spot).toMatchObject({ name: 'Edam harbour', personal: true })
+    expect(store.spots.at(-1)).toEqual(spot)
+    expect(store.spotById(spot.id)).toEqual(spot)
+
+    store.$dispose()
+    setActivePinia(createPinia())
+    const restored = useConfiguratorStore()
+    restored.loadPersonalSpots({ storage })
+    expect(restored.spotById(spot.id)).toEqual(spot)
+  })
+
   it.each([
     [true, '12-hour'],
     [false, '24-hour'],

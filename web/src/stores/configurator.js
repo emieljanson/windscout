@@ -18,7 +18,12 @@ import {
   MAX_THRESHOLD,
   MIN_THRESHOLD,
 } from '../renderer/contract'
-import { DEFAULT_SPOT_ID, getSpot } from '../spots'
+import { DEFAULT_SPOT_ID, SPOTS } from '../spots'
+import {
+  createPersonalSpot,
+  readPersonalSpots,
+  writePersonalSpot,
+} from '../spots/personalSpots'
 
 export { DEFAULT_THRESHOLD, MAX_THRESHOLD, MIN_THRESHOLD } from '../renderer/contract'
 
@@ -34,6 +39,7 @@ export const useConfiguratorStore = defineStore('configurator', {
       timeFormat: displayConfiguration.timeFormat,
       temperatureUnit: displayConfiguration.temperatureUnit,
       selectedSpotId: DEFAULT_SPOT_ID,
+      personalSpots: readPersonalSpots(),
       selectedModelId: DEFAULT_FORECAST_MODEL_ID,
       forecastsByModel: { [DEFAULT_FORECAST_MODEL_ID]: brouwersdamForecast },
       forecast: brouwersdamForecast,
@@ -59,6 +65,10 @@ export const useConfiguratorStore = defineStore('configurator', {
     }
   },
   getters: {
+    spots: (state) => [...SPOTS, ...state.personalSpots],
+    spotById() {
+      return (spotId) => this.spots.find((spot) => spot.id === spotId) ?? null
+    },
     temperatureChoice: (state) => state.showTemperature ? state.temperatureUnit : 'hide',
     tideAvailable: (state) =>
       ['available', 'cached'].includes(state.tideStatus) &&
@@ -68,6 +78,18 @@ export const useConfiguratorStore = defineStore('configurator', {
     },
   },
   actions: {
+    loadPersonalSpots({ storage } = {}) {
+      this.personalSpots = readPersonalSpots(storage)
+      return this.personalSpots
+    },
+    addPersonalSpot(input, { storage } = {}) {
+      const spot = createPersonalSpot(input)
+      if (!writePersonalSpot(spot, storage)) return null
+      const index = this.personalSpots.findIndex((candidate) => candidate.id === spot.id)
+      if (index >= 0) this.personalSpots[index] = spot
+      else this.personalSpots.push(spot)
+      return spot
+    },
     setShowThreshold(value) {
       if (typeof value !== 'boolean') return false
       this.showThreshold = value
@@ -131,7 +153,7 @@ export const useConfiguratorStore = defineStore('configurator', {
       storage,
       ...fetchOptions
     } = {}) {
-      const spot = getSpot(this.selectedSpotId)
+      const spot = this.spotById(this.selectedSpotId)
       if (!spot) return false
       const requestId = ++this.tideRequestId
       this.tideRequestInFlight = true
@@ -186,7 +208,7 @@ export const useConfiguratorStore = defineStore('configurator', {
       storage,
       ...fetchOptions
     } = {}) {
-      const spot = getSpot(this.selectedSpotId)
+      const spot = this.spotById(this.selectedSpotId)
       if (!spot) return false
       const requestId = ++this.forecastRequestId
       this.forecastRequestInFlight = true
@@ -262,7 +284,7 @@ export const useConfiguratorStore = defineStore('configurator', {
       }
     },
     async selectSpot(spotId, { tideFetcher, ...options } = {}) {
-      if (!getSpot(spotId)) return false
+      if (!this.spotById(spotId)) return false
       if (spotId === this.selectedSpotId) return true
       this.selectedSpotId = spotId
       const forecastResult = this.refreshForecast(options)
@@ -289,7 +311,7 @@ export const useConfiguratorStore = defineStore('configurator', {
       const cached = current ? null : readCachedForecast(this.selectedSpotId, modelId, storage)
       const available = current ?? cached
       if (!available && requestInFlight) {
-        const spot = getSpot(this.selectedSpotId)
+        const spot = this.spotById(this.selectedSpotId)
         this.forecastMessage = `Loading ${model.label} forecast for ${spot?.name ?? 'this spot'}…`
         return true
       }
@@ -316,7 +338,7 @@ export const useConfiguratorStore = defineStore('configurator', {
           this.pendingForecastModelId !== this.selectedModelId ||
           this.forecast.spotId !== this.selectedSpotId ||
           this.forecast.modelId !== this.selectedModelId) return false
-      const spot = getSpot(this.selectedSpotId)
+      const spot = this.spotById(this.selectedSpotId)
       const model = getForecastModel(this.selectedModelId)
       const publicationSource = this.pendingForecastSource
       this.pendingForecastRevision = null
@@ -343,7 +365,7 @@ export const useConfiguratorStore = defineStore('configurator', {
     },
     rejectForecastPublication(revision) {
       if (revision !== this.pendingForecastRevision || revision !== this.forecastRevision) return false
-      const failedSpot = getSpot(this.pendingForecastSpotId)
+      const failedSpot = this.spotById(this.pendingForecastSpotId)
       const failedModel = getForecastModel(this.pendingForecastModelId)
       this.pendingForecastRevision = null
       this.pendingForecastSpotId = null
