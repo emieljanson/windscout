@@ -25,6 +25,7 @@ const props = defineProps({
   by: { type: [String, Function], default: undefined },
   placeholder: { type: String, default: 'Search' },
   emptyText: { type: String, default: 'No results found' },
+  emptyRole: { type: String, default: 'status' },
   loadingText: { type: String, default: 'Searching…' },
   loading: { type: Boolean, default: false },
   createActionLabel: { type: String, default: '' },
@@ -182,7 +183,7 @@ defineExpose({
               </ComboboxItemIndicator>
             </ComboboxItem>
           </template>
-          <p v-else class="setting-popup__message" role="status">
+          <p v-else class="setting-popup__message" :role="props.emptyRole">
             {{ props.emptyText }}
           </p>
           <template v-if="!props.loading && props.createActionLabel">

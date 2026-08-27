@@ -78,6 +78,49 @@ async function mockForecastApi(page, state = { fail: false, tideUnsupported: fal
   return requests
 }
 
+async function mockGeoapify(page) {
+  const autocompleteRequests = []
+  const reverseRequests = []
+  await page.route('https://api.geoapify.com/v1/geocode/autocomplete**', async (route) => {
+    autocompleteRequests.push(new URL(route.request().url()))
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ results: [{
+        place_id: 'hindeloopen-id',
+        name: 'Hindeloopen',
+        city: 'Hindeloopen',
+        state: 'Friesland',
+        country: 'Netherlands',
+        formatted: 'Hindeloopen, Friesland, Netherlands',
+        lat: 52.9432,
+        lon: 5.4007,
+        timezone: { name: 'Europe/Amsterdam' },
+      }] }),
+    })
+  })
+  await page.route('https://api.geoapify.com/v1/geocode/reverse**', async (route) => {
+    reverseRequests.push(new URL(route.request().url()))
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ results: [{
+        place_id: 'confirmed-pin',
+        lat: Number(new URL(route.request().url()).searchParams.get('lat')),
+        lon: Number(new URL(route.request().url()).searchParams.get('lon')),
+        timezone: { name: 'Europe/Amsterdam' },
+      }] }),
+    })
+  })
+  await page.route('https://maps.geoapify.com/v1/styles/positron/style.json**', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ version: 8, sources: {}, layers: [] }),
+    }))
+  return { autocompleteRequests, reverseRequests }
+}
+
 function forecastStatus(page) {
   return page.locator('.forecast-status')
 }
@@ -208,6 +251,44 @@ test('switches the live preview to another supported spot without a page reload'
   await expect(page.getByTestId('forecast-label')).toHaveCount(0)
   expect(requests).toHaveLength(2)
   expect(requests[1].searchParams.get('latitude')).toBe('52.512600')
+})
+
+test('creates and remembers a personal spot only after the explicit map flow', async ({ page }) => {
+  const forecastRequests = await mockForecastApi(page)
+  const { autocompleteRequests, reverseRequests } = await mockGeoapify(page)
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto('/')
+  await expect(forecastStatus(page)).toContainText('Live Best Match forecast for Brouwersdam', { timeout: 15_000 })
+
+  const spot = page.getByRole('combobox', { name: 'Spot' })
+  await spot.fill('Hindeloopen')
+  await expect(page.getByRole('option', { name: 'Add “Hindeloopen” as a spot' })).toBeVisible()
+  expect(autocompleteRequests).toHaveLength(0)
+  await page.getByRole('option', { name: 'Add “Hindeloopen” as a spot' }).click()
+
+  const dialog = page.getByRole('dialog', { name: 'Add a spot' })
+  await expect(dialog).toBeVisible()
+  const placeSearch = dialog.getByRole('combobox', { name: 'Search for a place' })
+  await expect(placeSearch).toBeFocused()
+  await expect(page.getByRole('option', { name: /Hindeloopen.*Friesland/ })).toBeVisible()
+  expect(autocompleteRequests).toHaveLength(1)
+  await page.getByRole('option', { name: /Hindeloopen.*Friesland/ }).click()
+
+  await expect(dialog.getByText('Move the map until the pin is on your spot by the water.')).toBeVisible()
+  await expect(dialog.locator('.spot-dialog__pin')).toBeVisible()
+  await expect(dialog.locator('.maplibregl-canvas')).toBeVisible()
+  await dialog.getByRole('button', { name: 'Add spot' }).click()
+
+  await expect(dialog).toHaveCount(0)
+  await expect(spot).toHaveValue('Hindeloopen')
+  await expect(forecastStatus(page)).toContainText('Live Best Match forecast for Hindeloopen', { timeout: 15_000 })
+  expect(reverseRequests).toHaveLength(1)
+  expect(forecastRequests.at(-1).searchParams.get('latitude')).toBe('52.943200')
+
+  await page.reload()
+  await expect(forecastStatus(page)).toContainText('Live Best Match forecast for Brouwersdam', { timeout: 15_000 })
+  await page.getByRole('combobox', { name: 'Spot' }).fill('Hind')
+  await expect(page.getByRole('option', { name: 'Hindeloopen' })).toBeVisible()
 })
 
 test('recomposes the preview when Weather, Temperature, and Tide change', async ({ page }) => {

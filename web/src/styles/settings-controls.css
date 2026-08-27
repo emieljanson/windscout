@@ -129,7 +129,7 @@
 .setting-option__indicator svg { inline-size: 1rem; block-size: 1rem; }
 
 .setting-popup {
-  z-index: 1200;
+  z-index: 2200;
   overflow: hidden;
   max-block-size: min(18rem, var(--reka-select-content-available-height, var(--reka-combobox-content-available-height, 18rem)));
   background: #fff;

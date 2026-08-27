@@ -121,6 +121,9 @@ describe('Spot creation dialog', () => {
       attachTo: document.body,
     })
     await vi.advanceTimersByTimeAsync(300)
+    const input = document.body.querySelector('input[role="combobox"]')
+    input.dispatchEvent(new FocusEvent('focus', { bubbles: true }))
+    await wrapper.vm.$nextTick()
     expect(document.body.querySelector('[role="alert"]')?.textContent)
       .toContain('Location search is temporarily unavailable')
     expect(wrapper.emitted('confirm')).toBeUndefined()

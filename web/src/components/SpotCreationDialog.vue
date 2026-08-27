@@ -205,7 +205,8 @@ onBeforeUnmount(reset)
             :display-value="(place) => place?.label ?? searchTerm"
             by="id"
             placeholder="Search for a place"
-            empty-text="No places found"
+            :empty-text="errorMessage || 'No places found'"
+            :empty-role="errorMessage ? 'alert' : 'status'"
             loading-text="Searching places…"
             aria-label="Search for a place"
             @update:model-value="choosePlace"
@@ -222,7 +223,7 @@ onBeforeUnmount(reset)
           </div>
         </div>
 
-        <p v-if="errorMessage" class="spot-dialog__error" role="alert">{{ errorMessage }}</p>
+        <p v-if="selectedPlace && errorMessage" class="spot-dialog__error" role="alert">{{ errorMessage }}</p>
 
         <footer class="spot-dialog__footer">
           <a class="spot-dialog__attribution" href="https://www.geoapify.com/" target="_blank" rel="noreferrer">
