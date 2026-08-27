@@ -1,16 +1,8 @@
 import { isNormalizedTide } from './normalizeTide'
+import { availableStorage } from '../storage'
 
 export const TIDE_CACHE_KEY = 'windscout.tides'
 export const TIDE_CACHE_VERSION = 1
-
-function availableStorage(storage) {
-  if (storage) return storage
-  try {
-    return globalThis.localStorage
-  } catch {
-    return null
-  }
-}
 
 function readEnvelope(storage) {
   const target = availableStorage(storage)

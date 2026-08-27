@@ -1,16 +1,8 @@
 import { RENDERER_TEXT_CAPACITIES, textFitsRenderer } from '../renderer/contract'
+import { availableStorage } from '../storage'
 
 export const PERSONAL_SPOTS_STORAGE_KEY = 'windscout.personal-spots'
 const PERSONAL_SPOTS_VERSION = 1
-
-function availableStorage(storage) {
-  if (storage) return storage
-  try {
-    return globalThis.localStorage
-  } catch {
-    return null
-  }
-}
 
 function validTimezone(timezone) {
   try {

@@ -29,12 +29,10 @@ function normalizeResult(result) {
   return {
     id: String(result.place_id || `${latitude},${longitude}`),
     name,
-    label: name,
     description: resultDescription(result, name),
     latitude,
     longitude,
     timezone: result.timezone?.name || '',
-    provider: 'geoapify',
   }
 }
 

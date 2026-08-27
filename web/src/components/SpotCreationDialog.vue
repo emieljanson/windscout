@@ -38,6 +38,8 @@ const center = ref(null)
 let debounceTimer
 let searchController
 let mapController
+let mapGeneration = 0
+let reverseController
 
 function language() {
   return String(globalThis.navigator?.language ?? 'en').slice(0, 2)
@@ -48,15 +50,24 @@ function clearSearch() {
   debounceTimer = undefined
   searchController?.abort()
   searchController = undefined
+  searching.value = false
 }
 
 function destroyMap() {
+  mapGeneration += 1
   mapController?.destroy()
   mapController = undefined
 }
 
+function clearReverse() {
+  reverseController?.abort()
+  reverseController = undefined
+  saving.value = false
+}
+
 function reset() {
   clearSearch()
+  clearReverse()
   destroyMap()
   results.value = []
   selectedPlace.value = null
@@ -72,22 +83,27 @@ async function runSearch(query) {
     results.value = []
     return
   }
-  searchController = new AbortController()
+  const controller = new AbortController()
+  searchController = controller
   searching.value = true
   errorMessage.value = ''
   try {
-    results.value = await props.searchPlaces(query, {
+    const nextResults = await props.searchPlaces(query, {
       apiKey: props.apiKey,
-      signal: searchController.signal,
+      signal: controller.signal,
       language: language(),
     })
+    if (searchController === controller && props.open) results.value = nextResults
   } catch (error) {
-    if (error?.name !== 'AbortError') {
+    if (searchController === controller && error?.name !== 'AbortError') {
       results.value = []
       errorMessage.value = error?.message || 'Location search is temporarily unavailable.'
     }
   } finally {
-    searching.value = false
+    if (searchController === controller) {
+      searchController = undefined
+      searching.value = false
+    }
   }
 }
 
@@ -99,20 +115,32 @@ function scheduleSearch(query) {
 async function choosePlace(place) {
   if (!place) return
   selectedPlace.value = place
-  searchTerm.value = place.label
+  searchTerm.value = place.name
   center.value = { latitude: place.latitude, longitude: place.longitude }
   errorMessage.value = ''
   clearSearch()
   await nextTick()
   destroyMap()
+  const generation = mapGeneration
   try {
-    mapController = await props.createMap(mapContainer.value, {
+    const controller = await props.createMap(mapContainer.value, {
       apiKey: props.apiKey,
       center: center.value,
-      onCenterChange: (nextCenter) => { center.value = nextCenter },
+      onCenterChange: (nextCenter) => {
+        if (generation === mapGeneration && selectedPlace.value?.id === place.id) {
+          center.value = nextCenter
+        }
+      },
     })
+    if (!props.open || generation !== mapGeneration || selectedPlace.value?.id !== place.id) {
+      controller.destroy()
+      return
+    }
+    mapController = controller
   } catch (error) {
-    errorMessage.value = error?.message || 'The map could not be loaded.'
+    if (props.open && generation === mapGeneration && selectedPlace.value?.id === place.id) {
+      errorMessage.value = error?.message || 'The map could not be loaded.'
+    }
   }
 }
 
@@ -120,29 +148,39 @@ async function confirmSpot() {
   if (!selectedPlace.value || !center.value || saving.value) return
   saving.value = true
   errorMessage.value = ''
+  const controller = new AbortController()
+  reverseController = controller
   try {
     const finalLocation = await props.reverseLocation(center.value, {
       apiKey: props.apiKey,
       language: language(),
+      signal: controller.signal,
     })
+    if (reverseController !== controller || !props.open) return
     const timezone = finalLocation?.timezone || selectedPlace.value.timezone
     if (!timezone) throw new Error('We could not determine the timezone for this pin.')
     emit('confirm', {
       name: selectedPlace.value.name,
-      latitude: Number(center.value.latitude.toFixed(6)),
-      longitude: Number(center.value.longitude.toFixed(6)),
+      latitude: center.value.latitude,
+      longitude: center.value.longitude,
       timezone,
       providerRef: `geoapify:${selectedPlace.value.id}`,
     })
     emit('update:open', false)
   } catch (error) {
-    errorMessage.value = error?.message || 'This spot could not be added.'
+    if (reverseController === controller && error?.name !== 'AbortError') {
+      errorMessage.value = error?.message || 'This spot could not be added.'
+    }
   } finally {
-    saving.value = false
+    if (reverseController === controller) {
+      reverseController = undefined
+      saving.value = false
+    }
   }
 }
 
 function setOpen(value) {
+  if (!value) reset()
   emit('update:open', value)
 }
 
@@ -160,7 +198,7 @@ watch(() => props.open, (open) => {
 
 watch(searchTerm, (query) => {
   if (!props.open) return
-  if (selectedPlace.value && query === selectedPlace.value.label) return
+  if (selectedPlace.value && query === selectedPlace.value.name) return
   if (selectedPlace.value) {
     selectedPlace.value = null
     center.value = null
@@ -200,9 +238,9 @@ onBeforeUnmount(reset)
             :options="results"
             :loading="searching"
             :get-option-value="(place) => place"
-            :get-option-label="(place) => place.label"
+            :get-option-label="(place) => place.name"
             :get-option-description="(place) => place.description"
-            :display-value="(place) => place?.label ?? searchTerm"
+            :display-value="(place) => place?.name ?? searchTerm"
             by="id"
             placeholder="Search for a place"
             :empty-text="errorMessage || 'No places found'"

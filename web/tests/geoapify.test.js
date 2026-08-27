@@ -14,7 +14,7 @@ function response(results, ok = true) {
 }
 
 describe('Geoapify place provider', () => {
-  it('normalizes a small result set with coordinates, timezone, and provider identity', async () => {
+  it('normalizes a small result set with coordinates and timezone', async () => {
     const fetchImpl = vi.fn().mockResolvedValue(response([{
       place_id: 'edam-id',
       name: 'Edam',
@@ -33,12 +33,10 @@ describe('Geoapify place provider', () => {
     })).resolves.toEqual([{
       id: 'edam-id',
       name: 'Edam',
-      label: 'Edam',
       description: 'North Holland, Netherlands',
       latitude: 52.5126,
       longitude: 5.0486,
       timezone: 'Europe/Amsterdam',
-      provider: 'geoapify',
     }])
     const url = new URL(fetchImpl.mock.calls[0][0])
     expect(url.searchParams.get('text')).toBe('Edam')
