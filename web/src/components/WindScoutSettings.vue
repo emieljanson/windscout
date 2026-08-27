@@ -71,10 +71,11 @@ function createSpot(query) {
   spotDialogOpen.value = true
 }
 
-function confirmSpot(input) {
+async function saveSpot(input) {
   const spot = store.addPersonalSpot(input)
-  if (!spot) return
-  void store.selectSpot(spot.id)
+  if (!spot) return null
+  await store.selectSpot(spot.id)
+  return spot
 }
 
 function selectModel(modelId) {
@@ -194,7 +195,7 @@ function selectModel(modelId) {
     <SpotCreationDialog
       v-model:open="spotDialogOpen"
       :initial-query="customSpotQuery"
-      @confirm="confirmSpot"
+      :save-spot="saveSpot"
     />
   </div>
 </template>

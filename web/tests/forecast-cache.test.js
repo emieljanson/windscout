@@ -46,6 +46,13 @@ describe('forecast cache', () => {
     expect(readCachedForecast('edam', 'best_match', storage)).toBeNull()
   })
 
+  it('round-trips forecasts for valid personal-spot timezones', () => {
+    const storage = memoryStorage()
+    const lisbon = { ...forecast(), spotId: 'personal-lisbon', timezone: 'Europe/Lisbon' }
+    expect(writeCachedForecast(lisbon, storage)).toBe(true)
+    expect(readCachedForecast('personal-lisbon', 'best_match', storage)).toEqual(lisbon)
+  })
+
   it.each([
     '{not-json',
     JSON.stringify({ version: 99, spots: {} }),

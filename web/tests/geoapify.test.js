@@ -70,4 +70,20 @@ describe('Geoapify place provider', () => {
     await expect(searchGeoapifyPlaces('Edam', { apiKey: 'test-key', fetchImpl }))
       .rejects.toThrow('Location search is temporarily unavailable')
   })
+
+  it.each([
+    ['autocomplete', (options) => searchGeoapifyPlaces('Edam', options)],
+    ['reverse lookup', (options) => reverseGeoapifyLocation({ latitude: 52.51, longitude: 5.05 }, options)],
+  ])('bounds a stalled %s request', async (_label, call) => {
+    vi.useFakeTimers()
+    const fetchImpl = vi.fn((_url, { signal }) => new Promise((_resolve, reject) => {
+      signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')))
+    }))
+    const pending = call({ apiKey: 'test-key', fetchImpl, timeoutMs: 25 })
+    const result = expect(pending).rejects.toThrow('Location search is temporarily unavailable')
+    await vi.advanceTimersByTimeAsync(25)
+    await result
+    expect(vi.getTimerCount()).toBe(0)
+    vi.useRealTimers()
+  })
 })

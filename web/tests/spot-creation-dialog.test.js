@@ -238,4 +238,109 @@ describe('Spot creation dialog', () => {
     expect(wrapper.emitted('confirm')).toBeUndefined()
     wrapper.unmount()
   })
+
+  it('saves the same pin that was used to determine the timezone', async () => {
+    vi.useFakeTimers()
+    const pendingReverse = deferred()
+    let moveMap
+    const wrapper = mount(SpotCreationDialog, {
+      props: {
+        open: true,
+        initialQuery: 'Edam',
+        apiKey: 'test-key',
+        searchPlaces: vi.fn().mockResolvedValue([edam]),
+        reverseLocation: vi.fn().mockReturnValue(pendingReverse.promise),
+        createMap: vi.fn(async (_element, options) => {
+          moveMap = options.onCenterChange
+          return { destroy: vi.fn() }
+        }),
+      },
+      attachTo: document.body,
+    })
+    await vi.advanceTimersByTimeAsync(300)
+    const input = document.body.querySelector('input[role="combobox"]')
+    input.dispatchEvent(new FocusEvent('focus', { bubbles: true }))
+    await wrapper.vm.$nextTick()
+    const option = [...document.body.querySelectorAll('[role="option"]')]
+      .find((candidate) => candidate.textContent.includes('Edam'))
+    option.click()
+    await flushPromises()
+    const confirm = [...document.body.querySelectorAll('button')]
+      .find((button) => button.textContent.includes('Add spot'))
+    confirm.click()
+    await wrapper.vm.$nextTick()
+    moveMap({ latitude: 53, longitude: 6 })
+    pendingReverse.resolve({ timezone: 'Europe/Amsterdam' })
+    await flushPromises()
+
+    expect(wrapper.emitted('confirm')?.at(-1)?.[0]).toMatchObject({
+      latitude: 52.5126,
+      longitude: 5.0486,
+      timezone: 'Europe/Amsterdam',
+    })
+    wrapper.unmount()
+  })
+
+  it('keeps confirmation disabled when the positioning map fails', async () => {
+    vi.useFakeTimers()
+    const wrapper = mount(SpotCreationDialog, {
+      props: {
+        open: true,
+        initialQuery: 'Edam',
+        apiKey: 'test-key',
+        searchPlaces: vi.fn().mockResolvedValue([edam]),
+        createMap: vi.fn().mockRejectedValue(new Error('The map could not be loaded.')),
+      },
+      attachTo: document.body,
+    })
+    await vi.advanceTimersByTimeAsync(300)
+    const input = document.body.querySelector('input[role="combobox"]')
+    input.dispatchEvent(new FocusEvent('focus', { bubbles: true }))
+    await wrapper.vm.$nextTick()
+    const option = [...document.body.querySelectorAll('[role="option"]')]
+      .find((candidate) => candidate.textContent.includes('Edam'))
+    option.click()
+    await flushPromises()
+
+    const confirm = [...document.body.querySelectorAll('button')]
+      .find((button) => button.textContent.includes('Add spot'))
+    expect(confirm.disabled).toBe(true)
+    expect(document.body.querySelector('[role="alert"]')?.textContent).toContain('map could not be loaded')
+    wrapper.unmount()
+  })
+
+  it('stays open and announces when personal spot storage fails', async () => {
+    vi.useFakeTimers()
+    const saveSpot = vi.fn().mockResolvedValue(null)
+    const wrapper = mount(SpotCreationDialog, {
+      props: {
+        open: true,
+        initialQuery: 'Edam',
+        apiKey: 'test-key',
+        searchPlaces: vi.fn().mockResolvedValue([edam]),
+        reverseLocation: vi.fn().mockResolvedValue({ timezone: 'Europe/Amsterdam' }),
+        createMap: vi.fn().mockResolvedValue({ destroy: vi.fn() }),
+        saveSpot,
+      },
+      attachTo: document.body,
+    })
+    await vi.advanceTimersByTimeAsync(300)
+    const input = document.body.querySelector('input[role="combobox"]')
+    input.dispatchEvent(new FocusEvent('focus', { bubbles: true }))
+    await wrapper.vm.$nextTick()
+    const option = [...document.body.querySelectorAll('[role="option"]')]
+      .find((candidate) => candidate.textContent.includes('Edam'))
+    option.click()
+    await flushPromises()
+    const confirm = [...document.body.querySelectorAll('button')]
+      .find((button) => button.textContent.includes('Add spot'))
+    confirm.click()
+    await flushPromises()
+
+    expect(saveSpot).toHaveBeenCalledOnce()
+    expect(wrapper.emitted('update:open')).toBeUndefined()
+    expect(document.body.querySelector('[role="alert"]')?.textContent)
+      .toContain('could not be saved in this browser')
+    wrapper.unmount()
+  })
 })

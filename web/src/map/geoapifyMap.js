@@ -3,6 +3,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 export async function createGeoapifyMap(container, {
   apiKey,
   center,
+  signal,
   onCenterChange = () => {},
 }) {
   if (!container) throw new Error('The map container is unavailable.')
@@ -21,7 +22,30 @@ export async function createGeoapifyMap(container, {
     onCenterChange({ latitude: value.lat, longitude: value.lng })
   }
   map.on('moveend', reportCenter)
-  map.once('load', () => map.resize())
+  await new Promise((resolve, reject) => {
+    const cleanup = () => {
+      map.off('load', loaded)
+      map.off('error', failed)
+      signal?.removeEventListener('abort', aborted)
+    }
+    const loaded = () => {
+      cleanup()
+      map.resize()
+      resolve()
+    }
+    const fail = (error) => {
+      cleanup()
+      map.off('moveend', reportCenter)
+      map.remove()
+      reject(error)
+    }
+    const failed = () => fail(new Error('The map could not be loaded.'))
+    const aborted = () => fail(new DOMException('Aborted', 'AbortError'))
+    map.once('load', loaded)
+    map.once('error', failed)
+    if (signal?.aborted) aborted()
+    else signal?.addEventListener('abort', aborted, { once: true })
+  })
   return {
     destroy() {
       map.off('moveend', reportCenter)

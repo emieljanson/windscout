@@ -23,6 +23,7 @@ const props = defineProps({
   searchPlaces: { type: Function, default: searchGeoapifyPlaces },
   reverseLocation: { type: Function, default: reverseGeoapifyLocation },
   createMap: { type: Function, default: createGeoapifyMap },
+  saveSpot: { type: Function, default: null },
 })
 
 const emit = defineEmits(['update:open', 'confirm'])
@@ -35,10 +36,12 @@ const errorMessage = ref('')
 const mapContainer = ref(null)
 const searchCombobox = ref(null)
 const center = ref(null)
+const mapReady = ref(false)
 let debounceTimer
 let searchController
 let mapController
 let mapGeneration = 0
+let mapCreationController
 let reverseController
 
 function language() {
@@ -55,6 +58,9 @@ function clearSearch() {
 
 function destroyMap() {
   mapGeneration += 1
+  mapReady.value = false
+  mapCreationController?.abort()
+  mapCreationController = undefined
   mapController?.destroy()
   mapController = undefined
 }
@@ -114,6 +120,7 @@ function scheduleSearch(query) {
 
 async function choosePlace(place) {
   if (!place) return
+  clearReverse()
   selectedPlace.value = place
   searchTerm.value = place.name
   center.value = { latitude: place.latitude, longitude: place.longitude }
@@ -122,10 +129,13 @@ async function choosePlace(place) {
   await nextTick()
   destroyMap()
   const generation = mapGeneration
+  const creationController = new AbortController()
+  mapCreationController = creationController
   try {
     const controller = await props.createMap(mapContainer.value, {
       apiKey: props.apiKey,
       center: center.value,
+      signal: creationController.signal,
       onCenterChange: (nextCenter) => {
         if (generation === mapGeneration && selectedPlace.value?.id === place.id) {
           center.value = nextCenter
@@ -136,36 +146,46 @@ async function choosePlace(place) {
       controller.destroy()
       return
     }
+    if (mapCreationController === creationController) mapCreationController = undefined
     mapController = controller
+    mapReady.value = true
   } catch (error) {
-    if (props.open && generation === mapGeneration && selectedPlace.value?.id === place.id) {
+    if (mapCreationController === creationController) mapCreationController = undefined
+    if (error?.name !== 'AbortError' && props.open && generation === mapGeneration &&
+        selectedPlace.value?.id === place.id) {
       errorMessage.value = error?.message || 'The map could not be loaded.'
     }
   }
 }
 
 async function confirmSpot() {
-  if (!selectedPlace.value || !center.value || saving.value) return
+  if (!selectedPlace.value || !center.value || !mapReady.value || saving.value) return
   saving.value = true
   errorMessage.value = ''
   const controller = new AbortController()
   reverseController = controller
+  const confirmedPlace = selectedPlace.value
+  const confirmedCenter = { ...center.value }
   try {
-    const finalLocation = await props.reverseLocation(center.value, {
+    const finalLocation = await props.reverseLocation(confirmedCenter, {
       apiKey: props.apiKey,
       language: language(),
       signal: controller.signal,
     })
     if (reverseController !== controller || !props.open) return
-    const timezone = finalLocation?.timezone || selectedPlace.value.timezone
+    const timezone = finalLocation?.timezone
     if (!timezone) throw new Error('We could not determine the timezone for this pin.')
-    emit('confirm', {
-      name: selectedPlace.value.name,
-      latitude: center.value.latitude,
-      longitude: center.value.longitude,
+    const input = {
+      name: confirmedPlace.name,
+      latitude: confirmedCenter.latitude,
+      longitude: confirmedCenter.longitude,
       timezone,
-      providerRef: `geoapify:${selectedPlace.value.id}`,
-    })
+      providerRef: `geoapify:${confirmedPlace.id}`,
+    }
+    if (props.saveSpot && !await props.saveSpot(input)) {
+      throw new Error('This spot could not be saved in this browser.')
+    }
+    emit('confirm', input)
     emit('update:open', false)
   } catch (error) {
     if (reverseController === controller && error?.name !== 'AbortError') {
@@ -200,6 +220,7 @@ watch(searchTerm, (query) => {
   if (!props.open) return
   if (selectedPlace.value && query === selectedPlace.value.name) return
   if (selectedPlace.value) {
+    clearReverse()
     selectedPlace.value = null
     center.value = null
     destroyMap()
@@ -271,7 +292,7 @@ onBeforeUnmount(reset)
             v-if="selectedPlace"
             class="spot-dialog__confirm"
             type="button"
-            :disabled="saving || !center"
+            :disabled="saving || !mapReady"
             @click="confirmSpot"
           >
             {{ saving ? 'Adding…' : 'Add spot' }}

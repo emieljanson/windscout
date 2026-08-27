@@ -108,7 +108,7 @@ describe('WindScout settings panel', () => {
     const dialog = wrapper.findComponent(SpotCreationDialog)
     expect(dialog.props('open')).toBe(true)
     expect(dialog.props('initialQuery')).toBe('Edam harbour')
-    dialog.vm.$emit('confirm', personalSpot)
+    await dialog.props('saveSpot')(personalSpot)
     await nextTick()
 
     expect(addPersonalSpot).toHaveBeenCalledWith(personalSpot)

@@ -1,4 +1,5 @@
 import { RENDERER_TEXT_CAPACITIES, textFitsRenderer } from '../renderer/contract'
+import { validTimezone } from '../timezone'
 import { FORECAST_MODELS, getForecastModel } from './models'
 
 const REQUIRED_HOURS = Object.freeze([8, 11, 14, 17, 20])
@@ -233,7 +234,7 @@ export function isNormalizedForecast(value) {
   const model = getForecastModel(value?.modelId)
   if (!value || value.schemaVersion !== 2 || typeof value.spotId !== 'string' || !value.spotId ||
       typeof value.spotName !== 'string' || !value.spotName || typeof value.coordinates !== 'string' ||
-      value.timezone !== 'Europe/Amsterdam' || value.provider !== 'OPEN-METEO' ||
+      !validTimezone(value.timezone) || value.provider !== 'OPEN-METEO' ||
       !model || value.model !== model.screenLabel ||
       typeof value.updatedTime !== 'string' ||
       !Number.isFinite(value.retrievedAt) || value.retrievedAt <= 0 ||
