@@ -44,6 +44,23 @@ describe('Geoapify place provider', () => {
     expect(url.searchParams.get('lang')).toBe('en')
   })
 
+  it('keeps only the highest-ranked result when locations render identically', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(response([
+      {
+        place_id: 'castricum-city', name: 'Castricum', city: 'Castricum',
+        state: 'North Holland', country: 'Netherlands', lat: 52.5497, lon: 4.6696,
+      },
+      {
+        place_id: 'castricum-admin', address_line1: 'Castricum', city: 'Castricum',
+        state: 'North Holland', country: 'Netherlands', lat: 52.55, lon: 4.67,
+      },
+    ]))
+
+    const results = await searchGeoapifyPlaces('Castricum', { apiKey: 'test-key', fetchImpl })
+    expect(results).toHaveLength(1)
+    expect(results[0].id).toBe('castricum-city')
+  })
+
   it('does not search until a meaningful query and key are present', async () => {
     const fetchImpl = vi.fn()
     await expect(searchGeoapifyPlaces('e', { apiKey: 'test-key', fetchImpl })).resolves.toEqual([])

@@ -92,7 +92,8 @@
   background: #e9ecea;
   box-shadow: inset 0 0 0 1px rgba(21, 24, 23, 0.06);
 }
-.spot-dialog__map { position: absolute; inset: 0; }
+.spot-dialog__map,
+.spot-dialog__map.maplibregl-map { position: absolute; inset: 0; }
 .spot-dialog__pin {
   position: absolute;
   z-index: 2;

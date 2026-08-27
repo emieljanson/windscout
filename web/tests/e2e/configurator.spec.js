@@ -275,6 +275,13 @@ test('creates and remembers a personal spot only after the explicit map flow', a
   await expect(dialog.getByText('Move the map until the pin is on your spot by the water.')).toBeVisible()
   await expect(dialog.locator('.spot-dialog__pin')).toBeVisible()
   await expect(dialog.locator('.maplibregl-canvas')).toBeVisible()
+  const mapLayout = await dialog.locator('.spot-dialog__map').evaluate((element) => ({
+    height: element.getBoundingClientRect().height,
+    parentHeight: element.parentElement.getBoundingClientRect().height,
+    position: getComputedStyle(element).position,
+  }))
+  expect(mapLayout.position).toBe('absolute')
+  expect(mapLayout.height).toBe(mapLayout.parentHeight)
   await dialog.getByRole('button', { name: 'Add spot' }).click()
 
   await expect(dialog).toHaveCount(0)

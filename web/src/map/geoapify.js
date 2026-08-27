@@ -37,6 +37,16 @@ function normalizeResult(result) {
   }
 }
 
+function uniqueVisibleResults(results) {
+  const seen = new Set()
+  return results.filter((result) => {
+    const key = `${result.name}\n${result.description}`.toLocaleLowerCase()
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
 async function request(url, { fetchImpl, signal, timeoutMs }) {
   const controller = new AbortController()
   let timedOut = false
@@ -84,7 +94,7 @@ export async function searchGeoapifyPlaces(query, {
   const payload = await request(`${GEOAPIFY_AUTOCOMPLETE_ENDPOINT}?${parameters}`, {
     fetchImpl, signal, timeoutMs,
   })
-  return (payload.results ?? []).map(normalizeResult).filter(Boolean)
+  return uniqueVisibleResults((payload.results ?? []).map(normalizeResult).filter(Boolean))
 }
 
 export async function reverseGeoapifyLocation({ latitude, longitude }, {
