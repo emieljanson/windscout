@@ -165,7 +165,6 @@ test('selects a catalog spot by keyboard and rejects an uncommitted draft', asyn
   await page.keyboard.type('bro')
   await expect(page.getByRole('option', { name: 'Brouwersdam' })).toBeVisible()
   await expect(page.getByRole('option', { name: 'Edam' })).toHaveCount(0)
-  await page.keyboard.press('ArrowDown')
   await page.keyboard.press('Enter')
   await expect(spot).toHaveValue('Brouwersdam')
   await expect(spot).toBeFocused()
@@ -243,7 +242,6 @@ test('switches the live preview to another supported spot without a page reload'
   await spot.focus()
   await page.keyboard.press(process.platform === 'darwin' ? 'Meta+A' : 'Control+A')
   await page.keyboard.type('eda')
-  await page.keyboard.press('ArrowDown')
   await page.keyboard.press('Enter')
 
   await expect(forecastStatus(page)).toContainText('Live Best Match forecast for Edam', { timeout: 15_000 })
@@ -264,7 +262,7 @@ test('creates and remembers a personal spot only after the explicit map flow', a
   await spot.fill('Hindeloopen')
   await expect(page.getByRole('option', { name: 'Add “Hindeloopen” as a spot' })).toBeVisible()
   expect(autocompleteRequests).toHaveLength(0)
-  await page.getByRole('option', { name: 'Add “Hindeloopen” as a spot' }).click()
+  await spot.press('Enter')
 
   const dialog = page.getByRole('dialog', { name: 'Add a spot' })
   await expect(dialog).toBeVisible()
