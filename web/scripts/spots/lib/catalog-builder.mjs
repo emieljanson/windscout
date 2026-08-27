@@ -33,6 +33,8 @@ function runtimeSpot({ id, name, latitude, longitude, timezone }) {
 }
 
 export function buildRuntimeCatalog({ existing, candidates, validationResults, decisions }) {
+  const existingSpots = existing.map(runtimeSpot)
+  const existingNames = new Set(existingSpots.map((spot) => spot.name.toLocaleLowerCase('en')))
   const resultsById = new Map(validationResults.map((result) => [result.candidateId, result]))
   const decisionsById = new Map(decisions.map((decision) => [decision.candidateId, decision]))
   const generated = []
@@ -62,8 +64,10 @@ export function buildRuntimeCatalog({ existing, candidates, validationResults, d
     }))
   }
   const catalog = [
-    ...existing.map(runtimeSpot),
-    ...generated.sort((left, right) => left.name.localeCompare(right.name) || left.id.localeCompare(right.id)),
+    ...existingSpots,
+    ...generated
+      .filter((spot) => !existingNames.has(spot.name.toLocaleLowerCase('en')))
+      .sort((left, right) => left.name.localeCompare(right.name) || left.id.localeCompare(right.id)),
   ]
   const ids = new Set()
   for (const spot of catalog) {
@@ -72,4 +76,3 @@ export function buildRuntimeCatalog({ existing, candidates, validationResults, d
   }
   return catalog
 }
-

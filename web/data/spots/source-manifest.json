@@ -21,11 +21,21 @@
       "input": "sources/varun-8f304b9-minimal.json",
       "upstream": "https://github.com/pwittchen/varun.surf",
       "snapshot": "8f304b9a15f633d4cde1f5e1489a9675b25d0d1d",
-      "releaseEligible": false,
+      "releaseEligible": true,
+      "validation": {
+        "mode": "trusted-location",
+        "timezone": "geoapify-reverse"
+      },
       "rights": {
-        "license": "unconfirmed-for-embedded-location-dataset",
-        "redistribution": false,
-        "attribution": "Varun source repository; some records cite third-party spot databases"
+        "license": "Direct permission for Windscout",
+        "redistribution": true,
+        "attribution": "Varun spot dataset",
+        "permission": {
+          "recorded": "2026-08-27",
+          "grantedBy": "Varun maintainer",
+          "scope": "Use and publish spot names and coordinates in Windscout",
+          "evidence": "Permission relayed directly to the Windscout project owner"
+        }
       }
     }
   ]

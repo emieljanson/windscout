@@ -11,7 +11,7 @@
       "candidates": 782,
       "exclusions": 0,
       "failures": 0,
-      "releaseEligible": false
+      "releaseEligible": true
     }
   },
   "candidates": [
@@ -17503,7 +17503,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.google.com/maps?q=51.350422,3.731831",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17519,7 +17519,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.google.com/maps?q=50.7097,18.1261",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17535,7 +17535,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.google.com/maps?q=51.337162,3.839594",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17551,7 +17551,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.google.com/maps?q=51.592909,3.731378",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17567,7 +17567,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.google.com/maps?q=52.524357,5.424342",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17583,7 +17583,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.google.com/maps?q=53.459965,5.741499",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17599,7 +17599,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.google.com/maps?q=52.093886073505,4.2496079841309",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17615,7 +17615,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.google.com/maps?q=52.565662,5.033157",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17631,7 +17631,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.google.com/maps?q=54.304122,19.473924",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17647,7 +17647,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.google.com/maps?q=52.329876,5.113459",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17663,7 +17663,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.google.com/maps?q=51.394135,3.896531",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17679,7 +17679,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.google.com/maps?q=52.843899,5.692941",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17695,7 +17695,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/10",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17711,7 +17711,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/100",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17727,7 +17727,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1001673",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17743,7 +17743,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1004616",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17759,7 +17759,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/100495",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17775,7 +17775,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1005114",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17791,7 +17791,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1010132",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17807,7 +17807,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1014901",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17823,7 +17823,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1020493",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17839,7 +17839,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/102457",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17855,7 +17855,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1025272",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17871,7 +17871,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1026499",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17887,7 +17887,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1027422",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17903,7 +17903,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1028155",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17919,7 +17919,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/103",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17935,7 +17935,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/103012",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17951,7 +17951,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/10315",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17967,7 +17967,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/104110",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17983,7 +17983,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/104272",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -17999,7 +17999,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/105318",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18015,7 +18015,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1064",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18031,7 +18031,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1068590",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18047,7 +18047,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/107905",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18063,7 +18063,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/108570",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18079,7 +18079,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1099067",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18095,7 +18095,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/109921",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18111,7 +18111,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/11",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18127,7 +18127,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/110",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18143,7 +18143,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1102295",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18159,7 +18159,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1102850",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18175,7 +18175,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/11040",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18191,7 +18191,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1104263",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18207,7 +18207,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1105102",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18223,7 +18223,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1105435",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18239,7 +18239,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1106370",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18255,7 +18255,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1109711",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18271,7 +18271,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1109734",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18287,7 +18287,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1111087",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18303,7 +18303,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1111335",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18319,7 +18319,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1112434",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18335,7 +18335,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1112940",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18351,7 +18351,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1113404",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18367,7 +18367,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/111823",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18383,7 +18383,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/111965",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18399,7 +18399,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1120682",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18415,7 +18415,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1122030",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18431,7 +18431,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/112689",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18447,7 +18447,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/11310",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18463,7 +18463,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1146458",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18479,7 +18479,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1154",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18495,7 +18495,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1154125",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18511,7 +18511,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/115722",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18527,7 +18527,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1158436",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18543,7 +18543,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1158567",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18559,7 +18559,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/116055",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18575,7 +18575,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1166539",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18591,7 +18591,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1166923",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18607,7 +18607,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1168929",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18623,7 +18623,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1171842",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18639,7 +18639,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/117205",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18655,7 +18655,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1172733",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18671,7 +18671,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1173196",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18687,7 +18687,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/117567",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18703,7 +18703,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1176430",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18719,7 +18719,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1181324",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18735,7 +18735,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1182348",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18751,7 +18751,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1183598",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18767,7 +18767,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1187042",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18783,7 +18783,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1189718",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18799,7 +18799,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/11912",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18815,7 +18815,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1195432",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18831,7 +18831,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/12",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18847,7 +18847,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/120",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18863,7 +18863,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1220688",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18879,7 +18879,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/122082",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18895,7 +18895,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1224973",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18911,7 +18911,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/122532",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18927,7 +18927,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1229341",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18943,7 +18943,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1232528",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18959,7 +18959,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1235773",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18975,7 +18975,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1238677",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -18991,7 +18991,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1248370",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19007,7 +19007,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1250511",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19023,7 +19023,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1277230",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19039,7 +19039,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/128220",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19055,7 +19055,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1282218",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19071,7 +19071,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1285167",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19087,7 +19087,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1286020",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19103,7 +19103,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1293603",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19119,7 +19119,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1293712",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19135,7 +19135,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1295354",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19151,7 +19151,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1296468",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19167,7 +19167,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1302784",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19183,7 +19183,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/130442",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19199,7 +19199,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1305898",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19215,7 +19215,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1306004",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19231,7 +19231,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1314050",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19247,7 +19247,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/131780",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19263,7 +19263,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1328983",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19279,7 +19279,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1334371",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19295,7 +19295,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/133508",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19311,7 +19311,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/13380",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19327,7 +19327,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/134061",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19343,7 +19343,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1340901",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19359,7 +19359,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1341028",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19375,7 +19375,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1343207",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19391,7 +19391,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/134412",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19407,7 +19407,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1348843",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19423,7 +19423,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/135862",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19439,7 +19439,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/136946",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19455,7 +19455,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/137343",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19471,7 +19471,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/139135",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19487,7 +19487,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/14",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19503,7 +19503,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/140444",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19519,7 +19519,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/140583",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19535,7 +19535,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/14473",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19551,7 +19551,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/144893",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19567,7 +19567,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/146949",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19583,7 +19583,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/147",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19599,7 +19599,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/147611",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19615,7 +19615,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1522",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19631,7 +19631,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1524",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19647,7 +19647,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1528",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19663,7 +19663,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/153754",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19679,7 +19679,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/154052",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19695,7 +19695,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/155188",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19711,7 +19711,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1584",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19727,7 +19727,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1593",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19743,7 +19743,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/159431",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19759,7 +19759,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/162",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19775,7 +19775,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/163",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19791,7 +19791,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/163221",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19807,7 +19807,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/164414",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19823,7 +19823,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/164501",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19839,7 +19839,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/16535",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19855,7 +19855,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1687",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19871,7 +19871,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/17",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19887,7 +19887,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/171338",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19903,7 +19903,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/172422",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19919,7 +19919,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/172696",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19935,7 +19935,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/174312",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19951,7 +19951,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/177",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19967,7 +19967,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/177663",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19983,7 +19983,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/17922",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -19999,7 +19999,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/179845",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20015,7 +20015,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/18",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20031,7 +20031,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/180126",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20047,7 +20047,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/180141",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20063,7 +20063,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1825",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20079,7 +20079,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/184",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20095,7 +20095,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/185",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20111,7 +20111,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/186",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20127,7 +20127,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/186293",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20143,7 +20143,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/187",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20159,7 +20159,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/188",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20175,7 +20175,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/188486",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20191,7 +20191,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/18879",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20207,7 +20207,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/190",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20223,7 +20223,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/1907",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20239,7 +20239,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/19081",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20255,7 +20255,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/191352",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20271,7 +20271,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/192",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20287,7 +20287,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/192576",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20303,7 +20303,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/19269",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20319,7 +20319,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/19320",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20335,7 +20335,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/193597",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20351,7 +20351,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/194",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20367,7 +20367,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/19439",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20383,7 +20383,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/196766",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20399,7 +20399,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/201",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20415,7 +20415,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/205103",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20431,7 +20431,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/206",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20447,7 +20447,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/20614",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20463,7 +20463,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/206831",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20479,7 +20479,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/206854",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20495,7 +20495,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/206855",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20511,7 +20511,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/206863",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20527,7 +20527,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/206872",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20543,7 +20543,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/206922",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20559,7 +20559,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/206959",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20575,7 +20575,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/207008",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20591,7 +20591,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/207146",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20607,7 +20607,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/208",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20623,7 +20623,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/208177",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20639,7 +20639,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/208245",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20655,7 +20655,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/208280",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20671,7 +20671,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/208504",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20687,7 +20687,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/208850",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20703,7 +20703,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/209143",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20719,7 +20719,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/209220",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20735,7 +20735,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/209223",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20751,7 +20751,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/209280",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20767,7 +20767,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/21",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20783,7 +20783,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/210595",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20799,7 +20799,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/212896",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20815,7 +20815,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/216",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20831,7 +20831,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/21691",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20847,7 +20847,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/2171",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20863,7 +20863,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/217357",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20879,7 +20879,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/218",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20895,7 +20895,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/219",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20911,7 +20911,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/22",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20927,7 +20927,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/22206",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20943,7 +20943,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/224126",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20959,7 +20959,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/226204",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20975,7 +20975,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/229046",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -20991,7 +20991,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/230400",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21007,7 +21007,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/2307",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21023,7 +21023,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/233",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21039,7 +21039,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/23383",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21055,7 +21055,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/234",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21071,7 +21071,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/2346",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21087,7 +21087,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/235167",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21103,7 +21103,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/237",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21119,7 +21119,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/238749",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21135,7 +21135,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/24118",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21151,7 +21151,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/24391",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21167,7 +21167,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/245922",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21183,7 +21183,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/245946",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21199,7 +21199,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/248781",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21215,7 +21215,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/250015",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21231,7 +21231,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/250626",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21247,7 +21247,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/253",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21263,7 +21263,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/254",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21279,7 +21279,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/255",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21295,7 +21295,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/25651",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21311,7 +21311,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/258",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21327,7 +21327,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/258166",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21343,7 +21343,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/26",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21359,7 +21359,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/260",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21375,7 +21375,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/261912",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21391,7 +21391,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/262593",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21407,7 +21407,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/262596",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21423,7 +21423,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/263680",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21439,7 +21439,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/269911",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21455,7 +21455,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/274295",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21471,7 +21471,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/275794",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21487,7 +21487,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/275801",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21503,7 +21503,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/277",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21519,7 +21519,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/279",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21535,7 +21535,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/280",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21551,7 +21551,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/28077",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21567,7 +21567,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/280809",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21583,7 +21583,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/28765",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21599,7 +21599,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/29081",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21615,7 +21615,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/29289",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21631,7 +21631,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/29558",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21647,7 +21647,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/296",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21663,7 +21663,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/29744",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21679,7 +21679,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/29853",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21695,7 +21695,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/299765",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21711,7 +21711,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/3",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21727,7 +21727,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/30007",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21743,7 +21743,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/304",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21759,7 +21759,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/306",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21775,7 +21775,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/307",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21791,7 +21791,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/30864",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21807,7 +21807,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/30866",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21823,7 +21823,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/309952",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21839,7 +21839,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/311",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21855,7 +21855,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/3159",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21871,7 +21871,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/316",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21887,7 +21887,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/316429",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21903,7 +21903,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/317",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21919,7 +21919,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/31891",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21935,7 +21935,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/321198",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21951,7 +21951,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/32161",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21967,7 +21967,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/32462",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21983,7 +21983,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/32473",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -21999,7 +21999,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/33",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22015,7 +22015,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/331569",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22031,7 +22031,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/331724",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22047,7 +22047,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/334",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22063,7 +22063,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/33420",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22079,7 +22079,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/33623",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22095,7 +22095,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/337",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22111,7 +22111,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/3436",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22127,7 +22127,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/346",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22143,7 +22143,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/347",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22159,7 +22159,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/350",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22175,7 +22175,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/35051",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22191,7 +22191,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/3508",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22207,7 +22207,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/354",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22223,7 +22223,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/355",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22239,7 +22239,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/35611",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22255,7 +22255,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/35990",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22271,7 +22271,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/3602",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22287,7 +22287,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/36075",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22303,7 +22303,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/362",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22319,7 +22319,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/3635",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22335,7 +22335,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/3636",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22351,7 +22351,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/3642",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22367,7 +22367,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/3644",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22383,7 +22383,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/366069",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22399,7 +22399,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/37042",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22415,7 +22415,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/372312",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22431,7 +22431,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/376115",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22447,7 +22447,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/37709",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22463,7 +22463,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/379403",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22479,7 +22479,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/38193",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22495,7 +22495,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/38196",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22511,7 +22511,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/382699",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22527,7 +22527,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/384961",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22543,7 +22543,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/386993",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22559,7 +22559,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/388368",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22575,7 +22575,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/39151",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22591,7 +22591,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/39502",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22607,7 +22607,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/39595",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22623,7 +22623,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/398038",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22639,7 +22639,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/39961",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22655,7 +22655,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/39964",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22671,7 +22671,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/4",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22687,7 +22687,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/402228",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22703,7 +22703,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/41201",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22719,7 +22719,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/413",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22735,7 +22735,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/4160",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22751,7 +22751,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/4161",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22767,7 +22767,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/4162",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22783,7 +22783,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/4165",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22799,7 +22799,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/4168",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22815,7 +22815,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/4169",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22831,7 +22831,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/417",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22847,7 +22847,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/42527",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22863,7 +22863,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/42547",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22879,7 +22879,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/4262",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22895,7 +22895,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/428886",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22911,7 +22911,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/429085",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22927,7 +22927,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/436366",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22943,7 +22943,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/436446",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22959,7 +22959,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/437308",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22975,7 +22975,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/442099",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -22991,7 +22991,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/442797",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23007,7 +23007,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/444404",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23023,7 +23023,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/44708",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23039,7 +23039,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/451415",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23055,7 +23055,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/456404",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23071,7 +23071,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/46940",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23087,7 +23087,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/46944",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23103,7 +23103,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47791",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23119,7 +23119,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47798",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23135,7 +23135,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47799",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23151,7 +23151,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47805",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23167,7 +23167,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47808",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23183,7 +23183,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47828",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23199,7 +23199,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47833",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23215,7 +23215,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47837",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23231,7 +23231,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47840",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23247,7 +23247,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47842",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23263,7 +23263,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47847",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23279,7 +23279,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47852",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23295,7 +23295,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47855",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23311,7 +23311,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47857",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23327,7 +23327,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47864",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23343,7 +23343,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47866",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23359,7 +23359,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47877",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23375,7 +23375,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47889",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23391,7 +23391,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47912",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23407,7 +23407,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47913",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23423,7 +23423,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47927",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23439,7 +23439,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47932",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23455,7 +23455,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47941",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23471,7 +23471,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47945",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23487,7 +23487,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47950",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23503,7 +23503,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47951",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23519,7 +23519,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47956",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23535,7 +23535,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47960",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23551,7 +23551,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47962",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23567,7 +23567,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47964",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23583,7 +23583,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47978",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23599,7 +23599,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47981",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23615,7 +23615,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47988",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23631,7 +23631,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/47990",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23647,7 +23647,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/480026",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23663,7 +23663,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48009",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23679,7 +23679,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48012",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23695,7 +23695,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48014",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23711,7 +23711,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48019",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23727,7 +23727,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48024",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23743,7 +23743,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48025",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23759,7 +23759,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48026",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23775,7 +23775,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48027",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23791,7 +23791,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48028",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23807,7 +23807,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48029",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23823,7 +23823,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48030",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23839,7 +23839,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48035",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23855,7 +23855,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48036",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23871,7 +23871,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48037",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23887,7 +23887,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48040",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23903,7 +23903,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48042",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23919,7 +23919,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48045",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23935,7 +23935,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48061",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23951,7 +23951,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48067",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23967,7 +23967,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48074",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23983,7 +23983,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48080",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -23999,7 +23999,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48083",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24015,7 +24015,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48085",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24031,7 +24031,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48086",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24047,7 +24047,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48088",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24063,7 +24063,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48091",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24079,7 +24079,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48094",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24095,7 +24095,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48095",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24111,7 +24111,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48096",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24127,7 +24127,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48097",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24143,7 +24143,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48102",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24159,7 +24159,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48112",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24175,7 +24175,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48113",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24191,7 +24191,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48116",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24207,7 +24207,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48120",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24223,7 +24223,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48121",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24239,7 +24239,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48124",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24255,7 +24255,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48125",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24271,7 +24271,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48132",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24287,7 +24287,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48133",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24303,7 +24303,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48134",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24319,7 +24319,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48136",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24335,7 +24335,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48138",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24351,7 +24351,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48139",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24367,7 +24367,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48149",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24383,7 +24383,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48153",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24399,7 +24399,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48162",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24415,7 +24415,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48164",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24431,7 +24431,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48165",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24447,7 +24447,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48166",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24463,7 +24463,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48169",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24479,7 +24479,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48170",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24495,7 +24495,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48174",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24511,7 +24511,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48188",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24527,7 +24527,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48189",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24543,7 +24543,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48201",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24559,7 +24559,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48220",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24575,7 +24575,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48225",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24591,7 +24591,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48230",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24607,7 +24607,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48231",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24623,7 +24623,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48236",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24639,7 +24639,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48237",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24655,7 +24655,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48243",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24671,7 +24671,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48247",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24687,7 +24687,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48249",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24703,7 +24703,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48253",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24719,7 +24719,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48261",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24735,7 +24735,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48262",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24751,7 +24751,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48265",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24767,7 +24767,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48267",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24783,7 +24783,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48268",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24799,7 +24799,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48270",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24815,7 +24815,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48272",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24831,7 +24831,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48274",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24847,7 +24847,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48276",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24863,7 +24863,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48289",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24879,7 +24879,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48290",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24895,7 +24895,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48291",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24911,7 +24911,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48292",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24927,7 +24927,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48294",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24943,7 +24943,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48296",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24959,7 +24959,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48299",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24975,7 +24975,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48303",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -24991,7 +24991,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48305",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25007,7 +25007,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48306",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25023,7 +25023,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48307",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25039,7 +25039,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48309",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25055,7 +25055,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48311",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25071,7 +25071,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48313",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25087,7 +25087,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48321",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25103,7 +25103,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48323",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25119,7 +25119,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48324",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25135,7 +25135,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48326",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25151,7 +25151,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48327",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25167,7 +25167,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48328",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25183,7 +25183,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48350",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25199,7 +25199,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48359",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25215,7 +25215,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48361",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25231,7 +25231,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48401",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25247,7 +25247,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48456",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25263,7 +25263,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48471",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25279,7 +25279,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48503",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25295,7 +25295,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48514",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25311,7 +25311,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48530",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25327,7 +25327,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48535",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25343,7 +25343,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48552",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25359,7 +25359,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48559",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25375,7 +25375,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/485656",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25391,7 +25391,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/4857",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25407,7 +25407,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48576",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25423,7 +25423,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48579",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25439,7 +25439,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48586",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25455,7 +25455,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48593",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25471,7 +25471,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48599",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25487,7 +25487,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48604",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25503,7 +25503,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48605",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25519,7 +25519,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48606",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25535,7 +25535,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48608",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25551,7 +25551,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/4861",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25567,7 +25567,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48648",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25583,7 +25583,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/4867",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25599,7 +25599,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48694",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25615,7 +25615,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48717",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25631,7 +25631,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48721",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25647,7 +25647,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48738",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25663,7 +25663,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/4874",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25679,7 +25679,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48745",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25695,7 +25695,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48748",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25711,7 +25711,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48752",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25727,7 +25727,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48753",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25743,7 +25743,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48759",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25759,7 +25759,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48769",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25775,7 +25775,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48775",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25791,7 +25791,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48776",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25807,7 +25807,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48777",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25823,7 +25823,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48778",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25839,7 +25839,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48780",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25855,7 +25855,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48784",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25871,7 +25871,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48785",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25887,7 +25887,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48787",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25903,7 +25903,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48795",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25919,7 +25919,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48810",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25935,7 +25935,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48827",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25951,7 +25951,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48839",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25967,7 +25967,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48858",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25983,7 +25983,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48861",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -25999,7 +25999,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48871",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26015,7 +26015,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48901",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26031,7 +26031,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48904",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26047,7 +26047,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48905",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26063,7 +26063,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48915",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26079,7 +26079,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48917",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26095,7 +26095,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48928",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26111,7 +26111,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48944",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26127,7 +26127,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48948",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26143,7 +26143,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48959",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26159,7 +26159,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48966",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26175,7 +26175,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/48968",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26191,7 +26191,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/489912",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26207,7 +26207,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49002",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26223,7 +26223,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49015",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26239,7 +26239,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49029",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26255,7 +26255,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/4903",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26271,7 +26271,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49032",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26287,7 +26287,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/4904",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26303,7 +26303,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49081",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26319,7 +26319,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49086",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26335,7 +26335,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49118",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26351,7 +26351,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49125",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26367,7 +26367,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49147",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26383,7 +26383,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49152",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26399,7 +26399,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49154",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26415,7 +26415,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49162",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26431,7 +26431,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49171",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26447,7 +26447,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49203",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26463,7 +26463,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49209",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26479,7 +26479,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49215",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26495,7 +26495,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49221",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26511,7 +26511,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49229",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26527,7 +26527,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49231",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26543,7 +26543,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49234",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26559,7 +26559,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49238",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26575,7 +26575,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49246",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26591,7 +26591,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49249",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26607,7 +26607,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49251",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26623,7 +26623,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49261",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26639,7 +26639,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49315",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26655,7 +26655,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49321",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26671,7 +26671,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49322",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26687,7 +26687,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49324",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26703,7 +26703,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49328",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26719,7 +26719,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49329",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26735,7 +26735,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49330",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26751,7 +26751,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49334",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26767,7 +26767,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49336",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26783,7 +26783,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49341",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26799,7 +26799,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49345",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26815,7 +26815,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49346",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26831,7 +26831,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49349",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26847,7 +26847,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/49355",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26863,7 +26863,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500615",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26879,7 +26879,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500638",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26895,7 +26895,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500657",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26911,7 +26911,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500674",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26927,7 +26927,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500681",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26943,7 +26943,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500684",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26959,7 +26959,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500685",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26975,7 +26975,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500686",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -26991,7 +26991,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500690",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27007,7 +27007,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500692",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27023,7 +27023,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500697",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27039,7 +27039,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500699",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27055,7 +27055,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500700",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27071,7 +27071,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500702",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27087,7 +27087,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500708",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27103,7 +27103,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500733",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27119,7 +27119,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500757",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27135,7 +27135,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500758",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27151,7 +27151,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500760",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27167,7 +27167,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500761",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27183,7 +27183,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500768",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27199,7 +27199,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500774",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27215,7 +27215,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500779",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27231,7 +27231,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500781",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27247,7 +27247,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500785",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27263,7 +27263,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500795",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27279,7 +27279,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500799",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27295,7 +27295,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500803",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27311,7 +27311,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500806",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27327,7 +27327,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500808",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27343,7 +27343,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500821",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27359,7 +27359,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500825",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27375,7 +27375,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500842",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27391,7 +27391,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500844",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27407,7 +27407,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500846",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27423,7 +27423,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500851",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27439,7 +27439,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500857",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27455,7 +27455,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500859",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27471,7 +27471,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500860",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27487,7 +27487,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500863",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27503,7 +27503,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500864",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27519,7 +27519,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500867",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27535,7 +27535,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500872",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27551,7 +27551,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500875",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27567,7 +27567,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500876",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27583,7 +27583,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500878",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27599,7 +27599,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500879",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27615,7 +27615,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500880",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27631,7 +27631,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/500980",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27647,7 +27647,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/501047",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27663,7 +27663,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/501136",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27679,7 +27679,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/501144",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27695,7 +27695,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/501160",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27711,7 +27711,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/501161",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27727,7 +27727,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/501165",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27743,7 +27743,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/501166",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27759,7 +27759,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/501171",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27775,7 +27775,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/501230",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27791,7 +27791,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/501242",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27807,7 +27807,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/501247",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27823,7 +27823,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/501257",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27839,7 +27839,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/501261",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27855,7 +27855,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/501262",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27871,7 +27871,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/508031",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27887,7 +27887,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/508077",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27903,7 +27903,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/509053",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27919,7 +27919,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/509469",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27935,7 +27935,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/522194",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27951,7 +27951,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/52615",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27967,7 +27967,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/52627",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27983,7 +27983,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/529890",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -27999,7 +27999,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/537164",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28015,7 +28015,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/540832",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28031,7 +28031,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/541946",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28047,7 +28047,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/542133",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28063,7 +28063,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/54233",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28079,7 +28079,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/550295",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28095,7 +28095,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/554608",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28111,7 +28111,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/556726",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28127,7 +28127,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/565984",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28143,7 +28143,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/56846",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28159,7 +28159,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/568677",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28175,7 +28175,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/5691",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28191,7 +28191,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/5693",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28207,7 +28207,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/572",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28223,7 +28223,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/57447",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28239,7 +28239,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/57459",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28255,7 +28255,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/575",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28271,7 +28271,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/579",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28287,7 +28287,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/58335",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28303,7 +28303,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/586",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28319,7 +28319,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/586004",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28335,7 +28335,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/587758",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28351,7 +28351,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/59330",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28367,7 +28367,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/59416",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28383,7 +28383,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/597",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28399,7 +28399,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/60001",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28415,7 +28415,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/61888",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28431,7 +28431,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/62",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28447,7 +28447,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/622274",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28463,7 +28463,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/624315",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28479,7 +28479,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/62514",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28495,7 +28495,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/63301",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28511,7 +28511,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/6359",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28527,7 +28527,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/6456",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28543,7 +28543,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/64972",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28559,7 +28559,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/64975",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28575,7 +28575,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/64979",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28591,7 +28591,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/654721",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28607,7 +28607,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/65606",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28623,7 +28623,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/66047",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28639,7 +28639,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/662947",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28655,7 +28655,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/665105",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28671,7 +28671,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/66601",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28687,7 +28687,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/66632",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28703,7 +28703,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/671289",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28719,7 +28719,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/67484",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28735,7 +28735,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/67661",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28751,7 +28751,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/68399",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28767,7 +28767,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/68535",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28783,7 +28783,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/68544",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28799,7 +28799,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/690093",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28815,7 +28815,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/692681",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28831,7 +28831,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/693430",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28847,7 +28847,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/71",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28863,7 +28863,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/712",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28879,7 +28879,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/713",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28895,7 +28895,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/719383",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28911,7 +28911,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/721",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28927,7 +28927,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/724",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28943,7 +28943,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/725874",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28959,7 +28959,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/726",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28975,7 +28975,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/73506",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -28991,7 +28991,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/743",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29007,7 +29007,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/75856",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29023,7 +29023,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/76",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29039,7 +29039,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/764187",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29055,7 +29055,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/766",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29071,7 +29071,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/770029",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29087,7 +29087,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/776762",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29103,7 +29103,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/781",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29119,7 +29119,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/789863",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29135,7 +29135,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/792017",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29151,7 +29151,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/793138",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29167,7 +29167,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/794424",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29183,7 +29183,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/79814",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29199,7 +29199,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/799776",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29215,7 +29215,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/799881",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29231,7 +29231,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/800860",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29247,7 +29247,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/80500",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29263,7 +29263,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/805332",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29279,7 +29279,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/81215",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29295,7 +29295,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/814462",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29311,7 +29311,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/815387",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29327,7 +29327,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/817974",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29343,7 +29343,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/824",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29359,7 +29359,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/827",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29375,7 +29375,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/839381",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29391,7 +29391,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/85080",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29407,7 +29407,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/85184",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29423,7 +29423,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/859182",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29439,7 +29439,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/860201",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29455,7 +29455,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/865477",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29471,7 +29471,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/872453",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29487,7 +29487,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/879926",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29503,7 +29503,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/88023",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29519,7 +29519,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/881559",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29535,7 +29535,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/896357",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29551,7 +29551,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/897049",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29567,7 +29567,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/900303",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29583,7 +29583,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/905535",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29599,7 +29599,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/91424",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29615,7 +29615,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/919378",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29631,7 +29631,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/924364",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29647,7 +29647,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/92785",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29663,7 +29663,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/932755",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29679,7 +29679,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/933232",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29695,7 +29695,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/93760",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29711,7 +29711,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/9401",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29727,7 +29727,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/947996",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29743,7 +29743,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/949976",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29759,7 +29759,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/95094",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29775,7 +29775,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/953727",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29791,7 +29791,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/96685",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29807,7 +29807,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/97",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29823,7 +29823,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/97082",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29839,7 +29839,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/976270",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29855,7 +29855,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/97766",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29871,7 +29871,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/97909",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29887,7 +29887,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/98366",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29903,7 +29903,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/984134",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29919,7 +29919,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/98880",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29935,7 +29935,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/99",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29951,7 +29951,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/99327",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29967,7 +29967,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/993308",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29983,7 +29983,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/99824",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     },
     {
@@ -29999,7 +29999,7 @@
       ],
       "featureType": "spot-collection",
       "sourceRef": "https://www.windguru.cz/999303",
-      "releaseEligible": false,
+      "releaseEligible": true,
       "flags": []
     }
   ],

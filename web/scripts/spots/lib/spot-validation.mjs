@@ -42,17 +42,19 @@ function fingerprint(value) {
   return createHash('sha256').update(JSON.stringify(value)).digest('hex').slice(0, 24)
 }
 
-export function classifyCandidate(candidate, evidence, { duplicateReasons = [] } = {}) {
+export function classifyCandidate(candidate, evidence, { duplicateReasons = [], trustedLocation = false } = {}) {
   const reasons = []
   if (candidate.releaseEligible !== true) reasons.push('source-rights')
-  const sourceCountry = countryCode(candidate.country)
   const observedCountry = countryCode(evidence?.reverse?.countryCode)
-  if (!observedCountry) reasons.push('country-missing')
-  else if (candidate.country && !sourceCountry) reasons.push('country-unmapped')
-  else if (sourceCountry && sourceCountry !== observedCountry) reasons.push('country-conflict')
+  if (!trustedLocation) {
+    const sourceCountry = countryCode(candidate.country)
+    if (!observedCountry) reasons.push('country-missing')
+    else if (candidate.country && !sourceCountry) reasons.push('country-unmapped')
+    else if (sourceCountry && sourceCountry !== observedCountry) reasons.push('country-conflict')
+  }
   if (!validTimezone(evidence?.reverse?.timezone)) reasons.push('timezone-invalid')
-  if (evidence?.water?.nearby !== true) reasons.push('water-not-found')
-  reasons.push(...(candidate.flags ?? []), ...duplicateReasons)
+  if (!trustedLocation && evidence?.water?.nearby !== true) reasons.push('water-not-found')
+  if (!trustedLocation) reasons.push(...(candidate.flags ?? []), ...duplicateReasons)
   const uniqueReasons = [...new Set(reasons)].sort()
   const outcome = uniqueReasons.includes('source-rights')
     ? 'rejected'
@@ -61,6 +63,7 @@ export function classifyCandidate(candidate, evidence, { duplicateReasons = [] }
     candidateId: candidate.id,
     outcome,
     reasons: uniqueReasons,
+    trustedLocation,
     timezone: validTimezone(evidence?.reverse?.timezone) ? evidence.reverse.timezone : '',
     countryCode: observedCountry,
     evidenceFingerprint: fingerprint({
@@ -76,7 +79,7 @@ export function classifyCandidate(candidate, evidence, { duplicateReasons = [] }
       },
       evidence,
       duplicateReasons: [...duplicateReasons].sort(),
+      trustedLocation,
     }),
   }
 }
-

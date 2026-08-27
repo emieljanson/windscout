@@ -35,6 +35,20 @@ describe('deterministic spot validation', () => {
       .toMatchObject({ outcome: 'needs-review', reasons: ['water-not-found'] })
   })
 
+  it('trusts curated source coordinates while still requiring a timezone', () => {
+    expect(classifyCandidate(candidate({ source: 'varun' }), evidence({
+      reverse: { countryCode: '', timezone: 'Europe/Amsterdam' },
+      water: undefined,
+    }), { trustedLocation: true, duplicateReasons: ['duplicate:within-75m'] }))
+      .toMatchObject({ outcome: 'accepted', reasons: [], trustedLocation: true })
+
+    expect(classifyCandidate(candidate({ source: 'varun' }), evidence({
+      reverse: { countryCode: '', timezone: '' },
+      water: undefined,
+    }), { trustedLocation: true }))
+      .toMatchObject({ outcome: 'needs-review', reasons: ['timezone-invalid'] })
+  })
+
   it.each([
     [{ reverse: { countryCode: '', timezone: 'Europe/Amsterdam' } }, 'country-missing'],
     [{ reverse: { countryCode: 'be', timezone: 'Europe/Amsterdam' } }, 'country-conflict'],
@@ -75,6 +89,22 @@ describe('Geoapify evidence collection', () => {
     const spots = [candidate(), candidate({ id: 'osm:node/2', latitude: 53 })]
     const cache = { [cacheKeyForCandidate(spots[0])]: { reverse: evidence().reverse } }
     expect(requiredGeoapifyCredits(spots, cache)).toBe(3)
+    expect(requiredGeoapifyCredits(spots, cache, { includeWater: false })).toBe(1)
+  })
+
+  it('can collect timezone evidence without rechecking a trusted location', async () => {
+    const fetchImpl = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ results: [{ country_code: 'nl', timezone: { name: 'Europe/Amsterdam' } }] }),
+    }))
+    const cache = {}
+    await collectGeoapifyEvidence([candidate()], {
+      cache, apiKey: 'test', fetchImpl, creditBudget: 1, delayMs: 0, includeWater: false,
+    })
+    expect(fetchImpl).toHaveBeenCalledTimes(1)
+    expect(cache[cacheKeyForCandidate(candidate())]).toEqual({
+      reverse: { countryCode: 'nl', timezone: 'Europe/Amsterdam' },
+    })
   })
 
   it('makes zero calls when the conservative credit budget is exceeded', async () => {

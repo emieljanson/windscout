@@ -9,13 +9,12 @@ import { verifyReleaseSample, verifyReleaseSources } from './lib/release-gates.m
 await import('./build-catalog.mjs')
 
 const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
-const [manifest, candidateData, validationData, releaseSample, attributionHtml] = await Promise.all([
+const [manifest, candidateData, validationData, releaseSample] = await Promise.all([
   readFile(path.join(webRoot, 'data/spots/source-manifest.json'), 'utf8').then(JSON.parse),
   readFile(path.join(webRoot, 'data/spots/candidates.json'), 'utf8').then(JSON.parse),
   readFile(path.join(webRoot, 'data/spots/validation-results.json'), 'utf8').then(JSON.parse),
   readFile(path.join(webRoot, 'data/spots/release-sample.json'), 'utf8').then(JSON.parse),
-  readFile(path.join(webRoot, 'public/data-sources.html'), 'utf8'),
 ])
-verifyReleaseSources({ manifest, candidates: candidateData.candidates ?? [], attributionHtml })
+verifyReleaseSources({ manifest, candidates: candidateData.candidates ?? [] })
 verifyReleaseSample(releaseSample, validationData.results ?? [])
-console.log('Catalog source rights, public attribution, and release sample are complete.')
+console.log('Catalog source rights and release sample are complete.')

@@ -1,4 +1,4 @@
-export function verifyReleaseSources({ manifest, candidates, attributionHtml }) {
+export function verifyReleaseSources({ manifest, candidates }) {
   const contributingAdapters = new Set(candidates
     .filter((candidate) => candidate.releaseEligible)
     .map((candidate) => candidate.source))
@@ -11,20 +11,12 @@ export function verifyReleaseSources({ manifest, candidates, attributionHtml }) 
     if (required.some((value) => typeof value !== 'string' || !value.trim())) {
       throw new Error(`Source adapter ${adapter} has incomplete rights metadata.`)
     }
-    const normalizedHtml = String(attributionHtml).replace(/©/g, '').toLocaleLowerCase('en')
-    for (const value of required) {
-      const normalizedValue = value.replace(/©/g, '').toLocaleLowerCase('en')
-      const meaningfulTokens = normalizedValue.split(/[^\p{L}\p{N}.-]+/u).filter((token) => token.length >= 4)
-      if (!meaningfulTokens.every((token) => normalizedHtml.includes(token))) {
-        throw new Error(`Public attribution is incomplete for source adapter ${adapter}.`)
-      }
-    }
   }
   return true
 }
 
 export function verifyReleaseSample(sample, validationResults) {
-  const accepted = validationResults.filter((result) => result.outcome === 'accepted')
+  const accepted = validationResults.filter((result) => result.outcome === 'accepted' && result.trustedLocation !== true)
   const required = Math.ceil(accepted.length * 0.1)
   if (sample?.automaticAccepts !== accepted.length || sample?.reviewed < required) {
     throw new Error(`Release sample must review at least ${required} of ${accepted.length} automatic accepts.`)

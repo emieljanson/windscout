@@ -11,6 +11,7 @@ import { classifyCandidate } from './lib/spot-validation.mjs'
 const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const dataRoot = path.join(webRoot, 'data/spots')
 const candidatesPath = path.join(dataRoot, 'candidates.json')
+const manifestPath = path.join(dataRoot, 'source-manifest.json')
 const cachePath = path.join(dataRoot, 'validation-cache.json')
 const resultsPath = path.join(dataRoot, 'validation-results.json')
 const checkOnly = process.argv.includes('--check')
@@ -44,28 +45,49 @@ async function localApiKey() {
   }
 }
 
-const input = await readJson(candidatesPath)
+const [input, manifest] = await Promise.all([readJson(candidatesPath), readJson(manifestPath)])
 const candidates = input.candidates ?? []
 const releaseCandidates = candidates.filter((candidate) => candidate.releaseEligible)
+const trustedSources = new Set((manifest.sources ?? [])
+  .filter((source) => source.releaseEligible === true && source.validation?.mode === 'trusted-location')
+  .map((source) => source.adapter))
+const trustedCandidates = releaseCandidates.filter((candidate) => trustedSources.has(candidate.source))
+const verifiedCandidates = releaseCandidates.filter((candidate) => !trustedSources.has(candidate.source))
 const cache = await readJson(cachePath, {})
-const creditsRequired = requiredGeoapifyCredits(releaseCandidates, cache)
+const verifiedCredits = requiredGeoapifyCredits(verifiedCandidates, cache)
+const trustedCredits = requiredGeoapifyCredits(trustedCandidates, cache, { includeWater: false })
+const creditsRequired = verifiedCredits + trustedCredits
+const creditBudget = Number(process.env.SPOT_VALIDATION_CREDIT_BUDGET ?? 3000)
 
-let requestStats = { requests: 0, cacheHits: releaseCandidates.length * 2 }
+let requestStats = { requests: 0, cacheHits: verifiedCandidates.length * 2 + trustedCandidates.length }
 if (checkOnly) {
   if (creditsRequired) throw new Error(`Validation cache is incomplete: ${creditsRequired} Geoapify credits still required.`)
 } else {
+  if (creditsRequired > creditBudget) {
+    throw new Error(`Validation requires ${creditsRequired} Geoapify credits; budget is ${creditBudget}.`)
+  }
   let persistChain = Promise.resolve()
-  requestStats = await collectGeoapifyEvidence(releaseCandidates, {
-    cache,
-    apiKey: await localApiKey(),
-    creditBudget: Number(process.env.SPOT_VALIDATION_CREDIT_BUDGET ?? 3000),
-    delayMs: Number(process.env.SPOT_VALIDATION_DELAY_MS ?? 210),
+  const apiKey = await localApiKey()
+  const options = {
+    cache, apiKey, delayMs: Number(process.env.SPOT_VALIDATION_DELAY_MS ?? 210),
     concurrency: Number(process.env.SPOT_VALIDATION_CONCURRENCY ?? 3),
     persist: (nextCache) => {
       persistChain = persistChain.then(() => atomicWrite(cachePath, nextCache))
       return persistChain
     },
-  })
+  }
+  const verifiedStats = verifiedCredits
+    ? await collectGeoapifyEvidence(verifiedCandidates, { ...options, creditBudget })
+    : { requests: 0, cacheHits: verifiedCandidates.length * 2 }
+  const trustedStats = trustedCredits
+    ? await collectGeoapifyEvidence(trustedCandidates, {
+        ...options, creditBudget: creditBudget - verifiedStats.requests, includeWater: false,
+      })
+    : { requests: 0, cacheHits: trustedCandidates.length }
+  requestStats = {
+    requests: verifiedStats.requests + trustedStats.requests,
+    cacheHits: verifiedStats.cacheHits + trustedStats.cacheHits,
+  }
 }
 
 const duplicateGroups = detectDuplicates(candidates)
@@ -81,7 +103,10 @@ for (const group of duplicateGroups) {
 const results = candidates.map((candidate) => classifyCandidate(
   candidate,
   cache[cacheKeyForCandidate(candidate)] ?? {},
-  { duplicateReasons: duplicateReasons.get(candidate.id) ?? [] },
+  {
+    duplicateReasons: duplicateReasons.get(candidate.id) ?? [],
+    trustedLocation: trustedSources.has(candidate.source),
+  },
 )).sort((left, right) => left.candidateId.localeCompare(right.candidateId))
 
 const totals = results.reduce((counts, result) => {
@@ -102,4 +127,5 @@ console.log(JSON.stringify({
   ...requestStats,
   outcomes: totals,
   duplicateGroups: duplicateGroups.length,
+  trustedLocations: trustedCandidates.length,
 }, null, 2))

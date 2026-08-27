@@ -10,10 +10,10 @@ export function cacheKeyForCandidate(candidate) {
     .slice(0, 20)
 }
 
-export function requiredGeoapifyCredits(candidates, cache) {
+export function requiredGeoapifyCredits(candidates, cache, { includeWater = true } = {}) {
   return candidates.reduce((credits, candidate) => {
     const entry = cache[cacheKeyForCandidate(candidate)] ?? {}
-    return credits + (entry.reverse ? 0 : 1) + (entry.water ? 0 : 1)
+    return credits + (entry.reverse ? 0 : 1) + (includeWater && !entry.water ? 1 : 0)
   }, 0)
 }
 
@@ -79,11 +79,12 @@ export async function collectGeoapifyEvidence(candidates, {
   creditBudget = 3000,
   delayMs = 220,
   concurrency = 3,
+  includeWater = true,
   sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
   persist = async () => {},
 } = {}) {
   if (!apiKey) throw new Error('Set VITE_GEOAPIFY_API_KEY before validating spot candidates.')
-  const required = requiredGeoapifyCredits(candidates, cache)
+  const required = requiredGeoapifyCredits(candidates, cache, { includeWater })
   if (required > creditBudget) throw new Error(`Validation requires ${required} Geoapify credits; budget is ${creditBudget}.`)
   let requests = 0
   let nextCandidate = 0
@@ -106,7 +107,7 @@ export async function collectGeoapifyEvidence(candidates, {
       requests += 1
       await persist(cache)
     }
-    if (!entry.water) {
+    if (includeWater && !entry.water) {
       entry.water = compactWater(await requestJson(placesUrl(candidate, apiKey), { fetchImpl, sleep, beforeRequest }))
       requests += 1
       await persist(cache)
@@ -120,5 +121,6 @@ export async function collectGeoapifyEvidence(candidates, {
     }
   }
   await Promise.all(Array.from({ length: Math.max(1, Math.min(concurrency, candidates.length)) }, worker))
-  return { requests, cacheHits: candidates.length * 2 - requests }
+  const evidenceItems = candidates.length * (includeWater ? 2 : 1)
+  return { requests, cacheHits: evidenceItems - requests }
 }

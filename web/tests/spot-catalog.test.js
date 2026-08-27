@@ -23,10 +23,19 @@ describe('runtime spot catalog', () => {
     const reviewCandidate = { ...candidate, id: 'osm:node/100', name: 'Reviewed Spot' }
     const catalog = buildRuntimeCatalog({
       existing,
-      candidates: [candidate, reviewCandidate, { ...candidate, id: 'varun:1', name: 'Rights hold', releaseEligible: false }],
-      validationResults: [accepted, {
-        candidateId: reviewCandidate.id, outcome: 'needs-review', timezone: 'Europe/Warsaw', evidenceFingerprint: 'review-current',
-      }],
+      candidates: [
+        candidate,
+        reviewCandidate,
+        { ...candidate, id: 'varun:1', name: 'Rights hold', releaseEligible: false },
+        { ...candidate, id: 'varun:2', name: 'Brouwersdam' },
+      ],
+      validationResults: [
+        accepted,
+        { ...accepted, candidateId: 'varun:2' },
+        {
+          candidateId: reviewCandidate.id, outcome: 'needs-review', timezone: 'Europe/Warsaw', evidenceFingerprint: 'review-current',
+        },
+      ],
       decisions: [{
         candidateId: reviewCandidate.id, action: 'approve', evidenceFingerprint: 'review-current',
         windscoutId: 'reviewed-spot', name: 'Reviewed Corrected', latitude: 54.7, longitude: 18.4,
@@ -40,6 +49,7 @@ describe('runtime spot catalog', () => {
       expect.objectContaining({ id: 'reviewed-spot', name: 'Reviewed Corrected' }),
     ]))
     expect(catalog.some((spot) => spot.name === 'Rights hold')).toBe(false)
+    expect(catalog.filter((spot) => spot.name === 'Brouwersdam')).toHaveLength(1)
   })
 
   it('does not reuse a stale review decision', () => {
@@ -76,9 +86,19 @@ describe('catalog search', () => {
 
   it('ranks personal exact, curated exact, prefix, then substring matches', () => {
     expect(searchSpots([...curated, ...personal], 'cape').map((spot) => spot.id).slice(0, 2))
-      .toEqual(['personal-cape', 'cape-town'])
+      .toEqual(['personal-cape'])
     expect(searchSpots([...curated, ...personal], 'town').map((spot) => spot.id))
-      .toEqual(['town-lake', 'personal-cape', 'cape-town'])
+      .toEqual(['town-lake', 'personal-cape'])
+  })
+
+  it('keeps same-name catalog spots unless a personal spot replaces them', () => {
+    const duplicates = [
+      { id: 'north', name: 'Kite Beach' },
+      { id: 'south', name: 'Kite Beach' },
+    ]
+    expect(searchSpots(duplicates, 'kite')).toHaveLength(2)
+    expect(searchSpots([...duplicates, { id: 'personal', name: 'Kite Beach', personal: true }], 'kite'))
+      .toEqual([{ id: 'personal', name: 'Kite Beach', personal: true }])
   })
 
   it('does not expose the global catalog before two characters and caps results', () => {
@@ -90,7 +110,7 @@ describe('catalog search', () => {
 })
 
 describe('catalog release gates', () => {
-  it('requires release rights and public attribution for contributing sources', () => {
+  it('requires release rights metadata for contributing sources', () => {
     const manifest = { sources: [{
       id: 'osm-snapshot', adapter: 'osm', releaseEligible: true,
       rights: { license: 'ODbL-1.0', redistribution: true, attribution: '© OpenStreetMap contributors' },
@@ -98,13 +118,14 @@ describe('catalog release gates', () => {
     expect(() => verifyReleaseSources({
       manifest,
       candidates: [{ source: 'osm', releaseEligible: true }],
-      attributionHtml: '<p>OpenStreetMap contributors ODbL-1.0</p>',
     })).not.toThrow()
     expect(() => verifyReleaseSources({
-      manifest,
+      manifest: { sources: [{
+        id: 'osm-snapshot', adapter: 'osm', releaseEligible: true,
+        rights: { license: '', redistribution: true, attribution: '' },
+      }] },
       candidates: [{ source: 'osm', releaseEligible: true }],
-      attributionHtml: '<p>Sources</p>',
-    })).toThrow('attribution')
+    })).toThrow('rights metadata')
   })
 
   it('fails closed when dataset redistribution rights are unresolved', () => {
@@ -114,12 +135,14 @@ describe('catalog release gates', () => {
         rights: { license: 'unconfirmed', redistribution: false, attribution: 'Varun' },
       }] },
       candidates: [{ source: 'varun', releaseEligible: true }],
-      attributionHtml: '<p>Varun unconfirmed</p>',
     })).toThrow('not release-eligible')
   })
 
   it('requires a passing review sample of at least ten percent', () => {
-    const validationResults = Array.from({ length: 20 }, (_, index) => ({ candidateId: `spot-${index}`, outcome: 'accepted' }))
+    const validationResults = [
+      ...Array.from({ length: 20 }, (_, index) => ({ candidateId: `spot-${index}`, outcome: 'accepted' })),
+      { candidateId: 'trusted-spot', outcome: 'accepted', trustedLocation: true },
+    ]
     expect(() => verifyReleaseSample({
       automaticAccepts: 20, reviewed: 2, systematicIssues: [],
       sample: [{ candidateId: 'spot-0', verdict: 'pass' }, { candidateId: 'spot-1', verdict: 'pass' }],

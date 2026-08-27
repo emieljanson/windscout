@@ -72,6 +72,14 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-q1ikko",
+    "name": "Aberavon",
+    "displayName": "ABERAVON",
+    "latitude": 51.598,
+    "longitude": -3.815,
+    "timezone": "Europe/London"
+  },
+  {
     "id": "spot-3nagbg",
     "name": "Absolute Kite Boarding",
     "displayName": "ABSOLUTE KITE BOARDING",
@@ -88,6 +96,30 @@
     "timezone": "Europe/Paris"
   },
   {
+    "id": "spot-1gr0wvm",
+    "name": "Achensee",
+    "displayName": "ACHENSEE",
+    "latitude": 47.4545,
+    "longitude": 11.71397,
+    "timezone": "Europe/Vienna"
+  },
+  {
+    "id": "spot-1dxzrx6",
+    "name": "Achivadolimni (Milos)",
+    "displayName": "ACHIVADOLIMNI (MILOS)",
+    "latitude": 36.6913,
+    "longitude": 24.4498,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-1bf2735",
+    "name": "Ada Bojana",
+    "displayName": "ADA BOJANA",
+    "latitude": 41.855,
+    "longitude": 19.353,
+    "timezone": "Europe/Belgrade"
+  },
+  {
     "id": "spot-1pxeroy",
     "name": "Adriatico Wind Club",
     "displayName": "ADRIATICO WIND CLUB",
@@ -96,12 +128,84 @@
     "timezone": "Europe/Rome"
   },
   {
+    "id": "spot-tjqp8z",
+    "name": "Afiartis (Karpathos)",
+    "displayName": "AFIARTIS (KARPATHOS)",
+    "latitude": 35.4302,
+    "longitude": 27.155,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-15iugvn",
+    "name": "Agger",
+    "displayName": "AGGER",
+    "latitude": 56.782655,
+    "longitude": 8.229245,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-9u4xzu",
+    "name": "Agia Marina (Crete)",
+    "displayName": "AGIA MARINA (CRETE)",
+    "latitude": 35.5266,
+    "longitude": 23.9251,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-alqo9x",
+    "name": "Agios Georgios (Naxos)",
+    "displayName": "AGIOS GEORGIOS (NAXOS)",
+    "latitude": 37.097,
+    "longitude": 25.3747,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-blo6jd",
+    "name": "Agios Ioannis (Lefkada)",
+    "displayName": "AGIOS IOANNIS (LEFKADA)",
+    "latitude": 38.8364,
+    "longitude": 20.686,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-1f0d7jc",
+    "name": "Agios Theologos (Kos)",
+    "displayName": "AGIOS THEOLOGOS (KOS)",
+    "latitude": 36.7189,
+    "longitude": 26.9647,
+    "timezone": "Europe/Athens"
+  },
+  {
     "id": "spot-in4asl",
     "name": "AGSN ski nautique",
     "displayName": "AGSN SKI NAUTIQUE",
     "latitude": 16.275331,
     "longitude": -61.582653,
     "timezone": "America/Puerto_Rico"
+  },
+  {
+    "id": "spot-y47aga",
+    "name": "Ahtopol",
+    "displayName": "AHTOPOL",
+    "latitude": 42.0993,
+    "longitude": 27.949,
+    "timezone": "Europe/Sofia"
+  },
+  {
+    "id": "spot-2ivq3",
+    "name": "Åhus",
+    "displayName": "ÅHUS",
+    "latitude": 55.92,
+    "longitude": 14.29,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-rm1ctu",
+    "name": "Ainsdale",
+    "displayName": "AINSDALE",
+    "latitude": 53.605,
+    "longitude": -3.064,
+    "timezone": "Europe/London"
   },
   {
     "id": "spot-1e8cji7",
@@ -120,6 +224,14 @@
     "timezone": "Europe/London"
   },
   {
+    "id": "spot-1m0lt58",
+    "name": "Albufeira / Salgados",
+    "displayName": "ALBUFEIRA / SALGADOS",
+    "latitude": 37.0839,
+    "longitude": -8.3213,
+    "timezone": "Europe/Lisbon"
+  },
+  {
     "id": "spot-11q87zw",
     "name": "Aldridge Sailing Club",
     "displayName": "ALDRIDGE SAILING CLUB",
@@ -136,12 +248,108 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-9tgdww",
+    "name": "Alexandroupoli",
+    "displayName": "ALEXANDROUPOLI",
+    "latitude": 40.8507,
+    "longitude": 25.8797,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-1maleu7",
+    "name": "Algarve / Meia Praia",
+    "displayName": "ALGARVE / MEIA PRAIA",
+    "latitude": 37.109698,
+    "longitude": -8.660337,
+    "timezone": "Europe/Lisbon"
+  },
+  {
     "id": "spot-1ybep0o",
     "name": "All Ride 66",
     "displayName": "ALL RIDE 66",
     "latitude": 42.815524,
     "longitude": 3.019191,
     "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-cyyqy7",
+    "name": "Almere",
+    "displayName": "ALMERE",
+    "latitude": 52.34747,
+    "longitude": 5.133559,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-go1evy",
+    "name": "Altenteil",
+    "displayName": "ALTENTEIL",
+    "latitude": 54.5306,
+    "longitude": 11.0895,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1rl32e6",
+    "name": "Altmühlsee (Schlungenhof)",
+    "displayName": "ALTMÜHLSEE (SCHLUNGENHOF)",
+    "latitude": 49.132,
+    "longitude": 10.744,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-176a3xu",
+    "name": "Amager Strandpark",
+    "displayName": "AMAGER STRANDPARK",
+    "latitude": 55.6566,
+    "longitude": 12.6453,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1dyhdsa",
+    "name": "Amager Sydvestpynten",
+    "displayName": "AMAGER SYDVESTPYNTEN",
+    "latitude": 55.5633,
+    "longitude": 12.5636,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-147neg4",
+    "name": "Ameland - Noordzee",
+    "displayName": "AMELAND - NOORDZEE",
+    "latitude": 53.459965,
+    "longitude": 5.741499,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1paol87",
+    "name": "Ameland - Waddenzee",
+    "displayName": "AMELAND - WADDENZEE",
+    "latitude": 53.439205,
+    "longitude": 5.77345,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-12q5hsw",
+    "name": "Ammolofoi",
+    "displayName": "AMMOLOFOI",
+    "latitude": 40.8115,
+    "longitude": 24.2906,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-wetc7j",
+    "name": "Amrum (Wittdün)",
+    "displayName": "AMRUM (WITTDÜN)",
+    "latitude": 54.632,
+    "longitude": 8.383,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1yo1oba",
+    "name": "Amstelmeer Lutjestrand Zuid",
+    "displayName": "AMSTELMEER LUTJESTRAND ZUID",
+    "latitude": 52.885125,
+    "longitude": 4.916567,
+    "timezone": "Europe/Brussels"
   },
   {
     "id": "spot-1u0qha6",
@@ -160,12 +368,60 @@
     "timezone": "Europe/Belgrade"
   },
   {
+    "id": "spot-1lmcsse",
+    "name": "Anavyssos (Attica)",
+    "displayName": "ANAVYSSOS (ATTICA)",
+    "latitude": 37.722,
+    "longitude": 23.933,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-1d3dz7h",
+    "name": "Ängelholm",
+    "displayName": "ÄNGELHOLM",
+    "latitude": 56.27,
+    "longitude": 12.83,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-hir4qg",
+    "name": "Antiparos",
+    "displayName": "ANTIPAROS",
+    "latitude": 37.0078,
+    "longitude": 25.0751,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-hzgl4u",
+    "name": "Antoinette Strand",
+    "displayName": "ANTOINETTE STRAND",
+    "latitude": 55.120342,
+    "longitude": 14.699453,
+    "timezone": "Europe/Berlin"
+  },
+  {
     "id": "spot-qra12",
     "name": "Antrim Boat Club",
     "displayName": "ANTRIM BOAT CLUB",
     "latitude": 54.716133,
     "longitude": -6.240852,
     "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1f6b89c",
+    "name": "Apelviken (Varberg)",
+    "displayName": "APELVIKEN (VARBERG)",
+    "latitude": 57.08,
+    "longitude": 12.257,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1a8qv65",
+    "name": "Årgab",
+    "displayName": "ÅRGAB",
+    "latitude": 55.9753,
+    "longitude": 8.1328,
+    "timezone": "Europe/Berlin"
   },
   {
     "id": "spot-t4dvce",
@@ -181,6 +437,22 @@
     "displayName": "ÅRØSUND BÅDELAUG",
     "latitude": 55.262082,
     "longitude": 9.707464,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-16vnx5g",
+    "name": "Åsgårdstrand",
+    "displayName": "ÅSGÅRDSTRAND",
+    "latitude": 59.3563,
+    "longitude": 10.4693,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1ga9n18",
+    "name": "Askim (Göteborg)",
+    "displayName": "ASKIM (GÖTEBORG)",
+    "latitude": 57.626,
+    "longitude": 11.925,
     "timezone": "Europe/Berlin"
   },
   {
@@ -224,6 +496,14 @@
     "timezone": "America/Puerto_Rico"
   },
   {
+    "id": "spot-14jzi4y",
+    "name": "Attersee",
+    "displayName": "ATTERSEE",
+    "latitude": 47.885296,
+    "longitude": 13.550379,
+    "timezone": "Europe/Vienna"
+  },
+  {
     "id": "spot-dm6n1s",
     "name": "Aura Sailing",
     "displayName": "AURA SAILING",
@@ -240,12 +520,36 @@
     "timezone": "Europe/Paris"
   },
   {
+    "id": "spot-116ibul",
+    "name": "Baarland",
+    "displayName": "BAARLAND",
+    "latitude": 51.394135,
+    "longitude": 3.896531,
+    "timezone": "Europe/Brussels"
+  },
+  {
     "id": "spot-6um3qu",
     "name": "Bad Wörishofener Segelclub e. V.",
     "displayName": "BAD WÖRISHOFENER SEGELCLUB E. V.",
     "latitude": 48.023728,
     "longitude": 10.65117,
     "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-ofmnwk",
+    "name": "Badia de Pollença (Mallorca, Balearic Islands)",
+    "displayName": "BADIA DE POLLENÇA (MALLORCA, BALEARIC ISLANDS)",
+    "latitude": 39.8586,
+    "longitude": 3.1013,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-1m4b6zg",
+    "name": "Bahia Salinas",
+    "displayName": "BAHIA SALINAS",
+    "latitude": 11.029801,
+    "longitude": -85.720165,
+    "timezone": "America/Costa_Rica"
   },
   {
     "id": "spot-6fcs94",
@@ -256,11 +560,67 @@
     "timezone": "Europe/Paris"
   },
   {
+    "id": "spot-15s8xz0",
+    "name": "Balka Strand",
+    "displayName": "BALKA STRAND",
+    "latitude": 55.035298,
+    "longitude": 15.109976,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-i0keyv",
+    "name": "Ballyholme (Bangor)",
+    "displayName": "BALLYHOLME (BANGOR)",
+    "latitude": 54.667,
+    "longitude": -5.645,
+    "timezone": "Europe/London"
+  },
+  {
     "id": "spot-xr9wyy",
     "name": "Baltische Seglervereinigung Hamburg",
     "displayName": "BALTISCHE SEGLERVEREINIGUNG HAMBURG",
     "latitude": 53.4896,
     "longitude": 10.092955,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-17en9so",
+    "name": "Barbate",
+    "displayName": "BARBATE",
+    "latitude": 36.1866,
+    "longitude": -5.93,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-an5kyw",
+    "name": "Barmouth",
+    "displayName": "BARMOUTH",
+    "latitude": 52.72,
+    "longitude": -4.06,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1u232ko",
+    "name": "Barneville-Carteret",
+    "displayName": "BARNEVILLE-CARTERET",
+    "latitude": 49.367801,
+    "longitude": -1.764703,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1bcta27",
+    "name": "Barra Grande",
+    "displayName": "BARRA GRANDE",
+    "latitude": -2.908482,
+    "longitude": -41.409975,
+    "timezone": "America/Fortaleza"
+  },
+  {
+    "id": "spot-y4rkur",
+    "name": "Barsebäck",
+    "displayName": "BARSEBÄCK",
+    "latitude": 55.7731,
+    "longitude": 12.9595,
     "timezone": "Europe/Berlin"
   },
   {
@@ -320,6 +680,22 @@
     "timezone": "Europe/Paris"
   },
   {
+    "id": "spot-1iy04nw",
+    "name": "Baška (Krk)",
+    "displayName": "BAŠKA (KRK)",
+    "latitude": 44.968,
+    "longitude": 14.752,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-w891y",
+    "name": "Båstad",
+    "displayName": "BÅSTAD",
+    "latitude": 56.4428,
+    "longitude": 12.8439,
+    "timezone": "Europe/Berlin"
+  },
+  {
     "id": "spot-14ygqxe",
     "name": "BCM Brühler Club für Motorsport, Abt. Segelsport",
     "displayName": "BCM BRÜHLER CLUB FÜR MOTORSPORT, ABT. SEGELSPORT",
@@ -334,6 +710,94 @@
     "latitude": 42.199,
     "longitude": -8.788109,
     "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-kkp3b9",
+    "name": "Beadnell",
+    "displayName": "BEADNELL",
+    "latitude": 55.545,
+    "longitude": -1.63,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1lkn46v",
+    "name": "Beauduc",
+    "displayName": "BEAUDUC",
+    "latitude": 43.4046,
+    "longitude": 4.5921,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-b8yiqd",
+    "name": "Beitostølen",
+    "displayName": "BEITOSTØLEN",
+    "latitude": 61.267,
+    "longitude": 8.8781,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1g5m5r",
+    "name": "Belhaven Bay",
+    "displayName": "BELHAVEN BAY",
+    "latitude": 56.0005,
+    "longitude": -2.545,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-yv7dir",
+    "name": "Benone Strand",
+    "displayName": "BENONE STRAND",
+    "latitude": 55.166,
+    "longitude": -6.9,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1iigeh0",
+    "name": "Bensersiel",
+    "displayName": "BENSERSIEL",
+    "latitude": 53.68,
+    "longitude": 7.5686,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-6fypxz",
+    "name": "Berck – Baie d'Authie",
+    "displayName": "BERCK – BAIE D'AUTHIE",
+    "latitude": 50.408509,
+    "longitude": 1.561862,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-urdp5c",
+    "name": "Bergen aan Zee",
+    "displayName": "BERGEN AAN ZEE",
+    "latitude": 52.658703,
+    "longitude": 4.626903,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1j6zp5n",
+    "name": "Białogóra",
+    "displayName": "BIAŁOGÓRA",
+    "latitude": 54.831,
+    "longitude": 17.9548,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-1pydxp0",
+    "name": "Bibinje",
+    "displayName": "BIBINJE",
+    "latitude": 44.0764,
+    "longitude": 15.2776,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-1g2jhvd",
+    "name": "Bibione",
+    "displayName": "BIBIONE",
+    "latitude": 45.6337,
+    "longitude": 12.9955,
+    "timezone": "Europe/Rome"
   },
   {
     "id": "spot-l9iud6",
@@ -360,6 +824,14 @@
     "timezone": "America/New_York"
   },
   {
+    "id": "spot-1ff80aj",
+    "name": "Blackpool",
+    "displayName": "BLACKPOOL",
+    "latitude": 53.815,
+    "longitude": -3.056,
+    "timezone": "Europe/London"
+  },
+  {
     "id": "spot-1hrhlq4",
     "name": "Blackwater Valley Watersports",
     "displayName": "BLACKWATER VALLEY WATERSPORTS",
@@ -376,12 +848,44 @@
     "timezone": "Europe/Brussels"
   },
   {
+    "id": "spot-tfss34",
+    "name": "Blåvand",
+    "displayName": "BLÅVAND",
+    "latitude": 55.5562,
+    "longitude": 8.0813,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1hhy4nk",
+    "name": "Bleik (Andøya)",
+    "displayName": "BLEIK (ANDØYA)",
+    "latitude": 69.2743,
+    "longitude": 15.9281,
+    "timezone": "Europe/Berlin"
+  },
+  {
     "id": "spot-u1ydve",
     "name": "Blindheimsvikå",
     "displayName": "BLINDHEIMSVIKÅ",
     "latitude": 62.553614,
     "longitude": 6.089988,
     "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-eucwdo",
+    "name": "Bloemendaal aan Zee",
+    "displayName": "BLOEMENDAAL AAN ZEE",
+    "latitude": 52.416317,
+    "longitude": 4.549245,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1jcqe7q",
+    "name": "Bloubergstrand (Big Bay)",
+    "displayName": "BLOUBERGSTRAND (BIG BAY)",
+    "latitude": -33.7914,
+    "longitude": 18.4584,
+    "timezone": "Africa/Johannesburg"
   },
   {
     "id": "spot-1euvgb8",
@@ -400,11 +904,67 @@
     "timezone": "America/Los_Angeles"
   },
   {
+    "id": "spot-jqn4qd",
+    "name": "Blyth",
+    "displayName": "BLYTH",
+    "latitude": 55.125,
+    "longitude": -1.503,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1lkbjpm",
+    "name": "Böda (Öland)",
+    "displayName": "BÖDA (ÖLAND)",
+    "latitude": 57.255,
+    "longitude": 17.05,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-16c85cy",
+    "name": "Boderne",
+    "displayName": "BODERNE",
+    "latitude": 55.022604,
+    "longitude": 14.904657,
+    "timezone": "Europe/Berlin"
+  },
+  {
     "id": "spot-yinctr",
     "name": "Bogø Sejlklub",
     "displayName": "BOGØ SEJLKLUB",
     "latitude": 54.912866,
     "longitude": 12.052308,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-g427i0",
+    "name": "Bojendorf",
+    "displayName": "BOJENDORF",
+    "latitude": 54.4902,
+    "longitude": 11.018,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1rkzww7",
+    "name": "Bol (Brač)",
+    "displayName": "BOL (BRAČ)",
+    "latitude": 43.256,
+    "longitude": 16.635,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-1mfquwr",
+    "name": "Bolonia",
+    "displayName": "BOLONIA",
+    "latitude": 36.0895,
+    "longitude": -5.7716,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-pc5tg3",
+    "name": "Boltenhagen",
+    "displayName": "BOLTENHAGEN",
+    "latitude": 53.9903,
+    "longitude": 11.202,
     "timezone": "Europe/Berlin"
   },
   {
@@ -424,6 +984,46 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-vjmnkh",
+    "name": "Borestranda",
+    "displayName": "BORESTRANDA",
+    "latitude": 58.7987,
+    "longitude": 5.5456,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-16cwfgj",
+    "name": "Bork Havn",
+    "displayName": "BORK HAVN",
+    "latitude": 55.8485,
+    "longitude": 8.2779,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-vk9ej0",
+    "name": "Borkum",
+    "displayName": "BORKUM",
+    "latitude": 53.599,
+    "longitude": 6.656,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-10yc6n9",
+    "name": "Borssele (de Kaloot)",
+    "displayName": "BORSSELE (DE KALOOT)",
+    "latitude": 51.433178,
+    "longitude": 3.709353,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-inpgfp",
+    "name": "Borth",
+    "displayName": "BORTH",
+    "latitude": 52.49,
+    "longitude": -4.052,
+    "timezone": "Europe/London"
+  },
+  {
     "id": "spot-4n7aoo",
     "name": "Bosham Sailing Club",
     "displayName": "BOSHAM SAILING CLUB",
@@ -438,6 +1038,22 @@
     "latitude": 53.439338,
     "longitude": 18.734536,
     "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-1ebo52u",
+    "name": "Brancaster Bay",
+    "displayName": "BRANCASTER BAY",
+    "latitude": 52.972,
+    "longitude": 0.64,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-smz43b",
+    "name": "Bray-Dunes",
+    "displayName": "BRAY-DUNES",
+    "latitude": 51.081687,
+    "longitude": 2.519971,
+    "timezone": "Europe/Paris"
   },
   {
     "id": "spot-18qot2f",
@@ -456,11 +1072,43 @@
     "timezone": "Europe/Vienna"
   },
   {
+    "id": "spot-1w0fui7",
+    "name": "Breitenbrunn",
+    "displayName": "BREITENBRUNN",
+    "latitude": 47.916584,
+    "longitude": 16.762476,
+    "timezone": "Europe/Vienna"
+  },
+  {
+    "id": "spot-10ockya",
+    "name": "Breskens Oost",
+    "displayName": "BRESKENS OOST",
+    "latitude": 51.400622,
+    "longitude": 3.5593,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-sqi0fj",
+    "name": "Broad Haven",
+    "displayName": "BROAD HAVEN",
+    "latitude": 51.779,
+    "longitude": -5.104,
+    "timezone": "Europe/London"
+  },
+  {
     "id": "spot-1lt5vly",
     "name": "Brühler Surf-Club 1976 e.V.",
     "displayName": "BRÜHLER SURF-CLUB 1976 E.V.",
     "latitude": 50.844308,
     "longitude": 6.860135,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-g0rxoh",
+    "name": "Brusand",
+    "displayName": "BRUSAND",
+    "latitude": 58.533,
+    "longitude": 5.753,
     "timezone": "Europe/Berlin"
   },
   {
@@ -472,12 +1120,140 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-1he2wbd",
+    "name": "Bude (Widemouth Bay)",
+    "displayName": "BUDE (WIDEMOUTH BAY)",
+    "latitude": 50.788,
+    "longitude": -4.552,
+    "timezone": "Europe/London"
+  },
+  {
     "id": "spot-cz2qwe",
     "name": "Büdelsdorfer Yachtclub e.V.",
     "displayName": "BÜDELSDORFER YACHTCLUB E.V.",
     "latitude": 54.311509,
     "longitude": 9.682199,
     "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-12gnskw",
+    "name": "Bukówka",
+    "displayName": "BUKÓWKA",
+    "latitude": 50.718523,
+    "longitude": 15.942275,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-164tsbh",
+    "name": "Buljarica",
+    "displayName": "BULJARICA",
+    "latitude": 42.1983,
+    "longitude": 18.9657,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-1c2etyn",
+    "name": "Burgas",
+    "displayName": "BURGAS",
+    "latitude": 42.5027,
+    "longitude": 27.4849,
+    "timezone": "Europe/Sofia"
+  },
+  {
+    "id": "spot-v0vbqo",
+    "name": "Büsum",
+    "displayName": "BÜSUM",
+    "latitude": 54.133672,
+    "longitude": 8.835297,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1xw6cru",
+    "name": "Cabo de Gata",
+    "displayName": "CABO DE GATA",
+    "latitude": 36.793,
+    "longitude": -2.2374,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-118bsc8",
+    "name": "Cadzand-bad - Vlamingpolder",
+    "displayName": "CADZAND-BAD - VLAMINGPOLDER",
+    "latitude": 51.385365,
+    "longitude": 3.404863,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-6aqf7i",
+    "name": "Cala Martina (Ibiza, Balearic Islands)",
+    "displayName": "CALA MARTINA (IBIZA, BALEARIC ISLANDS)",
+    "latitude": 38.9876,
+    "longitude": 1.5866,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-9ciwc8",
+    "name": "Cala Tirant (Menorca, Balearic Islands)",
+    "displayName": "CALA TIRANT (MENORCA, BALEARIC ISLANDS)",
+    "latitude": 40.047,
+    "longitude": 4.1015,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-vvc3x8",
+    "name": "Callantsoog",
+    "displayName": "CALLANTSOOG",
+    "latitude": 52.840599,
+    "longitude": 4.691325,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-106sn35",
+    "name": "Calshot",
+    "displayName": "CALSHOT",
+    "latitude": 50.8132,
+    "longitude": -1.3108,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1l12qel",
+    "name": "Calvi",
+    "displayName": "CALVI",
+    "latitude": 42.567664,
+    "longitude": 8.75887,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-nwhl77",
+    "name": "Camber Sands",
+    "displayName": "CAMBER SANDS",
+    "latitude": 50.9333,
+    "longitude": 0.7891,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-wfbbb6",
+    "name": "Camperduin",
+    "displayName": "CAMPERDUIN",
+    "latitude": 52.728309,
+    "longitude": 4.639765,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-o0be8i",
+    "name": "Campione del Garda",
+    "displayName": "CAMPIONE DEL GARDA",
+    "latitude": 45.752823,
+    "longitude": 10.748778,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-8igxrc",
+    "name": "Can Pastilla (Mallorca, Balearic Islands)",
+    "displayName": "CAN PASTILLA (MALLORCA, BALEARIC ISLANDS)",
+    "latitude": 39.5327,
+    "longitude": 2.7126,
+    "timezone": "Europe/Madrid"
   },
   {
     "id": "spot-1miemuv",
@@ -488,12 +1264,76 @@
     "timezone": "Atlantic/Canary"
   },
   {
+    "id": "spot-zy2p04",
+    "name": "Canet-en-Roussillon",
+    "displayName": "CANET-EN-ROUSSILLON",
+    "latitude": 42.683971,
+    "longitude": 3.035436,
+    "timezone": "Europe/Paris"
+  },
+  {
     "id": "spot-3cxdyz",
     "name": "Caños de Meca Kitesurf Spot",
     "displayName": "CAÑOS DE MECA KITESURF SPOT",
     "latitude": 36.186704,
     "longitude": -6.02625,
     "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-zpa7c",
+    "name": "Cap d'Agde – Richelieu",
+    "displayName": "CAP D'AGDE – RICHELIEU",
+    "latitude": 43.274052,
+    "longitude": 3.503218,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-111tcys",
+    "name": "Cap Ferret – Le Grand Crohot",
+    "displayName": "CAP FERRET – LE GRAND CROHOT",
+    "latitude": 44.798849,
+    "longitude": -1.234363,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-wscaid",
+    "name": "Cape Hatteras",
+    "displayName": "CAPE HATTERAS",
+    "latitude": 35.2931,
+    "longitude": -75.5165,
+    "timezone": "America/New_York"
+  },
+  {
+    "id": "spot-1gnlguw",
+    "name": "Capo Feto",
+    "displayName": "CAPO FETO",
+    "latitude": 37.659889,
+    "longitude": 12.527719,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-1uevc7f",
+    "name": "Capo Mannu",
+    "displayName": "CAPO MANNU",
+    "latitude": 40.0378,
+    "longitude": 8.3722,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-e1cfhf",
+    "name": "Capo Miseno (Bacoli)",
+    "displayName": "CAPO MISENO (BACOLI)",
+    "latitude": 40.7953,
+    "longitude": 14.0783,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-an8zyp",
+    "name": "Capo Peloro (Messina)",
+    "displayName": "CAPO PELORO (MESSINA)",
+    "latitude": 38.2661,
+    "longitude": 15.6383,
+    "timezone": "Europe/Rome"
   },
   {
     "id": "spot-1d5b1n1",
@@ -504,12 +1344,60 @@
     "timezone": "America/Jamaica"
   },
   {
+    "id": "spot-1ycvq0m",
+    "name": "Carnon – Petit Travers",
+    "displayName": "CARNON – PETIT TRAVERS",
+    "latitude": 43.546934,
+    "longitude": 3.988408,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1qr13ta",
+    "name": "Castelldefels",
+    "displayName": "CASTELLDEFELS",
+    "latitude": 41.2646,
+    "longitude": 1.949,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-1y0gt00",
+    "name": "Castiglione della Pescaia",
+    "displayName": "CASTIGLIONE DELLA PESCAIA",
+    "latitude": 42.7611,
+    "longitude": 10.8805,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-knyop",
+    "name": "Castlerock",
+    "displayName": "CASTLEROCK",
+    "latitude": 55.1674,
+    "longitude": -6.7899,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-18ot79c",
+    "name": "Catania, La Playa",
+    "displayName": "CATANIA, LA PLAYA",
+    "latitude": 37.4497,
+    "longitude": 15.087,
+    "timezone": "Europe/Rome"
+  },
+  {
     "id": "spot-3uolh1",
     "name": "Cataraibe",
     "displayName": "CATARAIBE",
     "latitude": 16.162618,
     "longitude": -61.58405,
     "timezone": "America/Puerto_Rico"
+  },
+  {
+    "id": "spot-wh6q1j",
+    "name": "Cecina, Le Gorette",
+    "displayName": "CECINA, LE GORETTE",
+    "latitude": 43.3138,
+    "longitude": 10.4715,
+    "timezone": "Europe/Rome"
   },
   {
     "id": "spot-o6wy1s",
@@ -592,12 +1480,68 @@
     "timezone": "Europe/Paris"
   },
   {
+    "id": "spot-npeumo",
+    "name": "Cesenatico",
+    "displayName": "CESENATICO",
+    "latitude": 44.2009,
+    "longitude": 12.4063,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-wts8yq",
+    "name": "Chałupy 3",
+    "displayName": "CHAŁUPY 3",
+    "latitude": 54.773518,
+    "longitude": 18.465481,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-1i1iy7l",
+    "name": "Chałupy 6",
+    "displayName": "CHAŁUPY 6",
+    "latitude": 54.76196,
+    "longitude": 18.498201,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-p4jwr",
+    "name": "Châtelaillon-Plage",
+    "displayName": "CHÂTELAILLON-PLAGE",
+    "latitude": 46.081396,
+    "longitude": -1.08775,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-2gnq0f",
+    "name": "Chia",
+    "displayName": "CHIA",
+    "latitude": 38.8836,
+    "longitude": 8.8636,
+    "timezone": "Europe/Rome"
+  },
+  {
     "id": "spot-7c31i8",
     "name": "Chichester Yacht Club",
     "displayName": "CHICHESTER YACHT CLUB",
     "latitude": 50.804113,
     "longitude": -0.827405,
     "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-tqwsxe",
+    "name": "Chiemsee (Chieming)",
+    "displayName": "CHIEMSEE (CHIEMING)",
+    "latitude": 47.896489,
+    "longitude": 12.526864,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1yxch42",
+    "name": "Chipiona",
+    "displayName": "CHIPIONA",
+    "latitude": 36.7503,
+    "longitude": -6.4267,
+    "timezone": "Europe/Madrid"
   },
   {
     "id": "spot-frfv06",
@@ -630,6 +1574,22 @@
     "latitude": 45.412414,
     "longitude": 8.0485,
     "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-1fppb1o",
+    "name": "Clacton-on-Sea",
+    "displayName": "CLACTON-ON-SEA",
+    "latitude": 51.789,
+    "longitude": 1.155,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-k0pvxb",
+    "name": "Cleethorpes",
+    "displayName": "CLEETHORPES",
+    "latitude": 53.552,
+    "longitude": -0.02,
+    "timezone": "Europe/London"
   },
   {
     "id": "spot-19y3op1",
@@ -880,6 +1840,158 @@
     "timezone": "Europe/Paris"
   },
   {
+    "id": "spot-1b4vmr2",
+    "name": "Colico (Lake Como)",
+    "displayName": "COLICO (LAKE COMO)",
+    "latitude": 46.137843,
+    "longitude": 9.372217,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-162t6la",
+    "name": "Comporta",
+    "displayName": "COMPORTA",
+    "latitude": 38.3856,
+    "longitude": -8.7889,
+    "timezone": "Europe/Lisbon"
+  },
+  {
+    "id": "spot-qf416m",
+    "name": "Conil de la Frontera",
+    "displayName": "CONIL DE LA FRONTERA",
+    "latitude": 36.268,
+    "longitude": -6.083,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-1v82xrz",
+    "name": "Corbu",
+    "displayName": "CORBU",
+    "latitude": 44.3657,
+    "longitude": 28.7031,
+    "timezone": "Europe/Bucharest"
+  },
+  {
+    "id": "spot-qy2u22",
+    "name": "Costa Nova / Ria de Aveiro",
+    "displayName": "COSTA NOVA / RIA DE AVEIRO",
+    "latitude": 40.6156,
+    "longitude": -8.7477,
+    "timezone": "Europe/Lisbon"
+  },
+  {
+    "id": "spot-1babmdt",
+    "name": "Costa Rei",
+    "displayName": "COSTA REI",
+    "latitude": 39.2697,
+    "longitude": 9.5849,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-13gm7yo",
+    "name": "Cova do Vapor",
+    "displayName": "COVA DO VAPOR",
+    "latitude": 38.6608,
+    "longitude": -9.2384,
+    "timezone": "Europe/Lisbon"
+  },
+  {
+    "id": "spot-1q9cua",
+    "name": "Croyde",
+    "displayName": "CROYDE",
+    "latitude": 51.13,
+    "longitude": -4.24,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-yt3zti",
+    "name": "Cullera",
+    "displayName": "CULLERA",
+    "latitude": 39.1786,
+    "longitude": -0.2183,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-e0jge",
+    "name": "Cumbuco",
+    "displayName": "CUMBUCO",
+    "latitude": -3.625298,
+    "longitude": -38.725777,
+    "timezone": "America/Fortaleza"
+  },
+  {
+    "id": "spot-p114kp",
+    "name": "Cuxhaven (Duhnen-Döse)",
+    "displayName": "CUXHAVEN (DUHNEN-DÖSE)",
+    "latitude": 53.89,
+    "longitude": 8.627,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1ohfmgs",
+    "name": "Dagalifjell (Hardangervidda)",
+    "displayName": "DAGALIFJELL (HARDANGERVIDDA)",
+    "latitude": 60.3667,
+    "longitude": 8.5167,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-tzrzh2",
+    "name": "Dahab",
+    "displayName": "DAHAB",
+    "latitude": 28.479721,
+    "longitude": 34.498179,
+    "timezone": "Africa/Cairo"
+  },
+  {
+    "id": "spot-fa08x4",
+    "name": "Dahme",
+    "displayName": "DAHME",
+    "latitude": 54.2168,
+    "longitude": 11.085,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-17e7avd",
+    "name": "Dakhla",
+    "displayName": "DAKHLA",
+    "latitude": 23.894248,
+    "longitude": -15.773378,
+    "timezone": "Africa/El_Aaiun"
+  },
+  {
+    "id": "spot-25uclm",
+    "name": "Damp",
+    "displayName": "DAMP",
+    "latitude": 54.574,
+    "longitude": 9.907,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1pwe4e3",
+    "name": "Dangast",
+    "displayName": "DANGAST",
+    "latitude": 53.4472,
+    "longitude": 8.1097,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-12waii0",
+    "name": "Darłówko",
+    "displayName": "DARŁÓWKO",
+    "latitude": 54.432911,
+    "longitude": 16.38937,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-lbsha4",
+    "name": "Daymer Bay",
+    "displayName": "DAYMER BAY",
+    "latitude": 50.565,
+    "longitude": -4.925,
+    "timezone": "Europe/London"
+  },
+  {
     "id": "spot-jvarka",
     "name": "De Maas",
     "displayName": "DE MAAS",
@@ -894,6 +2006,70 @@
     "latitude": 52.691291,
     "longitude": 6.089495,
     "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1xkr1nk",
+    "name": "Debeli Rtič",
+    "displayName": "DEBELI RTIČ",
+    "latitude": 45.5942,
+    "longitude": 13.7138,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-194vlw8",
+    "name": "Dębki",
+    "displayName": "DĘBKI",
+    "latitude": 54.8275,
+    "longitude": 18.08778,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-x870ou",
+    "name": "Delfzijl",
+    "displayName": "DELFZIJL",
+    "latitude": 53.33453,
+    "longitude": 6.931337,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-f1c3xn",
+    "name": "Den Haag - Zuiderstrand",
+    "displayName": "DEN HAAG - ZUIDERSTRAND",
+    "latitude": 52.093886,
+    "longitude": 4.249608,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-zha3fu",
+    "name": "Den Helder - Huisduinen",
+    "displayName": "DEN HELDER - HUISDUINEN",
+    "latitude": 52.953239,
+    "longitude": 4.720852,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-vbzxwk",
+    "name": "Dénia",
+    "displayName": "DÉNIA",
+    "latitude": 38.8531,
+    "longitude": 0.1043,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-hzdfmv",
+    "name": "Dierhagen",
+    "displayName": "DIERHAGEN",
+    "latitude": 54.301,
+    "longitude": 12.343,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1bdhomy",
+    "name": "Divjakë",
+    "displayName": "DIVJAKË",
+    "latitude": 40.9502,
+    "longitude": 19.4636,
+    "timezone": "Europe/Tirane"
   },
   {
     "id": "spot-1g6ebk1",
@@ -912,6 +2088,54 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-11s64tj",
+    "name": "Dojran",
+    "displayName": "DOJRAN",
+    "latitude": 41.2246,
+    "longitude": 22.6991,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-exjob0",
+    "name": "Dolphin Beach",
+    "displayName": "DOLPHIN BEACH",
+    "latitude": -33.8296,
+    "longitude": 18.4799,
+    "timezone": "Africa/Johannesburg"
+  },
+  {
+    "id": "spot-1ypkpwt",
+    "name": "Domaso (Lago di Como)",
+    "displayName": "DOMASO (LAGO DI COMO)",
+    "latitude": 46.149,
+    "longitude": 9.3312,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-104ddkc",
+    "name": "Domburg",
+    "displayName": "DOMBURG",
+    "latitude": 51.552254,
+    "longitude": 3.461647,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1cdfdia",
+    "name": "Dormelletto (Lago Maggiore)",
+    "displayName": "DORMELLETTO (LAGO MAGGIORE)",
+    "latitude": 45.7397,
+    "longitude": 8.5719,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-uqskjq",
+    "name": "Dorum-Neufeld",
+    "displayName": "DORUM-NEUFELD",
+    "latitude": 53.7274,
+    "longitude": 8.5062,
+    "timezone": "Europe/Berlin"
+  },
+  {
     "id": "spot-1x4vyu3",
     "name": "Downtown Sailing Center",
     "displayName": "DOWNTOWN SAILING CENTER",
@@ -920,12 +2144,44 @@
     "timezone": "America/New_York"
   },
   {
+    "id": "spot-1cv0run",
+    "name": "Dranske (Rügen)",
+    "displayName": "DRANSKE (RÜGEN)",
+    "latitude": 54.63,
+    "longitude": 13.228,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1b91veg",
+    "name": "Drepano (Patras)",
+    "displayName": "DREPANO (PATRAS)",
+    "latitude": 38.3406,
+    "longitude": 21.8453,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-2juqe0",
+    "name": "Druridge Bay",
+    "displayName": "DRURIDGE BAY",
+    "latitude": 55.27,
+    "longitude": -1.55,
+    "timezone": "Europe/London"
+  },
+  {
     "id": "spot-3db0f6",
     "name": "Dudley Water Sports Centre Ltd",
     "displayName": "DUDLEY WATER SPORTS CENTRE LTD",
     "latitude": 52.483151,
     "longitude": -2.092714,
     "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1lojklc",
+    "name": "Dueodde",
+    "displayName": "DUEODDE",
+    "latitude": 54.991798,
+    "longitude": 15.074295,
+    "timezone": "Europe/Berlin"
   },
   {
     "id": "spot-1ylhg2k",
@@ -944,12 +2200,68 @@
     "timezone": "Europe/London"
   },
   {
+    "id": "spot-pz5de5",
+    "name": "Dunkerque – Malo-les-Bains",
+    "displayName": "DUNKERQUE – MALO-LES-BAINS",
+    "latitude": 51.056715,
+    "longitude": 2.428056,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1dlsycn",
+    "name": "Durankulak",
+    "displayName": "DURANKULAK",
+    "latitude": 43.6733,
+    "longitude": 28.5567,
+    "timezone": "Europe/Sofia"
+  },
+  {
+    "id": "spot-1eolnsk",
+    "name": "Durrës",
+    "displayName": "DURRËS",
+    "latitude": 41.2778,
+    "longitude": 19.4897,
+    "timezone": "Europe/Tirane"
+  },
+  {
     "id": "spot-j7d6c",
     "name": "Dynamique Water en Buitensport",
     "displayName": "DYNAMIQUE WATER EN BUITENSPORT",
     "latitude": 52.403945,
     "longitude": 4.679918,
     "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1pklb0i",
+    "name": "Dzierżno",
+    "displayName": "DZIERŻNO",
+    "latitude": 50.362524,
+    "longitude": 18.559768,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-194xfdn",
+    "name": "Dziwnów",
+    "displayName": "DZIWNÓW",
+    "latitude": 54.0306,
+    "longitude": 14.7517,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-1tzz1fv",
+    "name": "Dźwirzyno",
+    "displayName": "DŹWIRZYNO",
+    "latitude": 54.148054,
+    "longitude": 15.397541,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-qeaizh",
+    "name": "Eckernförde",
+    "displayName": "ECKERNFÖRDE",
+    "latitude": 54.467,
+    "longitude": 9.842,
+    "timezone": "Europe/Berlin"
   },
   {
     "id": "spot-17emnbs",
@@ -1048,12 +2360,28 @@
     "timezone": "Europe/Paris"
   },
   {
+    "id": "spot-1usy34g",
+    "name": "Edam Noord - Galgenveld",
+    "displayName": "EDAM NOORD - GALGENVELD",
+    "latitude": 52.52256,
+    "longitude": 5.067095,
+    "timezone": "Europe/Brussels"
+  },
+  {
     "id": "spot-1m52tpw",
     "name": "Egå Sejlklub",
     "displayName": "EGÅ SEJLKLUB",
     "latitude": 56.209763,
     "longitude": 10.287937,
     "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-ag88ti",
+    "name": "Egmond Binnen/aan Zee",
+    "displayName": "EGMOND BINNEN/AAN ZEE",
+    "latitude": 52.613762,
+    "longitude": 4.616011,
+    "timezone": "Europe/Brussels"
   },
   {
     "id": "spot-m49fuw",
@@ -1064,12 +2392,76 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-6hhum4",
+    "name": "El Cotillo (Fuerteventura, Canary Islands)",
+    "displayName": "EL COTILLO (FUERTEVENTURA, CANARY ISLANDS)",
+    "latitude": 28.6812,
+    "longitude": -14.0106,
+    "timezone": "Atlantic/Canary"
+  },
+  {
+    "id": "spot-538c3k",
+    "name": "El Gouna",
+    "displayName": "EL GOUNA",
+    "latitude": 27.395743,
+    "longitude": 33.678613,
+    "timezone": "Africa/Cairo"
+  },
+  {
     "id": "spot-x9oq8m",
     "name": "El Kur",
     "displayName": "EL KUR",
     "latitude": 53.795438,
     "longitude": 20.428538,
     "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-1b6wz8k",
+    "name": "El Médano (Tenerife, Canary Islands)",
+    "displayName": "EL MÉDANO (TENERIFE, CANARY ISLANDS)",
+    "latitude": 28.040392,
+    "longitude": -16.543892,
+    "timezone": "Atlantic/Canary"
+  },
+  {
+    "id": "spot-1x27jox",
+    "name": "El Palmar (Vejer de la Frontera)",
+    "displayName": "EL PALMAR (VEJER DE LA FRONTERA)",
+    "latitude": 36.2298,
+    "longitude": -6.0353,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-xp2fjn",
+    "name": "El Trabucador (Delta de l'Ebre)",
+    "displayName": "EL TRABUCADOR (DELTA DE L'EBRE)",
+    "latitude": 40.6175,
+    "longitude": 0.7255,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-h6ohiy",
+    "name": "Elafonisi (Crete)",
+    "displayName": "ELAFONISI (CRETE)",
+    "latitude": 35.2747,
+    "longitude": 23.5354,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-yum47x",
+    "name": "Elafonisos",
+    "displayName": "ELAFONISOS",
+    "latitude": 36.5215,
+    "longitude": 22.9839,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-ekdaop",
+    "name": "Elburg",
+    "displayName": "ELBURG",
+    "latitude": 52.455063,
+    "longitude": 5.817958,
+    "timezone": "Europe/Brussels"
   },
   {
     "id": "spot-4spii9",
@@ -1086,6 +2478,30 @@
     "latitude": 59.315001,
     "longitude": 10.681456,
     "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1yz72n7",
+    "name": "Engure",
+    "displayName": "ENGURE",
+    "latitude": 57.1602,
+    "longitude": 23.2232,
+    "timezone": "Europe/Riga"
+  },
+  {
+    "id": "spot-1yw9e7q",
+    "name": "Enkhuizen",
+    "displayName": "ENKHUIZEN",
+    "latitude": 52.714832,
+    "longitude": 5.288304,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1c163wd",
+    "name": "Epanomi (Halkidiki)",
+    "displayName": "EPANOMI (HALKIDIKI)",
+    "latitude": 40.3799,
+    "longitude": 22.8929,
+    "timezone": "Europe/Athens"
   },
   {
     "id": "spot-8a66qr",
@@ -1136,12 +2552,116 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-13ktluk",
+    "name": "Espinho",
+    "displayName": "ESPINHO",
+    "latitude": 41.005,
+    "longitude": -8.649,
+    "timezone": "Europe/Lisbon"
+  },
+  {
+    "id": "spot-qxkuyf",
+    "name": "Esposende / Ofir",
+    "displayName": "ESPOSENDE / OFIR",
+    "latitude": 41.5163,
+    "longitude": -8.7855,
+    "timezone": "Europe/Lisbon"
+  },
+  {
+    "id": "spot-l9s1p",
+    "name": "Essaouira",
+    "displayName": "ESSAOUIRA",
+    "latitude": 31.49851,
+    "longitude": -9.76397,
+    "timezone": "Africa/Casablanca"
+  },
+  {
+    "id": "spot-1qcxutj",
+    "name": "Estepona, Guadalmansa",
+    "displayName": "ESTEPONA, GUADALMANSA",
+    "latitude": 36.4436,
+    "longitude": -5.0538,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-1xiq8ap",
+    "name": "Étang de Berre – Le Jaï",
+    "displayName": "ÉTANG DE BERRE – LE JAÏ",
+    "latitude": 43.407733,
+    "longitude": 5.153442,
+    "timezone": "Europe/Paris"
+  },
+  {
     "id": "spot-alt92",
     "name": "Exe Sailing Club",
     "displayName": "EXE SAILING CLUB",
     "latitude": 50.619241,
     "longitude": -3.424327,
     "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1akt9v5",
+    "name": "Exmouth",
+    "displayName": "EXMOUTH",
+    "latitude": 50.6131,
+    "longitude": -3.4105,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-11anyx",
+    "name": "Falkenberg (Skrea strand)",
+    "displayName": "FALKENBERG (SKREA STRAND)",
+    "latitude": 56.885,
+    "longitude": 12.505,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-f6wa3j",
+    "name": "Falsterbo",
+    "displayName": "FALSTERBO",
+    "latitude": 55.39,
+    "longitude": 12.856,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-99h11t",
+    "name": "Famara (Lanzarote, Canary Islands)",
+    "displayName": "FAMARA (LANZAROTE, CANARY ISLANDS)",
+    "latitude": 29.1215,
+    "longitude": -13.552,
+    "timezone": "Atlantic/Canary"
+  },
+  {
+    "id": "spot-prpfcs",
+    "name": "Fanari (Rodopi)",
+    "displayName": "FANARI (RODOPI)",
+    "latitude": 40.9291,
+    "longitude": 25.2775,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-1icequy",
+    "name": "Fanes (Rhodes)",
+    "displayName": "FANES (RHODES)",
+    "latitude": 36.3628,
+    "longitude": 27.9755,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-fb9agi",
+    "name": "Fanø",
+    "displayName": "FANØ",
+    "latitude": 55.4154,
+    "longitude": 8.3759,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-h9hfug",
+    "name": "Farsund",
+    "displayName": "FARSUND",
+    "latitude": 58.0839,
+    "longitude": 6.9604,
+    "timezone": "Europe/Berlin"
   },
   {
     "id": "spot-1giu2ym",
@@ -1152,11 +2672,35 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-vl8z38",
+    "name": "Figueira da Foz",
+    "displayName": "FIGUEIRA DA FOZ",
+    "latitude": 40.1478,
+    "longitude": -8.8664,
+    "timezone": "Europe/Lisbon"
+  },
+  {
     "id": "spot-12fua4o",
     "name": "Fiskumvannet",
     "displayName": "FISKUMVANNET",
     "latitude": 59.69877,
     "longitude": 9.841186,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-7w456k",
+    "name": "Flag Beach (Fuerteventura, Canary Islands)",
+    "displayName": "FLAG BEACH (FUERTEVENTURA, CANARY ISLANDS)",
+    "latitude": 28.7207,
+    "longitude": -13.841057,
+    "timezone": "Atlantic/Canary"
+  },
+  {
+    "id": "spot-14o2tsc",
+    "name": "Flakstad (Lofoten)",
+    "displayName": "FLAKSTAD (LOFOTEN)",
+    "latitude": 68.1082,
+    "longitude": 13.2917,
     "timezone": "Europe/Berlin"
   },
   {
@@ -1168,6 +2712,22 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-1pjv6re",
+    "name": "Fleetwood",
+    "displayName": "FLEETWOOD",
+    "latitude": 53.928,
+    "longitude": -3.03,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-fu2lt1",
+    "name": "Flügge",
+    "displayName": "FLÜGGE",
+    "latitude": 54.454,
+    "longitude": 11.0077,
+    "timezone": "Europe/Berlin"
+  },
+  {
     "id": "spot-255a5w",
     "name": "FluidW",
     "displayName": "FLUIDW",
@@ -1176,12 +2736,52 @@
     "timezone": "Europe/Paris"
   },
   {
+    "id": "spot-frab35",
+    "name": "Flyvesandet",
+    "displayName": "FLYVESANDET",
+    "latitude": 55.6203,
+    "longitude": 10.2895,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-4ggntb",
+    "name": "Föhr (Nieblum)",
+    "displayName": "FÖHR (NIEBLUM)",
+    "latitude": 54.682,
+    "longitude": 8.472,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-sql5xi",
+    "name": "Fonte da Telha",
+    "displayName": "FONTE DA TELHA",
+    "latitude": 38.572075,
+    "longitude": -9.196222,
+    "timezone": "Europe/Lisbon"
+  },
+  {
+    "id": "spot-4y1ch4",
+    "name": "Forggensee (Brunnen)",
+    "displayName": "FORGGENSEE (BRUNNEN)",
+    "latitude": 47.599,
+    "longitude": 10.737,
+    "timezone": "Europe/Berlin"
+  },
+  {
     "id": "spot-95d93j",
     "name": "Frankfurter Rudergesellschaft Borussia 1896",
     "displayName": "FRANKFURTER RUDERGESELLSCHAFT BORUSSIA 1896",
     "latitude": 50.105166,
     "longitude": 8.717157,
     "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-z3w53z",
+    "name": "Fraserburgh",
+    "displayName": "FRASERBURGH",
+    "latitude": 57.6776,
+    "longitude": -1.9808,
+    "timezone": "Europe/London"
   },
   {
     "id": "spot-1oiz0az",
@@ -1200,12 +2800,132 @@
     "timezone": "Europe/Belgrade"
   },
   {
+    "id": "spot-1484hsv",
+    "name": "Fregene",
+    "displayName": "FREGENE",
+    "latitude": 41.8489,
+    "longitude": 12.1897,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-1cjl12e",
+    "name": "Freshwater West",
+    "displayName": "FRESHWATER WEST",
+    "latitude": 51.66,
+    "longitude": -5.061,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-aeiz0c",
+    "name": "Frigole (Lecce)",
+    "displayName": "FRIGOLE (LECCE)",
+    "latitude": 40.4249,
+    "longitude": 18.2584,
+    "timezone": "Europe/Rome"
+  },
+  {
     "id": "spot-1kn8j39",
     "name": "Frosta-Tautra",
     "displayName": "FROSTA-TAUTRA",
     "latitude": 63.583695,
     "longitude": 10.614778,
     "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-d9oy76",
+    "name": "Ftelia (Mykonos)",
+    "displayName": "FTELIA (MYKONOS)",
+    "latitude": 37.4621,
+    "longitude": 25.376,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-1l6n02b",
+    "name": "Fuseta",
+    "displayName": "FUSETA",
+    "latitude": 37.050896,
+    "longitude": -7.743208,
+    "timezone": "Europe/Lisbon"
+  },
+  {
+    "id": "spot-aftiou",
+    "name": "Fynshoved",
+    "displayName": "FYNSHOVED",
+    "latitude": 55.611,
+    "longitude": 10.6271,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-i5iri8",
+    "name": "Gaeta",
+    "displayName": "GAETA",
+    "latitude": 41.2029,
+    "longitude": 13.621,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-f4fnkm",
+    "name": "Gammendorf (Niobe)",
+    "displayName": "GAMMENDORF (NIOBE)",
+    "latitude": 54.5182,
+    "longitude": 11.1533,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-19e0dkn",
+    "name": "Gdańsk Górki Zachodnie",
+    "displayName": "GDAŃSK GÓRKI ZACHODNIE",
+    "latitude": 54.371,
+    "longitude": 18.7689,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-11jckt3",
+    "name": "Geierswalder See",
+    "displayName": "GEIERSWALDER SEE",
+    "latitude": 51.5,
+    "longitude": 14.125,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-19kwdsc",
+    "name": "Gera Lario (Lago di Como)",
+    "displayName": "GERA LARIO (LAGO DI COMO)",
+    "latitude": 46.1695,
+    "longitude": 9.371,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-1qmxgii",
+    "name": "Getares",
+    "displayName": "GETARES",
+    "latitude": 36.094513,
+    "longitude": -5.445056,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-1yw7x3p",
+    "name": "Għajn Tuffieħa",
+    "displayName": "GĦAJN TUFFIEĦA",
+    "latitude": 35.9292,
+    "longitude": 14.3428,
+    "timezone": "Europe/Malta"
+  },
+  {
+    "id": "spot-1uhp0i2",
+    "name": "Gialova",
+    "displayName": "GIALOVA",
+    "latitude": 36.9491,
+    "longitude": 21.7038,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-w475rw",
+    "name": "Giannella (Orbetello)",
+    "displayName": "GIANNELLA (ORBETELLO)",
+    "latitude": 42.4558,
+    "longitude": 11.1758,
+    "timezone": "Europe/Rome"
   },
   {
     "id": "spot-1swj3c0",
@@ -1216,11 +2936,163 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-6ems6j",
+    "name": "Giruliai",
+    "displayName": "GIRULIAI",
+    "latitude": 55.7707,
+    "longitude": 21.079,
+    "timezone": "Europe/Vilnius"
+  },
+  {
+    "id": "spot-15ey2jy",
+    "name": "Gizzeria Lido, Hang Loose Beach",
+    "displayName": "GIZZERIA LIDO, HANG LOOSE BEACH",
+    "latitude": 38.9348,
+    "longitude": 16.1913,
+    "timezone": "Europe/Rome"
+  },
+  {
     "id": "spot-mc22t6",
     "name": "Gjerdsvika",
     "displayName": "GJERDSVIKA",
     "latitude": 62.25386,
     "longitude": 5.575819,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1kmnl07",
+    "name": "Glowe (Tromper Wiek)",
+    "displayName": "GLOWE (TROMPER WIEK)",
+    "latitude": 54.573,
+    "longitude": 13.463,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1y9s7hj",
+    "name": "Gnejna Bay",
+    "displayName": "GNEJNA BAY",
+    "latitude": 35.9242,
+    "longitude": 14.3406,
+    "timezone": "Europe/Malta"
+  },
+  {
+    "id": "spot-1eld5tn",
+    "name": "Goczałkowice",
+    "displayName": "GOCZAŁKOWICE",
+    "latitude": 49.945018,
+    "longitude": 18.844752,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-bobpwf",
+    "name": "Gold",
+    "displayName": "GOLD",
+    "latitude": 54.4248,
+    "longitude": 11.0977,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-glnc0t",
+    "name": "Golden Beach (Paros)",
+    "displayName": "GOLDEN BEACH (PAROS)",
+    "latitude": 37.0093,
+    "longitude": 25.2455,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-19g1klj",
+    "name": "Golsfjellet",
+    "displayName": "GOLSFJELLET",
+    "latitude": 60.8359,
+    "longitude": 9.1564,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-qetqpf",
+    "name": "Gomati (Limnos)",
+    "displayName": "GOMATI (LIMNOS)",
+    "latitude": 39.9925,
+    "longitude": 25.15,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-1sfqkh2",
+    "name": "Gouves (Crete)",
+    "displayName": "GOUVES (CRETE)",
+    "latitude": 35.3343,
+    "longitude": 25.3136,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-1hb0py5",
+    "name": "Graal-Müritz",
+    "displayName": "GRAAL-MÜRITZ",
+    "latitude": 54.254,
+    "longitude": 12.232,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1urgak0",
+    "name": "Grado Pineta",
+    "displayName": "GRADO PINETA",
+    "latitude": 45.6767,
+    "longitude": 13.4313,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-y0ia6o",
+    "name": "Granelli (Pachino)",
+    "displayName": "GRANELLI (PACHINO)",
+    "latitude": 36.7021,
+    "longitude": 15.0161,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-j75wg2",
+    "name": "Greatstone",
+    "displayName": "GREATSTONE",
+    "latitude": 50.965,
+    "longitude": 0.96,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-17m1frl",
+    "name": "Grevelingendam - Zuid",
+    "displayName": "GREVELINGENDAM - ZUID",
+    "latitude": 51.674713,
+    "longitude": 4.13996,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-386pj7",
+    "name": "Grisslehamn",
+    "displayName": "GRISSLEHAMN",
+    "latitude": 60.1025,
+    "longitude": 18.8058,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-gido1h",
+    "name": "Grömitz",
+    "displayName": "GRÖMITZ",
+    "latitude": 54.144,
+    "longitude": 10.96,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-h22xjf",
+    "name": "Grönhögen (Öland)",
+    "displayName": "GRÖNHÖGEN (ÖLAND)",
+    "latitude": 56.262,
+    "longitude": 16.4,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-56fhqf",
+    "name": "Großer Brombachsee",
+    "displayName": "GROSSER BROMBACHSEE",
+    "latitude": 49.1245,
+    "longitude": 10.933,
     "timezone": "Europe/Berlin"
   },
   {
@@ -1232,11 +3104,115 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-1tigy0",
+    "name": "Gruissan",
+    "displayName": "GRUISSAN",
+    "latitude": 43.09716,
+    "longitude": 3.11308,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-h80m9w",
+    "name": "Grüner Brink",
+    "displayName": "GRÜNER BRINK",
+    "latitude": 54.5084,
+    "longitude": 11.1929,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1pt1sxk",
+    "name": "Guadalmar (Málaga)",
+    "displayName": "GUADALMAR (MÁLAGA)",
+    "latitude": 36.6588,
+    "longitude": -4.4762,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-1a5905j",
+    "name": "Guajiru",
+    "displayName": "GUAJIRU",
+    "latitude": -3.237697,
+    "longitude": -39.234581,
+    "timezone": "America/Fortaleza"
+  },
+  {
+    "id": "spot-2mprgf",
+    "name": "Guardamar del Segura",
+    "displayName": "GUARDAMAR DEL SEGURA",
+    "latitude": 38.1004,
+    "longitude": -0.6503,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-1wa31mf",
+    "name": "Guidel – Plage de la Falaise",
+    "displayName": "GUIDEL – PLAGE DE LA FALAISE",
+    "latitude": 47.764316,
+    "longitude": -3.525926,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-ex457j",
+    "name": "Guincho",
+    "displayName": "GUINCHO",
+    "latitude": 38.733385,
+    "longitude": -9.47502,
+    "timezone": "Europe/Lisbon"
+  },
+  {
+    "id": "spot-1aato66",
+    "name": "Gwithian",
+    "displayName": "GWITHIAN",
+    "latitude": 50.214,
+    "longitude": -5.404,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1hji70i",
+    "name": "Häädemeeste",
+    "displayName": "HÄÄDEMEESTE",
+    "latitude": 58.076621,
+    "longitude": 24.493989,
+    "timezone": "Europe/Tallinn"
+  },
+  {
+    "id": "spot-1knjc0z",
+    "name": "Halikounas (Corfu)",
+    "displayName": "HALIKOUNAS (CORFU)",
+    "latitude": 39.4469,
+    "longitude": 19.8883,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-fnmxyx",
+    "name": "Halmstad (Simstadion)",
+    "displayName": "HALMSTAD (SIMSTADION)",
+    "latitude": 56.66,
+    "longitude": 12.81,
+    "timezone": "Europe/Berlin"
+  },
+  {
     "id": "spot-dkhr99",
     "name": "Hals Bådelaug",
     "displayName": "HALS BÅDELAUG",
     "latitude": 56.991098,
     "longitude": 10.306271,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-45a6j6",
+    "name": "Hamata",
+    "displayName": "HAMATA",
+    "latitude": 24.300838,
+    "longitude": 35.362698,
+    "timezone": "Africa/Cairo"
+  },
+  {
+    "id": "spot-grinok",
+    "name": "Hammarö (Vänern)",
+    "displayName": "HAMMARÖ (VÄNERN)",
+    "latitude": 59.2961,
+    "longitude": 13.4988,
     "timezone": "Europe/Berlin"
   },
   {
@@ -1248,12 +3224,100 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-1nvteua",
+    "name": "Hankø",
+    "displayName": "HANKØ",
+    "latitude": 59.1903,
+    "longitude": 10.7805,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-14osiar",
+    "name": "Hanstholm",
+    "displayName": "HANSTHOLM",
+    "latitude": 57.1256,
+    "longitude": 8.6199,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1kqjj0q",
+    "name": "Harlingen - Waddenzee",
+    "displayName": "HARLINGEN - WADDENZEE",
+    "latitude": 53.166355,
+    "longitude": 5.415011,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-ag1pur",
+    "name": "Haugastøl",
+    "displayName": "HAUGASTØL",
+    "latitude": 60.5125,
+    "longitude": 7.8681,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-lyn3s4",
+    "name": "Havika (Lista)",
+    "displayName": "HAVIKA (LISTA)",
+    "latitude": 58.075,
+    "longitude": 6.72,
+    "timezone": "Europe/Berlin"
+  },
+  {
     "id": "spot-pk47pi",
     "name": "Haviksanden",
     "displayName": "HAVIKSANDEN",
     "latitude": 58.066652,
     "longitude": 6.734329,
     "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-v4biuk",
+    "name": "Hayling Island",
+    "displayName": "HAYLING ISLAND",
+    "latitude": 50.7878,
+    "longitude": -1.0073,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-efjgqk",
+    "name": "Heidkate",
+    "displayName": "HEIDKATE",
+    "latitude": 54.4362,
+    "longitude": 10.3283,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-p0ciim",
+    "name": "Heiligenhafen (Graswarder)",
+    "displayName": "HEILIGENHAFEN (GRASWARDER)",
+    "latitude": 54.3826,
+    "longitude": 10.984,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1wkbjhc",
+    "name": "Hel",
+    "displayName": "HEL",
+    "latitude": 54.5926,
+    "longitude": 18.8113,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-dsv44p",
+    "name": "Hellestø",
+    "displayName": "HELLESTØ",
+    "latitude": 58.8385,
+    "longitude": 5.5637,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-4rxya6",
+    "name": "Hellevoetsluis - Haringvliet",
+    "displayName": "HELLEVOETSLUIS - HARINGVLIET",
+    "latitude": 51.820636,
+    "longitude": 4.159094,
+    "timezone": "Europe/Brussels"
   },
   {
     "id": "spot-z886e7",
@@ -1264,12 +3328,84 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-xg69rd",
+    "name": "Hendaye",
+    "displayName": "HENDAYE",
+    "latitude": 43.372743,
+    "longitude": -1.773662,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-16mw15i",
+    "name": "Henne Strand",
+    "displayName": "HENNE STRAND",
+    "latitude": 55.735,
+    "longitude": 8.1697,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1lr74dp",
+    "name": "Herdla",
+    "displayName": "HERDLA",
+    "latitude": 60.5681,
+    "longitude": 4.9503,
+    "timezone": "Europe/Berlin"
+  },
+  {
     "id": "spot-x3brok",
     "name": "Hermanus Yacht Club",
     "displayName": "HERMANUS YACHT CLUB",
     "latitude": -34.40918,
     "longitude": 19.349252,
     "timezone": "Africa/Johannesburg"
+  },
+  {
+    "id": "spot-1fwl3bh",
+    "name": "Herne Bay",
+    "displayName": "HERNE BAY",
+    "latitude": 51.375,
+    "longitude": 1.128,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1br2d2r",
+    "name": "Hiddensee",
+    "displayName": "HIDDENSEE",
+    "latitude": 54.557,
+    "longitude": 13.109,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1qs6z4k",
+    "name": "Hiiumaa",
+    "displayName": "HIIUMAA",
+    "latitude": 58.948611,
+    "longitude": 22.413922,
+    "timezone": "Europe/Tallinn"
+  },
+  {
+    "id": "spot-1vwzneb",
+    "name": "Hindeloopen",
+    "displayName": "HINDELOOPEN",
+    "latitude": 52.93354,
+    "longitude": 5.403361,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1yxra8s",
+    "name": "Hjerkinn (Dovrefjell)",
+    "displayName": "HJERKINN (DOVREFJELL)",
+    "latitude": 62.2047,
+    "longitude": 9.534,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-16shgac",
+    "name": "Hlučín",
+    "displayName": "HLUČÍN",
+    "latitude": 49.886883,
+    "longitude": 18.17589,
+    "timezone": "Europe/Prague"
   },
   {
     "id": "spot-vnphg3",
@@ -1286,6 +3422,14 @@
     "latitude": 56.643958,
     "longitude": 9.811057,
     "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-10yihn7",
+    "name": "Hoek van Holland - Hoekse Watersport Vereniging",
+    "displayName": "HOEK VAN HOLLAND - HOEKSE WATERSPORT VERENIGING",
+    "latitude": 51.991804,
+    "longitude": 4.114208,
+    "timezone": "Europe/Brussels"
   },
   {
     "id": "spot-1heeqn4",
@@ -1312,12 +3456,36 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-ml9ut9",
+    "name": "Höllviken",
+    "displayName": "HÖLLVIKEN",
+    "latitude": 55.41,
+    "longitude": 12.95,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-s8l1ts",
+    "name": "Holmsund (Umeå)",
+    "displayName": "HOLMSUND (UMEÅ)",
+    "latitude": 63.6828,
+    "longitude": 20.3632,
+    "timezone": "Europe/Berlin"
+  },
+  {
     "id": "spot-qzc4hh",
     "name": "Honorable William Wall",
     "displayName": "HONORABLE WILLIAM WALL",
     "latitude": 40.701659,
     "longitude": -74.036588,
     "timezone": "America/New_York"
+  },
+  {
+    "id": "spot-zuyd7a",
+    "name": "Hood River",
+    "displayName": "HOOD RIVER",
+    "latitude": 45.716072,
+    "longitude": -121.52008,
+    "timezone": "America/Los_Angeles"
   },
   {
     "id": "spot-6yz8qd",
@@ -1328,12 +3496,28 @@
     "timezone": "Europe/Brussels"
   },
   {
+    "id": "spot-n1ui0p",
+    "name": "Hooksiel",
+    "displayName": "HOOKSIEL",
+    "latitude": 53.6398,
+    "longitude": 8.0678,
+    "timezone": "Europe/Berlin"
+  },
+  {
     "id": "spot-1gscqce",
     "name": "Horizont",
     "displayName": "HORIZONT",
     "latitude": 45.23061,
     "longitude": 13.5987,
     "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-16wai8v",
+    "name": "Hornbæk",
+    "displayName": "HORNBÆK",
+    "latitude": 56.0945,
+    "longitude": 12.4553,
+    "timezone": "Europe/Berlin"
   },
   {
     "id": "spot-u1myrq",
@@ -1368,6 +3552,30 @@
     "timezone": "Europe/Paris"
   },
   {
+    "id": "spot-1ptxxyc",
+    "name": "Hoylake",
+    "displayName": "HOYLAKE",
+    "latitude": 53.393,
+    "longitude": -3.182,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1weliiv",
+    "name": "Hunstanton",
+    "displayName": "HUNSTANTON",
+    "latitude": 52.945,
+    "longitude": 0.489,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-19v9egk",
+    "name": "Hura Beach",
+    "displayName": "HURA BEACH",
+    "latitude": -2.877328,
+    "longitude": -39.922655,
+    "timezone": "America/Fortaleza"
+  },
+  {
     "id": "spot-1tqhwex",
     "name": "Hvasser syd",
     "displayName": "HVASSER SYD",
@@ -1376,12 +3584,100 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-19yr9h6",
+    "name": "Hvide Sande Nord",
+    "displayName": "HVIDE SANDE NORD",
+    "latitude": 56.014862,
+    "longitude": 8.10377,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-16ct9yk",
+    "name": "Hvide Sande South",
+    "displayName": "HVIDE SANDE SOUTH",
+    "latitude": 55.991527,
+    "longitude": 8.131881,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-ujr6v0",
+    "name": "Hyères – Almanarre",
+    "displayName": "HYÈRES – ALMANARRE",
+    "latitude": 43.062471,
+    "longitude": 6.131498,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-100yph0",
+    "name": "Ialyssos (Rhodes)",
+    "displayName": "IALYSSOS (RHODES)",
+    "latitude": 36.4275,
+    "longitude": 28.156,
+    "timezone": "Europe/Athens"
+  },
+  {
     "id": "spot-b0g5vk",
     "name": "Iate Clube do Rio de Janeiro",
     "displayName": "IATE CLUBE DO RIO DE JANEIRO",
     "latitude": -22.884039,
     "longitude": -42.006296,
     "timezone": "America/Sao_Paulo"
+  },
+  {
+    "id": "spot-yd8j5z",
+    "name": "IJmuiden",
+    "displayName": "IJMUIDEN",
+    "latitude": 52.449929,
+    "longitude": 4.562052,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-hqffu",
+    "name": "IJsselmeer - Workum",
+    "displayName": "IJSSELMEER - WORKUM",
+    "latitude": 52.9694,
+    "longitude": 5.4144,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-xzkcjp",
+    "name": "Île de Noirmoutier",
+    "displayName": "ÎLE DE NOIRMOUTIER",
+    "latitude": 46.904776,
+    "longitude": -2.166195,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-3h6vuf",
+    "name": "Île de Ré – La Couarde",
+    "displayName": "ÎLE DE RÉ – LA COUARDE",
+    "latitude": 46.200538,
+    "longitude": -1.40028,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1lgmlra",
+    "name": "Ilha de Tavira",
+    "displayName": "ILHA DE TAVIRA",
+    "latitude": 37.1103,
+    "longitude": -7.6512,
+    "timezone": "Europe/Lisbon"
+  },
+  {
+    "id": "spot-8byxky",
+    "name": "Ilha do Guajiru",
+    "displayName": "ILHA DO GUAJIRU",
+    "latitude": -2.884939,
+    "longitude": -39.898425,
+    "timezone": "America/Fortaleza"
+  },
+  {
+    "id": "spot-1van3qz",
+    "name": "Insel Poel (Timmendorf)",
+    "displayName": "INSEL POEL (TIMMENDORF)",
+    "latitude": 54.008,
+    "longitude": 11.414,
+    "timezone": "Europe/Berlin"
   },
   {
     "id": "spot-jrom8e",
@@ -1400,6 +3696,62 @@
     "timezone": "Europe/Brussels"
   },
   {
+    "id": "spot-15ichs0",
+    "name": "Ishøj Strand",
+    "displayName": "ISHØJ STRAND",
+    "latitude": 55.606,
+    "longitude": 12.384,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1mfx5wp",
+    "name": "Isla Cristina",
+    "displayName": "ISLA CRISTINA",
+    "latitude": 37.193,
+    "longitude": -7.3155,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-1jkyt2m",
+    "name": "Islay (The Big Strand)",
+    "displayName": "ISLAY (THE BIG STRAND)",
+    "latitude": 55.6784,
+    "longitude": -6.2677,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-64hbok",
+    "name": "Isola delle Correnti (Portopalo)",
+    "displayName": "ISOLA DELLE CORRENTI (PORTOPALO)",
+    "latitude": 36.6494,
+    "longitude": 15.0894,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-1geedi6",
+    "name": "Ixia (Rhodes)",
+    "displayName": "IXIA (RHODES)",
+    "latitude": 36.4193,
+    "longitude": 28.2103,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-exeni7",
+    "name": "Jastarnia",
+    "displayName": "JASTARNIA",
+    "latitude": 54.697213,
+    "longitude": 18.665455,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-17b2rqe",
+    "name": "Jastrzębia Góra",
+    "displayName": "JASTRZĘBIA GÓRA",
+    "latitude": 54.834907,
+    "longitude": 18.30525,
+    "timezone": "Europe/Warsaw"
+  },
+  {
     "id": "spot-1co150o",
     "name": "Jedriličarski Klub Ada",
     "displayName": "JEDRILIČARSKI KLUB ADA",
@@ -1414,6 +3766,54 @@
     "latitude": 45.336775,
     "longitude": 14.309743,
     "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-6cqkdv",
+    "name": "Jericoacoara",
+    "displayName": "JERICOACOARA",
+    "latitude": -2.799255,
+    "longitude": -40.52779,
+    "timezone": "America/Fortaleza"
+  },
+  {
+    "id": "spot-vwbmcy",
+    "name": "Jesolo",
+    "displayName": "JESOLO",
+    "latitude": 45.5057,
+    "longitude": 12.6546,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-wiojx3",
+    "name": "Jezioro Jamno",
+    "displayName": "JEZIORO JAMNO",
+    "latitude": 54.2683,
+    "longitude": 16.0836,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-1yxsbrl",
+    "name": "Jezioro Nyskie",
+    "displayName": "JEZIORO NYSKIE",
+    "latitude": 50.4627,
+    "longitude": 17.276,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-17jklmb",
+    "name": "Jezioro Otmuchowskie",
+    "displayName": "JEZIORO OTMUCHOWSKIE",
+    "latitude": 50.4737,
+    "longitude": 17.139,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-145o7m0",
+    "name": "Jeziorsko",
+    "displayName": "JEZIORSKO",
+    "latitude": 51.830991,
+    "longitude": 18.721239,
+    "timezone": "Europe/Warsaw"
   },
   {
     "id": "spot-kbcben",
@@ -1440,12 +3840,116 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-16m7r1x",
+    "name": "Jomfrugård Strand",
+    "displayName": "JOMFRUGÅRD STRAND",
+    "latitude": 54.993,
+    "longitude": 15.04,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1spd4ht",
+    "name": "Jönköping (Vättern)",
+    "displayName": "JÖNKÖPING (VÄTTERN)",
+    "latitude": 57.7833,
+    "longitude": 14.1676,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-fobpgl",
+    "name": "Julianadorp",
+    "displayName": "JULIANADORP",
+    "latitude": 52.895462,
+    "longitude": 4.711245,
+    "timezone": "Europe/Brussels"
+  },
+  {
     "id": "spot-1jhc3ae",
     "name": "Jumbles Sailing Club",
     "displayName": "JUMBLES SAILING CLUB",
     "latitude": 53.626863,
     "longitude": -2.404724,
     "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-41qccu",
+    "name": "Juodkrantė",
+    "displayName": "JUODKRANTĖ",
+    "latitude": 55.5445,
+    "longitude": 21.1215,
+    "timezone": "Europe/Vilnius"
+  },
+  {
+    "id": "spot-7sksne",
+    "name": "Jūra Spot (Monciškės)",
+    "displayName": "JŪRA SPOT (MONCIŠKĖS)",
+    "latitude": 56.003733,
+    "longitude": 21.074159,
+    "timezone": "Europe/Vilnius"
+  },
+  {
+    "id": "spot-enf1t8",
+    "name": "Jurata",
+    "displayName": "JURATA",
+    "latitude": 54.681721,
+    "longitude": 18.710661,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-16f8d4n",
+    "name": "Jūrmala (Pumpuri)",
+    "displayName": "JŪRMALA (PUMPURI)",
+    "latitude": 56.9599,
+    "longitude": 23.7372,
+    "timezone": "Europe/Riga"
+  },
+  {
+    "id": "spot-3pl3rn",
+    "name": "Kadyny",
+    "displayName": "KADYNY",
+    "latitude": 54.304122,
+    "longitude": 19.473924,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-exj0zu",
+    "name": "Kakumäe",
+    "displayName": "KAKUMÄE",
+    "latitude": 59.4501,
+    "longitude": 24.5759,
+    "timezone": "Europe/Tallinn"
+  },
+  {
+    "id": "spot-siocyl",
+    "name": "Kalogria",
+    "displayName": "KALOGRIA",
+    "latitude": 38.1421,
+    "longitude": 21.3712,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-roaxe7",
+    "name": "Kalpitiya",
+    "displayName": "KALPITIYA",
+    "latitude": 8.242326,
+    "longitude": 79.739714,
+    "timezone": "Asia/Colombo"
+  },
+  {
+    "id": "spot-bzbvl5",
+    "name": "Kamperland - Roompot XBeach",
+    "displayName": "KAMPERLAND - ROOMPOT XBEACH",
+    "latitude": 51.592909,
+    "longitude": 3.731378,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-lhbg1d",
+    "name": "Kämpinge",
+    "displayName": "KÄMPINGE",
+    "latitude": 55.4,
+    "longitude": 12.96,
+    "timezone": "Europe/Berlin"
   },
   {
     "id": "spot-1mj7qsd",
@@ -1456,12 +3960,188 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-1f30qwe",
+    "name": "Karlshagen (Usedom)",
+    "displayName": "KARLSHAGEN (USEDOM)",
+    "latitude": 54.123,
+    "longitude": 13.813,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-16cbaux",
+    "name": "Karrebæksminde",
+    "displayName": "KARREBÆKSMINDE",
+    "latitude": 55.172,
+    "longitude": 11.6506,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1u8bk1v",
+    "name": "Karteros (Crete)",
+    "displayName": "KARTEROS (CRETE)",
+    "latitude": 35.3332,
+    "longitude": 25.2058,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-ljw9x",
+    "name": "Karwia",
+    "displayName": "KARWIA",
+    "latitude": 54.830541,
+    "longitude": 18.171081,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-llczxi",
+    "name": "Kaštela",
+    "displayName": "KAŠTELA",
+    "latitude": 43.545,
+    "longitude": 16.4,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-16xwxi3",
+    "name": "Katharinenhof",
+    "displayName": "KATHARINENHOF",
+    "latitude": 54.4352,
+    "longitude": 11.28,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-122gwf3",
+    "name": "Katwijk",
+    "displayName": "KATWIJK",
+    "latitude": 52.201435,
+    "longitude": 4.386593,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-16ppkcq",
+    "name": "Kąty Rybackie",
+    "displayName": "KĄTY RYBACKIE",
+    "latitude": 54.355,
+    "longitude": 19.2241,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-1ojtu9q",
+    "name": "Kauno marios",
+    "displayName": "KAUNO MARIOS",
+    "latitude": 54.8606,
+    "longitude": 24.1508,
+    "timezone": "Europe/Vilnius"
+  },
+  {
+    "id": "spot-15mm6k0",
+    "name": "Kavarna",
+    "displayName": "KAVARNA",
+    "latitude": 43.4336,
+    "longitude": 28.3386,
+    "timezone": "Europe/Sofia"
+  },
+  {
+    "id": "spot-1io04v9",
+    "name": "Kefalos (Kos)",
+    "displayName": "KEFALOS (KOS)",
+    "latitude": 36.7542,
+    "longitude": 26.9833,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-azsq2s",
+    "name": "Kegnæs / Drejet – Lillehav",
+    "displayName": "KEGNÆS / DREJET – LILLEHAV",
+    "latitude": 54.85504,
+    "longitude": 9.991842,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-fa5h9c",
+    "name": "Keramoti",
+    "displayName": "KERAMOTI",
+    "latitude": 40.8556,
+    "longitude": 24.7031,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-18gi7y5",
+    "name": "Keremma – Tréflez",
+    "displayName": "KEREMMA – TRÉFLEZ",
+    "latitude": 48.643137,
+    "longitude": -4.252834,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-qotcee",
+    "name": "Keros (Limnos)",
+    "displayName": "KEROS (LIMNOS)",
+    "latitude": 39.9079,
+    "longitude": 25.3587,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-1s08h2",
+    "name": "Kerteminde",
+    "displayName": "KERTEMINDE",
+    "latitude": 55.4598,
+    "longitude": 10.667,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-ogvm6t",
+    "name": "Kiel-Falckenstein",
+    "displayName": "KIEL-FALCKENSTEIN",
+    "latitude": 54.3968,
+    "longitude": 10.1926,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-cxspzb",
+    "name": "Kihnu",
+    "displayName": "KIHNU",
+    "latitude": 58.147,
+    "longitude": 23.9646,
+    "timezone": "Europe/Tallinn"
+  },
+  {
+    "id": "spot-11ihp15",
+    "name": "Kijkduin",
+    "displayName": "KIJKDUIN",
+    "latitude": 52.066525,
+    "longitude": 4.21192,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-10oivy8",
+    "name": "Kijkduin - Zandmotor",
+    "displayName": "KIJKDUIN - ZANDMOTOR",
+    "latitude": 52.055203,
+    "longitude": 4.186521,
+    "timezone": "Europe/Brussels"
+  },
+  {
     "id": "spot-b2gw0",
     "name": "King George Sailing Club",
     "displayName": "KING GEORGE SAILING CLUB",
     "latitude": 51.639365,
     "longitude": -0.013703,
     "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1i05y2d",
+    "name": "Kintai",
+    "displayName": "KINTAI",
+    "latitude": 55.4243,
+    "longitude": 21.248,
+    "timezone": "Europe/Vilnius"
+  },
+  {
+    "id": "spot-1695p02",
+    "name": "Kite Beach (Table View)",
+    "displayName": "KITE BEACH (TABLE VIEW)",
+    "latitude": -33.8241,
+    "longitude": 18.4803,
+    "timezone": "Africa/Johannesburg"
   },
   {
     "id": "spot-1be2a89",
@@ -1504,6 +4184,14 @@
     "timezone": "Atlantic/Cape_Verde"
   },
   {
+    "id": "spot-7kgcka",
+    "name": "Kitespot Farø",
+    "displayName": "KITESPOT FARØ",
+    "latitude": 54.9496,
+    "longitude": 12.0005,
+    "timezone": "Europe/Berlin"
+  },
+  {
     "id": "spot-d0f5wc",
     "name": "KiteSurf and WindSurf",
     "displayName": "KITESURF AND WINDSURF",
@@ -1534,6 +4222,30 @@
     "latitude": 52.936206,
     "longitude": 5.402388,
     "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-hbi14u",
+    "name": "Klimno (Krk)",
+    "displayName": "KLIMNO (KRK)",
+    "latitude": 45.1529,
+    "longitude": 14.6011,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-tpsds3",
+    "name": "Klitmøller",
+    "displayName": "KLITMØLLER",
+    "latitude": 57.039326,
+    "longitude": 8.474643,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-h5bh1z",
+    "name": "Kloster",
+    "displayName": "KLOSTER",
+    "latitude": 56.106149,
+    "longitude": 8.16757,
+    "timezone": "Europe/Berlin"
   },
   {
     "id": "spot-y4lcps",
@@ -1576,6 +4288,22 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-miyec0",
+    "name": "Kolkasrags",
+    "displayName": "KOLKASRAGS",
+    "latitude": 57.7565,
+    "longitude": 22.5999,
+    "timezone": "Europe/Riga"
+  },
+  {
+    "id": "spot-g71005",
+    "name": "Kołobrzeg",
+    "displayName": "KOŁOBRZEG",
+    "latitude": 54.1676,
+    "longitude": 15.495151,
+    "timezone": "Europe/Warsaw"
+  },
+  {
     "id": "spot-pc9hfj",
     "name": "Kompleks Sukan Perahu Layar Kebangsaan",
     "displayName": "KOMPLEKS SUKAN PERAHU LAYAR KEBANGSAAN",
@@ -1592,12 +4320,84 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-cjbc7g",
+    "name": "Korfos (Mykonos)",
+    "displayName": "KORFOS (MYKONOS)",
+    "latitude": 37.4263,
+    "longitude": 25.3226,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-1jclijv",
+    "name": "Kornwerderzand",
+    "displayName": "KORNWERDERZAND",
+    "latitude": 53.074986,
+    "longitude": 5.344122,
+    "timezone": "Europe/Brussels"
+  },
+  {
     "id": "spot-34vipo",
     "name": "Korsør Sejlklub",
     "displayName": "KORSØR SEJLKLUB",
     "latitude": 55.326349,
     "longitude": 11.132147,
     "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-c68iix",
+    "name": "Kouremenos (Crete)",
+    "displayName": "KOUREMENOS (CRETE)",
+    "latitude": 35.2092,
+    "longitude": 26.2683,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-w82l41",
+    "name": "Kraimorie",
+    "displayName": "KRAIMORIE",
+    "latitude": 42.4559,
+    "longitude": 27.4819,
+    "timezone": "Europe/Sofia"
+  },
+  {
+    "id": "spot-4i0fm3",
+    "name": "Krapets",
+    "displayName": "KRAPETS",
+    "latitude": 43.6562,
+    "longitude": 28.5681,
+    "timezone": "Europe/Sofia"
+  },
+  {
+    "id": "spot-12mlplt",
+    "name": "Kremasti (Rhodes)",
+    "displayName": "KREMASTI (RHODES)",
+    "latitude": 36.42,
+    "longitude": 28.124,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-15su2km",
+    "name": "Krik Vig",
+    "displayName": "KRIK VIG",
+    "latitude": 56.7697,
+    "longitude": 8.2861,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1b9w4du",
+    "name": "Kristinehamn (Vänern)",
+    "displayName": "KRISTINEHAMN (VÄNERN)",
+    "latitude": 59.2911,
+    "longitude": 14.0323,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-thl8qy",
+    "name": "Krynica Morska",
+    "displayName": "KRYNICA MORSKA",
+    "latitude": 54.387772,
+    "longitude": 19.443025,
+    "timezone": "Europe/Warsaw"
   },
   {
     "id": "spot-1tgiapy",
@@ -1608,12 +4408,28 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-1g72b69",
+    "name": "Kühlungsborn",
+    "displayName": "KÜHLUNGSBORN",
+    "latitude": 54.1495,
+    "longitude": 11.7285,
+    "timezone": "Europe/Berlin"
+  },
+  {
     "id": "spot-npm2a9",
     "name": "Kurnell Catamaran Club",
     "displayName": "KURNELL CATAMARAN CLUB",
     "latitude": -34.008546,
     "longitude": 151.195725,
     "timezone": "Australia/Sydney"
+  },
+  {
+    "id": "spot-8dgc5o",
+    "name": "Kuźnica",
+    "displayName": "KUŹNICA",
+    "latitude": 54.730293,
+    "longitude": 18.586505,
+    "timezone": "Europe/Warsaw"
   },
   {
     "id": "spot-qzzlqq",
@@ -1640,6 +4456,54 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-1xa4qlh",
+    "name": "Kyllini",
+    "displayName": "KYLLINI",
+    "latitude": 37.9387,
+    "longitude": 21.1437,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-iinboo",
+    "name": "La Baule / Pornichet",
+    "displayName": "LA BAULE / PORNICHET",
+    "latitude": 47.27639,
+    "longitude": -2.41937,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1mzq5oj",
+    "name": "La Cinta (San Teodoro)",
+    "displayName": "LA CINTA (SAN TEODORO)",
+    "latitude": 40.7885,
+    "longitude": 9.6755,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-11c3uyy",
+    "name": "La Franqui – Les Coussoules",
+    "displayName": "LA FRANQUI – LES COUSSOULES",
+    "latitude": 42.941971,
+    "longitude": 3.031681,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-4aqj48",
+    "name": "La Manga",
+    "displayName": "LA MANGA",
+    "latitude": 37.736376,
+    "longitude": -0.739174,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-1j3czo",
+    "name": "La Palmyre – Bonne Anse",
+    "displayName": "LA PALMYRE – BONNE ANSE",
+    "latitude": 45.688651,
+    "longitude": -1.189202,
+    "timezone": "Europe/Paris"
+  },
+  {
     "id": "spot-g3hrwx",
     "name": "La Sportive de Vigneux",
     "displayName": "LA SPORTIVE DE VIGNEUX",
@@ -1648,12 +4512,188 @@
     "timezone": "Europe/Paris"
   },
   {
+    "id": "spot-7w0zol",
+    "name": "La Tejita (Tenerife, Canary Islands)",
+    "displayName": "LA TEJITA (TENERIFE, CANARY ISLANDS)",
+    "latitude": 28.0345,
+    "longitude": -16.5578,
+    "timezone": "Atlantic/Canary"
+  },
+  {
+    "id": "spot-nmhzi8",
+    "name": "La Torche",
+    "displayName": "LA TORCHE",
+    "latitude": 47.836658,
+    "longitude": -4.354351,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-5s68eb",
+    "name": "La Tranche-sur-Mer",
+    "displayName": "LA TRANCHE-SUR-MER",
+    "latitude": 46.360831,
+    "longitude": -1.477649,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-w1jz6x",
+    "name": "La Turballe – Pen Bron",
+    "displayName": "LA TURBALLE – PEN BRON",
+    "latitude": 47.303543,
+    "longitude": -2.512598,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-f6uzwe",
+    "name": "La Ventana",
+    "displayName": "LA VENTANA",
+    "latitude": 24.045772,
+    "longitude": -109.986777,
+    "timezone": "America/Mazatlan"
+  },
+  {
+    "id": "spot-epj2fj",
+    "name": "Laboe",
+    "displayName": "LABOE",
+    "latitude": 54.4108,
+    "longitude": 10.226,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1j9nzm",
+    "name": "Lac d'Hourtin-Carcans",
+    "displayName": "LAC D'HOURTIN-CARCANS",
+    "latitude": 45.180627,
+    "longitude": -1.081558,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1worf7s",
+    "name": "Lac de la Ganguise",
+    "displayName": "LAC DE LA GANGUISE",
+    "latitude": 43.317872,
+    "longitude": 1.805522,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-16sklsb",
+    "name": "Lac de Lacanau",
+    "displayName": "LAC DE LACANAU",
+    "latitude": 45.003747,
+    "longitude": -1.132241,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1qjzsv1",
+    "name": "Lacul Siutghiol",
+    "displayName": "LACUL SIUTGHIOL",
+    "latitude": 44.2422,
+    "longitude": 28.6104,
+    "timezone": "Europe/Bucharest"
+  },
+  {
+    "id": "spot-cxo9li",
+    "name": "Laghi Alimini (Otranto)",
+    "displayName": "LAGHI ALIMINI (OTRANTO)",
+    "latitude": 40.2067,
+    "longitude": 18.4819,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-9lgfg6",
+    "name": "Lago d'Idro",
+    "displayName": "LAGO D'IDRO",
+    "latitude": 45.822677,
+    "longitude": 10.529105,
+    "timezone": "Europe/Rome"
+  },
+  {
     "id": "spot-i3gs81",
     "name": "Lago di Alpi - aqua-FUN® Wassersportcenter",
     "displayName": "LAGO DI ALPI - AQUA-FUN® WASSERSPORTCENTER",
     "latitude": 51.073132,
     "longitude": 11.041004,
     "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1c3kmls",
+    "name": "Lago di Bolsena",
+    "displayName": "LAGO DI BOLSENA",
+    "latitude": 42.6444,
+    "longitude": 11.9825,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-wbed3b",
+    "name": "Lago di Bracciano",
+    "displayName": "LAGO DI BRACCIANO",
+    "latitude": 42.0856,
+    "longitude": 12.2144,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-e5rn6v",
+    "name": "Lago di Lesina",
+    "displayName": "LAGO DI LESINA",
+    "latitude": 41.8928,
+    "longitude": 15.3455,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-33uxdq",
+    "name": "Lago di Montespluga",
+    "displayName": "LAGO DI MONTESPLUGA",
+    "latitude": 46.4845,
+    "longitude": 9.335,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-1vhgdv8",
+    "name": "Lago di Santa Croce",
+    "displayName": "LAGO DI SANTA CROCE",
+    "latitude": 46.118847,
+    "longitude": 12.348289,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-1g75k8v",
+    "name": "Lago di Viverone",
+    "displayName": "LAGO DI VIVERONE",
+    "latitude": 45.4217,
+    "longitude": 8.0459,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-sqo5cw",
+    "name": "Lago Trasimeno (Castiglione del Lago)",
+    "displayName": "LAGO TRASIMENO (CASTIGLIONE DEL LAGO)",
+    "latitude": 43.1272,
+    "longitude": 12.0489,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-172h1zb",
+    "name": "Lagoa de Albufeira (Sesimbra)",
+    "displayName": "LAGOA DE ALBUFEIRA (SESIMBRA)",
+    "latitude": 38.5085,
+    "longitude": -9.1795,
+    "timezone": "Europe/Lisbon"
+  },
+  {
+    "id": "spot-13k4jku",
+    "name": "Lagoa de Cauípe",
+    "displayName": "LAGOA DE CAUÍPE",
+    "latitude": -3.606361,
+    "longitude": -38.793493,
+    "timezone": "America/Fortaleza"
+  },
+  {
+    "id": "spot-6rgz9r",
+    "name": "Laida (Urdaibai)",
+    "displayName": "LAIDA (URDAIBAI)",
+    "latitude": 43.4049,
+    "longitude": -2.679,
+    "timezone": "Europe/Madrid"
   },
   {
     "id": "spot-1uip2jj",
@@ -1670,6 +4710,118 @@
     "latitude": 43.396717,
     "longitude": -72.062676,
     "timezone": "America/New_York"
+  },
+  {
+    "id": "spot-dwdii0",
+    "name": "Langebaan",
+    "displayName": "LANGEBAAN",
+    "latitude": -33.093,
+    "longitude": 18.028,
+    "timezone": "Africa/Johannesburg"
+  },
+  {
+    "id": "spot-1vsrvw1",
+    "name": "Langeby (Sandefjord)",
+    "displayName": "LANGEBY (SANDEFJORD)",
+    "latitude": 59.0768,
+    "longitude": 10.2588,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1isj5ny",
+    "name": "Langeoog (Weststrand)",
+    "displayName": "LANGEOOG (WESTSTRAND)",
+    "latitude": 53.748,
+    "longitude": 7.468,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1fdio7p",
+    "name": "Laredo",
+    "displayName": "LAREDO",
+    "latitude": 43.4237,
+    "longitude": -3.4419,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-1yqq7l1",
+    "name": "Larkollen",
+    "displayName": "LARKOLLEN",
+    "latitude": 59.3048,
+    "longitude": 10.6923,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1pcu0w",
+    "name": "Lauwersmeer",
+    "displayName": "LAUWERSMEER",
+    "latitude": 53.407505,
+    "longitude": 6.161479,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1kgjxbr",
+    "name": "Lauwersoog Waddenzee",
+    "displayName": "LAUWERSOOG WADDENZEE",
+    "latitude": 53.408802,
+    "longitude": 6.157198,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-8x6kre",
+    "name": "Le Barcarès",
+    "displayName": "LE BARCARÈS",
+    "latitude": 42.840841,
+    "longitude": 3.031046,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1v427uy",
+    "name": "Le Castella",
+    "displayName": "LE CASTELLA",
+    "latitude": 38.9093,
+    "longitude": 17.0294,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-29x60g",
+    "name": "Le Crotoy – Baie de Somme",
+    "displayName": "LE CROTOY – BAIE DE SOMME",
+    "latitude": 50.216569,
+    "longitude": 1.624047,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1ot3vyh",
+    "name": "Le Havre – Sainte-Adresse",
+    "displayName": "LE HAVRE – SAINTE-ADRESSE",
+    "latitude": 49.506199,
+    "longitude": 0.07164,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1uobqca",
+    "name": "Le Morne",
+    "displayName": "LE MORNE",
+    "latitude": -20.46251,
+    "longitude": 57.309461,
+    "timezone": "Indian/Mauritius"
+  },
+  {
+    "id": "spot-13qwhok",
+    "name": "Le Touquet",
+    "displayName": "LE TOUQUET",
+    "latitude": 50.514217,
+    "longitude": 1.579111,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1z0mr8b",
+    "name": "Łeba",
+    "displayName": "ŁEBA",
+    "latitude": 54.764438,
+    "longitude": 17.527366,
+    "timezone": "Europe/Warsaw"
   },
   {
     "id": "spot-1nkl1qa",
@@ -1696,12 +4848,148 @@
     "timezone": "Europe/Rome"
   },
   {
+    "id": "spot-7toc7e",
+    "name": "Lelystad - Bataviastrand",
+    "displayName": "LELYSTAD - BATAVIASTRAND",
+    "latitude": 52.524357,
+    "longitude": 5.424342,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1vwwhwc",
+    "name": "Lelystad - Trintelhaven",
+    "displayName": "LELYSTAD - TRINTELHAVEN",
+    "latitude": 52.636238,
+    "longitude": 5.413053,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-w7xpsm",
+    "name": "Lemmer",
+    "displayName": "LEMMER",
+    "latitude": 52.843899,
+    "longitude": 5.692941,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-putmno",
+    "name": "Leucate",
+    "displayName": "LEUCATE",
+    "latitude": 42.901787,
+    "longitude": 3.053298,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1b687j0",
+    "name": "Lido di Spina (Comacchio)",
+    "displayName": "LIDO DI SPINA (COMACCHIO)",
+    "latitude": 44.6555,
+    "longitude": 12.2535,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-josdcw",
+    "name": "Liepāja",
+    "displayName": "LIEPĀJA",
+    "latitude": 56.4853,
+    "longitude": 20.9978,
+    "timezone": "Europe/Riga"
+  },
+  {
+    "id": "spot-1ixzini",
+    "name": "Liepājas ezers",
+    "displayName": "LIEPĀJAS EZERS",
+    "latitude": 56.4966,
+    "longitude": 21.0398,
+    "timezone": "Europe/Riga"
+  },
+  {
+    "id": "spot-1wfdwpu",
+    "name": "Lignano Pineta",
+    "displayName": "LIGNANO PINETA",
+    "latitude": 45.6644,
+    "longitude": 13.1194,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-1csuy9n",
+    "name": "Lilaste",
+    "displayName": "LILASTE",
+    "latitude": 57.181,
+    "longitude": 24.3562,
+    "timezone": "Europe/Riga"
+  },
+  {
+    "id": "spot-a5qrhw",
+    "name": "Liseleje",
+    "displayName": "LISELEJE",
+    "latitude": 56.0148,
+    "longitude": 11.96,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-ipc9lo",
+    "name": "Ljugarn (Gotland)",
+    "displayName": "LJUGARN (GOTLAND)",
+    "latitude": 57.33,
+    "longitude": 18.71,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-nmrp8h",
+    "name": "Llanddona",
+    "displayName": "LLANDDONA",
+    "latitude": 53.304,
+    "longitude": -4.15,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-rfgl1j",
+    "name": "Llangennith",
+    "displayName": "LLANGENNITH",
+    "latitude": 51.6,
+    "longitude": -4.29,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-xjcup7",
+    "name": "Lo Stagnone",
+    "displayName": "LO STAGNONE",
+    "latitude": 37.88029,
+    "longitude": 12.462122,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-o8x9gq",
+    "name": "Loano",
+    "displayName": "LOANO",
+    "latitude": 44.1157,
+    "longitude": 8.3094,
+    "timezone": "Europe/Rome"
+  },
+  {
     "id": "spot-9172cx",
     "name": "Lochaber Yacht Club",
     "displayName": "LOCHABER YACHT CLUB",
     "latitude": 56.810729,
     "longitude": -5.123802,
     "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-15irbdo",
+    "name": "Løkken",
+    "displayName": "LØKKEN",
+    "latitude": 57.3705,
+    "longitude": 9.702,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-fxmjnw",
+    "name": "Lomma",
+    "displayName": "LOMMA",
+    "latitude": 55.68,
+    "longitude": 13.058,
+    "timezone": "Europe/Berlin"
   },
   {
     "id": "spot-15yi17s",
@@ -1712,11 +5000,75 @@
     "timezone": "Europe/London"
   },
   {
+    "id": "spot-1ud13ta",
+    "name": "Long Bay Beach",
+    "displayName": "LONG BAY BEACH",
+    "latitude": 21.770841,
+    "longitude": -72.163927,
+    "timezone": "America/Grand_Turk"
+  },
+  {
     "id": "spot-1lvnl9i",
     "name": "Longcraig Scout Centre",
     "displayName": "LONGCRAIG SCOUT CENTRE",
     "latitude": 55.993687,
     "longitude": -3.373261,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1opt86i",
+    "name": "Longniddry",
+    "displayName": "LONGNIDDRY",
+    "latitude": 55.977,
+    "longitude": -2.921,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-s6n4n0",
+    "name": "Los Alcázares (Mar Menor)",
+    "displayName": "LOS ALCÁZARES (MAR MENOR)",
+    "latitude": 37.7332,
+    "longitude": -0.8497,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-1vl52h8",
+    "name": "Los Caños de Meca",
+    "displayName": "LOS CAÑOS DE MECA",
+    "latitude": 36.185206,
+    "longitude": -6.020151,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-85im9x",
+    "name": "Los Charcos (Costa Teguise, Lanzarote, Canary Islands)",
+    "displayName": "LOS CHARCOS (COSTA TEGUISE, LANZAROTE, CANARY ISLANDS)",
+    "latitude": 29.0002,
+    "longitude": -13.492,
+    "timezone": "Atlantic/Canary"
+  },
+  {
+    "id": "spot-1getjr9",
+    "name": "Lossiemouth",
+    "displayName": "LOSSIEMOUTH",
+    "latitude": 57.72,
+    "longitude": -3.29,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-d9lsp7",
+    "name": "Loutsa (Attica)",
+    "displayName": "LOUTSA (ATTICA)",
+    "latitude": 37.988,
+    "longitude": 24.005,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-3mrqur",
+    "name": "Lowestoft",
+    "displayName": "LOWESTOFT",
+    "latitude": 52.47,
+    "longitude": 1.752,
     "timezone": "Europe/London"
   },
   {
@@ -1728,12 +5080,44 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-1dd1sbp",
+    "name": "Lubiatowo",
+    "displayName": "LUBIATOWO",
+    "latitude": 54.8141,
+    "longitude": 17.8485,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-1fd0cld",
+    "name": "Lubmin (Greifswalder Bodden)",
+    "displayName": "LUBMIN (GREIFSWALDER BODDEN)",
+    "latitude": 54.14,
+    "longitude": 13.61,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-sg3l4w",
+    "name": "Luleå",
+    "displayName": "LULEÅ",
+    "latitude": 65.58,
+    "longitude": 22.13,
+    "timezone": "Europe/Berlin"
+  },
+  {
     "id": "spot-1hn6y2t",
     "name": "Lynæs Surfcenter",
     "displayName": "LYNÆS SURFCENTER",
     "latitude": 55.944127,
     "longitude": 11.862645,
     "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-am58l4",
+    "name": "Lytham St Annes",
+    "displayName": "LYTHAM ST ANNES",
+    "latitude": 53.752,
+    "longitude": -3.041,
+    "timezone": "Europe/London"
   },
   {
     "id": "spot-1wt4j6j",
@@ -1744,12 +5128,52 @@
     "timezone": "Europe/Brussels"
   },
   {
+    "id": "spot-zdvqsy",
+    "name": "Machrihanish",
+    "displayName": "MACHRIHANISH",
+    "latitude": 55.4316,
+    "longitude": -5.7206,
+    "timezone": "Europe/London"
+  },
+  {
     "id": "spot-z28xbq",
     "name": "Maison de la Mer",
     "displayName": "MAISON DE LA MER",
     "latitude": 47.844434,
     "longitude": -3.889691,
     "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-71h202",
+    "name": "Majanicho, North Shore (Fuerteventura, Canary Islands)",
+    "displayName": "MAJANICHO, NORTH SHORE (FUERTEVENTURA, CANARY ISLANDS)",
+    "latitude": 28.7452,
+    "longitude": -13.9357,
+    "timezone": "Atlantic/Canary"
+  },
+  {
+    "id": "spot-1yyva10",
+    "name": "Makkum",
+    "displayName": "MAKKUM",
+    "latitude": 53.05312,
+    "longitude": 5.376227,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-10fvurm",
+    "name": "Mamaia",
+    "displayName": "MAMAIA",
+    "latitude": 44.245,
+    "longitude": 28.622,
+    "timezone": "Europe/Bucharest"
+  },
+  {
+    "id": "spot-64y4vc",
+    "name": "Mändjala",
+    "displayName": "MÄNDJALA",
+    "latitude": 58.2116,
+    "longitude": 22.3225,
+    "timezone": "Europe/Tallinn"
   },
   {
     "id": "spot-1bwrlyu",
@@ -1768,6 +5192,46 @@
     "timezone": "Pacific/Auckland"
   },
   {
+    "id": "spot-llv8h2",
+    "name": "Marazion",
+    "displayName": "MARAZION",
+    "latitude": 50.123,
+    "longitude": -5.475,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1ds54ja",
+    "name": "Margherita di Savoia",
+    "displayName": "MARGHERITA DI SAVOIA",
+    "latitude": 41.3851,
+    "longitude": 16.1609,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-15i9ca1",
+    "name": "Marielyst",
+    "displayName": "MARIELYST",
+    "latitude": 54.695,
+    "longitude": 11.968,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-kj4iam",
+    "name": "Marina di Pisa",
+    "displayName": "MARINA DI PISA",
+    "latitude": 43.6843,
+    "longitude": 10.2686,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-1crbrb6",
+    "name": "Marina di Ragusa",
+    "displayName": "MARINA DI RAGUSA",
+    "latitude": 36.7789,
+    "longitude": 14.547,
+    "timezone": "Europe/Rome"
+  },
+  {
     "id": "spot-3ln4xy",
     "name": "Marina Surf",
     "displayName": "MARINA SURF",
@@ -1784,6 +5248,38 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-1h11496",
+    "name": "Markgrafenheide",
+    "displayName": "MARKGRAFENHEIDE",
+    "latitude": 54.1965,
+    "longitude": 12.129,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1adnui1",
+    "name": "Marmari (Evia)",
+    "displayName": "MARMARI (EVIA)",
+    "latitude": 38.0331,
+    "longitude": 24.3051,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-1geb807",
+    "name": "Marmari (Kos)",
+    "displayName": "MARMARI (KOS)",
+    "latitude": 36.8812,
+    "longitude": 27.1491,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-1aooutb",
+    "name": "Marseillan – Étang de Thau",
+    "displayName": "MARSEILLAN – ÉTANG DE THAU",
+    "latitude": 43.318982,
+    "longitude": 3.536398,
+    "timezone": "Europe/Paris"
+  },
+  {
     "id": "spot-3p99th",
     "name": "Marselisborg Sejlklub",
     "displayName": "MARSELISBORG SEJLKLUB",
@@ -1792,12 +5288,100 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-144z48g",
+    "name": "Martinhal (Sagres)",
+    "displayName": "MARTINHAL (SAGRES)",
+    "latitude": 37.0142,
+    "longitude": -8.9218,
+    "timezone": "Europe/Lisbon"
+  },
+  {
+    "id": "spot-7nb9ll",
+    "name": "Mastichari (Kos)",
+    "displayName": "MASTICHARI (KOS)",
+    "latitude": 36.8513,
+    "longitude": 27.0766,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-1g3lqcs",
+    "name": "Maszoperia",
+    "displayName": "MASZOPERIA",
+    "latitude": 54.714548,
+    "longitude": 18.632803,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-6rklt2",
+    "name": "Matagorda (Lanzarote, Canary Islands)",
+    "displayName": "MATAGORDA (LANZAROTE, CANARY ISLANDS)",
+    "latitude": 28.9241,
+    "longitude": -13.6207,
+    "timezone": "Atlantic/Canary"
+  },
+  {
+    "id": "spot-1phvy1d",
+    "name": "Matalascañas",
+    "displayName": "MATALASCAÑAS",
+    "latitude": 36.9861,
+    "longitude": -6.556,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-2et4ha",
+    "name": "Mattsee",
+    "displayName": "MATTSEE",
+    "latitude": 47.975153,
+    "longitude": 13.107524,
+    "timezone": "Europe/Vienna"
+  },
+  {
+    "id": "spot-txko0k",
+    "name": "Mechelinki",
+    "displayName": "MECHELINKI",
+    "latitude": 54.6106,
+    "longitude": 18.5158,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-1vcxaie",
+    "name": "Medemblik",
+    "displayName": "MEDEMBLIK",
+    "latitude": 52.755039,
+    "longitude": 5.125001,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-o7nmoe",
+    "name": "Medulin",
+    "displayName": "MEDULIN",
+    "latitude": 44.81,
+    "longitude": 13.9368,
+    "timezone": "Europe/Belgrade"
+  },
+  {
     "id": "spot-1fq4zoh",
     "name": "Meerwijck Naaktstrand",
     "displayName": "MEERWIJCK NAAKTSTRAND",
     "latitude": 53.146087,
     "longitude": 6.697045,
     "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1n4qtlh",
+    "name": "Melnragė (Klaipėda)",
+    "displayName": "MELNRAGĖ (KLAIPĖDA)",
+    "latitude": 55.7361,
+    "longitude": 21.0858,
+    "timezone": "Europe/Vilnius"
+  },
+  {
+    "id": "spot-1sqgs73",
+    "name": "Mewia Rewa",
+    "displayName": "MEWIA REWA",
+    "latitude": 54.69,
+    "longitude": 18.55,
+    "timezone": "Europe/Warsaw"
   },
   {
     "id": "spot-1yg102h",
@@ -1816,12 +5400,108 @@
     "timezone": "Atlantic/Bermuda"
   },
   {
+    "id": "spot-2lu611",
+    "name": "Midwolda Oldambtmeer",
+    "displayName": "MIDWOLDA OLDAMBTMEER",
+    "latitude": 53.193245,
+    "longitude": 7.027293,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-fbaxnc",
+    "name": "Międzybrodzie Bialskie",
+    "displayName": "MIĘDZYBRODZIE BIALSKIE",
+    "latitude": 49.786496,
+    "longitude": 19.200777,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-17qxlfd",
+    "name": "Międzyzdroje",
+    "displayName": "MIĘDZYZDROJE",
+    "latitude": 53.93,
+    "longitude": 14.44,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-t0hm4i",
+    "name": "Mietków",
+    "displayName": "MIETKÓW",
+    "latitude": 50.947469,
+    "longitude": 16.631949,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-edqih1",
+    "name": "Mikri Vigla (Naxos)",
+    "displayName": "MIKRI VIGLA (NAXOS)",
+    "latitude": 37.0277,
+    "longitude": 25.3716,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-1nzayt9",
+    "name": "Minnis Bay",
+    "displayName": "MINNIS BAY",
+    "latitude": 51.379,
+    "longitude": 1.278,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-15tltru",
+    "name": "Mirns",
+    "displayName": "MIRNS",
+    "latitude": 52.850101,
+    "longitude": 5.481972,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1mwmkdt",
+    "name": "Misty Cliffs",
+    "displayName": "MISTY CLIFFS",
+    "latitude": -34.184951,
+    "longitude": 18.363497,
+    "timezone": "Africa/Johannesburg"
+  },
+  {
+    "id": "spot-efhnx8",
+    "name": "Mølen",
+    "displayName": "MØLEN",
+    "latitude": 58.9628,
+    "longitude": 9.8427,
+    "timezone": "Europe/Berlin"
+  },
+  {
     "id": "spot-qq001r",
     "name": "Moloen",
     "displayName": "MOLOEN",
     "latitude": 62.51159,
     "longitude": 6.039745,
     "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1947bsn",
+    "name": "Møn / Klintholm Strand",
+    "displayName": "MØN / KLINTHOLM STRAND",
+    "latitude": 54.954513,
+    "longitude": 12.472556,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1ho79zh",
+    "name": "Mondello (Palermo)",
+    "displayName": "MONDELLO (PALERMO)",
+    "latitude": 38.2018,
+    "longitude": 13.3253,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-nw41xe",
+    "name": "Monte Gordo",
+    "displayName": "MONTE GORDO",
+    "latitude": 37.1798,
+    "longitude": -7.4487,
+    "timezone": "Europe/Lisbon"
   },
   {
     "id": "spot-1uwjdjm",
@@ -1846,6 +5526,14 @@
     "latitude": 43.079529,
     "longitude": -89.420791,
     "timezone": "America/Chicago"
+  },
+  {
+    "id": "spot-vpsyu",
+    "name": "Morecambe Bay",
+    "displayName": "MORECAMBE BAY",
+    "latitude": 54.073,
+    "longitude": -2.875,
+    "timezone": "Europe/London"
   },
   {
     "id": "spot-16qefv9",
@@ -1896,6 +5584,22 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-hfgj3c",
+    "name": "Mui Ne",
+    "displayName": "MUI NE",
+    "latitude": 10.938902,
+    "longitude": 108.191743,
+    "timezone": "Asia/Ho_Chi_Minh"
+  },
+  {
+    "id": "spot-gd9fdv",
+    "name": "Muiderberg",
+    "displayName": "MUIDERBERG",
+    "latitude": 52.329876,
+    "longitude": 5.113459,
+    "timezone": "Europe/Brussels"
+  },
+  {
     "id": "spot-1nh1lgz",
     "name": "Münchener Yacht Club",
     "displayName": "MÜNCHENER YACHT CLUB",
@@ -1904,12 +5608,36 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-l9s1xd",
+    "name": "Murter",
+    "displayName": "MURTER",
+    "latitude": 43.8336,
+    "longitude": 15.5922,
+    "timezone": "Europe/Belgrade"
+  },
+  {
     "id": "spot-tfxtk8",
     "name": "Museo Nueva Tabarca",
     "displayName": "MUSEO NUEVA TABARCA",
     "latitude": 38.166011,
     "longitude": -0.478429,
     "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-1qymgzc",
+    "name": "Nafplio",
+    "displayName": "NAFPLIO",
+    "latitude": 37.541,
+    "longitude": 22.8183,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-lwwdez",
+    "name": "Nairn",
+    "displayName": "NAIRN",
+    "latitude": 57.5905,
+    "longitude": -3.8718,
+    "timezone": "Europe/London"
   },
   {
     "id": "spot-1hqt9uu",
@@ -1976,6 +5704,30 @@
     "timezone": "Europe/Paris"
   },
   {
+    "id": "spot-1seomao",
+    "name": "Nazaré",
+    "displayName": "NAZARÉ",
+    "latitude": 39.62316,
+    "longitude": -9.083613,
+    "timezone": "Europe/Lisbon"
+  },
+  {
+    "id": "spot-1i7h7g9",
+    "name": "Nea Iraklitsa",
+    "displayName": "NEA IRAKLITSA",
+    "latitude": 40.8694,
+    "longitude": 24.3299,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-zaekhf",
+    "name": "Neeltje Jans",
+    "displayName": "NEELTJE JANS",
+    "latitude": 51.624242,
+    "longitude": 3.680559,
+    "timezone": "Europe/Brussels"
+  },
+  {
     "id": "spot-savys2",
     "name": "Nelson Yacht Club",
     "displayName": "NELSON YACHT CLUB",
@@ -1984,11 +5736,107 @@
     "timezone": "Pacific/Auckland"
   },
   {
+    "id": "spot-j2gdir",
+    "name": "Neretva",
+    "displayName": "NERETVA",
+    "latitude": 43.020337,
+    "longitude": 17.448692,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-1vr7dsf",
+    "name": "Nesodden",
+    "displayName": "NESODDEN",
+    "latitude": 59.85,
+    "longitude": 10.7,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1jwzjjh",
+    "name": "Neuharlingersiel",
+    "displayName": "NEUHARLINGERSIEL",
+    "latitude": 53.7009,
+    "longitude": 7.7047,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1prod6p",
+    "name": "New Golden Beach (Paros)",
+    "displayName": "NEW GOLDEN BEACH (PAROS)",
+    "latitude": 37.015,
+    "longitude": 25.2497,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-1kkqhre",
+    "name": "Newborough",
+    "displayName": "NEWBOROUGH",
+    "latitude": 53.137,
+    "longitude": -4.375,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1pjyc9d",
+    "name": "Newgale",
+    "displayName": "NEWGALE",
+    "latitude": 51.86,
+    "longitude": -5.12,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-4gpkbq",
+    "name": "Nida",
+    "displayName": "NIDA",
+    "latitude": 55.312,
+    "longitude": 21.01,
+    "timezone": "Europe/Vilnius"
+  },
+  {
+    "id": "spot-16z3gt6",
+    "name": "Niegocin",
+    "displayName": "NIEGOCIN",
+    "latitude": 54.0134,
+    "longitude": 21.7412,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-1dpfejr",
+    "name": "Nin (Kraljičina plaža)",
+    "displayName": "NIN (KRALJIČINA PLAŽA)",
+    "latitude": 44.25,
+    "longitude": 15.17,
+    "timezone": "Europe/Belgrade"
+  },
+  {
     "id": "spot-10ouzqe",
     "name": "Nivå Surf Klub",
     "displayName": "NIVÅ SURF KLUB",
     "latitude": 55.938365,
     "longitude": 12.527957,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-heowws",
+    "name": "Noordwijk",
+    "displayName": "NOORDWIJK",
+    "latitude": 52.241391,
+    "longitude": 4.423377,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1j2fluy",
+    "name": "Norddeich",
+    "displayName": "NORDDEICH",
+    "latitude": 53.6172,
+    "longitude": 7.1493,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-ugazr4",
+    "name": "Norderney",
+    "displayName": "NORDERNEY",
+    "latitude": 53.71,
+    "longitude": 7.156,
     "timezone": "Europe/Berlin"
   },
   {
@@ -2016,6 +5864,14 @@
     "timezone": "Europe/Simferopol"
   },
   {
+    "id": "spot-1vc1gxt",
+    "name": "Norefjell",
+    "displayName": "NOREFJELL",
+    "latitude": 60.2545,
+    "longitude": 9.5234,
+    "timezone": "Europe/Berlin"
+  },
+  {
     "id": "spot-1xj55ds",
     "name": "Nørresundby Sejlklub",
     "displayName": "NØRRESUNDBY SEJLKLUB",
@@ -2024,12 +5880,36 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-2iodwn",
+    "name": "Novalja (Pag)",
+    "displayName": "NOVALJA (PAG)",
+    "latitude": 44.5425,
+    "longitude": 14.8784,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-576p8m",
+    "name": "Nové Mlýny",
+    "displayName": "NOVÉ MLÝNY",
+    "latitude": 48.880094,
+    "longitude": 16.672952,
+    "timezone": "Europe/Prague"
+  },
+  {
     "id": "spot-ux4fj4",
     "name": "Oakcliff Sailing",
     "displayName": "OAKCLIFF SAILING",
     "latitude": 40.874393,
     "longitude": -73.527971,
     "timezone": "America/New_York"
+  },
+  {
+    "id": "spot-3nybza",
+    "name": "Óbidos Lagoon",
+    "displayName": "ÓBIDOS LAGOON",
+    "latitude": 39.408914,
+    "longitude": -9.229721,
+    "timezone": "Europe/Lisbon"
   },
   {
     "id": "spot-toeznh",
@@ -2048,11 +5928,67 @@
     "timezone": "Europe/Paris"
   },
   {
+    "id": "spot-1at4py",
+    "name": "Ohrid",
+    "displayName": "OHRID",
+    "latitude": 41.1235,
+    "longitude": 20.8196,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-12z16q2",
+    "name": "Oliva",
+    "displayName": "OLIVA",
+    "latitude": 38.9207,
+    "longitude": -0.1044,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-zkbowg",
+    "name": "Omiš",
+    "displayName": "OMIŠ",
+    "latitude": 43.443,
+    "longitude": 16.696,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-raawvi",
+    "name": "Ööri",
+    "displayName": "ÖÖRI",
+    "latitude": 58.1475,
+    "longitude": 22.221,
+    "timezone": "Europe/Tallinn"
+  },
+  {
+    "id": "spot-t0krmh",
+    "name": "Oostvoorne Noordzee",
+    "displayName": "OOSTVOORNE NOORDZEE",
+    "latitude": 51.915137,
+    "longitude": 4.060598,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-47yqw8",
+    "name": "Oostvoornse meer",
+    "displayName": "OOSTVOORNSE MEER",
+    "latitude": 51.92918,
+    "longitude": 4.066458,
+    "timezone": "Europe/Brussels"
+  },
+  {
     "id": "spot-1u0hi3w",
     "name": "Ørekroken",
     "displayName": "ØREKROKEN",
     "latitude": 59.032498,
     "longitude": 11.009263,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1bim9vw",
+    "name": "Ørekroken (Hvaler)",
+    "displayName": "ØREKROKEN (HVALER)",
+    "latitude": 59.0294,
+    "longitude": 11.0103,
     "timezone": "Europe/Berlin"
   },
   {
@@ -2064,12 +6000,44 @@
     "timezone": "Europe/London"
   },
   {
+    "id": "spot-zqk731",
+    "name": "Orrestranda",
+    "displayName": "ORRESTRANDA",
+    "latitude": 58.7247,
+    "longitude": 5.5203,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-akdb4j",
+    "name": "Orth",
+    "displayName": "ORTH",
+    "latitude": 54.4463,
+    "longitude": 11.0512,
+    "timezone": "Europe/Berlin"
+  },
+  {
     "id": "spot-14tnhrl",
     "name": "Orza Minore",
     "displayName": "ORZA MINORE",
     "latitude": 46.068192,
     "longitude": 9.30865,
     "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-20u1yv",
+    "name": "Osłonino",
+    "displayName": "OSŁONINO",
+    "latitude": 54.6682,
+    "longitude": 18.4684,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-edcama",
+    "name": "Øster Hurup",
+    "displayName": "ØSTER HURUP",
+    "latitude": 56.8065,
+    "longitude": 10.2805,
+    "timezone": "Europe/Berlin"
   },
   {
     "id": "spot-80ovc3",
@@ -2080,12 +6048,172 @@
     "timezone": "Europe/Vienna"
   },
   {
+    "id": "spot-7rkcqv",
+    "name": "Ostia",
+    "displayName": "OSTIA",
+    "latitude": 41.7256,
+    "longitude": 12.2717,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-k3h2gk",
+    "name": "Ouddorp",
+    "displayName": "OUDDORP",
+    "latitude": 51.82172,
+    "longitude": 3.878164,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-2jwrpf",
+    "name": "Ouistreham – Riva Bella",
+    "displayName": "OUISTREHAM – RIVA BELLA",
+    "latitude": 49.283771,
+    "longitude": -0.256162,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-17m759l",
+    "name": "Ouwerkerk",
+    "displayName": "OUWERKERK",
+    "latitude": 51.616791,
+    "longitude": 3.961531,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-qlhrym",
+    "name": "Oxwich Bay",
+    "displayName": "OXWICH BAY",
+    "latitude": 51.56,
+    "longitude": -4.15,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-fy55b",
+    "name": "Pacasmayo",
+    "displayName": "PACASMAYO",
+    "latitude": -7.405792,
+    "longitude": -79.575949,
+    "timezone": "America/Lima"
+  },
+  {
+    "id": "spot-1jxa2i7",
+    "name": "Paje",
+    "displayName": "PAJE",
+    "latitude": -6.269055,
+    "longitude": 39.536378,
+    "timezone": "Asia/Riyadh"
+  },
+  {
+    "id": "spot-1r2yytt",
+    "name": "Palaiochora (Crete)",
+    "displayName": "PALAIOCHORA (CRETE)",
+    "latitude": 35.2305,
+    "longitude": 23.679,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-bsza16",
+    "name": "Palić",
+    "displayName": "PALIĆ",
+    "latitude": 46.0979,
+    "longitude": 19.753,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-1qwx27h",
+    "name": "Palmones",
+    "displayName": "PALMONES",
+    "latitude": 36.174918,
+    "longitude": -5.446897,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-14k84nu",
+    "name": "Pape",
+    "displayName": "PAPE",
+    "latitude": 56.1631,
+    "longitude": 21.0347,
+    "timezone": "Europe/Riga"
+  },
+  {
+    "id": "spot-5fnu4u",
+    "name": "Paracas",
+    "displayName": "PARACAS",
+    "latitude": -13.838666,
+    "longitude": -76.260562,
+    "timezone": "America/Lima"
+  },
+  {
+    "id": "spot-13a4xvv",
+    "name": "Paracuru",
+    "displayName": "PARACURU",
+    "latitude": -3.433947,
+    "longitude": -39.056788,
+    "timezone": "America/Fortaleza"
+  },
+  {
     "id": "spot-1613rwb",
     "name": "Parchimer Segelfreunde",
     "displayName": "PARCHIMER SEGELFREUNDE",
     "latitude": 53.435702,
     "longitude": 11.854084,
     "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1tdocq7",
+    "name": "Pärnu",
+    "displayName": "PÄRNU",
+    "latitude": 58.3739,
+    "longitude": 24.4965,
+    "timezone": "Europe/Tallinn"
+  },
+  {
+    "id": "spot-1ao1hon",
+    "name": "Paulinapolder",
+    "displayName": "PAULINAPOLDER",
+    "latitude": 51.350422,
+    "longitude": 3.731831,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-msy00z",
+    "name": "Pāvilosta",
+    "displayName": "PĀVILOSTA",
+    "latitude": 56.8889,
+    "longitude": 21.1825,
+    "timezone": "Europe/Riga"
+  },
+  {
+    "id": "spot-1c0jzo3",
+    "name": "Pelzerhaken",
+    "displayName": "PELZERHAKEN",
+    "latitude": 54.0862,
+    "longitude": 10.876,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1vr6pgm",
+    "name": "Pembrey (Cefn Sidan)",
+    "displayName": "PEMBREY (CEFN SIDAN)",
+    "latitude": 51.69,
+    "longitude": -4.32,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-58jqy5",
+    "name": "Peniche",
+    "displayName": "PENICHE",
+    "latitude": 39.363353,
+    "longitude": -9.371702,
+    "timezone": "Europe/Lisbon"
+  },
+  {
+    "id": "spot-rhxz98",
+    "name": "Pentrez – Baie de Douarnenez",
+    "displayName": "PENTREZ – BAIE DE DOUARNENEZ",
+    "latitude": 48.189526,
+    "longitude": -4.300772,
+    "timezone": "Europe/Paris"
   },
   {
     "id": "spot-1uhmnh6",
@@ -2096,12 +6224,172 @@
     "timezone": "Europe/London"
   },
   {
+    "id": "spot-1e953bg",
+    "name": "Pepelow (Salzhaff)",
+    "displayName": "PEPELOW (SALZHAFF)",
+    "latitude": 54.04,
+    "longitude": 11.581,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-zaftzc",
+    "name": "Peroj",
+    "displayName": "PEROJ",
+    "latitude": 44.9505,
+    "longitude": 13.7767,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-ctda4u",
+    "name": "Pervalka",
+    "displayName": "PERVALKA",
+    "latitude": 55.415,
+    "longitude": 21.0965,
+    "timezone": "Europe/Vilnius"
+  },
+  {
+    "id": "spot-1v1cqr0",
+    "name": "Pescara",
+    "displayName": "PESCARA",
+    "latitude": 42.4756,
+    "longitude": 14.2072,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-w5bpm7",
+    "name": "Petten (Pettemer Zeewering)",
+    "displayName": "PETTEN (PETTEMER ZEEWERING)",
+    "latitude": 52.763783,
+    "longitude": 4.649366,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-vdpzxx",
+    "name": "Piantarella – Bonifacio",
+    "displayName": "PIANTARELLA – BONIFACIO",
+    "latitude": 41.374493,
+    "longitude": 9.218001,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-gy734v",
+    "name": "Pirita",
+    "displayName": "PIRITA",
+    "latitude": 59.4782,
+    "longitude": 24.8354,
+    "timezone": "Europe/Tallinn"
+  },
+  {
+    "id": "spot-1isr395",
+    "name": "Plage Napoléon – Port-Saint-Louis",
+    "displayName": "PLAGE NAPOLÉON – PORT-SAINT-LOUIS",
+    "latitude": 43.356414,
+    "longitude": 4.886358,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-gf28iq",
+    "name": "Plaka (Naxos)",
+    "displayName": "PLAKA (NAXOS)",
+    "latitude": 37.0531,
+    "longitude": 25.3573,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-zywx5t",
+    "name": "Platamona",
+    "displayName": "PLATAMONA",
+    "latitude": 40.8103,
+    "longitude": 8.4658,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-1up1w52",
+    "name": "Pławniowice",
+    "displayName": "PŁAWNIOWICE",
+    "latitude": 50.392288,
+    "longitude": 18.493389,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-6hl043",
+    "name": "Playa Honda (Lanzarote, Canary Islands)",
+    "displayName": "PLAYA HONDA (LANZAROTE, CANARY ISLANDS)",
+    "latitude": 28.9314,
+    "longitude": -13.604,
+    "timezone": "Atlantic/Canary"
+  },
+  {
+    "id": "spot-75ycae",
+    "name": "Podersdorf",
+    "displayName": "PODERSDORF",
+    "latitude": 47.867328,
+    "longitude": 16.828988,
+    "timezone": "Europe/Vienna"
+  },
+  {
+    "id": "spot-1xyc18",
+    "name": "Podgora",
+    "displayName": "PODGORA",
+    "latitude": 43.2404,
+    "longitude": 17.0766,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-1quxpb9",
+    "name": "Poetto (Cagliari)",
+    "displayName": "POETTO (CAGLIARI)",
+    "latitude": 39.205,
+    "longitude": 9.1697,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-1kfkehr",
+    "name": "Pogoria",
+    "displayName": "POGORIA",
+    "latitude": 50.363934,
+    "longitude": 19.204911,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-149xfu0",
+    "name": "Policoro",
+    "displayName": "POLICORO",
+    "latitude": 40.1806,
+    "longitude": 16.7189,
+    "timezone": "Europe/Rome"
+  },
+  {
     "id": "spot-z5mj93",
     "name": "Polygram Segelclub",
     "displayName": "POLYGRAM SEGELCLUB",
     "latitude": 53.579858,
     "longitude": 10.000516,
     "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-hvy45w",
+    "name": "Pomorie",
+    "displayName": "POMORIE",
+    "latitude": 42.5685,
+    "longitude": 27.6319,
+    "timezone": "Europe/Sofia"
+  },
+  {
+    "id": "spot-uubx5l",
+    "name": "Poole Harbour",
+    "displayName": "POOLE HARBOUR",
+    "latitude": 50.7,
+    "longitude": -1.945,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1m4mbkt",
+    "name": "Port Camargue / Espiguette",
+    "displayName": "PORT CAMARGUE / ESPIGUETTE",
+    "latitude": 43.4872,
+    "longitude": 4.1304,
+    "timezone": "Europe/Paris"
   },
   {
     "id": "spot-ef6a2m",
@@ -2112,12 +6400,316 @@
     "timezone": "Pacific/Auckland"
   },
   {
+    "id": "spot-1w549v6",
+    "name": "Porthcawl (Rest Bay)",
+    "displayName": "PORTHCAWL (REST BAY)",
+    "latitude": 51.489,
+    "longitude": -3.712,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1loiq5f",
+    "name": "Portland Harbour",
+    "displayName": "PORTLAND HARBOUR",
+    "latitude": 50.5788,
+    "longitude": -2.4741,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-mx4jhq",
+    "name": "Porto Botte",
+    "displayName": "PORTO BOTTE",
+    "latitude": 39.0382,
+    "longitude": 8.5713,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-mdwmso",
+    "name": "Porto Cesareo",
+    "displayName": "PORTO CESAREO",
+    "latitude": 40.2578,
+    "longitude": 17.885,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-8js5qk",
+    "name": "Porto Giunco (Villasimius)",
+    "displayName": "PORTO GIUNCO (VILLASIMIUS)",
+    "latitude": 39.0931,
+    "longitude": 9.5261,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-11wxail",
+    "name": "Porto Pollo",
+    "displayName": "PORTO POLLO",
+    "latitude": 41.191048,
+    "longitude": 9.315564,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-1rb3gp7",
+    "name": "Porto Santo (Madeira)",
+    "displayName": "PORTO SANTO (MADEIRA)",
+    "latitude": 33.05,
+    "longitude": -16.3212,
+    "timezone": "Atlantic/Madeira"
+  },
+  {
+    "id": "spot-126rqo0",
+    "name": "Portrush (East Strand)",
+    "displayName": "PORTRUSH (EAST STRAND)",
+    "latitude": 55.2046,
+    "longitude": -6.645,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-g7ub1f",
+    "name": "Possidi (Halkidiki)",
+    "displayName": "POSSIDI (HALKIDIKI)",
+    "latitude": 39.9596,
+    "longitude": 23.3624,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-n0vtms",
+    "name": "Pounda (Paros)",
+    "displayName": "POUNDA (PAROS)",
+    "latitude": 37.0315,
+    "longitude": 25.0967,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-10hkjzy",
+    "name": "Povljana (Pag)",
+    "displayName": "POVLJANA (PAG)",
+    "latitude": 44.3401,
+    "longitude": 15.094,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-pyzl59",
+    "name": "Praia a Mare",
+    "displayName": "PRAIA A MARE",
+    "latitude": 39.8997,
+    "longitude": 15.775,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-14os0mg",
+    "name": "Praia da Barra (Aveiro)",
+    "displayName": "PRAIA DA BARRA (AVEIRO)",
+    "latitude": 40.6415,
+    "longitude": -8.75,
+    "timezone": "Europe/Lisbon"
+  },
+  {
+    "id": "spot-18cuflw",
+    "name": "Praia da Bordeira",
+    "displayName": "PRAIA DA BORDEIRA",
+    "latitude": 37.198012,
+    "longitude": -8.901136,
+    "timezone": "Europe/Lisbon"
+  },
+  {
+    "id": "spot-1lwfxme",
+    "name": "Praia da Frouxeira (Valdoviño)",
+    "displayName": "PRAIA DA FROUXEIRA (VALDOVIÑO)",
+    "latitude": 43.606,
+    "longitude": -8.149,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-qjij8l",
+    "name": "Praia da Lanzada (O Grove)",
+    "displayName": "PRAIA DA LANZADA (O GROVE)",
+    "latitude": 42.4382,
+    "longitude": -8.8747,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-rde6tj",
+    "name": "Praia de Doniños (Ferrol)",
+    "displayName": "PRAIA DE DONIÑOS (FERROL)",
+    "latitude": 43.5029,
+    "longitude": -8.3211,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-1nhyqus",
+    "name": "Praia de Faro (Ria Formosa)",
+    "displayName": "PRAIA DE FARO (RIA FORMOSA)",
+    "latitude": 37.0038,
+    "longitude": -7.9885,
+    "timezone": "Europe/Lisbon"
+  },
+  {
+    "id": "spot-big6jt",
+    "name": "Praia de Mira",
+    "displayName": "PRAIA DE MIRA",
+    "latitude": 40.4544,
+    "longitude": -8.8046,
+    "timezone": "Europe/Lisbon"
+  },
+  {
+    "id": "spot-f6ci14",
+    "name": "Prasonisi",
+    "displayName": "PRASONISI",
+    "latitude": 35.889793,
+    "longitude": 27.768927,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-1xogm60",
+    "name": "Premantura (Kamenjak)",
+    "displayName": "PREMANTURA (KAMENJAK)",
+    "latitude": 44.7956,
+    "longitude": 13.9202,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-1ggyrd9",
+    "name": "Prerow",
+    "displayName": "PREROW",
+    "latitude": 54.46,
+    "longitude": 12.575,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-finzq4",
+    "name": "Prestwick",
+    "displayName": "PRESTWICK",
+    "latitude": 55.505,
+    "longitude": -4.622,
+    "timezone": "Europe/London"
+  },
+  {
     "id": "spot-wuft6v",
     "name": "Prestwick Sailing Club",
     "displayName": "PRESTWICK SAILING CLUB",
     "latitude": 55.493921,
     "longitude": -4.620358,
     "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-ifxbju",
+    "name": "Primorsko",
+    "displayName": "PRIMORSKO",
+    "latitude": 42.2699,
+    "longitude": 27.754,
+    "timezone": "Europe/Sofia"
+  },
+  {
+    "id": "spot-14ze3x7",
+    "name": "Privlaka",
+    "displayName": "PRIVLAKA",
+    "latitude": 44.2601,
+    "longitude": 15.1282,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-1qt9g8b",
+    "name": "Prizna",
+    "displayName": "PRIZNA",
+    "latitude": 44.5814,
+    "longitude": 14.9511,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-9cg8ik",
+    "name": "Puck",
+    "displayName": "PUCK",
+    "latitude": 54.720526,
+    "longitude": 18.416364,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-1jvjtfa",
+    "name": "Punat (Krk)",
+    "displayName": "PUNAT (KRK)",
+    "latitude": 45.02,
+    "longitude": 14.63,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-uutosx",
+    "name": "Punta Grò, Sirmione (Lago di Garda)",
+    "displayName": "PUNTA GRÒ, SIRMIONE (LAGO DI GARDA)",
+    "latitude": 45.4589,
+    "longitude": 10.6089,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-1qa6q1k",
+    "name": "Punta Prosciutto",
+    "displayName": "PUNTA PROSCIUTTO",
+    "latitude": 40.2914,
+    "longitude": 17.7864,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-jg0fjt",
+    "name": "Punta Sabbioni (Cavallino)",
+    "displayName": "PUNTA SABBIONI (CAVALLINO)",
+    "latitude": 45.4301,
+    "longitude": 12.4378,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-16i3813",
+    "name": "Punta Trettu",
+    "displayName": "PUNTA TRETTU",
+    "latitude": 39.112231,
+    "longitude": 8.437006,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-1phssje",
+    "name": "Punta Umbría",
+    "displayName": "PUNTA UMBRÍA",
+    "latitude": 37.1739,
+    "longitude": -6.9636,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-ixesfk",
+    "name": "Pupuya",
+    "displayName": "PUPUYA",
+    "latitude": -33.992546,
+    "longitude": -71.888955,
+    "timezone": "America/Santiago"
+  },
+  {
+    "id": "spot-1dhwpq9",
+    "name": "Putzu Idu",
+    "displayName": "PUTZU IDU",
+    "latitude": 40.0306,
+    "longitude": 8.4042,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-5uhpzl",
+    "name": "Puzziteddu",
+    "displayName": "PUZZITEDDU",
+    "latitude": 37.561,
+    "longitude": 12.6768,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-vnplmw",
+    "name": "Quiberon – Penthièvre",
+    "displayName": "QUIBERON – PENTHIÈVRE",
+    "latitude": 47.554359,
+    "longitude": -3.131618,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-hr3oqy",
+    "name": "Ramla Bay",
+    "displayName": "RAMLA BAY",
+    "latitude": 36.062,
+    "longitude": 14.283,
+    "timezone": "Europe/Malta"
   },
   {
     "id": "spot-fb0111",
@@ -2128,6 +6720,14 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-imopyh",
+    "name": "Redcar",
+    "displayName": "REDCAR",
+    "latitude": 54.618,
+    "longitude": -1.07,
+    "timezone": "Europe/London"
+  },
+  {
     "id": "spot-1vof49q",
     "name": "Refsnes",
     "displayName": "REFSNES",
@@ -2136,12 +6736,132 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-17cbnru",
+    "name": "Refsnes (Jæren)",
+    "displayName": "REFSNES (JÆREN)",
+    "latitude": 58.648,
+    "longitude": 5.54,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1yg5o2q",
+    "name": "Rėkyva",
+    "displayName": "RĖKYVA",
+    "latitude": 55.8654,
+    "longitude": 23.3192,
+    "timezone": "Europe/Vilnius"
+  },
+  {
+    "id": "spot-1ej4p0f",
+    "name": "Rerik",
+    "displayName": "RERIK",
+    "latitude": 54.108,
+    "longitude": 11.618,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-19efhde",
+    "name": "Reschensee (Lago di Resia)",
+    "displayName": "RESCHENSEE (LAGO DI RESIA)",
+    "latitude": 46.8056,
+    "longitude": 10.5375,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-w4twry",
+    "name": "Retamar",
+    "displayName": "RETAMAR",
+    "latitude": 36.833122,
+    "longitude": -2.317122,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-xzxqc3",
+    "name": "Rewa",
+    "displayName": "REWA",
+    "latitude": 54.6403,
+    "longitude": 18.5156,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-1qdx5ca",
+    "name": "Rhosneigr",
+    "displayName": "RHOSNEIGR",
+    "latitude": 53.229,
+    "longitude": -4.516,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-180tjy2",
+    "name": "Ria de Alvor",
+    "displayName": "RIA DE ALVOR",
+    "latitude": 37.1298,
+    "longitude": -8.6079,
+    "timezone": "Europe/Lisbon"
+  },
+  {
     "id": "spot-106txh4",
     "name": "Richard's Windsurfing Club",
     "displayName": "RICHARD'S WINDSURFING CLUB",
     "latitude": 57.002739,
     "longitude": 24.179283,
     "timezone": "Europe/Riga"
+  },
+  {
+    "id": "spot-kv6y6z",
+    "name": "Rimini",
+    "displayName": "RIMINI",
+    "latitude": 44.0728,
+    "longitude": 12.5711,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-fdnc9y",
+    "name": "Ringenäs",
+    "displayName": "RINGENÄS",
+    "latitude": 56.66,
+    "longitude": 12.73,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-5djfu8",
+    "name": "Risco del Paso (Fuerteventura, Canary Islands)",
+    "displayName": "RISCO DEL PASO (FUERTEVENTURA, CANARY ISLANDS)",
+    "latitude": 28.1093,
+    "longitude": -14.2318,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-5xi66u",
+    "name": "Riumar (Delta de l'Ebre)",
+    "displayName": "RIUMAR (DELTA DE L'EBRE)",
+    "latitude": 40.722,
+    "longitude": 0.859,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-fybb5k",
+    "name": "Rockanje Sportstrand",
+    "displayName": "ROCKANJE SPORTSTRAND",
+    "latitude": 51.872293,
+    "longitude": 4.044898,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-125y4to",
+    "name": "Roja",
+    "displayName": "ROJA",
+    "latitude": 57.5057,
+    "longitude": 22.8044,
+    "timezone": "Europe/Riga"
+  },
+  {
+    "id": "spot-1woimh",
+    "name": "Rømø",
+    "displayName": "RØMØ",
+    "latitude": 55.15,
+    "longitude": 8.48,
+    "timezone": "Europe/Berlin"
   },
   {
     "id": "spot-1bbicxp",
@@ -2160,12 +6880,36 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-yjmd86",
+    "name": "Roquetas de Mar",
+    "displayName": "ROQUETAS DE MAR",
+    "latitude": 36.762,
+    "longitude": -2.625,
+    "timezone": "Europe/Madrid"
+  },
+  {
     "id": "spot-zhm2az",
     "name": "Røsholmstranda",
     "displayName": "RØSHOLMSTRANDA",
     "latitude": 60.121601,
     "longitude": 10.189538,
     "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-14z04le",
+    "name": "Rota",
+    "displayName": "ROTA",
+    "latitude": 36.6273,
+    "longitude": -6.3839,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-1ast822",
+    "name": "Rowy",
+    "displayName": "ROWY",
+    "latitude": 54.6592,
+    "longitude": 17.0505,
+    "timezone": "Europe/Warsaw"
   },
   {
     "id": "spot-1e9jlso",
@@ -2200,6 +6944,22 @@
     "timezone": "Europe/Brussels"
   },
   {
+    "id": "spot-615ibj",
+    "name": "Rozkoš",
+    "displayName": "ROZKOŠ",
+    "latitude": 50.378285,
+    "longitude": 15.99944,
+    "timezone": "Europe/Prague"
+  },
+  {
+    "id": "spot-2dsa58",
+    "name": "Rullsand",
+    "displayName": "RULLSAND",
+    "latitude": 60.6441,
+    "longitude": 17.4661,
+    "timezone": "Europe/Berlin"
+  },
+  {
     "id": "spot-61hrc1",
     "name": "RWS 1922",
     "displayName": "RWS 1922",
@@ -2208,12 +6968,60 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-1ivjr6x",
+    "name": "Rybnik",
+    "displayName": "RYBNIK",
+    "latitude": 50.128939,
+    "longitude": 18.519214,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-1coli62",
+    "name": "Rzucewo",
+    "displayName": "RZUCEWO",
+    "latitude": 54.6866,
+    "longitude": 18.4661,
+    "timezone": "Europe/Warsaw"
+  },
+  {
     "id": "spot-18cbwj5",
     "name": "S.W.V. Plankenkoorts VB",
     "displayName": "S.W.V. PLANKENKOORTS VB",
     "latitude": 52.157406,
     "longitude": 4.442636,
     "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-fi7h8v",
+    "name": "Sa Barra (Sant'Antioco)",
+    "displayName": "SA BARRA (SANT'ANTIOCO)",
+    "latitude": 39.0924,
+    "longitude": 8.4503,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-8sgjgb",
+    "name": "Sa Ràpita (Mallorca, Balearic Islands)",
+    "displayName": "SA RÀPITA (MALLORCA, BALEARIC ISLANDS)",
+    "latitude": 39.3626,
+    "longitude": 2.9546,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-echdu1",
+    "name": "Sabaudia",
+    "displayName": "SABAUDIA",
+    "latitude": 41.2902,
+    "longitude": 13.0257,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-17hxlz",
+    "name": "Sabunike",
+    "displayName": "SABUNIKE",
+    "latitude": 44.2457,
+    "longitude": 15.1797,
+    "timezone": "Europe/Belgrade"
   },
   {
     "id": "spot-9vctoa",
@@ -2248,6 +7056,62 @@
     "timezone": "America/Puerto_Rico"
   },
   {
+    "id": "spot-17cjt69",
+    "name": "Saint-Jean-de-Monts",
+    "displayName": "SAINT-JEAN-DE-MONTS",
+    "latitude": 46.802007,
+    "longitude": -2.116357,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-tdyozk",
+    "name": "Saint-Malo – Le Sillon",
+    "displayName": "SAINT-MALO – LE SILLON",
+    "latitude": 48.6579,
+    "longitude": -2.006,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1lumpvu",
+    "name": "Saintes-Maries-de-la-Mer",
+    "displayName": "SAINTES-MARIES-DE-LA-MER",
+    "latitude": 43.451592,
+    "longitude": 4.42772,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1haf0dz",
+    "name": "Sakarun (Dugi otok)",
+    "displayName": "SAKARUN (DUGI OTOK)",
+    "latitude": 44.1346,
+    "longitude": 14.8722,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-sqj7cp",
+    "name": "Sal (Kite Beach)",
+    "displayName": "SAL (KITE BEACH)",
+    "latitude": 16.611507,
+    "longitude": -22.907388,
+    "timezone": "Atlantic/Cape_Verde"
+  },
+  {
+    "id": "spot-7m4jhl",
+    "name": "Salinas de Arinaga (Gran Canaria, Canary Islands)",
+    "displayName": "SALINAS DE ARINAGA (GRAN CANARIA, CANARY ISLANDS)",
+    "latitude": 27.8535,
+    "longitude": -15.3862,
+    "timezone": "Atlantic/Canary"
+  },
+  {
+    "id": "spot-a40yqc",
+    "name": "Salinas de Pozo (Gran Canaria, Canary Islands)",
+    "displayName": "SALINAS DE POZO (GRAN CANARIA, CANARY ISLANDS)",
+    "latitude": 27.808,
+    "longitude": -15.42,
+    "timezone": "Atlantic/Canary"
+  },
+  {
     "id": "spot-dc16a2",
     "name": "SaLiTrE Club deportivo",
     "displayName": "SALITRE CLUB DEPORTIVO",
@@ -2264,12 +7128,100 @@
     "timezone": "Europe/London"
   },
   {
+    "id": "spot-kuyewb",
+    "name": "San Vito Lo Capo",
+    "displayName": "SAN VITO LO CAPO",
+    "latitude": 38.1805,
+    "longitude": 12.7334,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-1d2zy1b",
+    "name": "Sandhammaren",
+    "displayName": "SANDHAMMAREN",
+    "latitude": 55.3849,
+    "longitude": 14.1981,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1628jnz",
+    "name": "Sandvig",
+    "displayName": "SANDVIG",
+    "latitude": 55.289881,
+    "longitude": 14.777958,
+    "timezone": "Europe/Berlin"
+  },
+  {
     "id": "spot-r9z7fp",
     "name": "Sandvika",
     "displayName": "SANDVIKA",
     "latitude": 62.486547,
     "longitude": 5.966606,
     "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-11sz9tr",
+    "name": "Sangatte – Blériot-Plage",
+    "displayName": "SANGATTE – BLÉRIOT-PLAGE",
+    "latitude": 50.945804,
+    "longitude": 1.753713,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1sf1vh3",
+    "name": "Sankt Peter Ording",
+    "displayName": "SANKT PETER ORDING",
+    "latitude": 54.326552,
+    "longitude": 8.606214,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1p7wcce",
+    "name": "Sanlúcar de Barrameda",
+    "displayName": "SANLÚCAR DE BARRAMEDA",
+    "latitude": 36.7936,
+    "longitude": -6.352,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-9wey87",
+    "name": "Sant Pere Pescador",
+    "displayName": "SANT PERE PESCADOR",
+    "latitude": 42.178,
+    "longitude": 3.1053,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-zg34xi",
+    "name": "Santa Maria (Paros)",
+    "displayName": "SANTA MARIA (PAROS)",
+    "latitude": 37.1311,
+    "longitude": 25.2773,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-196akba",
+    "name": "Santa Marinella, Banzai",
+    "displayName": "SANTA MARINELLA, BANZAI",
+    "latitude": 42.0347,
+    "longitude": 11.9214,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-1ks0gfo",
+    "name": "Santa Pola, El Pinet",
+    "displayName": "SANTA POLA, EL PINET",
+    "latitude": 38.1745,
+    "longitude": -0.6035,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-xj8185",
+    "name": "Sarbsko",
+    "displayName": "SARBSKO",
+    "latitude": 54.762085,
+    "longitude": 17.655987,
+    "timezone": "Europe/Warsaw"
   },
   {
     "id": "spot-1cs2wbz",
@@ -2280,12 +7232,84 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-z3r0i",
+    "name": "Schellinkhout",
+    "displayName": "SCHELLINKHOUT",
+    "latitude": 52.632278,
+    "longitude": 5.120788,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-h4pb7t",
+    "name": "Scheveningen",
+    "displayName": "SCHEVENINGEN",
+    "latitude": 52.109866,
+    "longitude": 4.271471,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-ug7u95",
+    "name": "Schiermonnikoog (Noordzee: Paal 3-5)",
+    "displayName": "SCHIERMONNIKOOG (NOORDZEE: PAAL 3-5)",
+    "latitude": 53.504333,
+    "longitude": 6.180988,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1hyh732",
+    "name": "Schillig",
+    "displayName": "SCHILLIG",
+    "latitude": 53.703,
+    "longitude": 8.0292,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-voshvu",
+    "name": "Schinias (Attica)",
+    "displayName": "SCHINIAS (ATTICA)",
+    "latitude": 38.1356,
+    "longitude": 24.0182,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-16wxgru",
+    "name": "Schweriner See (Flessenow)",
+    "displayName": "SCHWERINER SEE (FLESSENOW)",
+    "latitude": 53.733,
+    "longitude": 11.472,
+    "timezone": "Europe/Berlin"
+  },
+  {
     "id": "spot-hxakp2",
     "name": "scuola vela FIV",
     "displayName": "SCUOLA VELA FIV",
     "latitude": 42.992259,
     "longitude": 10.512333,
     "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-iwobng",
+    "name": "Sea Palling",
+    "displayName": "SEA PALLING",
+    "latitude": 52.792,
+    "longitude": 1.597,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-jgnj1e",
+    "name": "Seaton Carew",
+    "displayName": "SEATON CAREW",
+    "latitude": 54.655,
+    "longitude": -1.18,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1l0k3zk",
+    "name": "Sečovlje (Portorož)",
+    "displayName": "SEČOVLJE (PORTOROŽ)",
+    "latitude": 45.5017,
+    "longitude": 13.5833,
+    "timezone": "Europe/Belgrade"
   },
   {
     "id": "spot-1nsuare",
@@ -2544,12 +7568,68 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-d8vwqr",
+    "name": "Sele",
+    "displayName": "SELE",
+    "latitude": 58.81,
+    "longitude": 5.55,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-rsx5if",
+    "name": "Serre-Ponçon",
+    "displayName": "SERRE-PONÇON",
+    "latitude": 44.5309,
+    "longitude": 6.4285,
+    "timezone": "Europe/Paris"
+  },
+  {
     "id": "spot-1m0vq91",
     "name": "SGU Segler-Gemeinschaft Utting e.V.",
     "displayName": "SGU SEGLER-GEMEINSCHAFT UTTING E.V.",
     "latitude": 48.030612,
     "longitude": 11.095515,
     "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-gi1kr0",
+    "name": "Shabla",
+    "displayName": "SHABLA",
+    "latitude": 43.573,
+    "longitude": 28.5834,
+    "timezone": "Europe/Sofia"
+  },
+  {
+    "id": "spot-1e2hhom",
+    "name": "Shëngjin",
+    "displayName": "SHËNGJIN",
+    "latitude": 41.8008,
+    "longitude": 19.5726,
+    "timezone": "Europe/Tirane"
+  },
+  {
+    "id": "spot-hmaxfq",
+    "name": "Shkorpilovtsi",
+    "displayName": "SHKORPILOVTSI",
+    "latitude": 42.9537,
+    "longitude": 27.9015,
+    "timezone": "Europe/Sofia"
+  },
+  {
+    "id": "spot-2bph86",
+    "name": "Shoeburyness",
+    "displayName": "SHOEBURYNESS",
+    "latitude": 51.5314,
+    "longitude": 0.8035,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1gtqvbj",
+    "name": "Shoreham",
+    "displayName": "SHOREHAM",
+    "latitude": 50.826,
+    "longitude": -0.27,
+    "timezone": "Europe/London"
   },
   {
     "id": "spot-1lye3gp",
@@ -2560,12 +7640,60 @@
     "timezone": "Europe/London"
   },
   {
+    "id": "spot-3pi5n",
+    "name": "Sihlsee",
+    "displayName": "SIHLSEE",
+    "latitude": 47.115,
+    "longitude": 8.799,
+    "timezone": "Europe/Zurich"
+  },
+  {
     "id": "spot-1lk5imm",
     "name": "Silkeborg Sejlklub",
     "displayName": "SILKEBORG SEJLKLUB",
     "latitude": 56.148589,
     "longitude": 9.5769,
     "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-s4z8z",
+    "name": "Silvaplana",
+    "displayName": "SILVAPLANA",
+    "latitude": 46.456667,
+    "longitude": 9.792701,
+    "timezone": "Europe/Zurich"
+  },
+  {
+    "id": "spot-21okfb",
+    "name": "Šimuni (Pag)",
+    "displayName": "ŠIMUNI (PAG)",
+    "latitude": 44.4642,
+    "longitude": 14.9613,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-n1rciq",
+    "name": "Sines / São Torpes",
+    "displayName": "SINES / SÃO TORPES",
+    "latitude": 37.9195,
+    "longitude": -8.7963,
+    "timezone": "Europe/Lisbon"
+  },
+  {
+    "id": "spot-17cgnoa",
+    "name": "Siouville-Hague",
+    "displayName": "SIOUVILLE-HAGUE",
+    "latitude": 49.557978,
+    "longitude": -1.854344,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-wf7s65",
+    "name": "Six-Fours – Brutal Beach",
+    "displayName": "SIX-FOURS – BRUTAL BEACH",
+    "latitude": 43.111047,
+    "longitude": 5.811707,
+    "timezone": "Europe/Paris"
   },
   {
     "id": "spot-f10fc2",
@@ -2584,6 +7712,14 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-1d2fzoj",
+    "name": "Skala Kallonis (Lesvos)",
+    "displayName": "SKALA KALLONIS (LESVOS)",
+    "latitude": 39.21,
+    "longitude": 26.2,
+    "timezone": "Europe/Athens"
+  },
+  {
     "id": "spot-sfr9tz",
     "name": "Skanderborg Junior Sejlklub",
     "displayName": "SKANDERBORG JUNIOR SEJLKLUB",
@@ -2598,6 +7734,30 @@
     "latitude": 56.043898,
     "longitude": 9.934765,
     "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-m1anfb",
+    "name": "Skanör",
+    "displayName": "SKANÖR",
+    "latitude": 55.4188,
+    "longitude": 12.8312,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-162wtrk",
+    "name": "Skaven Strand",
+    "displayName": "SKAVEN STRAND",
+    "latitude": 55.8921,
+    "longitude": 8.357,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1wik38f",
+    "name": "Skegness",
+    "displayName": "SKEGNESS",
+    "latitude": 53.1428,
+    "longitude": 0.3563,
+    "timezone": "Europe/London"
   },
   {
     "id": "spot-11kplof",
@@ -2616,6 +7776,54 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-10h8b7s",
+    "name": "Slag Beukel",
+    "displayName": "SLAG BEUKEL",
+    "latitude": 52.010804,
+    "longitude": 4.138954,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-14ucxct",
+    "name": "Slufterstrand (Maasvlakte)",
+    "displayName": "SLUFTERSTRAND (MAASVLAKTE)",
+    "latitude": 51.924499,
+    "longitude": 4.002964,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1cgcg1e",
+    "name": "Smögen",
+    "displayName": "SMÖGEN",
+    "latitude": 58.3578,
+    "longitude": 11.223,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-13kr2kl",
+    "name": "Snettisham",
+    "displayName": "SNETTISHAM",
+    "latitude": 52.8738,
+    "longitude": 0.4457,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1gj6f2f",
+    "name": "Śniardwy",
+    "displayName": "ŚNIARDWY",
+    "latitude": 53.766839,
+    "longitude": 21.846361,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-n2w263",
+    "name": "Sobieszewo",
+    "displayName": "SOBIESZEWO",
+    "latitude": 54.355,
+    "longitude": 18.8364,
+    "timezone": "Europe/Warsaw"
+  },
+  {
     "id": "spot-u4no85",
     "name": "Società Nautica Laguna",
     "displayName": "SOCIETÀ NAUTICA LAGUNA",
@@ -2632,6 +7840,38 @@
     "timezone": "Europe/Paris"
   },
   {
+    "id": "spot-j6r2ue",
+    "name": "Solastranden",
+    "displayName": "SOLASTRANDEN",
+    "latitude": 58.885,
+    "longitude": 5.59,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1xbvsg",
+    "name": "Soma Bay",
+    "displayName": "SOMA BAY",
+    "latitude": 26.855993,
+    "longitude": 33.987479,
+    "timezone": "Africa/Cairo"
+  },
+  {
+    "id": "spot-1g00h7w",
+    "name": "Somo (Santander)",
+    "displayName": "SOMO (SANTANDER)",
+    "latitude": 43.448,
+    "longitude": -3.758,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-9wi3q6",
+    "name": "Son Bou (Menorca, Balearic Islands)",
+    "displayName": "SON BOU (MENORCA, BALEARIC ISLANDS)",
+    "latitude": 39.8969,
+    "longitude": 4.0757,
+    "timezone": "Europe/Madrid"
+  },
+  {
     "id": "spot-1w02ub7",
     "name": "Sopocki Klub Żeglarski",
     "displayName": "SOPOCKI KLUB ŻEGLARSKI",
@@ -2640,12 +7880,76 @@
     "timezone": "Europe/Warsaw"
   },
   {
+    "id": "spot-1cqwdgk",
+    "name": "Sõrve",
+    "displayName": "SÕRVE",
+    "latitude": 57.9098,
+    "longitude": 22.0554,
+    "timezone": "Europe/Tallinn"
+  },
+  {
+    "id": "spot-8zhfcu",
+    "name": "Sotavento (Fuerteventura, Canary Islands)",
+    "displayName": "SOTAVENTO (FUERTEVENTURA, CANARY ISLANDS)",
+    "latitude": 28.135943,
+    "longitude": -14.245248,
+    "timezone": "Atlantic/Canary"
+  },
+  {
+    "id": "spot-1vli94w",
+    "name": "Sottomarina (Chioggia)",
+    "displayName": "SOTTOMARINA (CHIOGGIA)",
+    "latitude": 45.2222,
+    "longitude": 12.3092,
+    "timezone": "Europe/Rome"
+  },
+  {
     "id": "spot-2ypw5p",
     "name": "South Beach Yacht Club",
     "displayName": "SOUTH BEACH YACHT CLUB",
     "latitude": 37.779976,
     "longitude": -122.38791,
     "timezone": "America/Los_Angeles"
+  },
+  {
+    "id": "spot-nd68ul",
+    "name": "Southbourne",
+    "displayName": "SOUTHBOURNE",
+    "latitude": 50.7175,
+    "longitude": -1.7845,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1iwssuy",
+    "name": "Southend-on-Sea",
+    "displayName": "SOUTHEND-ON-SEA",
+    "latitude": 51.535,
+    "longitude": 0.7,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1mly2y0",
+    "name": "Southport",
+    "displayName": "SOUTHPORT",
+    "latitude": 53.653,
+    "longitude": -3.01,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1plq729",
+    "name": "Sozopol",
+    "displayName": "SOZOPOL",
+    "latitude": 42.415,
+    "longitude": 27.6541,
+    "timezone": "Europe/Sofia"
+  },
+  {
+    "id": "spot-vkrdmn",
+    "name": "Spiekeroog",
+    "displayName": "SPIEKEROOG",
+    "latitude": 53.7735,
+    "longitude": 7.689,
+    "timezone": "Europe/Berlin"
   },
   {
     "id": "spot-1ojuqv9",
@@ -2704,6 +8008,14 @@
     "timezone": "Europe/Lisbon"
   },
   {
+    "id": "spot-15ge1qg",
+    "name": "Srebrno jezero",
+    "displayName": "SREBRNO JEZERO",
+    "latitude": 44.762,
+    "longitude": 21.4583,
+    "timezone": "Europe/Belgrade"
+  },
+  {
     "id": "spot-18o45q8",
     "name": "SRSV Plön",
     "displayName": "SRSV PLÖN",
@@ -2720,6 +8032,14 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-c0v5wn",
+    "name": "St Andrews (West Sands)",
+    "displayName": "ST ANDREWS (WEST SANDS)",
+    "latitude": 56.352,
+    "longitude": -2.808,
+    "timezone": "Europe/London"
+  },
+  {
     "id": "spot-1s5k461",
     "name": "Stade Nautique du Roucas Blanc",
     "displayName": "STADE NAUTIQUE DU ROUCAS BLANC",
@@ -2728,11 +8048,27 @@
     "timezone": "Europe/Paris"
   },
   {
+    "id": "spot-1wgvpaa",
+    "name": "Stavoren - it Suderstrand",
+    "displayName": "STAVOREN - IT SUDERSTRAND",
+    "latitude": 52.871938,
+    "longitude": 5.369857,
+    "timezone": "Europe/Brussels"
+  },
+  {
     "id": "spot-p28n05",
     "name": "STCI - Segel- und Tennisclub Rot Weiß Ingolstadt",
     "displayName": "STCI - SEGEL- UND TENNISCLUB ROT WEISS INGOLSTADT",
     "latitude": 48.749061,
     "longitude": 11.404713,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-11bsynr",
+    "name": "Steinhuder Meer (Mardorf)",
+    "displayName": "STEINHUDER MEER (MARDORF)",
+    "latitude": 52.493,
+    "longitude": 9.34,
     "timezone": "Europe/Berlin"
   },
   {
@@ -2752,11 +8088,35 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-1w4lwtw",
+    "name": "Strand Horst",
+    "displayName": "STRAND HORST",
+    "latitude": 52.32291,
+    "longitude": 5.570562,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-54k2ys",
+    "name": "Stroomi",
+    "displayName": "STROOMI",
+    "latitude": 59.4431,
+    "longitude": 24.6841,
+    "timezone": "Europe/Tallinn"
+  },
+  {
     "id": "spot-1hestnn",
     "name": "Struer Sejlklub",
     "displayName": "STRUER SEJLKLUB",
     "latitude": 56.494231,
     "longitude": 8.591147,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-ek6iao",
+    "name": "Sudersand (Fårö)",
+    "displayName": "SUDERSAND (FÅRÖ)",
+    "latitude": 57.95,
+    "longitude": 19.25,
     "timezone": "Europe/Berlin"
   },
   {
@@ -2766,6 +8126,14 @@
     "latitude": 53.821605,
     "longitude": 8.879083,
     "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1fmjrcx",
+    "name": "Sukošan",
+    "displayName": "SUKOŠAN",
+    "latitude": 44.0379,
+    "longitude": 15.3177,
+    "timezone": "Europe/Belgrade"
   },
   {
     "id": "spot-1fez7a3",
@@ -2872,12 +8240,212 @@
     "timezone": "Europe/Brussels"
   },
   {
+    "id": "spot-16opkcw",
+    "name": "Svencele",
+    "displayName": "SVENCELE",
+    "latitude": 55.492916,
+    "longitude": 21.244713,
+    "timezone": "Europe/Vilnius"
+  },
+  {
+    "id": "spot-ah99yl",
+    "name": "Sveti Filip i Jakov",
+    "displayName": "SVETI FILIP I JAKOV",
+    "latitude": 43.9623,
+    "longitude": 15.4218,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-wakjg",
+    "name": "Sveti Petar na Moru",
+    "displayName": "SVETI PETAR NA MORU",
+    "latitude": 43.989,
+    "longitude": 15.3665,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-159jgvx",
+    "name": "Świnoujście",
+    "displayName": "ŚWINOUJŚCIE",
+    "latitude": 53.922408,
+    "longitude": 14.267518,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-1it14rl",
+    "name": "Sylt",
+    "displayName": "SYLT",
+    "latitude": 54.862204,
+    "longitude": 8.340803,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-5n6oza",
+    "name": "Taiba",
+    "displayName": "TAIBA",
+    "latitude": -3.469891,
+    "longitude": -38.93775,
+    "timezone": "America/Fortaleza"
+  },
+  {
+    "id": "spot-139wzdp",
+    "name": "Talacre",
+    "displayName": "TALACRE",
+    "latitude": 53.353,
+    "longitude": -3.316,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1dzssg",
+    "name": "Talamone",
+    "displayName": "TALAMONE",
+    "latitude": 42.5597,
+    "longitude": 11.1436,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-1mfu0eq",
+    "name": "Tarifa, Arte Vida",
+    "displayName": "TARIFA, ARTE VIDA",
+    "latitude": 36.051613,
+    "longitude": -5.649196,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-1piz1qm",
+    "name": "Tarifa, Balneario",
+    "displayName": "TARIFA, BALNEARIO",
+    "latitude": 36.009922,
+    "longitude": -5.611024,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-fx9d8u",
+    "name": "Tarifa, Campo de Futbol",
+    "displayName": "TARIFA, CAMPO DE FUTBOL",
+    "latitude": 36.020964,
+    "longitude": -5.61657,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-1nts0vl",
+    "name": "Tarifa, Chirungito Agua",
+    "displayName": "TARIFA, CHIRUNGITO AGUA",
+    "latitude": 36.044651,
+    "longitude": -5.634545,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-1m5uepr",
+    "name": "Tarifa, Los Lances Sur",
+    "displayName": "TARIFA, LOS LANCES SUR",
+    "latitude": 36.035957,
+    "longitude": -5.636136,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-1lvut0s",
+    "name": "Tarifa, Rio Jara",
+    "displayName": "TARIFA, RIO JARA",
+    "latitude": 36.041331,
+    "longitude": -5.634325,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-16rjfvk",
+    "name": "Tarifa, Valdevaqueros",
+    "displayName": "TARIFA, VALDEVAQUEROS",
+    "latitude": 36.065654,
+    "longitude": -5.689424,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-1bjdbmc",
+    "name": "Tatajuba",
+    "displayName": "TATAJUBA",
+    "latitude": -2.852877,
+    "longitude": -40.700658,
+    "timezone": "America/Fortaleza"
+  },
+  {
+    "id": "spot-hwboic",
+    "name": "Tatort Hawaii",
+    "displayName": "TATORT HAWAII",
+    "latitude": 54.41776,
+    "longitude": 10.266796,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-nuzd1y",
+    "name": "Techirghiol",
+    "displayName": "TECHIRGHIOL",
+    "latitude": 44.0528,
+    "longitude": 28.6409,
+    "timezone": "Europe/Bucharest"
+  },
+  {
+    "id": "spot-14bw1ga",
+    "name": "Tegernsee",
+    "displayName": "TEGERNSEE",
+    "latitude": 47.712811,
+    "longitude": 11.725486,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-15ln5a0",
+    "name": "Terneuzen (Put van Terneuzen)",
+    "displayName": "TERNEUZEN (PUT VAN TERNEUZEN)",
+    "latitude": 51.337162,
+    "longitude": 3.839594,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1jml48u",
+    "name": "Terschelling - Groene Strand",
+    "displayName": "TERSCHELLING - GROENE STRAND",
+    "latitude": 53.355141,
+    "longitude": 5.21029,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1jcid1w",
+    "name": "Terschelling - Noordzee",
+    "displayName": "TERSCHELLING - NOORDZEE",
+    "latitude": 53.409386,
+    "longitude": 5.280458,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1gkmc46",
+    "name": "Texel - Dijkmanshuizen (Wadzijde)",
+    "displayName": "TEXEL - DIJKMANSHUIZEN (WADZIJDE)",
+    "latitude": 53.064888,
+    "longitude": 4.873644,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1yovoc1",
+    "name": "Texel (Paal 17.6-18.99, 28.2-32)",
+    "displayName": "TEXEL (PAAL 17.6-18.99, 28.2-32)",
+    "latitude": 53.078442,
+    "longitude": 4.731828,
+    "timezone": "Europe/Brussels"
+  },
+  {
     "id": "spot-rowkd0",
     "name": "The Watersports Academy",
     "displayName": "THE WATERSPORTS ACADEMY",
     "latitude": 50.694417,
     "longitude": -1.931245,
     "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1cayeyq",
+    "name": "Thiessow (Rügen)",
+    "displayName": "THIESSOW (RÜGEN)",
+    "latitude": 54.275,
+    "longitude": 13.712,
+    "timezone": "Europe/Berlin"
   },
   {
     "id": "spot-14sb5e5",
@@ -2888,6 +8456,22 @@
     "timezone": "Europe/Brussels"
   },
   {
+    "id": "spot-17mg9d9",
+    "name": "Tholen Oesterdam",
+    "displayName": "THOLEN OESTERDAM",
+    "latitude": 51.460934,
+    "longitude": 4.221407,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1f0gd1b",
+    "name": "Tholos (Rhodes)",
+    "displayName": "THOLOS (RHODES)",
+    "latitude": 36.3876,
+    "longitude": 28.0353,
+    "timezone": "Europe/Athens"
+  },
+  {
     "id": "spot-1i6bel9",
     "name": "Thurø Sejlklub",
     "displayName": "THURØ SEJLKLUB",
@@ -2896,12 +8480,44 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-ytwjf0",
+    "name": "Thurso",
+    "displayName": "THURSO",
+    "latitude": 58.6066,
+    "longitude": -3.552,
+    "timezone": "Europe/London"
+  },
+  {
     "id": "spot-1gi677z",
     "name": "Thyborøn Sejlklub",
     "displayName": "THYBORØN SEJLKLUB",
     "latitude": 56.689024,
     "longitude": 8.221325,
     "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-r8vpab",
+    "name": "Tigaki (Kos)",
+    "displayName": "TIGAKI (KOS)",
+    "latitude": 36.8895,
+    "longitude": 27.1681,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-lv6k2g",
+    "name": "Tiree (Balevullin)",
+    "displayName": "TIREE (BALEVULLIN)",
+    "latitude": 56.52,
+    "longitude": -6.95,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-l17qzj",
+    "name": "Tiree (Gott Bay)",
+    "displayName": "TIREE (GOTT BAY)",
+    "latitude": 56.52,
+    "longitude": -6.785,
+    "timezone": "Europe/London"
   },
   {
     "id": "spot-11ds9mt",
@@ -2928,12 +8544,60 @@
     "timezone": "Europe/Paris"
   },
   {
+    "id": "spot-1nkwulk",
+    "name": "Tofta (Gotland)",
+    "displayName": "TOFTA (GOTLAND)",
+    "latitude": 57.507,
+    "longitude": 18.156,
+    "timezone": "Europe/Berlin"
+  },
+  {
     "id": "spot-1s5j7d8",
     "name": "Torbay Sailing Club",
     "displayName": "TORBAY SAILING CLUB",
     "latitude": -36.701983,
     "longitude": 174.751224,
     "timezone": "Pacific/Auckland"
+  },
+  {
+    "id": "spot-1yyp24f",
+    "name": "Torekov",
+    "displayName": "TOREKOV",
+    "latitude": 56.4316,
+    "longitude": 12.6066,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-15swna4",
+    "name": "Torre Grande (Oristano)",
+    "displayName": "TORRE GRANDE (ORISTANO)",
+    "latitude": 39.9028,
+    "longitude": 8.5235,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-38ad2i",
+    "name": "Torre Guaceto",
+    "displayName": "TORRE GUACETO",
+    "latitude": 40.7156,
+    "longitude": 17.8003,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-1p4gcfn",
+    "name": "Traunsee (Ebensee)",
+    "displayName": "TRAUNSEE (EBENSEE)",
+    "latitude": 47.809336,
+    "longitude": 13.793314,
+    "timezone": "Europe/Vienna"
+  },
+  {
+    "id": "spot-eni7b7",
+    "name": "Travemünde (Priwall)",
+    "displayName": "TRAVEMÜNDE (PRIWALL)",
+    "latitude": 53.952,
+    "longitude": 10.885,
+    "timezone": "Europe/Berlin"
   },
   {
     "id": "spot-flma2o",
@@ -2968,12 +8632,28 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-ricf7u",
+    "name": "Tróia",
+    "displayName": "TRÓIA",
+    "latitude": 38.488,
+    "longitude": -8.8905,
+    "timezone": "Europe/Lisbon"
+  },
+  {
     "id": "spot-17mm25p",
     "name": "Trondheim Seilforening",
     "displayName": "TRONDHEIM SEILFORENING",
     "latitude": 63.431511,
     "longitude": 10.373884,
     "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-fsnlf3",
+    "name": "Troon",
+    "displayName": "TROON",
+    "latitude": 55.545,
+    "longitude": -4.665,
+    "timezone": "Europe/London"
   },
   {
     "id": "spot-1m9853e",
@@ -2992,6 +8672,30 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-patgg6",
+    "name": "Tulum",
+    "displayName": "TULUM",
+    "latitude": 20.208723,
+    "longitude": -87.429714,
+    "timezone": "America/Cancun"
+  },
+  {
+    "id": "spot-7648v6",
+    "name": "Turawa Północ",
+    "displayName": "TURAWA PÓŁNOC",
+    "latitude": 50.732786,
+    "longitude": 18.141829,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-1jecjw2",
+    "name": "Turawa Południe",
+    "displayName": "TURAWA POŁUDNIE",
+    "latitude": 50.7097,
+    "longitude": 18.1261,
+    "timezone": "Europe/Warsaw"
+  },
+  {
     "id": "spot-13wvzyb",
     "name": "Tuusulanjärven Purjehtijat",
     "displayName": "TUUSULANJÄRVEN PURJEHTIJAT",
@@ -3008,6 +8712,38 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-ih4fu8",
+    "name": "Tylösand",
+    "displayName": "TYLÖSAND",
+    "latitude": 56.6396,
+    "longitude": 12.7359,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-falp8z",
+    "name": "Ueckermünde (Stettiner Haff)",
+    "displayName": "UECKERMÜNDE (STETTINER HAFF)",
+    "latitude": 53.752,
+    "longitude": 14.062,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1fdbyns",
+    "name": "Ummanz (Suhrendorf)",
+    "displayName": "UMMANZ (SUHRENDORF)",
+    "latitude": 54.46416,
+    "longitude": 13.13777,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1o27tup",
+    "name": "Unstad (Lofoten)",
+    "displayName": "UNSTAD (LOFOTEN)",
+    "latitude": 68.272,
+    "longitude": 13.5643,
+    "timezone": "Europe/Berlin"
+  },
+  {
     "id": "spot-kmyk4c",
     "name": "Upton Warren Sailing Club",
     "displayName": "UPTON WARREN SAILING CLUB",
@@ -3016,11 +8752,123 @@
     "timezone": "Europe/London"
   },
   {
+    "id": "spot-18ghqu9",
+    "name": "Ustaoset",
+    "displayName": "USTAOSET",
+    "latitude": 60.498,
+    "longitude": 7.9515,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-916zse",
+    "name": "Ustka",
+    "displayName": "USTKA",
+    "latitude": 54.5885,
+    "longitude": 16.842,
+    "timezone": "Europe/Warsaw"
+  },
+  {
     "id": "spot-q0ai6",
     "name": "USV Potsdam Abteilung Segeln",
     "displayName": "USV POTSDAM ABTEILUNG SEGELN",
     "latitude": 52.382578,
     "longitude": 13.040483,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1lilt9z",
+    "name": "Vääna-Jõesuu",
+    "displayName": "VÄÄNA-JÕESUU",
+    "latitude": 59.4332,
+    "longitude": 24.3655,
+    "timezone": "Europe/Tallinn"
+  },
+  {
+    "id": "spot-jxu7k",
+    "name": "Vada, Spiagge Bianche",
+    "displayName": "VADA, SPIAGGE BIANCHE",
+    "latitude": 43.3742,
+    "longitude": 10.4364,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-4t206t",
+    "name": "Vadu",
+    "displayName": "VADU",
+    "latitude": 44.4292,
+    "longitude": 28.7669,
+    "timezone": "Europe/Bucharest"
+  },
+  {
+    "id": "spot-1mg0beo",
+    "name": "Valdelagrana (El Puerto de Santa María)",
+    "displayName": "VALDELAGRANA (EL PUERTO DE SANTA MARÍA)",
+    "latitude": 36.5793,
+    "longitude": -6.227,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-6s5qeo",
+    "name": "Vargas (Gran Canaria, Canary Islands)",
+    "displayName": "VARGAS (GRAN CANARIA, CANARY ISLANDS)",
+    "latitude": 27.8657,
+    "longitude": -15.3872,
+    "timezone": "Atlantic/Canary"
+  },
+  {
+    "id": "spot-13b7bm9",
+    "name": "Varkiza (Attica)",
+    "displayName": "VARKIZA (ATTICA)",
+    "latitude": 37.8204,
+    "longitude": 23.8104,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-4xk8eo",
+    "name": "Varna (Asparuhovo)",
+    "displayName": "VARNA (ASPARUHOVO)",
+    "latitude": 43.1767,
+    "longitude": 27.9134,
+    "timezone": "Europe/Sofia"
+  },
+  {
+    "id": "spot-1msvmgm",
+    "name": "Vasiliki (Lefkada)",
+    "displayName": "VASILIKI (LEFKADA)",
+    "latitude": 38.632,
+    "longitude": 20.5968,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-g4qvem",
+    "name": "Västerås (Mälaren)",
+    "displayName": "VÄSTERÅS (MÄLAREN)",
+    "latitude": 59.57,
+    "longitude": 16.61,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-wcgyjk",
+    "name": "Vasto Marina",
+    "displayName": "VASTO MARINA",
+    "latitude": 42.105,
+    "longitude": 14.7161,
+    "timezone": "Europe/Rome"
+  },
+  {
+    "id": "spot-x55mq9",
+    "name": "Vatera (Lesvos)",
+    "displayName": "VATERA (LESVOS)",
+    "latitude": 39.0191,
+    "longitude": 26.2012,
+    "timezone": "Europe/Athens"
+  },
+  {
+    "id": "spot-16wvmuh",
+    "name": "Vejers Strand",
+    "displayName": "VEJERS STRAND",
+    "latitude": 55.6272,
+    "longitude": 8.1176,
     "timezone": "Europe/Berlin"
   },
   {
@@ -3040,12 +8888,52 @@
     "timezone": "Europe/Rome"
   },
   {
+    "id": "spot-1v64kwy",
+    "name": "Velika Plaža (Ulcinj)",
+    "displayName": "VELIKA PLAŽA (ULCINJ)",
+    "latitude": 41.8888,
+    "longitude": 19.2937,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-ditdnn",
+    "name": "Velipojë",
+    "displayName": "VELIPOJË",
+    "latitude": 41.8643,
+    "longitude": 19.4148,
+    "timezone": "Europe/Tirane"
+  },
+  {
+    "id": "spot-rbyvd2",
+    "name": "Ventspils",
+    "displayName": "VENTSPILS",
+    "latitude": 57.3878,
+    "longitude": 21.5328,
+    "timezone": "Europe/Riga"
+  },
+  {
     "id": "spot-1v4j2dr",
     "name": "Verket",
     "displayName": "VERKET",
     "latitude": 59.609778,
     "longitude": 10.414119,
     "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-2jbn3t",
+    "name": "Viana do Castelo",
+    "displayName": "VIANA DO CASTELO",
+    "latitude": 41.676902,
+    "longitude": -8.82921,
+    "timezone": "Europe/Lisbon"
+  },
+  {
+    "id": "spot-1fja5y7",
+    "name": "Viareggio, La Buca",
+    "displayName": "VIAREGGIO, LA BUCA",
+    "latitude": 43.8828,
+    "longitude": 10.2325,
+    "timezone": "Europe/Rome"
   },
   {
     "id": "spot-1qja9jk",
@@ -3064,12 +8952,44 @@
     "timezone": "America/Vancouver"
   },
   {
+    "id": "spot-1yiff8x",
+    "name": "Viganj (Pelješac)",
+    "displayName": "VIGANJ (PELJEŠAC)",
+    "latitude": 42.9792,
+    "longitude": 17.1034,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-158rpop",
+    "name": "Vigsø",
+    "displayName": "VIGSØ",
+    "latitude": 57.1009,
+    "longitude": 8.7312,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-ylherv",
+    "name": "Vila Nova de Milfontes",
+    "displayName": "VILA NOVA DE MILFONTES",
+    "latitude": 37.7215,
+    "longitude": -8.792,
+    "timezone": "Europe/Lisbon"
+  },
+  {
     "id": "spot-kw4rxs",
     "name": "Vitavoile",
     "displayName": "VITAVOILE",
     "latitude": 48.613891,
     "longitude": -2.243699,
     "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1xuwv94",
+    "name": "Vlieland Noordzee",
+    "displayName": "VLIELAND NOORDZEE",
+    "latitude": 53.304478,
+    "longitude": 5.048718,
+    "timezone": "Europe/Brussels"
   },
   {
     "id": "spot-14wu86m",
@@ -3096,6 +9016,38 @@
     "timezone": "Europe/Brussels"
   },
   {
+    "id": "spot-zdoxdj",
+    "name": "Võrtsjärv",
+    "displayName": "VÕRTSJÄRV",
+    "latitude": 58.3861,
+    "longitude": 26.1309,
+    "timezone": "Europe/Tallinn"
+  },
+  {
+    "id": "spot-162to9l",
+    "name": "Vorupør",
+    "displayName": "VORUPØR",
+    "latitude": 56.948797,
+    "longitude": 8.363828,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1kn1kgw",
+    "name": "Vransko jezero",
+    "displayName": "VRANSKO JEZERO",
+    "latitude": 43.9385,
+    "longitude": 15.5271,
+    "timezone": "Europe/Belgrade"
+  },
+  {
+    "id": "spot-zudrvd",
+    "name": "Vrouwenpolder",
+    "displayName": "VROUWENPOLDER",
+    "latitude": 51.591873,
+    "longitude": 3.632949,
+    "timezone": "Europe/Brussels"
+  },
+  {
     "id": "spot-1aya5mn",
     "name": "VVW Turnhout",
     "displayName": "VVW TURNHOUT",
@@ -3104,12 +9056,76 @@
     "timezone": "Europe/Brussels"
   },
   {
+    "id": "spot-2y9t0q",
+    "name": "Walchensee",
+    "displayName": "WALCHENSEE",
+    "latitude": 47.584397,
+    "longitude": 11.323947,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1rqwb53",
+    "name": "Walensee (Tiefenwinkel)",
+    "displayName": "WALENSEE (TIEFENWINKEL)",
+    "latitude": 47.1151,
+    "longitude": 9.186,
+    "timezone": "Europe/Zurich"
+  },
+  {
     "id": "spot-19dd83y",
     "name": "Wallagoot Lake Boat Club",
     "displayName": "WALLAGOOT LAKE BOAT CLUB",
     "latitude": -36.779601,
     "longitude": 149.944699,
     "timezone": "Australia/Sydney"
+  },
+  {
+    "id": "spot-1ofwrzi",
+    "name": "Walney Island",
+    "displayName": "WALNEY ISLAND",
+    "latitude": 54.075,
+    "longitude": -3.24,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-384gz7",
+    "name": "Walvis Bay",
+    "displayName": "WALVIS BAY",
+    "latitude": -22.974405,
+    "longitude": 14.468233,
+    "timezone": "Africa/Windhoek"
+  },
+  {
+    "id": "spot-varrxo",
+    "name": "Wangerooge",
+    "displayName": "WANGEROOGE",
+    "latitude": 53.784,
+    "longitude": 7.87,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1q7ra93",
+    "name": "Warder",
+    "displayName": "WARDER",
+    "latitude": 52.565662,
+    "longitude": 5.033157,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1fn33sb",
+    "name": "Warnemünde",
+    "displayName": "WARNEMÜNDE",
+    "latitude": 54.1815,
+    "longitude": 12.064,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-g8awuj",
+    "name": "Wassenaarse slag",
+    "displayName": "WASSENAARSE SLAG",
+    "latitude": 52.163361,
+    "longitude": 4.34611,
+    "timezone": "Europe/Brussels"
   },
   {
     "id": "spot-1midnk6",
@@ -3152,6 +9168,14 @@
     "timezone": "Europe/Berlin"
   },
   {
+    "id": "spot-tfyp4p",
+    "name": "Watergate Bay",
+    "displayName": "WATERGATE BAY",
+    "latitude": 50.443,
+    "longitude": -5.043,
+    "timezone": "Europe/London"
+  },
+  {
     "id": "spot-1xmrmzd",
     "name": "Watersportcentrum Het Bastion",
     "displayName": "WATERSPORTCENTRUM HET BASTION",
@@ -3168,6 +9192,14 @@
     "timezone": "Europe/Brussels"
   },
   {
+    "id": "spot-mo4c3d",
+    "name": "Wells-next-the-Sea",
+    "displayName": "WELLS-NEXT-THE-SEA",
+    "latitude": 52.972,
+    "longitude": 0.85,
+    "timezone": "Europe/London"
+  },
+  {
     "id": "spot-1bd2ef5",
     "name": "Welton Sailing Club",
     "displayName": "WELTON SAILING CLUB",
@@ -3182,6 +9214,78 @@
     "latitude": 53.51012,
     "longitude": 8.576379,
     "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-vygmxf",
+    "name": "West Kirby",
+    "displayName": "WEST KIRBY",
+    "latitude": 53.371,
+    "longitude": -3.19,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-b61059",
+    "name": "West Mersea",
+    "displayName": "WEST MERSEA",
+    "latitude": 51.7726,
+    "longitude": 0.9007,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-pp4x29",
+    "name": "West Wittering",
+    "displayName": "WEST WITTERING",
+    "latitude": 50.777,
+    "longitude": -0.9,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-gy10kx",
+    "name": "Westermarkelsdorf (Markelsdorfer Huk)",
+    "displayName": "WESTERMARKELSDORF (MARKELSDORFER HUK)",
+    "latitude": 54.5275,
+    "longitude": 11.0584,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-sgieqk",
+    "name": "Weston-super-Mare",
+    "displayName": "WESTON-SUPER-MARE",
+    "latitude": 51.345,
+    "longitude": -2.99,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-lvroo2",
+    "name": "Westward Ho!",
+    "displayName": "WESTWARD HO!",
+    "latitude": 51.038,
+    "longitude": -4.238,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-takdbg",
+    "name": "Whitstable",
+    "displayName": "WHITSTABLE",
+    "latitude": 51.363,
+    "longitude": 1.023,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-1cl165o",
+    "name": "Wiek (Rügen)",
+    "displayName": "WIEK (RÜGEN)",
+    "latitude": 54.622,
+    "longitude": 13.287,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1f4uhev",
+    "name": "Wijk aan Zee - Pier (Strand Noordpier Velsen-Noord)",
+    "displayName": "WIJK AAN ZEE - PIER (STRAND NOORDPIER VELSEN-NOORD)",
+    "latitude": 52.471031,
+    "longitude": 4.565752,
+    "timezone": "Europe/Brussels"
   },
   {
     "id": "spot-1ljalze",
@@ -3240,6 +9344,22 @@
     "timezone": "Europe/Warsaw"
   },
   {
+    "id": "spot-12vyqh5",
+    "name": "Wissant",
+    "displayName": "WISSANT",
+    "latitude": 50.890135,
+    "longitude": 1.656038,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "id": "spot-1gyny32",
+    "name": "Wolin",
+    "displayName": "WOLIN",
+    "latitude": 53.843362,
+    "longitude": 14.617739,
+    "timezone": "Europe/Warsaw"
+  },
+  {
     "id": "spot-1mkrwxk",
     "name": "Wolsztyński Klub Żeglarski",
     "displayName": "WOLSZTYŃSKI KLUB ŻEGLARSKI",
@@ -3248,12 +9368,36 @@
     "timezone": "Europe/Warsaw"
   },
   {
+    "id": "spot-1gjr9mk",
+    "name": "Worthing",
+    "displayName": "WORTHING",
+    "latitude": 50.808,
+    "longitude": -0.395,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "spot-v0s68p",
+    "name": "Wremen",
+    "displayName": "WREMEN",
+    "latitude": 53.6437,
+    "longitude": 8.4907,
+    "timezone": "Europe/Berlin"
+  },
+  {
     "id": "spot-1qo1tnd",
     "name": "WRK 1961 e.V.",
     "displayName": "WRK 1961 E.V.",
     "latitude": 51.399891,
     "longitude": 6.678033,
     "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-14fknt0",
+    "name": "Wrzosowo",
+    "displayName": "WRZOSOWO",
+    "latitude": 54.010149,
+    "longitude": 14.790745,
+    "timezone": "Europe/Warsaw"
   },
   {
     "id": "spot-d2rwwh",
@@ -3278,6 +9422,22 @@
     "latitude": 51.531678,
     "longitude": 5.049239,
     "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-m9of2p",
+    "name": "Wulfener Hals",
+    "displayName": "WULFENER HALS",
+    "latitude": 54.4058,
+    "longitude": 11.1777,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-cd9bnj",
+    "name": "Wustrow (Fischland)",
+    "displayName": "WUSTROW (FISCHLAND)",
+    "latitude": 54.3455,
+    "longitude": 12.372,
+    "timezone": "Europe/Berlin"
   },
   {
     "id": "spot-b6ffsg",
@@ -3352,6 +9512,54 @@
     "timezone": "Europe/Paris"
   },
   {
+    "id": "spot-6m51h8",
+    "name": "Ystad",
+    "displayName": "YSTAD",
+    "latitude": 55.424,
+    "longitude": 13.83,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-15d2zr5",
+    "name": "Zahara de los Atunes",
+    "displayName": "ZAHARA DE LOS ATUNES",
+    "latitude": 36.1345,
+    "longitude": -5.8443,
+    "timezone": "Europe/Madrid"
+  },
+  {
+    "id": "spot-14exw14",
+    "name": "Zalew Sulejowski",
+    "displayName": "ZALEW SULEJOWSKI",
+    "latitude": 51.449806,
+    "longitude": 19.964915,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-sq36tv",
+    "name": "Zalew Zegrzyński",
+    "displayName": "ZALEW ZEGRZYŃSKI",
+    "latitude": 52.437,
+    "longitude": 21.0247,
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "spot-187q11l",
+    "name": "Zandvoort",
+    "displayName": "ZANDVOORT",
+    "latitude": 52.365335,
+    "longitude": 4.519106,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-5etl17",
+    "name": "Zaton (Nin)",
+    "displayName": "ZATON (NIN)",
+    "latitude": 44.2238,
+    "longitude": 15.1579,
+    "timezone": "Europe/Belgrade"
+  },
+  {
     "id": "spot-1x06p88",
     "name": "Zeilschool Aalsmeer",
     "displayName": "ZEILSCHOOL AALSMEER",
@@ -3397,6 +9605,38 @@
     "displayName": "ZEILVERENIGING DE LEK",
     "latitude": 52.002854,
     "longitude": 5.086482,
+    "timezone": "Europe/Brussels"
+  },
+  {
+    "id": "spot-1w9un20",
+    "name": "Zell am See",
+    "displayName": "ZELL AM SEE",
+    "latitude": 47.311461,
+    "longitude": 12.817303,
+    "timezone": "Europe/Vienna"
+  },
+  {
+    "id": "spot-1g6z5oa",
+    "name": "Zingst",
+    "displayName": "ZINGST",
+    "latitude": 54.44,
+    "longitude": 12.687,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-j3ezwq",
+    "name": "Zinnowitz (Usedom)",
+    "displayName": "ZINNOWITZ (USEDOM)",
+    "latitude": 54.076,
+    "longitude": 13.908,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "id": "spot-1m2u4ea",
+    "name": "Zuidlaardermeer",
+    "displayName": "ZUIDLAARDERMEER",
+    "latitude": 53.145409,
+    "longitude": 6.693851,
     "timezone": "Europe/Brussels"
   },
   {
