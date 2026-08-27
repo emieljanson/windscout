@@ -20,6 +20,7 @@ const props = defineProps({
   options: { type: Array, required: true },
   getOptionValue: { type: Function, default: (option) => option?.value ?? option },
   getOptionLabel: { type: Function, default: (option) => option?.label ?? String(option ?? '') },
+  getOptionDescription: { type: Function, default: () => '' },
   displayValue: { type: Function, default: undefined },
   by: { type: [String, Function], default: undefined },
   placeholder: { type: String, default: 'Search' },
@@ -58,6 +59,11 @@ function committedLabel(value = props.modelValue) {
   if (value && typeof value === 'object') return props.getOptionLabel(value)
   if (valuesMatch(value, cachedValue.value) && cachedLabel.value) return cachedLabel.value
   return value == null ? '' : String(value)
+}
+
+function optionKey(option) {
+  const value = props.getOptionValue(option)
+  return String(value && typeof value === 'object' ? value.id ?? props.getOptionLabel(option) : value)
 }
 
 watchEffect(() => {
@@ -105,6 +111,10 @@ async function selectValue(value) {
 function dismiss() {
   setOpen(false)
 }
+
+defineExpose({
+  focus: () => input.value?.$el?.focus(),
+})
 </script>
 
 <template>
@@ -154,12 +164,17 @@ function dismiss() {
           <template v-else-if="props.options.length">
             <ComboboxItem
               v-for="option in props.options"
-              :key="String(props.getOptionValue(option))"
+              :key="optionKey(option)"
               class="setting-option"
               :value="props.getOptionValue(option)"
               :disabled="option.disabled"
             >
-              <span>{{ props.getOptionLabel(option) }}</span>
+              <span class="setting-option__copy">
+                <span>{{ props.getOptionLabel(option) }}</span>
+                <span v-if="props.getOptionDescription(option)" class="setting-option__description">
+                  {{ props.getOptionDescription(option) }}
+                </span>
+              </span>
               <ComboboxItemIndicator class="setting-option__indicator" aria-hidden="true">
                 <svg viewBox="0 0 16 16" fill="none" focusable="false">
                   <path d="m3.5 8 3 3 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />

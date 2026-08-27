@@ -4,6 +4,8 @@ import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
 
 import WindScoutSettings from '../src/components/WindScoutSettings.vue'
+import SpotCreationDialog from '../src/components/SpotCreationDialog.vue'
+import SettingCombobox from '../src/components/settings/SettingCombobox.vue'
 import SettingSelect from '../src/components/settings/SettingSelect.vue'
 import { useConfiguratorStore } from '../src/stores/configurator'
 
@@ -79,6 +81,38 @@ describe('WindScout settings panel', () => {
     await nextTick()
     expect(document.body.textContent).toContain('No existing spots found')
     expect(selectSpot).toHaveBeenCalledTimes(1)
+  })
+
+  it('opens custom spot creation from the typed add action and selects the saved spot', async () => {
+    const store = useConfiguratorStore()
+    const personalSpot = {
+      id: 'personal-edam-harbour',
+      name: 'Edam harbour',
+      displayName: 'EDAM HARBOUR',
+      latitude: 52.50673,
+      longitude: 5.07729,
+      timezone: 'Europe/Amsterdam',
+      personal: true,
+    }
+    const addPersonalSpot = vi.spyOn(store, 'addPersonalSpot').mockReturnValue(personalSpot)
+    const selectSpot = vi.spyOn(store, 'selectSpot').mockResolvedValue(true)
+    mountSettings()
+    const spotCombobox = wrapper.findComponent(SettingCombobox)
+
+    spotCombobox.vm.$emit('update:searchTerm', 'Edam harbour')
+    await nextTick()
+    expect(spotCombobox.props('createActionLabel')).toBe('Add “Edam harbour” as a spot')
+    spotCombobox.vm.$emit('create', 'Edam harbour')
+    await nextTick()
+
+    const dialog = wrapper.findComponent(SpotCreationDialog)
+    expect(dialog.props('open')).toBe(true)
+    expect(dialog.props('initialQuery')).toBe('Edam harbour')
+    dialog.vm.$emit('confirm', personalSpot)
+    await nextTick()
+
+    expect(addPersonalSpot).toHaveBeenCalledWith(personalSpot)
+    expect(selectSpot).toHaveBeenCalledWith(personalSpot.id)
   })
 
   it('offers the curated model list and selects a model through the store', async () => {

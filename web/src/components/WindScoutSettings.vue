@@ -4,7 +4,7 @@ import { storeToRefs } from 'pinia'
 import { useConfiguratorStore } from '../stores/configurator'
 import { FORECAST_MODELS } from '../forecast/models'
 import { MAX_THRESHOLD, MIN_THRESHOLD } from '../renderer/contract'
-import { getSpot, SPOTS } from '../spots'
+import SpotCreationDialog from './SpotCreationDialog.vue'
 import SettingCombobox from './settings/SettingCombobox.vue'
 import SettingNumberInput from './settings/SettingNumberInput.vue'
 import SettingRow from './settings/SettingRow.vue'
@@ -20,6 +20,7 @@ const {
   forecastStatus,
   selectedModelId,
   selectedSpotId,
+  spots,
   showThreshold,
   showWeather,
   temperatureChoice,
@@ -29,11 +30,20 @@ const {
   tideStatus,
 } = storeToRefs(store)
 
-const spotSearchTerm = ref(getSpot(selectedSpotId.value)?.name ?? '')
+const spotSearchTerm = ref(store.spotById(selectedSpotId.value)?.name ?? '')
+const spotDialogOpen = ref(false)
+const customSpotQuery = ref('')
 const filteredSpots = computed(() => {
   const query = spotSearchTerm.value.trim().toLocaleLowerCase()
-  if (!query) return SPOTS
-  return SPOTS.filter((spot) => spot.name.toLocaleLowerCase().includes(query))
+  if (!query) return spots.value
+  return spots.value.filter((spot) => spot.name.toLocaleLowerCase().includes(query))
+})
+const createSpotActionLabel = computed(() => {
+  const query = spotSearchTerm.value.trim()
+  if (query.length < 2) return ''
+  const exactMatch = spots.value.some((spot) =>
+    spot.name.toLocaleLowerCase() === query.toLocaleLowerCase())
+  return exactMatch ? '' : `Add “${query}” as a spot`
 })
 
 const modelOptions = FORECAST_MODELS.map((model) => ({
@@ -47,13 +57,24 @@ const temperatureOptions = [
 ]
 
 watch(selectedSpotId, (spotId) => {
-  spotSearchTerm.value = getSpot(spotId)?.name ?? ''
+  spotSearchTerm.value = store.spotById(spotId)?.name ?? ''
 })
 
 function selectSpot(spotId) {
-  const spot = getSpot(spotId)
+  const spot = store.spotById(spotId)
   if (!spot) return
   if (spotId !== selectedSpotId.value) void store.selectSpot(spotId)
+}
+
+function createSpot(query) {
+  customSpotQuery.value = query.trim()
+  spotDialogOpen.value = true
+}
+
+function confirmSpot(input) {
+  const spot = store.addPersonalSpot(input)
+  if (!spot) return
+  void store.selectSpot(spot.id)
 }
 
 function selectModel(modelId) {
@@ -89,11 +110,13 @@ function selectModel(modelId) {
             :options="filteredSpots"
             :get-option-value="(spot) => spot.id"
             :get-option-label="(spot) => spot.name"
-            :display-value="(spotId) => getSpot(spotId)?.name ?? ''"
+            :display-value="(spotId) => store.spotById(spotId)?.name ?? ''"
+            :create-action-label="createSpotActionLabel"
             placeholder="Search spots"
             empty-text="No existing spots found"
             name="spot"
             @update:model-value="selectSpot"
+            @create="createSpot"
           />
         </SettingRow>
 
@@ -167,5 +190,11 @@ function selectModel(modelId) {
         {{ tideMessage }}
       </p>
     </div>
+
+    <SpotCreationDialog
+      v-model:open="spotDialogOpen"
+      :initial-query="customSpotQuery"
+      @confirm="confirmSpot"
+    />
   </div>
 </template>
