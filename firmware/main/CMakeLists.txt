@@ -25,6 +25,7 @@ set(SOURCES
     "wifi_provisioning.c"
     "wind_forecast.c"
     "wind_spots.c"
+    "installed_configuration.c"
     "open_meteo_knmi_provider.c"
     "wind_tide.c"
     "open_meteo_marine_provider.c"

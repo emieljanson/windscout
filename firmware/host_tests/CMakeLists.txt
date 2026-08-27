@@ -186,7 +186,19 @@ add_wind_test(
   ../main/wind_tide_cache.c
 )
 
-add_wind_test(wind_spots_test test_wind_spots.cpp ../main/wind_spots.c)
+add_wind_test(
+  wind_spots_test
+  test_wind_spots.cpp
+  ../main/wind_spots.c
+  ../main/installed_configuration.c
+)
+
+add_wind_test(
+  installed_configuration_test
+  test_installed_configuration.cpp
+  ../main/installed_configuration.c
+  ../main/wind_display_config.c
+)
 
 add_wind_test(
   wind_provider_test

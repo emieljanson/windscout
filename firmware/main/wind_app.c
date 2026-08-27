@@ -208,6 +208,7 @@ esp_err_t wind_app_show_cached(wind_app_t *app, int64_t now, wind_app_outcome_t 
 #include "open_meteo_knmi_provider.h"
 #include "open_meteo_marine_provider.h"
 #include "wind_config.h"
+#include "installed_configuration.h"
 #include "wind_spots.h"
 #include "wind_tide_cache.h"
 
@@ -230,7 +231,8 @@ typedef struct {
     char tide_path[96];
 } wind_spot_runtime_t;
 
-static wind_spot_runtime_t s_spots[3];
+static wind_spot_runtime_t s_spots[1];
+static installed_configuration_t s_installed_configuration;
 static size_t s_selected_index;
 static SemaphoreHandle_t s_app_lock;
 static bool s_ready;
@@ -538,6 +540,9 @@ static esp_err_t ensure_ready(void)
             return ESP_ERR_NO_MEM;
         }
     }
+    if (installed_configuration_load(&s_installed_configuration) != ESP_OK) {
+        return ESP_ERR_INVALID_STATE;
+    }
     if (wind_spots_load_selected(&s_selected_index) != ESP_OK ||
         !wind_spots_at(s_selected_index)) {
         s_selected_index = 0;
@@ -579,7 +584,7 @@ static esp_err_t ensure_ready(void)
             .latitude = runtime->spot->latitude,
             .longitude = runtime->spot->longitude,
             .timezone = runtime->spot->timezone,
-            .model = WIND_MODEL,
+            .model = s_installed_configuration.forecast_model,
         };
         if (!open_meteo_knmi_config_valid(&runtime->provider_config)) {
             ESP_LOGE(TAG, "Provider configuration rejected for %s", runtime->spot->id);
@@ -606,7 +611,7 @@ static esp_err_t ensure_ready(void)
             .provider = provider,
             .identity = {.spot_id = runtime->spot->id,
                          .timezone = runtime->spot->timezone,
-                         .model = WIND_MODEL},
+                         .model = s_installed_configuration.forecast_model},
             .forecast_cache_path = runtime->forecast_path,
             .panel_cache_path = WIND_PANEL_CACHE_PATH,
             .schedule_path = runtime->schedule_path,
@@ -628,7 +633,11 @@ static esp_err_t ensure_ready(void)
 esp_err_t wind_app_configure_runtime(void)
 {
     static const char *rules[] = {"5 0 *", "0 7 *", "0 11 *", "0 15 *", "0 19 *"};
-    config_manager_set_timezone(WIND_TIMEZONE);
+    installed_configuration_t installed;
+    if (installed_configuration_load(&installed) != ESP_OK) {
+        return ESP_ERR_INVALID_STATE;
+    }
+    config_manager_set_timezone(installed.spot.timezone);
     config_manager_set_cron_rules(rules, 5);
     config_manager_set_auto_rotate(true);
     return ESP_OK;

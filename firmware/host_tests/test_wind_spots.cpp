@@ -6,27 +6,24 @@ extern "C" {
 #include "wind_spots.h"
 }
 
-TEST(WindSpotsTest, HasStableProductOrder)
+TEST(WindSpotsTest, ExposesOneInstalledSpot)
 {
-    ASSERT_EQ(wind_spots_count(), 3u);
-    EXPECT_STREQ(wind_spots_at(0)->id, "edam");
-    EXPECT_STREQ(wind_spots_at(1)->id, "brouwersdam");
-    EXPECT_STREQ(wind_spots_at(2)->id, "castricum-aan-zee");
+    ASSERT_EQ(wind_spots_count(), 1u);
+    EXPECT_STREQ(wind_spots_at(0)->id, "brouwersdam");
+    EXPECT_EQ(wind_spots_at(1), nullptr);
 }
 
-TEST(WindSpotsTest, NavigationWrapsInBothDirections)
+TEST(WindSpotsTest, NavigationStaysOnInstalledSpot)
 {
-    EXPECT_EQ(wind_spots_offset(0, 1), 1u);
-    EXPECT_EQ(wind_spots_offset(2, 1), 0u);
-    EXPECT_EQ(wind_spots_offset(0, -1), 2u);
-    EXPECT_EQ(wind_spots_offset(1, -1), 0u);
+    EXPECT_EQ(wind_spots_offset(0, 1), 0u);
+    EXPECT_EQ(wind_spots_offset(0, -1), 0u);
 }
 
-TEST(WindSpotsTest, SelectionPersistsByIndexOnHost)
+TEST(WindSpotsTest, OnlyAcceptsTheInstalledIndex)
 {
-    ASSERT_EQ(wind_spots_store_selected(2), ESP_OK);
+    ASSERT_EQ(wind_spots_store_selected(0), ESP_OK);
     size_t selected = 0;
     ASSERT_EQ(wind_spots_load_selected(&selected), ESP_OK);
-    EXPECT_EQ(selected, 2u);
-    EXPECT_EQ(wind_spots_store_selected(99), ESP_ERR_INVALID_ARG);
+    EXPECT_EQ(selected, 0u);
+    EXPECT_EQ(wind_spots_store_selected(1), ESP_ERR_INVALID_ARG);
 }
