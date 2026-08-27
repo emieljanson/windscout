@@ -9,6 +9,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "spots:import": "node scripts/spots/import-sources.mjs",
     "renderer:build": "node scripts/build-wind-renderer.mjs",
     "renderer:check": "node scripts/build-wind-renderer.mjs --check",
     "model:prepare": "node scripts/prepare-e1002-model.mjs"
