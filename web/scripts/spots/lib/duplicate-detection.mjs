@@ -21,6 +21,7 @@ export function distanceMeters(left, right) {
 
 export function detectDuplicates(candidates) {
   const groups = []
+  const foldedNames = candidates.map((candidate) => foldName(candidate.name))
   for (let leftIndex = 0; leftIndex < candidates.length; leftIndex += 1) {
     const left = candidates[leftIndex]
     for (let rightIndex = leftIndex + 1; rightIndex < candidates.length; rightIndex += 1) {
@@ -29,7 +30,7 @@ export function detectDuplicates(candidates) {
       if (distance > 5000) continue
       const reasons = []
       if (distance <= 75) reasons.push('within-75m')
-      if (foldName(left.name) && foldName(left.name) === foldName(right.name)) reasons.push('equivalent-name-within-5km')
+      if (foldedNames[leftIndex] && foldedNames[leftIndex] === foldedNames[rightIndex]) reasons.push('equivalent-name-within-5km')
       if (reasons.length) groups.push({
         leftId: left.id,
         rightId: right.id,
