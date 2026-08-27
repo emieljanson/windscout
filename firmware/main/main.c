@@ -46,6 +46,7 @@
 #include "wifi_manager.h"
 #include "wifi_provisioning.h"
 #include "wind_app.h"
+#include "wind_installer_service.h"
 
 #if CONFIG_ESP_COREDUMP_ENABLE_TO_FLASH
 #include "esp_core_dump.h"
@@ -730,6 +731,9 @@ void app_main(void)
 
     ESP_ERROR_CHECK(wifi_manager_init());
     ESP_ERROR_CHECK(wifi_provisioning_init());
+#if BOARD_HAL_TYPE == BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+    ESP_ERROR_CHECK(wind_installer_service_start());
+#endif
 
     if (!wifi_provisioning_is_provisioned()) {
         bool creds_loaded = false;

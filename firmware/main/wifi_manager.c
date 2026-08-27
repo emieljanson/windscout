@@ -16,6 +16,7 @@
 #include "lwip/sys.h"
 #include "nvs.h"
 #include "nvs_flash.h"
+#include "installed_configuration.h"
 #include "storage.h"
 #include "utils.h"
 
@@ -302,6 +303,10 @@ esp_err_t wifi_manager_save_credentials(const char *ssid, const char *password)
 
 esp_err_t wifi_manager_load_credentials(char *ssid, char *password)
 {
+    if (installed_configuration_load_credentials(ssid, WIFI_SSID_MAX_LEN,
+                                                 password, WIFI_PASS_MAX_LEN) == ESP_OK) {
+        return ESP_OK;
+    }
     nvs_handle_t nvs_handle;
     esp_err_t err;
 

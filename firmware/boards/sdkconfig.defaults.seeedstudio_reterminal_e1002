@@ -8,3 +8,9 @@ CONFIG_ESPTOOLPY_FLASHFREQ_80M=y
 
 # Internal flash storage (LittleFS)
 CONFIG_USE_INTERNAL_FLASH_STORAGE=y
+
+# Keep USB Serial/JTAG dedicated to the browser installer. Development logs
+# remain available through the primary UART console.
+CONFIG_ESP_CONSOLE_UART_DEFAULT=y
+CONFIG_ESP_CONSOLE_SECONDARY_NONE=y
+# CONFIG_ESP_CONSOLE_SECONDARY_USB_SERIAL_JTAG is not set

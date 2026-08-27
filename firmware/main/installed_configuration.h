@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #include "esp_err.h"
@@ -45,6 +46,10 @@ bool installed_configuration_validate(const installed_configuration_t *config);
 uint64_t installed_configuration_digest(const installed_configuration_t *config);
 esp_err_t installed_configuration_load(installed_configuration_t *out_config);
 esp_err_t installed_configuration_promote(const installed_configuration_t *candidate);
+esp_err_t installed_configuration_promote_setup(const installed_configuration_t *candidate,
+                                                 const char *ssid, const char *password);
+esp_err_t installed_configuration_load_credentials(char *ssid, size_t ssid_size,
+                                                    char *password, size_t password_size);
 
 #ifndef ESP_PLATFORM
 void installed_configuration_reset_host_storage(void);

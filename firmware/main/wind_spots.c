@@ -6,10 +6,10 @@ static installed_configuration_t s_configuration;
 static wind_spot_t s_spot;
 static bool s_loaded;
 
-esp_err_t wind_spots_reload_installed(void)
+esp_err_t wind_spots_use_configuration(const installed_configuration_t *configuration)
 {
-    esp_err_t result = installed_configuration_load(&s_configuration);
-    if (result != ESP_OK) return result;
+    if (!installed_configuration_validate(configuration)) return ESP_ERR_INVALID_ARG;
+    s_configuration = *configuration;
     s_spot = (wind_spot_t) {
         .id = s_configuration.spot.id,
         .display_name = s_configuration.spot.display_name,
@@ -19,6 +19,13 @@ esp_err_t wind_spots_reload_installed(void)
     };
     s_loaded = true;
     return ESP_OK;
+}
+
+esp_err_t wind_spots_reload_installed(void)
+{
+    esp_err_t result = installed_configuration_load(&s_configuration);
+    if (result != ESP_OK) return result;
+    return wind_spots_use_configuration(&s_configuration);
 }
 
 static void ensure_loaded(void)

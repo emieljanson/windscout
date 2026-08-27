@@ -236,6 +236,7 @@ static installed_configuration_t s_installed_configuration;
 static size_t s_selected_index;
 static SemaphoreHandle_t s_app_lock;
 static bool s_ready;
+static bool s_last_render_succeeded;
 
 static uint64_t current_render_signature(void)
 {
@@ -643,6 +644,50 @@ esp_err_t wind_app_configure_runtime(void)
     return ESP_OK;
 }
 
+static wind_display_config_t display_from_installed(const installed_configuration_t *installed)
+{
+    wind_display_config_t display;
+    wind_display_config_default(&display);
+    display.display_mode = installed->display.show_threshold
+                               ? WIND_RENDERER_MODE_THRESHOLD
+                               : WIND_RENDERER_MODE_SOLID;
+    display.threshold_kt = installed->display.threshold_kt;
+    display.show_weather = installed->display.show_weather;
+    display.show_temperature = installed->display.show_temperature;
+    display.show_tide = installed->display.show_tide;
+    display.use_24_hour = installed->display.use_24_hour;
+    display.temperature_fahrenheit = installed->display.temperature_fahrenheit;
+    return display;
+}
+
+esp_err_t wind_app_preview_configuration(const installed_configuration_t *candidate)
+{
+    if (!installed_configuration_validate(candidate)) return ESP_ERR_INVALID_ARG;
+    installed_configuration_t active;
+    if (installed_configuration_load(&active) != ESP_OK) return ESP_ERR_INVALID_STATE;
+    const wind_display_config_t old_display = config_manager_get_wind_display_config();
+    const wind_display_config_t preview_display = display_from_installed(candidate);
+    if (!config_manager_set_wind_display_config_transient(&preview_display) ||
+        wind_spots_use_configuration(candidate) != ESP_OK) return ESP_ERR_INVALID_STATE;
+    s_ready = false;
+    esp_err_t result = wind_app_refresh(true);
+    (void) wind_spots_use_configuration(&active);
+    (void) config_manager_set_wind_display_config_transient(&old_display);
+    s_ready = false;
+    return result;
+}
+
+esp_err_t wind_app_activate_configuration(const installed_configuration_t *configuration)
+{
+    if (!installed_configuration_validate(configuration)) return ESP_ERR_INVALID_ARG;
+    const wind_display_config_t display = display_from_installed(configuration);
+    if (!config_manager_set_wind_display_config(&display) ||
+        wind_spots_use_configuration(configuration) != ESP_OK) return ESP_ERR_INVALID_STATE;
+    config_manager_set_timezone(configuration->spot.timezone);
+    s_ready = false;
+    return ESP_OK;
+}
+
 esp_err_t wind_app_refresh(bool force_refresh)
 {
     esp_err_t result = ensure_ready();
@@ -665,6 +710,10 @@ esp_err_t wind_app_refresh(bool force_refresh)
                  outcome.displayed, outcome.display_unchanged);
         if (index == s_selected_index || result == ESP_OK) {
             result = spot_result;
+        }
+        if (index == s_selected_index) {
+            s_last_render_succeeded = spot_result == ESP_OK &&
+                                      (outcome.displayed || outcome.display_unchanged);
         }
     }
     xSemaphoreGive(s_app_lock);
@@ -771,6 +820,11 @@ int wind_app_seconds_until_next_boundary(void)
     }
     return seconds;
 }
+
+bool wind_app_last_render_succeeded(void)
+{
+    return s_last_render_succeeded;
+}
 #else
 esp_err_t wind_app_configure_runtime(void) { return ESP_ERR_NOT_SUPPORTED; }
 esp_err_t wind_app_start(void) { return ESP_ERR_NOT_SUPPORTED; }
@@ -789,4 +843,15 @@ bool wind_app_navigation_requires_network(int direction)
 }
 esp_err_t wind_app_clear_panel_confirmation(void) { return ESP_ERR_NOT_SUPPORTED; }
 int wind_app_seconds_until_next_boundary(void) { return 0; }
+bool wind_app_last_render_succeeded(void) { return false; }
+esp_err_t wind_app_preview_configuration(const installed_configuration_t *candidate)
+{
+    (void) candidate;
+    return ESP_ERR_NOT_SUPPORTED;
+}
+esp_err_t wind_app_activate_configuration(const installed_configuration_t *configuration)
+{
+    (void) configuration;
+    return ESP_ERR_NOT_SUPPORTED;
+}
 #endif

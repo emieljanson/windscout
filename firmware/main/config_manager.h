@@ -46,6 +46,7 @@ void config_manager_set_display_rotation_deg(int rotation_deg);
 int config_manager_get_display_rotation_deg(void);
 
 bool config_manager_set_wind_display_config(const wind_display_config_t *config);
+bool config_manager_set_wind_display_config_transient(const wind_display_config_t *config);
 wind_display_config_t config_manager_get_wind_display_config(void);
 
 void config_manager_set_wifi_ssid(const char *ssid);

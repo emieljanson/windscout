@@ -42,6 +42,7 @@ static TaskHandle_t sleep_timer_task_handle = NULL;
 static TaskHandle_t rotation_timer_task_handle = NULL;
 static int64_t next_sleep_time = 0;  // Use absolute time for sleep timer
 static uint32_t auto_sleep_timeout_sec = AUTO_SLEEP_TIMEOUT_SEC;
+static volatile bool installer_active;
 static wakeup_source_t wakeup_source = WAKEUP_SOURCE_NONE;
 static int64_t next_rotation_time = 0;  // Use absolute time for rotation
 static uint64_t ext1_wakeup_pin_mask = 0;
@@ -112,7 +113,7 @@ static void sleep_timer_task(void *arg)
         // external power is present. Automated wakes (timer/rotate/clear) and
         // always-on-battery operation keep power save: nobody is browsing, and
         // full RX costs ~60-70mA extra.
-        bool usb_powered = board_hal_is_usb_connected();
+        bool usb_powered = board_hal_is_usb_connected() || installer_active;
         bool interactive_wake =
             (wakeup_source == WAKEUP_SOURCE_BOOT_BUTTON || wakeup_source == WAKEUP_SOURCE_NONE);
         if (config_manager_get_deep_sleep_enabled()) {
@@ -466,4 +467,15 @@ void power_manager_set_deep_sleep_enabled(bool enabled)
 
     // Update power LED: on when deep sleep enabled, off when disabled
     board_hal_led_set(BOARD_HAL_LED_POWER, enabled);
+}
+
+void power_manager_set_installer_active(bool active)
+{
+    installer_active = active;
+    if (active) power_manager_reset_sleep_timer();
+}
+
+bool power_manager_is_installer_active(void)
+{
+    return installer_active;
 }

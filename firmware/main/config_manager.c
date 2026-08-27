@@ -729,6 +729,13 @@ bool config_manager_set_wind_display_config(const wind_display_config_t *config)
     return true;
 }
 
+bool config_manager_set_wind_display_config_transient(const wind_display_config_t *config)
+{
+    if (!wind_display_config_validate(config)) return false;
+    wind_display_config = *config;
+    return true;
+}
+
 wind_display_config_t config_manager_get_wind_display_config(void)
 {
     if (!wind_display_config_validate(&wind_display_config))

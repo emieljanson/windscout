@@ -26,6 +26,8 @@ set(SOURCES
     "wind_forecast.c"
     "wind_spots.c"
     "installed_configuration.c"
+    "wind_usb_protocol.c"
+    "wind_installer_service.c"
     "open_meteo_knmi_provider.c"
     "wind_tide.c"
     "open_meteo_marine_provider.c"
@@ -57,6 +59,7 @@ set(PRIV_REQUIRES
     esp_app_format
     esp_driver_gpio
     esp_driver_ledc
+    esp_driver_usb_serial_jtag
     esp_event
     esp_http_client
     esp_http_server

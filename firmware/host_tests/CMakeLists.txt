@@ -201,6 +201,21 @@ add_wind_test(
 )
 
 add_wind_test(
+  wind_usb_protocol_test
+  test_wind_usb_protocol.cpp
+  ../main/wind_usb_protocol.c
+)
+
+add_wind_test(
+  installer_service_test
+  test_installer_service.cpp
+  ../main/wind_installer_service.c
+  ../main/installed_configuration.c
+)
+target_link_libraries(installer_service_test cjson)
+target_include_directories(installer_service_test BEFORE PRIVATE ${cjson_SOURCE_DIR})
+
+add_wind_test(
   wind_provider_test
   test_wind_provider.cpp
   ../main/wind_forecast.c

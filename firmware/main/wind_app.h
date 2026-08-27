@@ -8,6 +8,7 @@
 #include "wind_cache.h"
 #include "wind_provider.h"
 #include "wind_schedule.h"
+#include "installed_configuration.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -72,6 +73,9 @@ esp_err_t wind_app_select_next_display_mode(void);
 bool wind_app_navigation_requires_network(int direction);
 esp_err_t wind_app_clear_panel_confirmation(void);
 int wind_app_seconds_until_next_boundary(void);
+esp_err_t wind_app_preview_configuration(const installed_configuration_t *candidate);
+esp_err_t wind_app_activate_configuration(const installed_configuration_t *configuration);
+bool wind_app_last_render_succeeded(void);
 
 #ifdef __cplusplus
 }
