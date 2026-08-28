@@ -244,6 +244,42 @@ describe('Spot creation dialog', () => {
     expect(destroy).toHaveBeenCalledOnce()
   })
 
+  it('does not let a late map startup position replace the searched place', async () => {
+    vi.useFakeTimers()
+    const pendingMap = deferred()
+    const reverseLocation = vi.fn().mockResolvedValue({ timezone: 'Europe/Amsterdam' })
+    let reportMapCenter
+    const wrapper = mount(SpotCreationDialog, {
+      props: {
+        open: true,
+        initialQuery: 'Edam',
+        apiKey: 'test-key',
+        searchPlaces: vi.fn().mockResolvedValue([edam]),
+        reverseLocation,
+        createMap: vi.fn((_element, options) => {
+          reportMapCenter = options.onCenterChange
+          return pendingMap.promise
+        }),
+      },
+      attachTo: document.body,
+    })
+
+    await vi.advanceTimersByTimeAsync(300)
+    await flushPromises()
+    reportMapCenter({ latitude: 52.2, longitude: 5.3 })
+    pendingMap.resolve({ destroy: vi.fn(), setCenter: vi.fn() })
+    await flushPromises()
+
+    document.body.querySelector('.spot-dialog__confirm').click()
+    await flushPromises()
+
+    expect(reverseLocation).toHaveBeenCalledWith({
+      latitude: 52.5126,
+      longitude: 5.0486,
+    }, expect.objectContaining({ apiKey: 'test-key' }))
+    wrapper.unmount()
+  })
+
   it('toasts provider errors and offers a retry path', async () => {
     vi.useFakeTimers()
     const searchPlaces = vi.fn().mockRejectedValue(new Error('Location search is temporarily unavailable.'))

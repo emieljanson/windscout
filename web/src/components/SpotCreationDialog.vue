@@ -195,7 +195,11 @@ async function createPositioningMap() {
       zoom: selectedPlace.value ? 13 : 6,
       signal: creationController.signal,
       onCenterChange: (nextCenter) => {
-        if (generation === mapGeneration) center.value = nextCenter
+        // MapLibre can report its initial camera position while the map is
+        // still loading. At that point the place search may already have
+        // selected a more precise location. Ignore those startup events so
+        // they cannot replace the selected place just before confirmation.
+        if (generation === mapGeneration && mapReady.value) center.value = nextCenter
       },
     })
     if (!props.open || generation !== mapGeneration) {
@@ -207,10 +211,14 @@ async function createPositioningMap() {
     mapReady.value = true
     mapErrorMessage.value = ''
     if (selectedPlace.value) {
-      controller.setCenter?.({
+      const selectedCenter = {
         latitude: selectedPlace.value.latitude,
         longitude: selectedPlace.value.longitude,
-      }, { zoom: 13 })
+      }
+      // Keep the confirmation coordinates correct immediately; the animated
+      // map move reports its final center only after it has finished.
+      center.value = selectedCenter
+      controller.setCenter?.(selectedCenter, { zoom: 13 })
     }
   } catch (error) {
     if (mapCreationController === creationController) mapCreationController = undefined
