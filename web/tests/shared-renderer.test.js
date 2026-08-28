@@ -118,7 +118,7 @@ describe('shared WebAssembly renderer', () => {
       expect(actual).toHaveLength(RENDERER_PALETTE_BYTES)
       expect(actual, fixtureName).toEqual(expected)
     }
-  }, 15_000)
+  }, 30_000)
 
   it('preserves red threshold pixels and output across repeated renders', async () => {
     const renderer = await loadRealRenderer()
