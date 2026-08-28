@@ -18,8 +18,9 @@ with one configured spot.
    same-origin firmware bundle used by the website from that one build.
 5. It places the website bundle in `web/public/firmware`, builds the site and
    checks that every referenced firmware part exists and has the expected size.
-6. It deploys the site from `main`. A `v*` tag also publishes the firmware as a
-   GitHub Release.
+6. It prepares a deployable site artifact from `main`. When the repository
+   variable `WINDSCOUT_PAGES_ENABLED` is `true`, it also deploys that artifact.
+   A `v*` tag publishes the firmware as a GitHub Release.
 
 The browser uses `./firmware/` by default, so the same artifact works on the
 custom domain and on the repository's temporary GitHub Pages URL. Do not point
@@ -28,13 +29,16 @@ same-origin browser installer host.
 
 ## One-time GitHub setup
 
-Before merging the release workflow to `main`:
+Before enabling the Pages deployment:
 
 - In the `windscout` repository, open **Settings → Pages** and select
   **GitHub Actions** as the publishing source.
 - Confirm the account plan permits Pages for this private repository, or make
   the repository public. A Pages website is public even when its source repo is
   private.
+- Add the repository variable `WINDSCOUT_PAGES_ENABLED` with value `true` only
+  after Pages accepts the repository. Until then, `main` still verifies and
+  packages the complete site but deliberately skips publication.
 - Keep the custom domain on `windscout-site` until the new Pages deployment has
   passed at its temporary URL.
 

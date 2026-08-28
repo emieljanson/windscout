@@ -130,7 +130,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pages: read
     steps:
       - uses: actions/checkout@v6
 
@@ -149,9 +148,6 @@ jobs:
       - name: Install web dependencies
         working-directory: web
         run: npm ci
-
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
 
       - name: Build website with bundled firmware
         working-directory: web
@@ -194,6 +190,7 @@ jobs:
 
   deploy-site:
     name: Deploy website
+    if: vars.WINDSCOUT_PAGES_ENABLED == 'true'
     needs: build-site
     runs-on: ubuntu-latest
     permissions:
