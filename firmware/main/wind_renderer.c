@@ -26,16 +26,15 @@ enum {
     DAY_HEADER_BOTTOM = 138,
     GRAPH_TOP = 180,
     BAR_GRAPH_TOP = 184,
-    DAY_WIDTH = 155,
-    SAMPLE_STEP = 26,
-    SAMPLE_FIRST_CENTER = 26,
     SUSTAINED_BAR_WIDTH = 16,
     WEATHER_ROW_HEIGHT = 35,
     TEMPERATURE_ROW_HEIGHT = 35,
     COMBINED_CONDITIONS_ROW_HEIGHT = 54,
     TIDE_ROW_HEIGHT = 60,
-    TIDE_FIRST_HOUR = 8,
-    TIDE_LAST_HOUR = 20,
+    FORECAST_FIRST_HOUR = 8,
+    FORECAST_LAST_HOUR = 20,
+    TIDE_DATA_FIRST_HOUR = 5,
+    TIDE_DATA_LAST_HOUR = 23,
 };
 
 typedef struct {
@@ -111,6 +110,30 @@ static int clamp_int(int value, int low, int high) {
     if (value < low) return low;
     if (value > high) return high;
     return value;
+}
+
+static int day_column_x(int day) {
+    return OUTER_X +
+           (OUTER_RIGHT - OUTER_X) * day / WIND_RENDERER_DAY_COUNT;
+}
+
+static int forecast_sample_center_x(int day, int sample) {
+    const int column_width = day_column_x(day + 1) - day_column_x(day);
+    const int sample_step =
+        (column_width + (WIND_RENDERER_SAMPLES_PER_DAY + 1) / 2) /
+        (WIND_RENDERER_SAMPLES_PER_DAY + 1);
+    return day_column_x(day) + (sample + 1) * sample_step;
+}
+
+static int tide_hour_x(int day, int hour) {
+    /* The forecast centers are the time axis: 08:00 and 20:00 therefore
+     * share exactly the same pixels as the first and last wind samples. */
+    const int first_x = forecast_sample_center_x(day, 0);
+    const int last_x = forecast_sample_center_x(
+        day, WIND_RENDERER_SAMPLES_PER_DAY - 1);
+    return first_x + divide_rounded(
+        (hour - FORECAST_FIRST_HOUR) * (last_x - first_x),
+        FORECAST_LAST_HOUR - FORECAST_FIRST_HOUR);
 }
 
 static int text_fits(const char *text, size_t capacity) {
@@ -527,24 +550,54 @@ static void draw_line(canvas_t *canvas, int x0, int y0, int x1, int y1) {
     }
 }
 
-static void draw_eased_tide_segment(canvas_t *canvas,
-                                    int x0, int y0, int x1, int y1,
-                                    int clip_left, int clip_right) {
-    if (x1 <= x0) return;
-    const int first_x = clamp_int(clip_left, x0, x1);
-    const int last_x = clamp_int(clip_right, x0, x1);
-    if (last_x < first_x) return;
-    int previous_x = first_x;
-    const float first_t = (float)(first_x - x0) / (float)(x1 - x0);
-    const float first_ease = 0.5f - 0.5f * cosf(3.14159265359f * first_t);
-    int previous_y = (int) lroundf(y0 + (y1 - y0) * first_ease);
-    for (int x = first_x + 1; x <= last_x; ++x) {
-        const float t = (float)(x - x0) / (float)(x1 - x0);
-        const float ease = 0.5f - 0.5f * cosf(3.14159265359f * t);
-        const int y = (int) lroundf(y0 + (y1 - y0) * ease);
-        draw_line(canvas, previous_x, previous_y, x, y);
-        previous_x = x;
-        previous_y = y;
+static void draw_tide_curve(canvas_t *canvas, const int *point_x,
+                            const int *point_y, int point_count,
+                            int clip_left, int clip_right,
+                            int curve_top, int curve_bottom) {
+    for (int segment = 0; segment + 1 < point_count; ++segment) {
+        const int x0 = point_x[segment];
+        const int x1 = point_x[segment + 1];
+        if (x1 <= x0 || x1 < clip_left || x0 > clip_right) continue;
+
+        const int first_x = clamp_int(clip_left, x0, x1);
+        const int last_x = clamp_int(clip_right, x0, x1);
+        const float segment_width = (float) (x1 - x0);
+        const float start_slope = segment == 0
+            ? (float) (point_y[segment + 1] - point_y[segment]) /
+                  segment_width
+            : (float) (point_y[segment + 1] - point_y[segment - 1]) /
+                  (float) (point_x[segment + 1] - point_x[segment - 1]);
+        const float end_slope = segment + 2 >= point_count
+            ? (float) (point_y[segment + 1] - point_y[segment]) /
+                  segment_width
+            : (float) (point_y[segment + 2] - point_y[segment]) /
+                  (float) (point_x[segment + 2] - point_x[segment]);
+
+        int previous_x = first_x;
+        int previous_y = point_y[segment];
+        for (int x = first_x; x <= last_x; ++x) {
+            const float t = (float) (x - x0) / segment_width;
+            const float t2 = t * t;
+            const float t3 = t2 * t;
+            const float h00 = 2.0f * t3 - 3.0f * t2 + 1.0f;
+            const float h10 = t3 - 2.0f * t2 + t;
+            const float h01 = -2.0f * t3 + 3.0f * t2;
+            const float h11 = t3 - t2;
+            const int y = clamp_int(
+                (int) lroundf(
+                    h00 * point_y[segment] +
+                    h10 * segment_width * start_slope +
+                    h01 * point_y[segment + 1] +
+                    h11 * segment_width * end_slope),
+                curve_top, curve_bottom);
+            if (x == first_x) {
+                previous_y = y;
+            } else {
+                draw_line(canvas, previous_x, previous_y, x, y);
+            }
+            previous_x = x;
+            previous_y = y;
+        }
     }
 }
 
@@ -555,38 +608,51 @@ static void draw_tide(canvas_t *canvas, const wind_renderer_dashboard_t *dashboa
     const int curve_top = layout->tide_top + 25;
     const int curve_bottom = layout->tide_bottom - 25;
     const int curve_middle = (curve_top + curve_bottom) / 2;
-    const int visible_width =
-        (WIND_RENDERER_SAMPLES_PER_DAY - 1) * SAMPLE_STEP;
-    const int visible_hours = TIDE_LAST_HOUR - TIDE_FIRST_HOUR;
 
     for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day) {
-        int visible[WIND_RENDERER_MAX_TIDE_SAMPLES] = {0};
-        int visible_x[WIND_RENDERER_MAX_TIDE_SAMPLES] = {0};
-        int visible_count = 0;
+        int points[WIND_RENDERER_MAX_TIDE_SAMPLES] = {0};
+        int point_x[WIND_RENDERER_MAX_TIDE_SAMPLES] = {0};
+        int point_y[WIND_RENDERER_MAX_TIDE_SAMPLES] = {0};
+        int point_count = 0;
         int minimum = 0;
         int maximum = 0;
 
-        for (int index = 0; index < dashboard->tide_sample_count; ++index) {
-            const wind_renderer_tide_sample_t *sample =
-                &dashboard->tide_samples[index];
-            if (!sample->available || sample->day_index != day ||
-                sample->local_hour < TIDE_FIRST_HOUR ||
-                sample->local_hour > TIDE_LAST_HOUR) {
-                continue;
-            }
+        /* Select in local-hour order so renderer output does not depend on
+         * provider ordering. Hours outside the forecast labels are real,
+         * visible curve data for the left and right margins. */
+        for (int hour = TIDE_DATA_FIRST_HOUR;
+             hour <= TIDE_DATA_LAST_HOUR; ++hour) {
+            for (int index = 0; index < dashboard->tide_sample_count; ++index) {
+                const wind_renderer_tide_sample_t *sample =
+                    &dashboard->tide_samples[index];
+                if (!sample->available || sample->day_index != day ||
+                    sample->local_hour != hour) {
+                    continue;
+                }
 
-            visible[visible_count] = index;
-            visible_x[visible_count] =
-                OUTER_X + day * DAY_WIDTH + SAMPLE_FIRST_CENTER +
-                divide_rounded(
-                    (sample->local_hour - TIDE_FIRST_HOUR) * visible_width,
-                    visible_hours);
-            if (visible_count == 0) minimum = maximum = sample->sea_level_mm;
-            if (sample->sea_level_mm < minimum) minimum = sample->sea_level_mm;
-            if (sample->sea_level_mm > maximum) maximum = sample->sea_level_mm;
-            visible_count++;
+                points[point_count] = index;
+                point_x[point_count] = tide_hour_x(day, hour);
+                if (point_count == 0)
+                    minimum = maximum = sample->sea_level_mm;
+                if (sample->sea_level_mm < minimum)
+                    minimum = sample->sea_level_mm;
+                if (sample->sea_level_mm > maximum)
+                    maximum = sample->sea_level_mm;
+                point_count++;
+                break;
+            }
         }
-        if (visible_count < 2) continue;
+        if (point_count < 2) continue;
+
+        const int range = maximum - minimum;
+        for (int position = 0; position < point_count; ++position) {
+            const int value =
+                dashboard->tide_samples[points[position]].sea_level_mm;
+            point_y[position] = range == 0
+                ? curve_middle
+                : curve_bottom - divide_rounded(
+                      (value - minimum) * (curve_bottom - curve_top), range);
+        }
 
         int extrema[WIND_RENDERER_MAX_TIDE_SAMPLES] = {0};
         bool extrema_is_high[WIND_RENDERER_MAX_TIDE_SAMPLES] = {false};
@@ -597,23 +663,23 @@ static void draw_tide(canvas_t *canvas, const wind_renderer_dashboard_t *dashboa
         int high_candidate = 0;
         int low_candidate = 0;
 
-        for (int position = 1; position < visible_count; ++position) {
+        for (int position = 1; position < point_count; ++position) {
             const int value =
-                dashboard->tide_samples[visible[position]].sea_level_mm;
+                dashboard->tide_samples[points[position]].sea_level_mm;
             if (direction >= 0 &&
                 value >= dashboard->tide_samples[
-                             visible[high_candidate]].sea_level_mm) {
+                             points[high_candidate]].sea_level_mm) {
                 high_candidate = position;
             }
             if (direction <= 0 &&
                 value <= dashboard->tide_samples[
-                             visible[low_candidate]].sea_level_mm) {
+                             points[low_candidate]].sea_level_mm) {
                 low_candidate = position;
             }
 
             if (direction == 0) {
                 if (value - dashboard->tide_samples[
-                                visible[low_candidate]].sea_level_mm >=
+                                points[low_candidate]].sea_level_mm >=
                     turn_threshold) {
                     if (low_candidate > 0) {
                         extrema[extrema_count] = low_candidate;
@@ -623,7 +689,7 @@ static void draw_tide(canvas_t *canvas, const wind_renderer_dashboard_t *dashboa
                     high_candidate = position;
                 } else if (
                     dashboard->tide_samples[
-                        visible[high_candidate]].sea_level_mm - value >=
+                        points[high_candidate]].sea_level_mm - value >=
                     turn_threshold) {
                     if (high_candidate > 0) {
                         extrema[extrema_count] = high_candidate;
@@ -635,7 +701,7 @@ static void draw_tide(canvas_t *canvas, const wind_renderer_dashboard_t *dashboa
             } else if (
                 direction > 0 &&
                 dashboard->tide_samples[
-                    visible[high_candidate]].sea_level_mm - value >=
+                    points[high_candidate]].sea_level_mm - value >=
                     turn_threshold) {
                 extrema[extrema_count] = high_candidate;
                 extrema_is_high[extrema_count++] = true;
@@ -644,7 +710,7 @@ static void draw_tide(canvas_t *canvas, const wind_renderer_dashboard_t *dashboa
             } else if (
                 direction < 0 &&
                 value - dashboard->tide_samples[
-                            visible[low_candidate]].sea_level_mm >=
+                            points[low_candidate]].sea_level_mm >=
                     turn_threshold) {
                 extrema[extrema_count] = low_candidate;
                 extrema_is_high[extrema_count++] = false;
@@ -656,79 +722,30 @@ static void draw_tide(canvas_t *canvas, const wind_renderer_dashboard_t *dashboa
         if (extrema_count > 0) {
             const int previous = extrema[extrema_count - 1];
             if (direction > 0 && high_candidate > previous &&
-                high_candidate < visible_count - 1) {
+                high_candidate < point_count - 1) {
                 extrema[extrema_count] = high_candidate;
                 extrema_is_high[extrema_count++] = true;
             } else if (direction < 0 && low_candidate > previous &&
-                       low_candidate < visible_count - 1) {
+                       low_candidate < point_count - 1) {
                 extrema[extrema_count] = low_candidate;
                 extrema_is_high[extrema_count++] = false;
             }
         }
 
-        /* Fill the complete day cell. The actual extrema and labels remain
-         * anchored to the visible 08:00-20:00 wind window. */
-        const int first_x = OUTER_X + day * DAY_WIDTH + 1;
-        const int last_x = OUTER_X + (day + 1) * DAY_WIDTH - 1;
-        if (extrema_count == 0) {
-            draw_line(canvas, first_x, curve_middle, last_x, curve_middle);
-            continue;
-        }
-
-        const int default_span = 2 * SAMPLE_STEP;
-        const int first_position = extrema[0];
-        const int first_y = extrema_is_high[0] ? curve_top : curve_bottom;
-        const int leading_span =
-            extrema_count > 1
-                ? visible_x[extrema[1]] - visible_x[first_position]
-                : default_span;
-        const int leading_start =
-            visible_x[first_position] - leading_span < first_x
-                ? visible_x[first_position] - leading_span
-                : first_x;
-        draw_eased_tide_segment(
-            canvas,
-            leading_start,
-            extrema_is_high[0] ? curve_bottom : curve_top,
-            visible_x[first_position], first_y,
-            first_x, visible_x[first_position]);
-
-        for (int extremum = 0; extremum + 1 < extrema_count; ++extremum) {
-            const int from = extrema[extremum];
-            const int to = extrema[extremum + 1];
-            draw_eased_tide_segment(
-                canvas, visible_x[from],
-                extrema_is_high[extremum] ? curve_top : curve_bottom,
-                visible_x[to],
-                extrema_is_high[extremum + 1] ? curve_top : curve_bottom,
-                visible_x[from], visible_x[to]);
-        }
-
-        const int last_extremum = extrema_count - 1;
-        const int last_position = extrema[last_extremum];
-        const int trailing_span =
-            extrema_count > 1
-                ? visible_x[last_position] -
-                      visible_x[extrema[last_extremum - 1]]
-                : default_span;
-        const int trailing_end =
-            visible_x[last_position] + trailing_span > last_x
-                ? visible_x[last_position] + trailing_span
-                : last_x;
-        draw_eased_tide_segment(
-            canvas, visible_x[last_position],
-            extrema_is_high[last_extremum] ? curve_top : curve_bottom,
-            trailing_end,
-            extrema_is_high[last_extremum] ? curve_bottom : curve_top,
-            visible_x[last_position], last_x);
+        const int first_x = day_column_x(day) + 1;
+        const int last_x = day_column_x(day + 1) - 1;
+        draw_tide_curve(canvas, point_x, point_y, point_count,
+                        first_x, last_x, curve_top, curve_bottom);
 
         for (int extremum = 0; extremum < extrema_count; ++extremum) {
             const int position = extrema[extremum];
-            const int index = visible[position];
+            const int index = points[position];
             const bool is_high = extrema_is_high[extremum];
 
             char time[8];
             const int hour = dashboard->tide_samples[index].local_hour;
+            if (hour < FORECAST_FIRST_HOUR || hour > FORECAST_LAST_HOUR)
+                continue;
             if (dashboard->use_24_hour) {
                 snprintf(time, sizeof(time), "%02d:00", hour);
             } else {
@@ -742,14 +759,14 @@ static void draw_tide(canvas_t *canvas, const wind_renderer_dashboard_t *dashboa
                 WIND_FONT_SIZE_STATUS, time);
             const int label_margin = metrics.width / 2 + 10;
             const int label_center = clamp_int(
-                visible_x[position],
-                OUTER_X + day * DAY_WIDTH + label_margin,
-                OUTER_X + (day + 1) * DAY_WIDTH - label_margin);
-            const int point_y = is_high ? curve_top : curve_bottom;
+                point_x[position],
+                day_column_x(day) + label_margin,
+                day_column_x(day + 1) - label_margin);
+            const int extremum_y = point_y[position];
             /* Both labels share the same optical shift so their outside
              * margins read equally against the top and bottom borders. */
             const int baseline = clamp_int(
-                is_high ? point_y - 3 : point_y + 16,
+                is_high ? extremum_y - 3 : extremum_y + 16,
                 layout->tide_top + 14,
                 layout->tide_bottom - 5);
             draw_outlined_text_center(
@@ -759,6 +776,7 @@ static void draw_tide(canvas_t *canvas, const wind_renderer_dashboard_t *dashboa
         }
     }
 }
+
 static void build_status(const wind_renderer_dashboard_t *dashboard,
                          char *model, size_t model_size, char *update,
                          size_t update_size) {
@@ -927,12 +945,12 @@ static void draw_threshold_overlay(canvas_t *scratch,
                                    const dashboard_layout_t *layout) {
     const int y = layout->wind_baseline -
                   dashboard->threshold_kt * layout->chart_scale_height / 40;
-    const int line_left = OUTER_X + SAMPLE_FIRST_CENTER -
+    const int line_left = forecast_sample_center_x(0, 0) -
                           SUSTAINED_BAR_WIDTH / 2 - 2;
-    const int line_right = OUTER_X +
-                           (WIND_RENDERER_DAY_COUNT - 1) * DAY_WIDTH +
-                           SAMPLE_FIRST_CENTER +
-                           (WIND_RENDERER_SAMPLES_PER_DAY - 1) * SAMPLE_STEP +
+    const int line_right =
+                           forecast_sample_center_x(
+                               WIND_RENDERER_DAY_COUNT - 1,
+                               WIND_RENDERER_SAMPLES_PER_DAY - 1) +
                            SUSTAINED_BAR_WIDTH / 2 - 1 + 2;
     for (int x = line_left; x <= line_right; ++x) {
         set_output_pixel(output, (y - 1) * WIND_RENDERER_WIDTH + x,
@@ -943,11 +961,10 @@ static void draw_threshold_overlay(canvas_t *scratch,
     }
 
     for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day) {
-        const int column_x = OUTER_X + day * DAY_WIDTH;
         for (int sample = 0; sample < WIND_RENDERER_SAMPLES_PER_DAY; ++sample) {
             const wind_renderer_sample_t *source = &dashboard->days[day].samples[sample];
             if (!source->available) continue;
-            const int center_x = column_x + SAMPLE_FIRST_CENTER + sample * SAMPLE_STEP;
+            const int center_x = forecast_sample_center_x(day, sample);
             const int sustained = clamp_int(source->sustained_kt, 0, 40);
             const int sustained_y = layout->wind_baseline -
                                     sustained * layout->chart_scale_height / 40;
@@ -1336,7 +1353,7 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
         horizontal_line(&canvas, OUTER_X, OUTER_RIGHT, layout.tide_top,
                         CANVAS_BLACK);
     for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day) {
-        const int column_x = OUTER_X + day * DAY_WIDTH;
+        const int column_x = day_column_x(day);
         if (day > 0)
             vertical_line(&canvas, column_x, HEADER_BOTTOM, OUTER_BOTTOM,
                           CANVAS_BLACK);
@@ -1345,9 +1362,9 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
         for (int sample = 0; sample < WIND_RENDERER_SAMPLES_PER_DAY; ++sample) {
             if (dashboard->state != WIND_RENDERER_UNAVAILABLE)
                 draw_sample(&canvas,
-                            column_x + SAMPLE_FIRST_CENTER + sample * SAMPLE_STEP,
+                            forecast_sample_center_x(day, sample),
                             &dashboard->days[day].samples[sample], &layout);
-            const int center_x = column_x + SAMPLE_FIRST_CENTER + sample * SAMPLE_STEP;
+            const int center_x = forecast_sample_center_x(day, sample);
             const wind_renderer_sample_t *slot = &dashboard->days[day].samples[sample];
             if (dashboard->state != WIND_RENDERER_UNAVAILABLE &&
                 dashboard->show_weather)

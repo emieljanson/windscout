@@ -474,6 +474,49 @@ TEST(WindRenderer, DrawsTemperatureAndTideWithoutMovingEnabledRowsWhenDataIsMiss
     EXPECT_EQ(missing_stats.tide_row_top, populated_stats.tide_row_top);
 }
 
+TEST(WindRenderer, UsesRealTideDataInTheMarginsOutsideForecastLabels) {
+    auto first = Dashboard();
+    first.show_tide = 1;
+    first.tide_available = 1;
+    first.tide_sample_count = 24;
+    for (int hour = 0; hour < 24; ++hour) {
+        const int central_level = (hour - 14) * (hour - 14) * 10;
+        first.tide_samples[hour] = {0, hour, central_level, 1};
+    }
+
+    auto second = first;
+    second.tide_samples[5].sea_level_mm = -1200;
+    second.tide_samples[6].sea_level_mm = 1200;
+    second.tide_samples[7].sea_level_mm = -1200;
+    second.tide_samples[21].sea_level_mm = 1200;
+    second.tide_samples[22].sea_level_mm = -1200;
+    second.tide_samples[23].sea_level_mm = 1200;
+
+    EXPECT_NE(Render(first), Render(second));
+}
+
+TEST(WindRenderer, DoesNotLabelTideExtremaOutsideForecastCenters) {
+    auto dashboard = Dashboard();
+    dashboard.show_tide = 1;
+    dashboard.tide_available = 1;
+    dashboard.tide_sample_count = 24;
+    for (int hour = 0; hour < 24; ++hour) {
+        int level = 1000 - hour * 100;
+        if (hour == 5) level = 0;
+        if (hour == 6) level = 1200;
+        if (hour == 22) level = -1200;
+        if (hour == 23) level = 0;
+        dashboard.tide_samples[hour] = {0, hour, level, 1};
+    }
+
+    dashboard.use_24_hour = 0;
+    const Frame twelve_hour = Render(dashboard);
+    dashboard.use_24_hour = 1;
+    const Frame twenty_four_hour = Render(dashboard);
+
+    EXPECT_EQ(twelve_hour, twenty_four_hour);
+}
+
 TEST(WindRenderer, AppliesClockAndTemperaturePreferencesInTheSharedComposition) {
     auto dashboard = Dashboard();
     dashboard.show_temperature = 1;
