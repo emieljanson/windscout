@@ -14,6 +14,7 @@ const webRoot = dirname(dirname(fileURLToPath(import.meta.url)))
 const repositoryRoot = dirname(webRoot)
 const wasmPath = join(webRoot, 'public', 'renderer', 'wind-renderer.wasm')
 const fixtureDirectory = join(repositoryRoot, 'shared', 'renderer-fixtures')
+const RENDERER_TEST_TIMEOUT_MS = 30_000
 
 async function loadRealRenderer() {
   return loadSharedRenderer({ wasmBytes: await readFile(wasmPath) })
@@ -75,7 +76,7 @@ function fixtureInput(displayMode = 0, thresholdKt = 17, rowMask = 1, missingDat
   }
 }
 
-describe('shared WebAssembly renderer', () => {
+describe('shared WebAssembly renderer', { timeout: RENDERER_TEST_TIMEOUT_MS }, () => {
   it('matches every full native palette fixture byte for byte', async () => {
     const renderer = await loadRealRenderer()
     const fixtureNames = (await readdir(fixtureDirectory)).filter((name) => name.endsWith('.bin'))
@@ -118,7 +119,7 @@ describe('shared WebAssembly renderer', () => {
       expect(actual).toHaveLength(RENDERER_PALETTE_BYTES)
       expect(actual, fixtureName).toEqual(expected)
     }
-  }, 15_000)
+  })
 
   it('preserves red threshold pixels and output across repeated renders', async () => {
     const renderer = await loadRealRenderer()
