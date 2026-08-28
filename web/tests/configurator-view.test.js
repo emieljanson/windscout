@@ -28,10 +28,8 @@ describe('configurator experience', () => {
     expect(wrapper.find('[data-testid="3d-scene"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="flat-preview"]').exists()).toBe(false)
     expect(wrapper.find('.settings-panel').exists()).toBe(true)
-    expect(wrapper.findAll('.setting-section__title').map((title) => title.text())).toEqual([
-      'Forecast',
-      'Display',
-    ])
+    expect(wrapper.findAll('.setting-section__title')).toHaveLength(0)
+    expect(wrapper.get('.inspector-search input').attributes('placeholder')).toBe('Search spot…')
     expect(wrapper.text()).not.toContain('See your next session')
     expect(wrapper.text()).not.toContain('Reset view')
   })
@@ -68,10 +66,98 @@ describe('configurator experience', () => {
     expect(wrapper.find('[data-testid="flat-preview"]').exists()).toBe(false)
   })
 
-  it('reveals a truthful next-slice explanation without starting installation', async () => {
+  it('opens the guided installer inside the inspector before requesting a device', async () => {
     const wrapper = mount(ConfiguratorView, { global: { plugins: [createPinia()] } })
-    expect(wrapper.text()).not.toContain('USB installation is the next build step')
+    expect(wrapper.find('.installer-layer').exists()).toBe(false)
     await wrapper.get('[data-testid="install-continuation"]').trigger('click')
-    expect(wrapper.text()).toContain('USB installation is the next build step')
+    expect(wrapper.get('.installer-layer').text()).toContain('Connect your reTerminal')
+    expect(wrapper.get('.installer-layer').text()).toContain('Connect your reTerminal')
+  })
+
+  it.each([
+    { width: 896, compact: true },
+    { width: 897, compact: false },
+  ])('renders one active settings surface at $width CSS pixels', async ({ width, compact }) => {
+    const originalWidth = window.innerWidth
+    const originalMatchMedia = window.matchMedia
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: width })
+    Object.defineProperty(window, 'matchMedia', {
+      configurable: true,
+      value: vi.fn(() => ({
+        matches: compact,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      })),
+    })
+
+    try {
+      const wrapper = mount(ConfiguratorView, {
+        global: {
+          plugins: [createPinia()],
+          stubs: {
+            WindScoutScene: { template: '<div data-testid="3d-scene"></div>' },
+            WindScoutSettings: { template: '<div data-testid="settings-surface"></div>' },
+            InstallContinuation: { template: '<button data-testid="install-continuation">Install</button>' },
+          },
+        },
+      })
+
+      expect(wrapper.findAll('[data-testid="settings-surface"]')).toHaveLength(1)
+      expect(wrapper.find('.mobile-settings-sheet').exists()).toBe(false)
+      expect(wrapper.get('.settings-panel').classes()).toContain(compact ? 'settings-panel--compact' : 'settings-panel')
+      expect(wrapper.find('[data-testid="install-continuation"]').exists()).toBe(true)
+      wrapper.unmount()
+    } finally {
+      Object.defineProperty(window, 'innerWidth', { configurable: true, value: originalWidth })
+      Object.defineProperty(window, 'matchMedia', { configurable: true, value: originalMatchMedia })
+    }
+  })
+
+  it('keeps the compact panel above Safari chrome through the visual viewport inset', () => {
+    const originalInnerHeight = window.innerHeight
+    const originalVisualViewport = window.visualViewport
+    const originalRequestAnimationFrame = window.requestAnimationFrame
+    const originalCancelAnimationFrame = window.cancelAnimationFrame
+    const listeners = new Map()
+    const visualViewport = {
+      height: 700,
+      offsetTop: 20,
+      addEventListener: vi.fn((type, handler) => listeners.set(type, handler)),
+      removeEventListener: vi.fn(),
+    }
+    let scheduledCallback
+
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 844 })
+    Object.defineProperty(window, 'visualViewport', { configurable: true, value: visualViewport })
+    window.requestAnimationFrame = vi.fn((callback) => {
+      scheduledCallback = callback
+      return 1
+    })
+    window.cancelAnimationFrame = vi.fn()
+
+    try {
+      const wrapper = mount(ConfiguratorView, {
+        global: {
+          plugins: [createPinia()],
+          stubs: { WindScoutScene: { template: '<div data-testid="3d-scene"></div>' } },
+        },
+      })
+      scheduledCallback()
+
+      expect(document.documentElement.style.getPropertyValue('--visual-viewport-bottom')).toBe('124px')
+      expect(visualViewport.addEventListener).toHaveBeenCalledWith('resize', expect.any(Function))
+      expect(visualViewport.addEventListener).toHaveBeenCalledWith('scroll', expect.any(Function))
+
+      wrapper.unmount()
+      expect(visualViewport.removeEventListener).toHaveBeenCalledWith('resize', listeners.get('resize'))
+      expect(visualViewport.removeEventListener).toHaveBeenCalledWith('scroll', listeners.get('scroll'))
+      expect(document.documentElement.style.getPropertyValue('--visual-viewport-bottom')).toBe('')
+    } finally {
+      Object.defineProperty(window, 'innerHeight', { configurable: true, value: originalInnerHeight })
+      Object.defineProperty(window, 'visualViewport', { configurable: true, value: originalVisualViewport })
+      window.requestAnimationFrame = originalRequestAnimationFrame
+      window.cancelAnimationFrame = originalCancelAnimationFrame
+      document.documentElement.style.removeProperty('--visual-viewport-bottom')
+    }
   })
 })

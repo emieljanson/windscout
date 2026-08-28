@@ -257,6 +257,16 @@ esp_err_t apply_config_from_json(cJSON *root)
     cJSON *wifi_ssid_obj = cJSON_GetObjectItem(root, "wifi_ssid");
     cJSON *wifi_password_obj = cJSON_GetObjectItem(root, "wifi_password");
     if (wifi_ssid_obj && cJSON_IsString(wifi_ssid_obj)) {
+        char current_ssid_buffer[WIFI_SSID_MAX_LEN] = {0};
+        char current_password_buffer[WIFI_PASS_MAX_LEN] = {0};
+        const bool have_canonical_credentials = wifi_manager_load_credentials(
+            current_ssid_buffer, current_password_buffer) == ESP_OK;
+        const char *current_ssid = have_canonical_credentials
+                                       ? current_ssid_buffer
+                                       : config_manager_get_wifi_ssid();
+        const char *current_password = have_canonical_credentials
+                                           ? current_password_buffer
+                                           : config_manager_get_wifi_password();
         const char *new_ssid = cJSON_GetStringValue(wifi_ssid_obj);
         const char *new_password = NULL;
         if (wifi_password_obj && cJSON_IsString(wifi_password_obj) &&
@@ -264,25 +274,25 @@ esp_err_t apply_config_from_json(cJSON *root)
             new_password = cJSON_GetStringValue(wifi_password_obj);
         }
 
-        const char *current_ssid = config_manager_get_wifi_ssid();
         if (strcmp(new_ssid, current_ssid) != 0 || new_password != NULL) {
             if (new_password == NULL) {
-                new_password = config_manager_get_wifi_password();
+                new_password = current_password;
             }
 
             ESP_LOGI(TAG, "WiFi credentials changed, testing connection to: %s", new_ssid);
 
             esp_err_t err = wifi_manager_connect(new_ssid, new_password);
             if (err == ESP_OK) {
-                config_manager_set_wifi_ssid(new_ssid);
-                if (wifi_password_obj && cJSON_IsString(wifi_password_obj) &&
-                    strlen(cJSON_GetStringValue(wifi_password_obj)) > 0) {
-                    config_manager_set_wifi_password(new_password);
+                err = wifi_manager_save_credentials(new_ssid, new_password);
+                if (err != ESP_OK) {
+                    ESP_LOGW(TAG, "Connected to new WiFi but could not save credentials");
+                    wifi_manager_connect(current_ssid, current_password);
+                    return err;
                 }
                 ESP_LOGI(TAG, "Successfully connected and saved WiFi credentials");
             } else {
                 ESP_LOGW(TAG, "Failed to connect to new WiFi, reverting to previous credentials");
-                wifi_manager_connect(current_ssid, config_manager_get_wifi_password());
+                wifi_manager_connect(current_ssid, current_password);
                 return ESP_FAIL;
             }
         }
@@ -460,12 +470,6 @@ esp_err_t apply_config_from_json(cJSON *root)
     item = cJSON_GetObjectItem(root, "google_api_key");
     if (item && cJSON_IsString(item)) {
         config_manager_set_google_api_key(cJSON_GetStringValue(item));
-    }
-
-    // Power
-    item = cJSON_GetObjectItem(root, "deep_sleep_enabled");
-    if (item && cJSON_IsBool(item)) {
-        power_manager_set_deep_sleep_enabled(cJSON_IsTrue(item));
     }
 
     // Debugging

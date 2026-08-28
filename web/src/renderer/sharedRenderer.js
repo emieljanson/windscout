@@ -7,6 +7,7 @@ import {
   RENDERER_WIDTH,
   textFitsRenderer,
 } from './contract'
+import { publicAssetUrl } from '../assets/publicAssetUrl'
 
 export {
   RENDERER_CONTRACT_VERSION,
@@ -256,7 +257,7 @@ async function getWasmBytes({ wasmBytes, wasmUrl, fetchImpl, signal }) {
 
 export async function loadSharedRenderer({
   wasmBytes,
-  wasmUrl = '/renderer/wind-renderer.wasm',
+  wasmUrl = publicAssetUrl('renderer/wind-renderer.wasm'),
   fetchImpl = globalThis.fetch,
   instantiate = WebAssembly.instantiate,
   timeoutMs = RENDERER_LOAD_TIMEOUT_MS,

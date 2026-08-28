@@ -65,9 +65,6 @@ void http_server_enable_maintenance(uint32_t duration_seconds)
 
 bool http_server_is_maintenance_enabled(void)
 {
-#if WINDSCOUT_DEVELOPMENT_MODE
-    return true;
-#endif
     if (board_hal_is_usb_connected()) {
         return true;
     }
@@ -1566,7 +1563,6 @@ static esp_err_t config_handler(httpd_req_t *req)
         cJSON_AddBoolToObject(root, "google_api_key_set", google_key && google_key[0] != '\0');
 
         // Other
-        cJSON_AddBoolToObject(root, "deep_sleep_enabled", config_manager_get_deep_sleep_enabled());
         cJSON_AddBoolToObject(root, "debug_log_enabled", config_manager_get_debug_log_enabled());
 
         char *json_str = cJSON_Print(root);

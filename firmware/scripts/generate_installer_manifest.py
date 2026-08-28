@@ -13,6 +13,7 @@ from pathlib import Path
 
 
 BOARD_ID = "seeedstudio_reterminal_e1002"
+FIRMWARE_LAYOUT_VERSION = 1
 FLASH_SIZE_BYTES = 32 * 1024 * 1024
 PART_KINDS = {
     "bootloader/bootloader.bin": "bootloader",
@@ -91,7 +92,11 @@ def _validate_ranges(parts: list[dict], flash_size: int, label: str) -> None:
 def validate_manifest(manifest: dict, bundle_dir: Path, partitions_path: Path) -> None:
     if manifest.get("schemaVersion") != 1 or manifest.get("boardId") != BOARD_ID:
         raise ManifestError("Unsupported installer manifest identity")
-    if manifest.get("chipFamily") != "ESP32-S3" or manifest.get("flashSize") != FLASH_SIZE_BYTES:
+    if (
+        manifest.get("chipFamily") != "ESP32-S3"
+        or manifest.get("firmwareLayoutVersion") != FIRMWARE_LAYOUT_VERSION
+        or manifest.get("flashSize") != FLASH_SIZE_BYTES
+    ):
         raise ManifestError("Unexpected chip family or flash size")
     parts = manifest.get("parts")
     if not isinstance(parts, list) or len(parts) != 4:
@@ -104,6 +109,11 @@ def validate_manifest(manifest: dict, bundle_dir: Path, partitions_path: Path) -
     update = manifest.get("preservingUpdate", {})
     if clean.get("eraseFlash") is not True or update.get("eraseFlash") is not False:
         raise ManifestError("Invalid erase policy")
+    clean_parts = clean.get("parts", [])
+    if len(clean_parts) != len(PART_KINDS) or {
+        part.get("kind") for part in clean_parts
+    } != set(PART_KINDS.values()):
+        raise ManifestError("Clean install must contain every flash part exactly once")
     _validate_ranges(clean.get("parts", []), FLASH_SIZE_BYTES, "clean install")
     _validate_ranges(update.get("parts", []), FLASH_SIZE_BYTES, "preserving update")
     canonical = {part["kind"]: part for part in parts}
@@ -134,6 +144,7 @@ def generate_installer_bundle(
     output_dir: Path,
     version: str,
     board_id: str,
+    flat: bool = False,
 ) -> Path:
     build_dir = Path(build_dir)
     partitions_path = Path(partitions_path)
@@ -156,7 +167,7 @@ def generate_installer_bundle(
     if set(flash_files.values()) != set(PART_KINDS):
         raise ManifestError("Unexpected or stale ESP-IDF flash part names")
 
-    bundle_dir = output_dir / safe_version
+    bundle_dir = output_dir if flat else output_dir / safe_version
     parts = []
     for offset_text, source_name in sorted(flash_files.items(), key=lambda item: _number(item[0])):
         source = build_dir / source_name
@@ -182,6 +193,7 @@ def generate_installer_bundle(
         "version": version,
         "boardId": BOARD_ID,
         "chipFamily": "ESP32-S3",
+        "firmwareLayoutVersion": FIRMWARE_LAYOUT_VERSION,
         "flashSize": flash_size,
         "protocol": {"minimum": 1, "maximum": 1},
         "configuration": {"minimum": 2, "maximum": 2},
@@ -195,11 +207,12 @@ def generate_installer_bundle(
     }
     validate_manifest(manifest, bundle_dir, partitions_path)
     manifest_bytes = (json.dumps(manifest, indent=2, sort_keys=True) + "\n").encode()
-    manifest_path = bundle_dir / "installer-manifest.json"
+    manifest_name = f"installer-manifest-{safe_version}.json" if flat else "installer-manifest.json"
+    manifest_path = bundle_dir / manifest_name
     _write_immutable(manifest_path, manifest_bytes)
     pointer = {
         "version": version,
-        "manifest": f"{safe_version}/installer-manifest.json",
+        "manifest": manifest_name if flat else f"{safe_version}/installer-manifest.json",
         "sha256": hashlib.sha256(manifest_bytes).hexdigest(),
     }
     pointer_bytes = (json.dumps(pointer, indent=2, sort_keys=True) + "\n").encode()
@@ -215,9 +228,10 @@ def main() -> None:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--version", required=True)
     parser.add_argument("--board-id", default=BOARD_ID)
+    parser.add_argument("--flat", action="store_true")
     args = parser.parse_args()
     path = generate_installer_bundle(
-        args.build_dir, args.partitions, args.output, args.version, args.board_id
+        args.build_dir, args.partitions, args.output, args.version, args.board_id, args.flat
     )
     print(path)
 

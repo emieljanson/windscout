@@ -272,6 +272,43 @@ static void draw_text(canvas_t *canvas, int x, int baseline,
                    safe_text(text));
 }
 
+static void fade_region_to_white(canvas_t *canvas, int left, int top,
+                                 int right, int bottom) {
+    left = clamp_int(left, 0, WIND_RENDERER_WIDTH - 1);
+    right = clamp_int(right, 0, WIND_RENDERER_WIDTH - 1);
+    top = clamp_int(top, 0, WIND_RENDERER_HEIGHT - 1);
+    bottom = clamp_int(bottom, 0, WIND_RENDERER_HEIGHT - 1);
+    if (right <= left || bottom < top) return;
+
+    const int span = right - left;
+    for (int y = top; y <= bottom; ++y) {
+        for (int x = left; x <= right; ++x) {
+            const int linear = (x - left) * 255 / span;
+            const int fade = (linear * linear * (765 - 2 * linear) + 32512) /
+                             65025;
+            uint8_t *pixel = &canvas->pixels[y * WIND_RENDERER_WIDTH + x];
+            *pixel = (uint8_t)((int)*pixel +
+                               ((CANVAS_WHITE - (int)*pixel) * fade + 127) /
+                                   255);
+        }
+    }
+}
+
+static int rightmost_ink_pixel(const canvas_t *canvas, int left, int top,
+                               int right, int bottom) {
+    left = clamp_int(left, 0, WIND_RENDERER_WIDTH - 1);
+    right = clamp_int(right, 0, WIND_RENDERER_WIDTH - 1);
+    top = clamp_int(top, 0, WIND_RENDERER_HEIGHT - 1);
+    bottom = clamp_int(bottom, 0, WIND_RENDERER_HEIGHT - 1);
+    for (int x = right; x >= left; --x) {
+        for (int y = top; y <= bottom; ++y) {
+            if (canvas->pixels[y * WIND_RENDERER_WIDTH + x] < CANVAS_WHITE)
+                return x;
+        }
+    }
+    return left;
+}
+
 static void draw_text_color(canvas_t *canvas, int x, int baseline,
                             wind_font_family_t family, int size, uint8_t gray,
                             const char *text) {
@@ -1227,14 +1264,6 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
     char model[64];
     char update[32];
     build_status(dashboard, model, sizeof(model), update, sizeof(update));
-    draw_text_right(&canvas, CONTENT_RIGHT, 58, WIND_FONT_BERKELEY_MONO_BOLD,
-                    WIND_FONT_SIZE_STATUS, model);
-    draw_battery(&canvas, CONTENT_RIGHT, 72, dashboard->battery_percent);
-    const int status_character_width = wind_font_measure(
-        WIND_FONT_BERKELEY_MONO_BOLD, WIND_FONT_SIZE_STATUS, "0").width;
-    draw_text_right(&canvas, CONTENT_RIGHT - 30 - status_character_width, 78,
-                    WIND_FONT_BERKELEY_MONO_BOLD,
-                    WIND_FONT_SIZE_STATUS, update);
 
     if (dashboard->display_mode == WIND_RENDERER_MODE_BACKGROUND_FADE)
         draw_low_wind_background(&canvas, output_format == OUTPUT_RGBA, &layout);
@@ -1242,7 +1271,6 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
 
     const int header_text_right = 565;
     const int header_width = header_text_right - CONTENT_LEFT + 1;
-    char fitted_name[192];
     char coordinate_first[64];
     char coordinate_second[64];
     split_coordinates(dashboard->coordinates, coordinate_first,
@@ -1259,12 +1287,25 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
                                      : coordinate_second_metrics.width;
     const int coordinates_included = *safe_text(dashboard->coordinates) &&
         name_metrics.width + 20 + coordinate_width <= header_width;
-    wind_font_fit_ellipsis(WIND_FONT_INTER, WIND_FONT_SIZE_SPOT,
-                           safe_text(dashboard->spot_name), "",
-                           coordinates_included ? name_metrics.width : header_width,
-                           fitted_name, sizeof(fitted_name), NULL);
     draw_text(&canvas, CONTENT_LEFT, 78, WIND_FONT_INTER, WIND_FONT_SIZE_SPOT,
-              fitted_name);
+              safe_text(dashboard->spot_name));
+    if (name_metrics.width > header_width) {
+        const int fade_width = 240;
+        const int name_top = 78 - name_metrics.ascent;
+        const int name_bottom = 78 + name_metrics.descent;
+        const int ink_right = rightmost_ink_pixel(
+            &canvas, CONTENT_LEFT, name_top, header_text_right, name_bottom);
+        fade_region_to_white(&canvas,
+                             clamp_int(ink_right - fade_width + 1,
+                                       CONTENT_LEFT, ink_right),
+                             name_top, ink_right, name_bottom);
+        fill_rect(&canvas, header_text_right + 1, name_top,
+                  OUTER_RIGHT - header_text_right - 1,
+                  name_bottom - name_top + 1, CANVAS_WHITE);
+        fill_rect(&canvas, OUTER_RIGHT + 1, name_top,
+                  WIND_RENDERER_WIDTH - OUTER_RIGHT - 1,
+                  name_bottom - name_top + 1, CANVAS_WHITE);
+    }
     if (coordinates_included) {
         const int coordinate_x = CONTENT_LEFT + name_metrics.width + 20;
         draw_text(&canvas, coordinate_x, 59, WIND_FONT_BERKELEY_MONO_BOLD,
@@ -1272,6 +1313,15 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
         draw_text(&canvas, coordinate_x, 78, WIND_FONT_BERKELEY_MONO_BOLD,
                   WIND_FONT_SIZE_STATUS, coordinate_second);
     }
+
+    draw_text_right(&canvas, CONTENT_RIGHT, 58, WIND_FONT_BERKELEY_MONO_BOLD,
+                    WIND_FONT_SIZE_STATUS, model);
+    draw_battery(&canvas, CONTENT_RIGHT, 72, dashboard->battery_percent);
+    const int status_character_width = wind_font_measure(
+        WIND_FONT_BERKELEY_MONO_BOLD, WIND_FONT_SIZE_STATUS, "0").width;
+    draw_text_right(&canvas, CONTENT_RIGHT - 30 - status_character_width, 78,
+                    WIND_FONT_BERKELEY_MONO_BOLD,
+                    WIND_FONT_SIZE_STATUS, update);
 
     horizontal_line(&canvas, OUTER_X, OUTER_RIGHT, DAY_HEADER_BOTTOM,
                     CANVAS_BLACK);

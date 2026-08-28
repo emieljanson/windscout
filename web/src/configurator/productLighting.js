@@ -1,6 +1,6 @@
 export const PRODUCT_LIGHTING = Object.freeze({
-  background: 0xf5f7f3,
-  hemisphere: Object.freeze({ sky: 0xf8fbff, ground: 0x69716d, intensity: 0.32 }),
+  background: 0xf3f5f7,
+  hemisphere: Object.freeze({ sky: 0xf7f8fb, ground: 0x68717c, intensity: 0.32 }),
   key: Object.freeze({
     kind: 'spot',
     color: 0xfff8ee,
@@ -27,11 +27,11 @@ export const PRODUCT_LIGHTING = Object.freeze({
   }),
   rim: Object.freeze({ color: 0xc9dcde, intensity: 0.28, position: [0.34, 0.08, -0.2] }),
   environment: Object.freeze({
-    background: 0xbac0bd,
+    background: 0xbdc4ca,
     key: 0xfffcf5,
-    top: 0xf4f8f7,
-    rim: 0xd9eeee,
+    top: 0xf5f7fb,
+    rim: 0xd9e0e8,
     rimWidth: 0.18,
-    backdrop: 0xd7dcd9,
+    backdrop: 0xd2d7dc,
   }),
 })

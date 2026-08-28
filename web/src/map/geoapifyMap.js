@@ -3,6 +3,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 export async function createGeoapifyMap(container, {
   apiKey,
   center,
+  zoom = 13,
   signal,
   onCenterChange = () => {},
 }) {
@@ -13,14 +14,25 @@ export async function createGeoapifyMap(container, {
     container,
     style: `https://maps.geoapify.com/v1/styles/positron/style.json?apiKey=${encodeURIComponent(apiKey)}`,
     center: [center.longitude, center.latitude],
-    zoom: 13,
-    attributionControl: true,
+    zoom,
+    attributionControl: { compact: true },
   })
   map.addControl(new NavigationControl({ showCompass: false }), 'top-right')
+  let programmaticCenter = null
+  const clearProgrammaticCenterOnUserMove = (event) => {
+    if (event.originalEvent) programmaticCenter = null
+  }
   const reportCenter = () => {
+    if (programmaticCenter) {
+      const value = programmaticCenter
+      programmaticCenter = null
+      onCenterChange(value)
+      return
+    }
     const value = map.getCenter()
     onCenterChange({ latitude: value.lat, longitude: value.lng })
   }
+  map.on('movestart', clearProgrammaticCenterOnUserMove)
   map.on('moveend', reportCenter)
   await new Promise((resolve, reject) => {
     const cleanup = () => {
@@ -31,6 +43,9 @@ export async function createGeoapifyMap(container, {
     const loaded = () => {
       cleanup()
       map.resize()
+      const attribution = container.querySelector('.maplibregl-ctrl-attrib.maplibregl-compact')
+      attribution?.classList.remove('maplibregl-compact-show')
+      attribution?.removeAttribute('open')
       resolve()
     }
     const fail = (error) => {
@@ -47,7 +62,16 @@ export async function createGeoapifyMap(container, {
     else signal?.addEventListener('abort', aborted, { once: true })
   })
   return {
+    setCenter(nextCenter, { zoom: nextZoom = 13 } = {}) {
+      programmaticCenter = { ...nextCenter }
+      map.easeTo({
+        center: [nextCenter.longitude, nextCenter.latitude],
+        zoom: nextZoom,
+        duration: 280,
+      })
+    },
     destroy() {
+      map.off('movestart', clearProgrammaticCenterOnUserMove)
       map.off('moveend', reportCenter)
       map.remove()
     },

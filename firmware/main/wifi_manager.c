@@ -18,15 +18,22 @@
 #include "nvs_flash.h"
 #include "installed_configuration.h"
 #include "storage.h"
+#if BOARD_HAL_TYPE != BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
 #include "utils.h"
+#endif
 
 static const char *TAG = "wifi_manager";
 
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT BIT1
+#define WIFI_INTERACTIVE_CONNECT_TIMEOUT_MS 45000
+#define WIFI_REFRESH_CONNECT_TIMEOUT_MS 12000
+#define WIFI_INTERACTIVE_MAX_RETRIES 5
+#define WIFI_REFRESH_MAX_RETRIES 1
 
 static EventGroupHandle_t s_wifi_event_group;
 static int s_retry_num = 0;
+static int s_max_retries = WIFI_INTERACTIVE_MAX_RETRIES;
 static bool s_is_connected = false;
 static esp_netif_t *s_sta_netif = NULL;
 
@@ -44,7 +51,7 @@ static void event_handler(void *arg, esp_event_base_t event_base, int32_t event_
         // before falling back to the A record.
         esp_netif_create_ip6_linklocal(s_sta_netif);
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-        if (s_retry_num < 5) {
+        if (s_retry_num < s_max_retries) {
             esp_wifi_connect();
             s_retry_num++;
             ESP_LOGI(TAG, "retry to connect to the AP");
@@ -101,7 +108,11 @@ esp_err_t wifi_manager_update_hostname(void)
     // DHCP hostname from the device name (CamelCase, shown in router device
     // lists). The router picks it up at the next DHCP negotiation (reconnect).
     char hostname[64];
+#if BOARD_HAL_TYPE == BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+    strncpy(hostname, "windscout", sizeof(hostname));
+#else
     sanitize_dhcp_hostname(config_manager_get_device_name(), hostname, sizeof(hostname));
+#endif
     esp_err_t err = esp_netif_set_hostname(s_sta_netif, hostname);
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Failed to set DHCP hostname: %s", esp_err_to_name(err));
@@ -118,14 +129,20 @@ esp_err_t wifi_manager_init(void)
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
-    // Create both STA and AP network interfaces
+    // WindScout is configured over USB and only needs a station interface.
     s_sta_netif = esp_netif_create_default_wifi_sta();
+#if BOARD_HAL_TYPE != BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
     esp_netif_create_default_wifi_ap();
+#endif
 
     wifi_manager_update_hostname();
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+    // Candidate credentials from the USB installer must never be persisted by
+    // the Wi-Fi driver. WindScout commits credentials through its own
+    // transactional configuration record only after setup succeeds.
+    ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
 
     esp_event_handler_instance_t instance_any_id;
     esp_event_handler_instance_t instance_got_ip;
@@ -152,6 +169,10 @@ esp_err_t wifi_manager_apply_ip_config(void)
         return ESP_ERR_INVALID_STATE;
     }
 
+#if BOARD_HAL_TYPE == BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+    esp_netif_dhcpc_start(s_sta_netif);
+    return ESP_OK;
+#else
     if (config_manager_get_ip_mode() == IP_MODE_STATIC) {
         esp_netif_ip_info_t ip_info = {0};
         if (esp_netif_str_to_ip4(config_manager_get_static_ip(), &ip_info.ip) != ESP_OK ||
@@ -174,6 +195,7 @@ esp_err_t wifi_manager_apply_ip_config(void)
         esp_netif_dhcpc_start(s_sta_netif);
     }
     return ESP_OK;
+#endif
 }
 
 // Apply the DNS override (if configured). Called after GOT_IP so it takes
@@ -181,6 +203,9 @@ esp_err_t wifi_manager_apply_ip_config(void)
 // only DNS source (defaults to the gateway when unset).
 static void apply_dns_override(void)
 {
+#if BOARD_HAL_TYPE == BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+    return;
+#else
     const char *dns = config_manager_get_dns_server();
     if ((dns == NULL || dns[0] == '\0') && config_manager_get_ip_mode() == IP_MODE_STATIC) {
         dns = config_manager_get_static_gateway();
@@ -197,9 +222,11 @@ static void apply_dns_override(void)
     dns_info.ip.type = ESP_IPADDR_TYPE_V4;
     esp_netif_set_dns_info(s_sta_netif, ESP_NETIF_DNS_MAIN, &dns_info);
     ESP_LOGI(TAG, "DNS server set to: %s", dns);
+#endif
 }
 
-esp_err_t wifi_manager_connect(const char *ssid, const char *password)
+static esp_err_t connect_with_policy(const char *ssid, const char *password,
+                                     uint32_t timeout_ms, int max_retries)
 {
     if (!ssid || strlen(ssid) == 0) {
         ESP_LOGE(TAG, "SSID is empty");
@@ -217,17 +244,45 @@ esp_err_t wifi_manager_connect(const char *ssid, const char *password)
     wifi_config.sta.pmf_cfg.capable = true;
     wifi_config.sta.pmf_cfg.required = false;
 
-    // Stop WiFi if it's running, then set config
-    esp_wifi_stop();
+    // Provisioning leaves the radio in AP mode. Stop it, explicitly switch to
+    // station mode, and return recoverable errors instead of rebooting when a
+    // candidate network cannot be applied.
+    esp_err_t result = esp_wifi_stop();
+    if (result != ESP_OK && result != ESP_ERR_WIFI_NOT_STARTED) {
+        ESP_LOGE(TAG, "Failed to stop WiFi: %s", esp_err_to_name(result));
+        return result;
+    }
+    result = esp_wifi_set_mode(WIFI_MODE_STA);
+    if (result != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to enter station mode: %s", esp_err_to_name(result));
+        return result;
+    }
+    result = esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
+    if (result != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to configure station: %s", esp_err_to_name(result));
+        return result;
+    }
 
-    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
-    ESP_ERROR_CHECK(esp_wifi_start());
-    ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_MIN_MODEM));  // Enable power save at boot/connect
-
+    // Clear stale events before starting: a fast connection must not set the
+    // success bit only for this function to erase it immediately afterwards.
     s_retry_num = 0;
+    s_max_retries = max_retries;
+    s_is_connected = false;
     xEventGroupClearBits(s_wifi_event_group, WIFI_CONNECTED_BIT | WIFI_FAIL_BIT);
-    EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group, WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
-                                           pdFALSE, pdFALSE, portMAX_DELAY);
+    result = esp_wifi_start();
+    if (result != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to start WiFi: %s", esp_err_to_name(result));
+        return result;
+    }
+    result = esp_wifi_set_ps(WIFI_PS_MIN_MODEM);  // Enable power save at boot/connect
+    if (result != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to enable WiFi power save: %s", esp_err_to_name(result));
+        return result;
+    }
+
+    EventBits_t bits = xEventGroupWaitBits(
+        s_wifi_event_group, WIFI_CONNECTED_BIT | WIFI_FAIL_BIT, pdFALSE, pdFALSE,
+        pdMS_TO_TICKS(timeout_ms));
 
     if (bits & WIFI_CONNECTED_BIT) {
         ESP_LOGI(TAG, "connected to ap SSID:%s", ssid);
@@ -239,6 +294,18 @@ esp_err_t wifi_manager_connect(const char *ssid, const char *password)
         ESP_LOGE(TAG, "UNEXPECTED EVENT");
         return ESP_FAIL;
     }
+}
+
+esp_err_t wifi_manager_connect(const char *ssid, const char *password)
+{
+    return connect_with_policy(ssid, password, WIFI_INTERACTIVE_CONNECT_TIMEOUT_MS,
+                               WIFI_INTERACTIVE_MAX_RETRIES);
+}
+
+esp_err_t wifi_manager_connect_for_refresh(const char *ssid, const char *password)
+{
+    return connect_with_policy(ssid, password, WIFI_REFRESH_CONNECT_TIMEOUT_MS,
+                               WIFI_REFRESH_MAX_RETRIES);
 }
 
 esp_err_t wifi_manager_disconnect(void)
@@ -275,6 +342,14 @@ esp_err_t wifi_manager_get_ip(char *ip_str, size_t len)
 
 esp_err_t wifi_manager_save_credentials(const char *ssid, const char *password)
 {
+#if BOARD_HAL_TYPE == BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+    installed_configuration_t active;
+    esp_err_t installed_result = installed_configuration_load(&active);
+    if (installed_result != ESP_OK) return installed_result;
+    installed_result = installed_configuration_promote_setup(&active, ssid, password);
+    if (installed_result != ESP_OK) return installed_result;
+    return ESP_OK;
+#else
     nvs_handle_t nvs_handle;
     esp_err_t err;
 
@@ -299,6 +374,7 @@ esp_err_t wifi_manager_save_credentials(const char *ssid, const char *password)
     nvs_close(nvs_handle);
 
     return err;
+#endif
 }
 
 esp_err_t wifi_manager_load_credentials(char *ssid, char *password)
@@ -307,6 +383,9 @@ esp_err_t wifi_manager_load_credentials(char *ssid, char *password)
                                                  password, WIFI_PASS_MAX_LEN) == ESP_OK) {
         return ESP_OK;
     }
+#if BOARD_HAL_TYPE == BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+    return ESP_ERR_NOT_FOUND;
+#else
     nvs_handle_t nvs_handle;
     esp_err_t err;
 
@@ -327,6 +406,7 @@ esp_err_t wifi_manager_load_credentials(char *ssid, char *password)
     nvs_close(nvs_handle);
 
     return err;
+#endif
 }
 
 EventGroupHandle_t wifi_manager_get_event_group(void)

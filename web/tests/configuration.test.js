@@ -26,6 +26,7 @@ describe('display configuration', () => {
 
     expect(displayConfigurationFromStore(settings)).toEqual({
       version: CONFIGURATION_VERSION,
+      showThreshold: false,
       treatment: 'solid',
       threshold: 23,
       showWeather: true,
@@ -36,6 +37,48 @@ describe('display configuration', () => {
     })
     expect(displayConfigurationFromStore({ ...settings, showThreshold: true }).treatment)
       .toBe('threshold-line')
+  })
+
+  it('never installs Tide enabled when it is unavailable for the selected spot', () => {
+    const settings = {
+      showThreshold: false,
+      threshold: 17,
+      showWeather: true,
+      showTemperature: false,
+      showTide: true,
+      tideAvailable: false,
+      timeFormat: '24-hour',
+      temperatureUnit: 'celsius',
+    }
+
+    expect(displayConfigurationFromStore(settings).showTide).toBe(false)
+    expect(displayConfigurationFromStore({ ...settings, tideAvailable: true }).showTide).toBe(true)
+  })
+
+  it('preserves threshold visibility when store settings become an installation', () => {
+    const display = displayConfigurationFromStore({
+      showThreshold: true,
+      threshold: 23,
+      showWeather: true,
+      showTemperature: false,
+      showTide: false,
+      timeFormat: '24-hour',
+      temperatureUnit: 'celsius',
+    })
+    const configuration = createInstalledConfiguration({
+      spot: {
+        id: 'brouwersdam',
+        name: 'Brouwersdam',
+        latitude: 51.7506,
+        longitude: 3.8577,
+        timezone: 'Europe/Amsterdam',
+      },
+      modelId: 'best_match',
+      display,
+    })
+
+    expect(configuration.display.showThreshold).toBe(true)
+    expect(configuration.digest).not.toBe('f70d51b9a49fdddb')
   })
 
   it.each([

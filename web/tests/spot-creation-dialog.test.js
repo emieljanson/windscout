@@ -3,6 +3,9 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import SpotCreationDialog from '../src/components/SpotCreationDialog.vue'
 
+const { toastError } = vi.hoisted(() => ({ toastError: vi.fn() }))
+vi.mock('vue-sonner', () => ({ toast: { error: toastError } }))
+
 const edam = {
   id: 'edam-id',
   name: 'Edam',
@@ -24,10 +27,43 @@ function deferred() {
 
 afterEach(() => {
   vi.useRealTimers()
+  toastError.mockClear()
   document.body.innerHTML = ''
 })
 
 describe('Spot creation dialog', () => {
+  it('keeps the automatic initial search visually silent', async () => {
+    vi.useFakeTimers()
+    const search = deferred()
+    const typedSearch = deferred()
+    const searchPlaces = vi.fn()
+      .mockReturnValueOnce(search.promise)
+      .mockReturnValueOnce(typedSearch.promise)
+    const wrapper = mount(SpotCreationDialog, {
+      props: {
+        open: true,
+        initialQuery: 'Edam',
+        apiKey: 'test-key',
+        searchPlaces,
+      },
+      attachTo: document.body,
+    })
+
+    await vi.advanceTimersByTimeAsync(300)
+    expect(document.body.querySelector('.spot-dialog__results')).toBeNull()
+
+    search.resolve([edam])
+    await flushPromises()
+    expect(document.body.querySelector('.spot-dialog__results')).toBeNull()
+
+    const input = document.body.querySelector('input[role="combobox"]')
+    input.value = 'Edam harbour'
+    input.dispatchEvent(new InputEvent('input', { bubbles: true }))
+    await vi.advanceTimersByTimeAsync(300)
+    expect(document.body.textContent).toContain('Searching places…')
+    wrapper.unmount()
+  })
+
   it('waits until the dialog opens before searching and debounces its initial query', async () => {
     vi.useFakeTimers()
     const searchPlaces = vi.fn().mockResolvedValue([edam])
@@ -50,12 +86,99 @@ describe('Spot creation dialog', () => {
     expect(searchPlaces).toHaveBeenCalledOnce()
     expect(searchPlaces).toHaveBeenCalledWith('Edam', expect.objectContaining({
       apiKey: 'test-key',
+      bias: { latitude: 52.2, longitude: 5.3 },
       signal: expect.any(AbortSignal),
     }))
     const input = document.body.querySelector('input[role="combobox"]')
-    input.dispatchEvent(new FocusEvent('focus', { bubbles: true }))
+    expect(input.value).toBe('Edam')
+    expect(document.body.querySelector('.spot-dialog__results')).toBeNull()
+    wrapper.unmount()
+  })
+
+  it('automatically previews the best result and keeps alternatives keyboard friendly', async () => {
+    vi.useFakeTimers()
+    const setCenter = vi.fn()
+    const wrapper = mount(SpotCreationDialog, {
+      props: {
+        open: true,
+        initialQuery: 'Edam',
+        apiKey: 'test-key',
+        searchPlaces: vi.fn().mockResolvedValue([edam]),
+        createMap: vi.fn().mockResolvedValue({ destroy: vi.fn(), setCenter }),
+      },
+      attachTo: document.body,
+    })
+    await vi.advanceTimersByTimeAsync(300)
+    await flushPromises()
+
+    const input = document.body.querySelector('input[role="combobox"]')
+    expect(input.value).toBe('Edam')
+    expect(document.body.querySelector('.setting-popup')).toBeNull()
+    expect(document.body.querySelector('[role="option"]')).toBeNull()
+    expect(setCenter).toHaveBeenCalledWith({ latitude: 52.5126, longitude: 5.0486 }, { zoom: 13 })
+    expect(document.body.querySelector('.spot-dialog__confirm').textContent).toContain('Add Edam')
+    input.click()
     await wrapper.vm.$nextTick()
-    expect(document.body.textContent).toContain('North Holland, Netherlands')
+    expect(document.body.querySelector('[role="option"]')).not.toBeNull()
+    expect(document.body.querySelector('[role="option"]').getAttribute('aria-selected')).toBe('false')
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+    await flushPromises()
+
+    expect(setCenter).toHaveBeenCalledWith({ latitude: 52.5126, longitude: 5.0486 }, { zoom: 13 })
+    expect(document.activeElement).toBe(input)
+    expect(document.body.querySelector('.spot-dialog__results')).toBeNull()
+    wrapper.unmount()
+  })
+
+  it('replaces an unfinished query with the provider result name', async () => {
+    vi.useFakeTimers()
+    const setCenter = vi.fn()
+    const wrapper = mount(SpotCreationDialog, {
+      props: {
+        open: true,
+        initialQuery: 'edma',
+        apiKey: 'test-key',
+        searchPlaces: vi.fn().mockResolvedValue([edam]),
+        createMap: vi.fn().mockResolvedValue({ destroy: vi.fn(), setCenter }),
+      },
+      attachTo: document.body,
+    })
+    await vi.advanceTimersByTimeAsync(300)
+    await flushPromises()
+
+    const input = document.body.querySelector('input[role="combobox"]')
+    expect(input.value).toBe('Edam')
+    expect(document.body.querySelector('.spot-dialog__confirm').textContent).toContain('Add Edam')
+    expect(setCenter).toHaveBeenCalledWith({ latitude: 52.5126, longitude: 5.0486 }, { zoom: 13 })
+    expect(document.body.querySelector('.spot-dialog__results')).toBeNull()
+
+    input.click()
+    await wrapper.vm.$nextTick()
+    expect(document.body.querySelector('[role="option"]')).not.toBeNull()
+    expect(input.selectionStart).toBe(0)
+    expect(input.selectionEnd).toBe(4)
+    wrapper.unmount()
+  })
+
+  it('keeps the map in place and disables confirmation when no location is found', async () => {
+    vi.useFakeTimers()
+    const setCenter = vi.fn()
+    const wrapper = mount(SpotCreationDialog, {
+      props: {
+        open: true,
+        initialQuery: 'Nowhere nearby',
+        apiKey: 'test-key',
+        searchPlaces: vi.fn().mockResolvedValue([]),
+        createMap: vi.fn().mockResolvedValue({ destroy: vi.fn(), setCenter }),
+      },
+      attachTo: document.body,
+    })
+    await vi.advanceTimersByTimeAsync(300)
+    await flushPromises()
+
+    expect(document.body.textContent).toContain('No location found')
+    expect(document.body.querySelector('.spot-dialog__confirm').disabled).toBe(true)
+    expect(setCenter).not.toHaveBeenCalled()
     wrapper.unmount()
   })
 
@@ -64,9 +187,13 @@ describe('Spot creation dialog', () => {
     const searchPlaces = vi.fn().mockResolvedValue([edam])
     const reverseLocation = vi.fn().mockResolvedValue({ timezone: 'Europe/Amsterdam' })
     const destroy = vi.fn()
+    const setCenter = vi.fn((_center, _options) => {
+      moveMap({ latitude: 52.50673, longitude: 5.07729 })
+    })
+    let moveMap
     const createMap = vi.fn(async (_element, options) => {
-      options.onCenterChange({ latitude: 52.50673, longitude: 5.07729 })
-      return { destroy }
+      moveMap = options.onCenterChange
+      return { destroy, setCenter }
     })
     const wrapper = mount(SpotCreationDialog, {
       props: {
@@ -90,13 +217,14 @@ describe('Spot creation dialog', () => {
     await vi.runAllTimersAsync()
 
     expect(createMap).toHaveBeenCalledWith(expect.any(HTMLElement), expect.objectContaining({
-      center: { latitude: 52.5126, longitude: 5.0486 },
+      center: { latitude: 52.2, longitude: 5.3 },
       apiKey: 'test-key',
+      zoom: 6,
     }))
+    expect(setCenter).toHaveBeenCalledWith({ latitude: 52.5126, longitude: 5.0486 }, { zoom: 13 })
     expect(document.body.textContent).toContain('Move the map until the pin is on your spot')
 
-    const confirm = [...document.body.querySelectorAll('button')]
-      .find((button) => button.textContent.includes('Add spot'))
+    const confirm = document.body.querySelector('.spot-dialog__confirm')
     confirm.click()
     await wrapper.vm.$nextTick()
     await vi.runAllTimersAsync()
@@ -116,7 +244,7 @@ describe('Spot creation dialog', () => {
     expect(destroy).toHaveBeenCalledOnce()
   })
 
-  it('keeps provider errors inside the dialog and offers a retry path', async () => {
+  it('toasts provider errors and offers a retry path', async () => {
     vi.useFakeTimers()
     const searchPlaces = vi.fn().mockRejectedValue(new Error('Location search is temporarily unavailable.'))
     const wrapper = mount(SpotCreationDialog, {
@@ -132,8 +260,11 @@ describe('Spot creation dialog', () => {
     const input = document.body.querySelector('input[role="combobox"]')
     input.dispatchEvent(new FocusEvent('focus', { bubbles: true }))
     await wrapper.vm.$nextTick()
-    expect(document.body.querySelector('[role="alert"]')?.textContent)
-      .toContain('Location search is temporarily unavailable')
+    expect(toastError).toHaveBeenCalledWith(
+      'Location search is temporarily unavailable.',
+      { id: 'spot-search-error' },
+    )
+    expect(document.body.querySelector('[role="alert"]')).toBeNull()
     expect(wrapper.emitted('confirm')).toBeUndefined()
     wrapper.unmount()
   })
@@ -168,7 +299,9 @@ describe('Spot creation dialog', () => {
 
     second.resolve([edam])
     await flushPromises()
-    expect(document.body.textContent).toContain('North Holland, Netherlands')
+    expect(input.value).toBe('Edam')
+    expect(document.body.querySelector('.spot-dialog__confirm').textContent).toContain('Add Edam')
+    expect(document.body.textContent).not.toContain('Stale result')
     wrapper.unmount()
   })
 
@@ -225,8 +358,7 @@ describe('Spot creation dialog', () => {
       .find((candidate) => candidate.textContent.includes('Edam'))
     option.click()
     await flushPromises()
-    const confirm = [...document.body.querySelectorAll('button')]
-      .find((button) => button.textContent.includes('Add spot'))
+    const confirm = document.body.querySelector('.spot-dialog__confirm')
     confirm.click()
     await wrapper.vm.$nextTick()
     const signal = reverseLocation.mock.calls[0][1].signal
@@ -265,8 +397,7 @@ describe('Spot creation dialog', () => {
       .find((candidate) => candidate.textContent.includes('Edam'))
     option.click()
     await flushPromises()
-    const confirm = [...document.body.querySelectorAll('button')]
-      .find((button) => button.textContent.includes('Add spot'))
+    const confirm = document.body.querySelector('.spot-dialog__confirm')
     confirm.click()
     await wrapper.vm.$nextTick()
     moveMap({ latitude: 53, longitude: 6 })
@@ -302,10 +433,12 @@ describe('Spot creation dialog', () => {
     option.click()
     await flushPromises()
 
-    const confirm = [...document.body.querySelectorAll('button')]
-      .find((button) => button.textContent.includes('Add spot'))
+    const confirm = document.body.querySelector('.spot-dialog__confirm')
     expect(confirm.disabled).toBe(true)
-    expect(document.body.querySelector('[role="alert"]')?.textContent).toContain('map could not be loaded')
+    expect(toastError).toHaveBeenCalledWith(
+      'The map could not be loaded.',
+      { id: 'spot-map-error' },
+    )
     wrapper.unmount()
   })
 
@@ -332,15 +465,16 @@ describe('Spot creation dialog', () => {
       .find((candidate) => candidate.textContent.includes('Edam'))
     option.click()
     await flushPromises()
-    const confirm = [...document.body.querySelectorAll('button')]
-      .find((button) => button.textContent.includes('Add spot'))
+    const confirm = document.body.querySelector('.spot-dialog__confirm')
     confirm.click()
     await flushPromises()
 
     expect(saveSpot).toHaveBeenCalledOnce()
     expect(wrapper.emitted('update:open')).toBeUndefined()
-    expect(document.body.querySelector('[role="alert"]')?.textContent)
-      .toContain('could not be saved in this browser')
+    expect(toastError).toHaveBeenCalledWith(
+      'This spot could not be saved in this browser.',
+      { id: 'spot-save-error' },
+    )
     wrapper.unmount()
   })
 })

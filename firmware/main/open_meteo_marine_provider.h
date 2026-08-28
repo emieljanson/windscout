@@ -10,15 +10,11 @@
 extern "C" {
 #endif
 
-#define OPEN_METEO_MARINE_FREE_ENDPOINT "https://marine-api.open-meteo.com/v1/marine"
+#define OPEN_METEO_MARINE_ENDPOINT "https://marine-api.open-meteo.com/v1/marine"
 #define OPEN_METEO_MARINE_RESPONSE_LIMIT (16u * 1024u)
 #define OPEN_METEO_MARINE_TIMEOUT_MS 15000
 
 typedef struct {
-    const char *endpoint;
-    const char *api_key;
-    bool development_mode;
-    bool commercial_mode;
     const char *spot_id;
     double latitude;
     double longitude;

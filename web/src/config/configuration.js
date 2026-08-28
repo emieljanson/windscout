@@ -32,11 +32,12 @@ export function createDefaultDisplayConfiguration(locale) {
 export function displayConfigurationFromStore(store) {
   return {
     version: CONFIGURATION_VERSION,
+    showThreshold: store.showThreshold,
     treatment: store.showThreshold ? 'threshold-line' : 'solid',
     threshold: store.threshold,
     showWeather: store.showWeather,
     showTemperature: store.showTemperature,
-    showTide: store.showTide,
+    showTide: Boolean(store.showTide && store.tideAvailable !== false),
     timeFormat: store.timeFormat,
     temperatureUnit: store.temperatureUnit,
   }

@@ -39,6 +39,7 @@ describe('canonical screen texture', () => {
       version: RENDERER_CONTRACT_VERSION,
       spotName: 'Brouwersdam',
       provider: 'BEST MATCH',
+      batteryPercent: 70,
       displayMode: DISPLAY_MODES.solid,
       thresholdKt: 17,
       days: expect.arrayContaining([
@@ -126,6 +127,14 @@ describe('canonical screen texture', () => {
 
     expect(twentyFourHour.updatedTime).toMatch(/^\d{2} [A-Z]{3} \d{2}:\d{2}$/)
     expect(twelveHour.updatedTime).toMatch(/^\d{2} [A-Z]{3} \d{1,2}(AM|PM)$/)
+  })
+
+  it('keeps explicit battery data instead of the web demo fallback', () => {
+    const input = createRendererInput({ ...brouwersdamForecast, batteryPercent: 42 }, {
+      showThreshold: false, threshold: 17, timeFormat: '24-hour', temperatureUnit: 'celsius',
+    })
+
+    expect(input.batteryPercent).toBe(42)
   })
 
   it('does not publish an incomplete frame during rapid updates', async () => {

@@ -10,6 +10,8 @@ import {
   createMatteScreenFinish,
   createScreenRecessShadow,
   enhanceE1002Surface,
+  fitScreenUnderBezel,
+  SCREEN_BEZEL_OVERSCAN,
 } from '../src/configurator/deviceSurface'
 
 describe('E1002 product surfaces', () => {
@@ -123,7 +125,7 @@ describe('E1002 product surfaces', () => {
     })
   })
 
-  it('fills the CAD opening behind the exact-size active e-paper area', () => {
+  it('fits the complete e-paper stack underneath the rounded bezel', () => {
     const root = new THREE.Group()
     const texture = new THREE.Texture()
     const screen = new THREE.Mesh(
@@ -133,13 +135,17 @@ describe('E1002 product surfaces', () => {
     screen.position.set(0, 0.066, 0.00278)
     root.add(screen)
 
+    fitScreenUnderBezel(screen)
     const backing = createEpaperBacking(screen)
     const size = backing.geometry.parameters
 
-    expect(size.width).toBeCloseTo(0.1604)
-    expect(size.height).toBeCloseTo(0.0951)
+    expect(screen.scale.x).toBeCloseTo(SCREEN_BEZEL_OVERSCAN)
+    expect(screen.scale.y).toBeCloseTo(SCREEN_BEZEL_OVERSCAN)
+    expect(size.width * backing.scale.x).toBeCloseTo(0.159 * SCREEN_BEZEL_OVERSCAN)
+    expect(size.height * backing.scale.y).toBeCloseTo(0.0954 * SCREEN_BEZEL_OVERSCAN)
     expect(backing.position.y).toBeCloseTo(screen.position.y)
     expect(backing.position.z).toBeLessThan(screen.position.z)
+    expect(backing.scale.equals(screen.scale)).toBe(true)
     expect(backing.material.map).toBe(texture)
 
     root.traverse((child) => {
@@ -147,6 +153,15 @@ describe('E1002 product surfaces', () => {
       child.material?.dispose?.()
     })
     texture.dispose()
+  })
+
+  it('clips the leading UI equally beneath every visible bezel edge', () => {
+    const horizontalClip = (0.159 * SCREEN_BEZEL_OVERSCAN - 0.1602) / 2
+    const verticalClip = (0.0954 * SCREEN_BEZEL_OVERSCAN - 0.0949) / 2
+
+    expect(horizontalClip).toBeGreaterThan(0)
+    expect(horizontalClip).toBeCloseTo(verticalClip, 7)
+    expect(horizontalClip).toBeCloseTo(0.001525, 6)
   })
 
   it('adds a hard, view-dependent white softbox to the glossy front panel', () => {

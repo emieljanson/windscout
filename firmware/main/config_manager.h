@@ -20,6 +20,9 @@ void config_manager_set_device_name(const char *name);
 const char *config_manager_get_device_name(void);
 
 void config_manager_set_timezone(const char *tz);
+// Applies the installed WindScout spot timezone without duplicating that
+// source-of-truth in the legacy photo-frame NVS settings.
+bool config_manager_set_timezone_transient(const char *tz);
 const char *config_manager_get_timezone(void);
 
 void config_manager_set_ntp_server(const char *server);
@@ -132,13 +135,6 @@ const char *config_manager_get_openai_api_key(void);
 
 void config_manager_set_google_api_key(const char *key);
 const char *config_manager_get_google_api_key(void);
-
-// ============================================================================
-// Power
-// ============================================================================
-
-void config_manager_set_deep_sleep_enabled(bool enabled);
-bool config_manager_get_deep_sleep_enabled(void);
 
 // ============================================================================
 // Debugging

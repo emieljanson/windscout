@@ -97,3 +97,26 @@ TEST(WindUsbProtocolTest, RecoversAfterNoiseAndNeverEchoesInput)
     ASSERT_EQ(frames.payloads.size(), 1u);
     EXPECT_EQ(frames.payloads.front(), payload);
 }
+
+TEST(WindUsbProtocolTest, HelloStartsANewBrowserSessionAtRequestOne)
+{
+    wind_usb_parser_t parser;
+    wind_usb_parser_init(&parser);
+    Frames frames;
+    std::array<uint8_t, WIND_USB_MAX_FRAME_SIZE> encoded{};
+    const char state[] = R"({"command":"get_state"})";
+    size_t size = wind_usb_encode_frame(9, WIND_USB_MESSAGE_REQUEST,
+                                        reinterpret_cast<const uint8_t *>(state), strlen(state),
+                                        encoded.data(), encoded.size());
+    ASSERT_GT(size, 0u);
+    EXPECT_EQ(wind_usb_parser_feed(&parser, encoded.data(), size, collect, &frames), ESP_OK);
+
+    const char hello[] = R"({ "client": "browser", "command" : "hello" })";
+    size = wind_usb_encode_frame(1, WIND_USB_MESSAGE_REQUEST,
+                                 reinterpret_cast<const uint8_t *>(hello), strlen(hello),
+                                 encoded.data(), encoded.size());
+    ASSERT_GT(size, 0u);
+    EXPECT_EQ(wind_usb_parser_feed(&parser, encoded.data(), size, collect, &frames), ESP_OK);
+    ASSERT_EQ(frames.ids.size(), 2u);
+    EXPECT_EQ(frames.ids.back(), 1u);
+}

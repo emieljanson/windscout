@@ -2,7 +2,7 @@
   color-scheme: light;
   font-family: 'Inter Variable', Inter, system-ui, sans-serif;
   color: #151817;
-  background: #ffffff;
+  background: #f3f5f7;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   --ink: #151817;
@@ -10,14 +10,45 @@
   --mist: #ffffff;
   --signal: #e74d32;
   --line: rgba(21, 24, 23, 0.16);
-  --focus: #135f56;
+  --focus: #000000;
+  --studio-background: #f3f5f7;
+  --visual-viewport-bottom: 0px;
 }
 
 * { box-sizing: border-box; }
 
-html { min-width: 320px; background: var(--mist); }
-body { min-width: 320px; min-height: 100vh; margin: 0; }
+html { min-width: 320px; background: var(--studio-background); }
+body { min-width: 320px; min-height: 100vh; margin: 0; background: var(--studio-background); }
 button, input, select { font: inherit; }
+
+@media (max-width: 56rem) {
+  html,
+  body,
+  #app {
+    inline-size: 100%;
+    block-size: 100vh;
+    block-size: 100lvh;
+    max-inline-size: 100%;
+    overflow: hidden;
+    overflow: clip;
+    overscroll-behavior: none;
+  }
+
+  body {
+    position: fixed;
+    inset: 0;
+  }
+
+  [data-sonner-toaster] {
+    inset-inline: 1rem !important;
+    inline-size: calc(100% - 2rem) !important;
+    max-inline-size: calc(100% - 2rem) !important;
+  }
+
+  [data-sonner-toaster] [data-sonner-toast] {
+    inline-size: 100% !important;
+  }
+}
 
 .skip-link {
   position: fixed;
@@ -34,6 +65,34 @@ button, input, select { font: inherit; }
 :focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 3px;
+}
+
+[data-sonner-toaster] {
+  font-family: 'Inter Variable', Inter, system-ui, sans-serif;
+}
+
+@media (max-width: 56rem) {
+  [data-sonner-toaster][data-y-position='top'] {
+    top: max(0.75rem, env(safe-area-inset-top)) !important;
+  }
+}
+
+[data-sonner-toast] {
+  border: 0 !important;
+  border-radius: 12px !important;
+  color: #151817 !important;
+  background: #ffffff !important;
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 10%),
+    0 10px 32px rgb(0 0 0 / 18%) !important;
+}
+
+[data-sonner-toast] [data-icon] {
+  color: #151817 !important;
+}
+
+[data-sonner-toast] [data-description] {
+  color: #68716e !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

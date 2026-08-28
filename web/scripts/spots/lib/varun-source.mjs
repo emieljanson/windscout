@@ -6,6 +6,9 @@ import {
   parseGoogleCoordinates,
 } from './candidate-normalization.mjs'
 
+const LOCATION_HOSTS = new Set(['maps.app.goo.gl', 'www.google.com'])
+const MAX_LOCATION_REDIRECTS = 5
+
 function compactHash(value) {
   return createHash('sha256').update(String(value)).digest('hex').slice(0, 16)
 }
@@ -20,11 +23,29 @@ async function resolveCoordinates(locationUrl, { fetchImpl, resolutions }) {
   if (direct) return direct
   if (resolutions[locationUrl]) return resolutions[locationUrl]
   if (typeof fetchImpl !== 'function') return null
-  const response = await fetchImpl(locationUrl, { redirect: 'follow', headers: { 'User-Agent': 'Windscout spot importer' } })
-  if (!response?.ok || !response.url) return null
-  const resolved = parseGoogleCoordinates(response.url)
-  if (resolved) resolutions[locationUrl] = resolved
-  return resolved
+  let current = locationUrl
+  for (let redirect = 0; redirect <= MAX_LOCATION_REDIRECTS; redirect += 1) {
+    const url = new URL(current)
+    if (url.protocol !== 'https:' || url.username || url.password ||
+        (url.port && url.port !== '443') || !LOCATION_HOSTS.has(url.hostname)) {
+      throw new Error('unsupported-location-url')
+    }
+    const response = await fetchImpl(url, {
+      redirect: 'manual',
+      headers: { 'User-Agent': 'Windscout spot importer' },
+    })
+    if (response?.status >= 300 && response.status < 400) {
+      const destination = response.headers?.get?.('location')
+      if (!destination || redirect === MAX_LOCATION_REDIRECTS) return null
+      current = new URL(destination, url).href
+      continue
+    }
+    if (!response?.ok) return null
+    const resolved = parseGoogleCoordinates(response.url || url.href)
+    if (resolved) resolutions[locationUrl] = resolved
+    return resolved
+  }
+  return null
 }
 
 export async function importVarunRecords(records, {
@@ -73,4 +94,3 @@ export async function importVarunRecords(records, {
     resolutions,
   }
 }
-

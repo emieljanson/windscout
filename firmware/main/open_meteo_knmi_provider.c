@@ -1,5 +1,6 @@
 #include "open_meteo_knmi_provider.h"
 
+#include <ctype.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,6 +8,7 @@
 #include <time.h>
 
 #include "cJSON.h"
+#include "wind_timezone.h"
 
 #ifdef ESP_PLATFORM
 #include "esp_crt_bundle.h"
@@ -25,27 +27,55 @@ void open_meteo_knmi_get_diagnostics(open_meteo_knmi_diagnostics_t *out_diagnost
     }
 }
 
-static bool same_text(const char *a, const char *b)
+const char *open_meteo_knmi_endpoint(void)
 {
-    return a && b && strcmp(a, b) == 0;
+    return OPEN_METEO_ENDPOINT;
+}
+
+static bool supported_model(const char *model)
+{
+    static const char *models[] = {
+        "best_match", "knmi_seamless", "ecmwf_ifs025", "icon_seamless", "gfs_seamless",
+    };
+    if (!model) return false;
+    for (size_t index = 0; index < sizeof(models) / sizeof(models[0]); ++index) {
+        if (strcmp(model, models[index]) == 0) return true;
+    }
+    return false;
+}
+
+static bool encode_query_value(const char *input, char *output, size_t output_size)
+{
+    static const char hex[] = "0123456789ABCDEF";
+    if (!input || !output || output_size == 0) return false;
+    size_t written = 0;
+    for (const unsigned char *cursor = (const unsigned char *) input; *cursor; ++cursor) {
+        const bool unreserved = isalnum(*cursor) || *cursor == '-' || *cursor == '_' ||
+                                *cursor == '.' || *cursor == '~';
+        const size_t needed = unreserved ? 1 : 3;
+        if (written + needed >= output_size) return false;
+        if (unreserved) {
+            output[written++] = (char) *cursor;
+        } else {
+            output[written++] = '%';
+            output[written++] = hex[*cursor >> 4];
+            output[written++] = hex[*cursor & 0x0f];
+        }
+    }
+    output[written] = '\0';
+    return written > 0;
 }
 
 bool open_meteo_knmi_config_valid(const open_meteo_knmi_config_t *config)
 {
-    if (!config || !config->endpoint || config->endpoint[0] == '\0' || !config->spot_id ||
-        !config->spot_name || !config->timezone || !config->model ||
-        strcmp(config->model, "knmi_seamless") != 0 ||
-        strcmp(config->timezone, "Europe/Amsterdam") != 0 || !isfinite(config->latitude) ||
-        !isfinite(config->longitude) || (config->development_mode && config->commercial_mode)) {
-        return false;
-    }
-    if (same_text(config->endpoint, OPEN_METEO_FREE_ENDPOINT)) {
-        return config->development_mode && !config->commercial_mode;
-    }
-    if (config->commercial_mode) {
-        return config->api_key && config->api_key[0] != '\0';
-    }
-    return config->development_mode;
+    if (!config || !config->spot_id || config->spot_id[0] == '\0' ||
+        !config->spot_name || config->spot_name[0] == '\0' || !config->timezone ||
+        !config->model ||
+        !supported_model(config->model) || config->timezone[0] == '\0' ||
+        !isfinite(config->latitude) || config->latitude < -90.0 || config->latitude > 90.0 ||
+        !isfinite(config->longitude) || config->longitude < -180.0 ||
+        config->longitude > 180.0) return false;
+    return true;
 }
 
 static bool copy_text(char *dst, size_t size, const char *src)
@@ -57,7 +87,8 @@ static bool copy_text(char *dst, size_t size, const char *src)
     return true;
 }
 
-static bool parse_local_time(const char *value, char date[WIND_FORECAST_DATE_LENGTH], int *hour)
+static bool parse_local_time(const char *value, wind_local_datetime_t *local,
+                             char date[WIND_FORECAST_DATE_LENGTH])
 {
     int y = 0, m = 0, d = 0, h = 0, minute = 0;
     char tail = 0;
@@ -65,24 +96,11 @@ static bool parse_local_time(const char *value, char date[WIND_FORECAST_DATE_LEN
         m < 1 || m > 12 || d < 1 || d > 31 || h < 0 || h > 23 || minute != 0) {
         return false;
     }
-    snprintf(date, WIND_FORECAST_DATE_LENGTH, "%04d-%02d-%02d", y, m, d);
-    *hour = h;
-    return true;
-}
-
-static int64_t local_epoch(const char *value)
-{
-    int y, m, d, h, minute;
-    if (sscanf(value, "%4d-%2d-%2dT%2d:%2d", &y, &m, &d, &h, &minute) != 5) {
-        return 0;
-    }
-    struct tm local = {.tm_year = y - 1900,
-                       .tm_mon = m - 1,
-                       .tm_mday = d,
-                       .tm_hour = h,
-                       .tm_min = minute,
-                       .tm_isdst = -1};
-    return (int64_t) mktime(&local);
+    *local = (wind_local_datetime_t) {
+        .year = (int16_t) y, .month = (uint8_t) m, .day = (uint8_t) d,
+        .hour = (uint8_t) h, .minute = (uint8_t) minute,
+    };
+    return wind_timezone_format_date(local, date, WIND_FORECAST_DATE_LENGTH) == ESP_OK;
 }
 
 static cJSON *required_object(cJSON *parent, const char *name)
@@ -183,8 +201,8 @@ esp_err_t open_meteo_knmi_parse_json(const open_meteo_knmi_config_t *config, con
         strcpy(previous_time, time_item->valuestring);
 
         char date[WIND_FORECAST_DATE_LENGTH];
-        int hour = 0;
-        if (!parse_local_time(time_item->valuestring, date, &hour)) {
+        wind_local_datetime_t local;
+        if (!parse_local_time(time_item->valuestring, &local, date)) {
             goto cleanup;
         }
         if (strcmp(date, first_date) < 0) {
@@ -192,7 +210,7 @@ esp_err_t open_meteo_knmi_parse_json(const open_meteo_knmi_config_t *config, con
         }
         int target_slot = -1;
         for (int slot = 0; slot < WIND_FORECAST_SAMPLES_PER_DAY; ++slot) {
-            if (hour == REQUIRED_HOURS[slot]) {
+            if (local.hour == REQUIRED_HOURS[slot]) {
                 target_slot = slot;
                 break;
             }
@@ -217,8 +235,10 @@ esp_err_t open_meteo_knmi_parse_json(const open_meteo_knmi_config_t *config, con
         if (wind < 0 || gust < 0 || direction == UINT16_MAX) {
             goto cleanup;
         }
-        wind_forecast_sample_t normalized = {.timestamp = local_epoch(time_item->valuestring),
-                                             .local_hour = (uint8_t) hour,
+        int64_t timestamp = 0;
+        if (wind_timezone_to_unix(config->timezone, &local, &timestamp) != ESP_OK) goto cleanup;
+        wind_forecast_sample_t normalized = {.timestamp = timestamp,
+                                             .local_hour = local.hour,
                                              .wind_knots = (int16_t) wind,
                                              .gust_knots = (int16_t) gust,
                                              .destination_degrees = direction};
@@ -297,12 +317,17 @@ static esp_err_t fetch_forecast(void *context, int64_t retrieved_at, wind_foreca
     if (!open_meteo_knmi_config_valid(config) || !out_forecast) {
         return ESP_ERR_INVALID_STATE;
     }
+    char encoded_timezone[192];
+    if (!encode_query_value(config->timezone, encoded_timezone, sizeof(encoded_timezone))) {
+        return ESP_ERR_INVALID_ARG;
+    }
     char url[768];
     int written = snprintf(
         url, sizeof(url),
         "%s?latitude=%.6f&longitude=%.6f&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m,cloud_cover,precipitation,is_day,temperature_2m&"
-        "wind_speed_unit=kn&timezone=Europe%%2FAmsterdam&models=knmi_seamless&forecast_days=5",
-        config->endpoint, config->latitude, config->longitude);
+        "wind_speed_unit=kn&timezone=%s&models=%s&forecast_days=5",
+        open_meteo_knmi_endpoint(), config->latitude, config->longitude, encoded_timezone,
+        config->model);
     if (written <= 0 || (size_t) written >= sizeof(url)) {
         return ESP_ERR_INVALID_SIZE;
     }
@@ -323,9 +348,6 @@ static esp_err_t fetch_forecast(void *context, int64_t retrieved_at, wind_foreca
         free(response.body);
         return ESP_FAIL;
     }
-    if (config->api_key && config->api_key[0]) {
-        esp_http_client_set_header(client, "X-API-Key", config->api_key);
-    }
     esp_err_t result = esp_http_client_perform(client);
     int status = esp_http_client_get_status_code(client);
     s_diagnostics.perform_result = result;
@@ -337,11 +359,13 @@ static esp_err_t fetch_forecast(void *context, int64_t retrieved_at, wind_foreca
         free(response.body);
         return response.too_large ? ESP_ERR_INVALID_SIZE : ESP_FAIL;
     }
-    time_t now = (time_t) retrieved_at;
-    struct tm local;
-    localtime_r(&now, &local);
+    wind_local_datetime_t local;
     char first_date[WIND_FORECAST_DATE_LENGTH];
-    strftime(first_date, sizeof(first_date), "%Y-%m-%d", &local);
+    if (wind_timezone_from_unix(config->timezone, retrieved_at, &local) != ESP_OK ||
+        wind_timezone_format_date(&local, first_date, sizeof(first_date)) != ESP_OK) {
+        free(response.body);
+        return ESP_ERR_INVALID_STATE;
+    }
     result = open_meteo_knmi_parse_json(config, response.body, response.length, retrieved_at,
                                         first_date, out_forecast);
     s_diagnostics.parse_result = result;

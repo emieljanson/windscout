@@ -75,6 +75,7 @@ async function request(url, { fetchImpl, signal, timeoutMs }) {
 
 export async function searchGeoapifyPlaces(query, {
   apiKey = geoapifyApiKey(),
+  bias,
   fetchImpl = globalThis.fetch,
   signal,
   language = 'en',
@@ -89,8 +90,14 @@ export async function searchGeoapifyPlaces(query, {
     format: 'json',
     limit: String(GEOAPIFY_RESULT_LIMIT),
     lang: String(language || 'en').slice(0, 2).toLowerCase(),
+    type: 'locality',
     apiKey,
   })
+  const biasLatitude = Number(bias?.latitude)
+  const biasLongitude = Number(bias?.longitude)
+  if (Number.isFinite(biasLatitude) && Number.isFinite(biasLongitude)) {
+    parameters.set('bias', `proximity:${biasLongitude},${biasLatitude}`)
+  }
   const payload = await request(`${GEOAPIFY_AUTOCOMPLETE_ENDPOINT}?${parameters}`, {
     fetchImpl, signal, timeoutMs,
   })

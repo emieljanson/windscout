@@ -70,7 +70,7 @@ export function createRendererInput(forecast, config) {
     state: forecast.state ?? 0,
     refreshFailed: forecast.refreshFailed ?? false,
     ageHours: forecast.ageHours ?? 0,
-    batteryPercent: forecast.batteryPercent ?? -1,
+    batteryPercent: forecast.batteryPercent ?? 70,
     displayMode,
     thresholdKt: config.threshold,
     showWeather: config.showWeather ?? true,

@@ -60,6 +60,7 @@ class InstallerManifestTest(unittest.TestCase):
         )
         first = manifest_path.read_bytes()
         manifest = json.loads(first)
+        self.assertEqual(manifest["firmwareLayoutVersion"], 1)
         self.assertEqual(manifest["flashSize"], 32 * 1024 * 1024)
         self.assertTrue(manifest["cleanInstall"]["eraseFlash"])
         self.assertEqual(
@@ -84,6 +85,24 @@ class InstallerManifestTest(unittest.TestCase):
             board_id="seeedstudio_reterminal_e1002",
         )
         self.assertEqual(first, second_path.read_bytes())
+
+    def test_generates_flat_github_release_assets(self):
+        manifest_path = generate_installer_bundle(
+            build_dir=self.build,
+            partitions_path=self.partitions,
+            output_dir=self.output,
+            version="v1.2.3",
+            board_id="seeedstudio_reterminal_e1002",
+            flat=True,
+        )
+        pointer = json.loads((self.output / "latest.json").read_text())
+        self.assertEqual(manifest_path.parent, self.output)
+        self.assertEqual(pointer["manifest"], "installer-manifest-v1.2.3.json")
+        self.assertEqual(manifest_path.name, pointer["manifest"])
+        manifest = json.loads(manifest_path.read_text())
+        for part in manifest["parts"]:
+            self.assertNotIn("/", part["file"])
+            self.assertTrue((self.output / part["file"]).is_file())
 
     def test_rejects_corruption_overlap_wrong_board_and_stale_names(self):
         with self.assertRaises(ManifestError):
@@ -113,6 +132,11 @@ class InstallerManifestTest(unittest.TestCase):
             "seeedstudio_reterminal_e1002",
         )
         manifest = json.loads(manifest_path.read_text())
+        incomplete = json.loads(manifest_path.read_text())
+        incomplete["cleanInstall"]["parts"] = []
+        with self.assertRaises(ManifestError):
+            validate_manifest(incomplete, manifest_path.parent, self.partitions)
+
         app = next(part for part in manifest["parts"] if part["kind"] == "application")
         (manifest_path.parent / app["file"]).write_bytes(b"tampered")
         with self.assertRaises(ManifestError):

@@ -20,6 +20,7 @@ const isDisabled = computed(() => props.disabled || row?.disabled?.value || fals
 const draft = ref(String(props.modelValue))
 const invalid = ref(false)
 const focused = ref(false)
+const pointerFocus = ref(false)
 const errorId = `setting-number-error-${useId()}`
 const unitId = `setting-number-unit-${useId()}`
 
@@ -61,6 +62,7 @@ function rollback() {
 
 function handleBlur() {
   focused.value = false
+  pointerFocus.value = false
   if (parseValidValue(draft.value) == null) rollback()
 }
 
@@ -77,8 +79,9 @@ function handleEscape(event) {
         :id="row?.controlId"
         v-model="draft"
         class="setting-control setting-number__input"
+        :class="{ 'is-pointer-focus': pointerFocus }"
         type="number"
-        inputmode="decimal"
+        inputmode="numeric"
         :min="props.min"
         :max="props.max"
         :step="props.step"
@@ -89,6 +92,8 @@ function handleEscape(event) {
         :aria-describedby="describedBy"
         :aria-invalid="invalid ? 'true' : undefined"
         @focus="focused = true"
+        @pointerdown="pointerFocus = true"
+        @keydown="pointerFocus = false"
         @input="updateDraft"
         @blur="handleBlur"
         @keydown.esc="handleEscape"

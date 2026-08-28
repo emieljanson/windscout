@@ -31,6 +31,22 @@ TEST(InstalledConfigurationTest, RejectsUnsupportedAndOutOfBoundsValues)
     EXPECT_FALSE(installed_configuration_validate(&config));
 }
 
+TEST(InstalledConfigurationTest, AcceptsA64CharacterSpotId)
+{
+    installed_configuration_reset_host_storage();
+    installed_configuration_t config;
+    installed_configuration_default(&config);
+    memset(config.spot.id, 'a', 64);
+    config.spot.id[64] = '\0';
+
+    ASSERT_TRUE(installed_configuration_validate(&config));
+    ASSERT_EQ(installed_configuration_promote(&config), ESP_OK);
+
+    installed_configuration_t loaded;
+    ASSERT_EQ(installed_configuration_load(&loaded), ESP_OK);
+    EXPECT_STREQ(loaded.spot.id, config.spot.id);
+}
+
 TEST(InstalledConfigurationTest, InterruptedCandidateNeverReplacesActive)
 {
     installed_configuration_reset_host_storage();

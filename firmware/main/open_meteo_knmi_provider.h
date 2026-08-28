@@ -10,7 +10,7 @@
 extern "C" {
 #endif
 
-#define OPEN_METEO_FREE_ENDPOINT "https://api.open-meteo.com/v1/forecast"
+#define OPEN_METEO_ENDPOINT "https://api.open-meteo.com/v1/forecast"
 #define OPEN_METEO_RESPONSE_LIMIT (16u * 1024u)
 
 typedef struct {
@@ -26,10 +26,6 @@ void open_meteo_knmi_get_diagnostics(open_meteo_knmi_diagnostics_t *out_diagnost
 #define OPEN_METEO_REQUEST_TIMEOUT_MS 15000
 
 typedef struct {
-    const char *endpoint;
-    const char *api_key;
-    bool development_mode;
-    bool commercial_mode;
     const char *spot_id;
     const char *spot_name;
     double latitude;
@@ -38,6 +34,7 @@ typedef struct {
     const char *model;
 } open_meteo_knmi_config_t;
 
+const char *open_meteo_knmi_endpoint(void);
 bool open_meteo_knmi_config_valid(const open_meteo_knmi_config_t *config);
 esp_err_t open_meteo_knmi_parse_json(const open_meteo_knmi_config_t *config, const char *json,
                                      size_t length, int64_t retrieved_at, const char *first_date,

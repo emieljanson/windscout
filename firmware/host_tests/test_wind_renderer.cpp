@@ -520,7 +520,7 @@ TEST(WindRenderer, MakesBatteryRedBelowTenPercentOnly) {
     EXPECT_EQ(CountColor(ten, 746, 65, 771, 78, 3), 0);
 }
 
-TEST(WindRenderer, KeepsStatusRightAlignedAndDropsCoordinatesBeforeEllipsis) {
+TEST(WindRenderer, KeepsStatusRightAlignedAndDropsCoordinatesBeforeFadingLongTitle) {
     auto dashboard = Dashboard();
     wind_renderer_stats_t normal_stats{};
     (void)Render(dashboard, &normal_stats);
@@ -532,6 +532,67 @@ TEST(WindRenderer, KeepsStatusRightAlignedAndDropsCoordinatesBeforeEllipsis) {
     EXPECT_EQ(long_stats.coordinates_included, 0);
     EXPECT_EQ(long_stats.status_right, normal_stats.status_right);
     EXPECT_EQ(long_stats.clipped_primitives, 0);
+}
+
+TEST(WindRenderer, FadesLongTitleIntoDitherWithoutTouchingStatus) {
+    auto dashboard = Dashboard();
+    dashboard.spot_name =
+        "Noord-Holland Windmeetpost Met Een Uitzonderlijk Lange Naam";
+
+    const Frame preview = RenderPreview(dashboard);
+    int intermediate_luma = 0;
+    for (int y = 20; y <= 82; ++y) {
+        for (int x = 494; x <= 565; ++x) {
+            const uint8_t luma = preview[(y * WIND_RENDERER_WIDTH + x) * 4];
+            intermediate_luma += luma > 0 && luma < 255;
+        }
+    }
+    EXPECT_GT(intermediate_luma, 0);
+
+    const Frame dithered = Render(dashboard);
+    EXPECT_GT(CountColor(dithered, 494, 20, 565, 82, 0), 0);
+    EXPECT_GT(CountColor(dithered, 494, 20, 565, 82, 1), 0);
+
+    wind_renderer_stats_t normal_stats{};
+    (void)Render(Dashboard(), &normal_stats);
+    wind_renderer_stats_t faded_stats{};
+    (void)Render(dashboard, &faded_stats);
+    EXPECT_EQ(faded_stats.status_right, normal_stats.status_right);
+}
+
+TEST(WindRenderer, EndsFadeAtLastVisibleGlyphInsteadOfTextAdvanceBox) {
+    constexpr int title_left = 30;
+    const auto rightmost_title_pixel = [=](const Frame &preview) {
+        int rightmost = -1;
+        for (int y = 20; y <= 82; ++y)
+            for (int x = title_left; x <= 565; ++x)
+                if (preview[(y * WIND_RENDERER_WIDTH + x) * 4] < 255 &&
+                    x > rightmost)
+                    rightmost = x;
+        return rightmost;
+    };
+
+    auto plain_dashboard = Dashboard();
+    plain_dashboard.spot_name = "CASTRICUM AAN";
+    const int plain_ink_right = rightmost_title_pixel(RenderPreview(plain_dashboard));
+
+    auto dashboard = Dashboard();
+    dashboard.spot_name =
+        "CASTRICUM AAN                                                  ";
+
+    const Frame preview = RenderPreview(dashboard);
+    int intermediate_luma = 0;
+    for (int y = 20; y <= 82; ++y) {
+        for (int x = title_left; x <= 565; ++x) {
+            const uint8_t luma = preview[(y * WIND_RENDERER_WIDTH + x) * 4];
+            intermediate_luma += luma > 0 && luma < 255;
+        }
+    }
+    const int faded_ink_right = rightmost_title_pixel(preview);
+
+    EXPECT_GT(intermediate_luma, 0);
+    EXPECT_GT(faded_ink_right, title_left);
+    EXPECT_LT(faded_ink_right, plain_ink_right);
 }
 
 TEST(WindRenderer, CoversAgedStaleUnavailableAndBatteryWarnings) {

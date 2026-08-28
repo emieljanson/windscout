@@ -7,6 +7,7 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js'
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
+import { SMAAPass } from 'three/examples/jsm/postprocessing/SMAAPass.js'
 import { useConfiguratorStore } from '../stores/configurator'
 import {
   createEpaperMaterial,
@@ -14,6 +15,7 @@ import {
   createMatteScreenFinish,
   createScreenRecessShadow,
   enhanceE1002Surface,
+  fitScreenUnderBezel,
 } from '../configurator/deviceSurface'
 import { loadE1002Model } from '../configurator/modelLoader'
 import {
@@ -27,10 +29,12 @@ import { createScreenTexture } from '../configurator/screenTexture'
 import { createProductStudioEnvironment } from '../configurator/studioEnvironment'
 import { configureAmbientOcclusion } from '../configurator/ambientOcclusion'
 import { PRODUCT_LIGHTING } from '../configurator/productLighting'
+import { scheduleSceneLoadingLabel } from '../configurator/sceneLoadingState'
 
 const emit = defineEmits(['ready', 'error'])
 const host = ref(null)
 const status = ref('loading')
+const showLoadingStatus = ref(false)
 const store = useConfiguratorStore()
 const {
   forecast,
@@ -51,6 +55,7 @@ const {
 let renderer
 let composer
 let gtaoPass
+let smaaPass
 let outputPass
 let scene
 let camera
@@ -58,6 +63,8 @@ let controls
 let animationFrame
 let resizeObserver
 let settingsPanel
+let viewportResizeFrame
+let cancelLoadingStatus = () => {}
 let compositionMode
 let screenSource
 let keyLight
@@ -124,6 +131,14 @@ function resize() {
   requestRender()
 }
 
+function scheduleViewportResize() {
+  if (viewportResizeFrame !== undefined) return
+  viewportResizeFrame = requestAnimationFrame(() => {
+    viewportResizeFrame = undefined
+    resize()
+  })
+}
+
 function renderFrame() {
   animationFrame = undefined
   const changed = controls?.update() ?? false
@@ -135,6 +150,20 @@ function renderFrame() {
 function requestRender() {
   if (!lifetime.active || animationFrame !== undefined) return
   animationFrame = requestAnimationFrame(renderFrame)
+}
+
+function startLoadingStatus() {
+  cancelLoadingStatus()
+  showLoadingStatus.value = false
+  cancelLoadingStatus = scheduleSceneLoadingLabel(() => {
+    if (lifetime.active && status.value === 'loading') showLoadingStatus.value = true
+  })
+}
+
+function stopLoadingStatus() {
+  cancelLoadingStatus()
+  cancelLoadingStatus = () => {}
+  showLoadingStatus.value = false
 }
 
 function resetView() {
@@ -153,7 +182,7 @@ function createPerspectiveSurface() {
     toneMapped: false,
     extensions: { derivatives: true },
     uniforms: {
-      lineColor: { value: new THREE.Color(0x68736e) },
+      lineColor: { value: new THREE.Color(0x6f7784) },
       spacing: { value: 0.032 },
     },
     vertexShader: `
@@ -228,7 +257,7 @@ function createContactOcclusion() {
     fragmentShader: `
       varying vec2 vUv;
       void main() {
-        float ends = 1.0 - smoothstep(0.46, 0.5, abs(vUv.x - 0.5));
+        float ends = 1.0 - smoothstep(0.462, 0.5, abs(vUv.x - 0.5));
         float frontTail = smoothstep(0.0, 0.5, vUv.y);
         float backTail = 1.0 - smoothstep(0.5, 1.0, vUv.y);
         float contact = vUv.y < 0.5 ? frontTail : backTail;
@@ -237,11 +266,12 @@ function createContactOcclusion() {
       }
     `,
   })
-  const contact = new THREE.Mesh(new THREE.PlaneGeometry(0.175, 0.026), material)
+  const contact = new THREE.Mesh(new THREE.PlaneGeometry(0.183, 0.026), material)
   contact.name = 'CONTACT_OCCLUSION'
   contact.rotation.x = -Math.PI / 2
-  // BODY_03 touches the surface across x ±87.5 mm and z 0…4 mm. The tiny
-  // 1 mm front reveal keeps the occlusion visibly attached to that edge.
+  // BODY_03 touches the surface across x ±87.5 mm and z 0…4 mm. Keep the
+  // shader's end fade outside that footprint so the shadow reaches beneath
+  // both rounded corners instead of disappearing just before them.
   contact.position.set(0, -0.06012, 0.004)
   contact.renderOrder = 1
   return contact
@@ -253,6 +283,8 @@ async function initialize() {
     emit('error', 'This browser cannot show the 3D model.')
     return
   }
+
+  startLoadingStatus()
 
   try {
     const lighting = PRODUCT_LIGHTING
@@ -273,6 +305,8 @@ async function initialize() {
     composer.addPass(new RenderPass(scene, camera))
     gtaoPass = configureAmbientOcclusion(new GTAOPass(scene, camera, 1, 1))
     composer.addPass(gtaoPass)
+    smaaPass = new SMAAPass()
+    composer.addPass(smaaPass)
     outputPass = new OutputPass()
     composer.addPass(outputPass)
 
@@ -329,8 +363,6 @@ async function initialize() {
     scene.add(rimLight)
 
     scene.add(createPerspectiveSurface())
-    scene.add(createPhysicalShadowLayer())
-    scene.add(createContactOcclusion())
 
     const loadedModel = await loadE1002Model()
     if (!lifetime.adopt(loadedModel, disposeObject)) return
@@ -363,26 +395,31 @@ async function initialize() {
     if (pendingForecastRevision.value === forecastRevision.value) store.publishForecast(forecastRevision.value)
     const screen = model.getObjectByName('SCREEN')
     // The CAD display opening is centred 0.85 mm below the imported screen
-    // plane. Move the complete display stack, rather than stretching the UI,
-    // so the visible reveal is even while the 800×480 aspect ratio stays exact.
+    // plane. Centre it, then let the full 800×480 surface run underneath the
+    // bezel so its rounded inner corners physically clip the display.
     screen.position.y -= 0.00085
+    fitScreenUnderBezel(screen)
     screen.material.dispose()
     screen.material = createEpaperMaterial(screenSource.texture)
     const screenBacking = createEpaperBacking(screen)
     createScreenRecessShadow(screenBacking)
     createMatteScreenFinish(screenBacking)
-    scene.add(model)
+    scene.add(createPhysicalShadowLayer(), createContactOcclusion(), model)
 
     settingsPanel = host.value.closest('.configurator-layout')?.querySelector('.settings-panel')
     resizeObserver = new ResizeObserver(resize)
     resizeObserver.observe(host.value)
     if (settingsPanel) resizeObserver.observe(settingsPanel)
+    window.visualViewport?.addEventListener('resize', scheduleViewportResize)
+    window.visualViewport?.addEventListener('scroll', scheduleViewportResize)
     resize()
+    stopLoadingStatus()
     status.value = 'ready'
     emit('ready')
     requestRender()
   } catch (error) {
     if (!lifetime.active) return
+    stopLoadingStatus()
     status.value = 'error'
     emit('error', error instanceof Error ? error.message : 'The 3D model could not be loaded.')
   }
@@ -424,14 +461,19 @@ watch(forecastRevision, () => {
 onMounted(initialize)
 onBeforeUnmount(() => {
   lifetime.cancel()
+  stopLoadingStatus()
   if (animationFrame !== undefined) cancelAnimationFrame(animationFrame)
+  if (viewportResizeFrame !== undefined) cancelAnimationFrame(viewportResizeFrame)
   resizeObserver?.disconnect()
+  window.visualViewport?.removeEventListener('resize', scheduleViewportResize)
+  window.visualViewport?.removeEventListener('scroll', scheduleViewportResize)
   controls?.removeEventListener('change', requestRender)
   controls?.dispose()
   screenSource?.dispose()
   disposeSurface?.()
   environmentMap?.dispose()
   gtaoPass?.dispose()
+  smaaPass?.dispose()
   outputPass?.dispose()
   composer?.dispose()
   disposeObject(model)
@@ -453,7 +495,7 @@ onBeforeUnmount(() => {
     :data-forecast-model="selectedModelId"
     :data-forecast-revision="forecastRevision"
   >
-    <span v-if="status === 'loading'" class="scene-status" role="status">Building your WindScout…</span>
+    <span v-if="status === 'loading' && showLoadingStatus" class="scene-status" role="status">Building your WindScout…</span>
   </div>
 </template>
 

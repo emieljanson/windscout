@@ -43,7 +43,6 @@ typedef struct {
     wind_app_config_t config;
     wind_schedule_state_t schedule;
     int64_t coverage_refresh_cache_retrieved_at;
-    int64_t unavailable_retry_at;
     bool coverage_refresh_attempted;
     bool initialized;
 } wind_app_t;
@@ -72,7 +71,7 @@ esp_err_t wind_app_select_next(void);
 esp_err_t wind_app_select_next_display_mode(void);
 bool wind_app_navigation_requires_network(int direction);
 esp_err_t wind_app_clear_panel_confirmation(void);
-int wind_app_seconds_until_next_boundary(void);
+int wind_app_seconds_until_next_wake(void);
 esp_err_t wind_app_preview_configuration(const installed_configuration_t *candidate);
 esp_err_t wind_app_activate_configuration(const installed_configuration_t *configuration);
 bool wind_app_last_render_succeeded(void);

@@ -12,6 +12,17 @@ const SECONDARY_SOFTBOX = Object.freeze({
   halfHeight: 0.12,
 })
 
+// BODY_18/BODY_19 expose a 160.2 × 94.9 mm opening. This scale keeps the
+// canonical 159 × 95.4 mm (800 × 480) UI undistorted while placing exactly
+// 1.525 mm of screen underneath each of the four visible bezel edges.
+export const SCREEN_BEZEL_OVERSCAN = 1.02672956
+
+export function fitScreenUnderBezel(screen, overscan = SCREEN_BEZEL_OVERSCAN) {
+  screen.scale.x *= overscan
+  screen.scale.y *= overscan
+  return screen
+}
+
 function noise(x, y) {
   const value = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123
   return value - Math.floor(value)
@@ -422,14 +433,16 @@ export function createEpaperMaterial(texture) {
 }
 
 export function createEpaperBacking(screen) {
-  // Continue the same rendered frame underneath the bezel. The exact-size
-  // SCREEN remains the canonical 800 × 480 surface; this slightly larger
-  // backing only fills the CAD reveal instead of exposing a plain white strip.
+  // Continue the same rendered frame underneath the bezel. Reuse the fitted
+  // screen geometry and scale so the backing, finish and recess shadow form
+  // one aligned stack without exposing a plain strip around the active frame.
   const material = createEpaperMaterial(screen.material.map ?? null)
   material.name = 'epaper-backing'
-  const backing = new THREE.Mesh(new THREE.PlaneGeometry(0.1604, 0.0951), material)
+  const backing = new THREE.Mesh(screen.geometry.clone(), material)
   backing.name = 'SCREEN_BACKING'
   backing.position.copy(screen.position)
+  backing.rotation.copy(screen.rotation)
+  backing.scale.copy(screen.scale)
   backing.position.z -= 0.00006
   screen.parent.add(backing)
   return backing

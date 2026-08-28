@@ -1,5 +1,6 @@
 #include "config_manager.h"
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -9,12 +10,19 @@
 #include "esp_log.h"
 #include "nvs.h"
 #include "storage.h"
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1002
+#include "wind_timezone.h"
+#endif
 
 static const char *TAG = "config_manager";
 
 // General
 static char device_name[DEVICE_NAME_MAX_LEN] = {0};
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1002
+static char tz_string[TIMEZONE_MAX_LEN] = "UTC";
+#else
 static char tz_string[TIMEZONE_MAX_LEN] = {0};
+#endif
 static display_orientation_t display_orientation = DISPLAY_ORIENTATION_LANDSCAPE;
 static int display_rotation_deg = BOARD_HAL_DISPLAY_ROTATION_DEG;
 static wind_display_config_t wind_display_config;
@@ -59,14 +67,35 @@ static char ha_url[HA_URL_MAX_LEN] = {0};
 static char openai_api_key[AI_API_KEY_MAX_LEN] = {0};
 static char google_api_key[AI_API_KEY_MAX_LEN] = {0};
 
-// Power
-static bool deep_sleep_enabled = true;  // Enabled by default
-
 // Debugging
 static bool debug_log_enabled = false;
 
 // Config sync
 static int64_t config_last_updated = 0;
+
+static bool apply_timezone(const char *timezone)
+{
+    if (!timezone || timezone[0] == '\0' || strlen(timezone) >= sizeof(tz_string)) {
+        return false;
+    }
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1002
+    if (!wind_timezone_is_supported(timezone)) return false;
+#else
+    if (setenv("TZ", timezone, 1) != 0) return false;
+    tzset();
+#endif
+    memmove(tz_string, timezone, strlen(timezone) + 1);
+    return true;
+}
+
+static const char *default_timezone(void)
+{
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1002
+    return "UTC";
+#else
+    return DEFAULT_TIMEZONE;
+#endif
+}
 
 // ----------------------------------------------------------------------------
 // Cron schedule helpers
@@ -148,6 +177,13 @@ esp_err_t config_manager_init(void)
 {
     ESP_LOGI(TAG, "Initializing config manager");
     wind_display_config_default(&wind_display_config);
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1002
+    esp_err_t timezone_result = wind_timezone_init();
+    if (timezone_result != ESP_OK) {
+        ESP_LOGE(TAG, "Could not initialize timezone database");
+        return timezone_result;
+    }
+#endif
 
     // Rotation-schedule load is resolved after the read-only NVS handle closes
     // (migration / default seeding may need a read-write handle).
@@ -172,7 +208,7 @@ esp_err_t config_manager_init(void)
         if (nvs_get_str(nvs_handle, NVS_TIMEZONE_KEY, tz_string, &tz_len) == ESP_OK) {
             ESP_LOGI(TAG, "Loaded timezone from NVS: %s", tz_string);
         } else {
-            strncpy(tz_string, DEFAULT_TIMEZONE, TIMEZONE_MAX_LEN - 1);
+            strncpy(tz_string, default_timezone(), TIMEZONE_MAX_LEN - 1);
             tz_string[TIMEZONE_MAX_LEN - 1] = '\0';
             ESP_LOGI(TAG, "No timezone in NVS, using default: %s", tz_string);
         }
@@ -406,14 +442,6 @@ esp_err_t config_manager_init(void)
             ESP_LOGI(TAG, "Loaded Google API Key from NVS");
         }
 
-        // Power
-        uint8_t deep_sleep_val = 1;  // Default to enabled
-        if (nvs_get_u8(nvs_handle, NVS_DEEP_SLEEP_KEY, &deep_sleep_val) == ESP_OK) {
-            deep_sleep_enabled = (deep_sleep_val != 0);
-            ESP_LOGI(TAG, "Loaded deep sleep setting from NVS: %s",
-                     deep_sleep_enabled ? "enabled" : "disabled");
-        }
-
         // Debugging
         uint8_t debug_log_val = 0;
         if (nvs_get_u8(nvs_handle, NVS_DEBUG_LOG_KEY, &debug_log_val) == ESP_OK) {
@@ -443,9 +471,10 @@ esp_err_t config_manager_init(void)
         ESP_LOGI(TAG, "No rotation schedule in NVS, using default: %s", DEFAULT_ROTATE_CRON);
     }
 
-    // Erase the legacy quiet-hours (sleep schedule) keys. That feature was
-    // replaced by cron rules that carry their own active-hours window; the
-    // firmware no longer reads these keys, so drop them from NVS.
+    // Erase superseded power-management keys. WindScout now has one battery
+    // policy: it sleeps between forecast wakes. Cron rules replace the old
+    // quiet-hours settings, and USB power is the only supported always-awake
+    // state.
     {
         nvs_handle_t erase_handle;
         if (nvs_open(NVS_NAMESPACE, NVS_READWRITE, &erase_handle) == ESP_OK) {
@@ -454,6 +483,7 @@ esp_err_t config_manager_init(void)
                 NVS_SLEEP_SCHEDULE_ENABLED_KEY,
                 NVS_SLEEP_SCHEDULE_START_KEY,
                 NVS_SLEEP_SCHEDULE_END_KEY,
+                NVS_DEEP_SLEEP_KEY,
             };
             for (size_t i = 0; i < sizeof(legacy_keys) / sizeof(legacy_keys[0]); i++) {
                 if (nvs_erase_key(erase_handle, legacy_keys[i]) == ESP_OK) {
@@ -462,35 +492,19 @@ esp_err_t config_manager_init(void)
             }
             if (erased) {
                 nvs_commit(erase_handle);
-                ESP_LOGI(TAG, "Erased legacy sleep-schedule keys from NVS");
+                ESP_LOGI(TAG, "Erased legacy power-management keys from NVS");
             }
             nvs_close(erase_handle);
         }
     }
 
     // Apply timezone setting
-    setenv("TZ", tz_string, 1);
-    tzset();
+    if (!apply_timezone(tz_string)) {
+        ESP_LOGW(TAG, "Stored timezone '%s' is unsupported; falling back to %s",
+                 tz_string, default_timezone());
+        if (!apply_timezone(default_timezone())) return ESP_ERR_INVALID_ARG;
+    }
     ESP_LOGI(TAG, "Timezone set to: %s", tz_string);
-
-    // Log current system time in local timezone
-    time_t now;
-    struct tm timeinfo;
-    time(&now);
-    localtime_r(&now, &timeinfo);
-    char strftime_buf[64];
-    strftime(strftime_buf, sizeof(strftime_buf), "%Y-%m-%d %H:%M:%S", &timeinfo);
-
-    // Calculate UTC offset for display
-    struct tm utc_timeinfo;
-    gmtime_r(&now, &utc_timeinfo);
-    int offset_hours = timeinfo.tm_hour - utc_timeinfo.tm_hour;
-
-    // Handle day boundary crossing
-    if (offset_hours > 12)
-        offset_hours -= 24;
-    if (offset_hours < -12)
-        offset_hours += 24;
 
     ESP_LOGI(TAG, "Config manager initialized");
     return ESP_OK;
@@ -524,12 +538,7 @@ const char *config_manager_get_device_name(void)
 
 void config_manager_set_timezone(const char *tz)
 {
-    if (tz == NULL) {
-        return;
-    }
-
-    strncpy(tz_string, tz, TIMEZONE_MAX_LEN - 1);
-    tz_string[TIMEZONE_MAX_LEN - 1] = '\0';
+    if (!apply_timezone(tz)) return;
 
     nvs_handle_t nvs_handle;
     if (nvs_open(NVS_NAMESPACE, NVS_READWRITE, &nvs_handle) == ESP_OK) {
@@ -540,10 +549,21 @@ void config_manager_set_timezone(const char *tz)
 
     ESP_LOGI(TAG, "Timezone set to: %s", tz_string);
 }
+
+bool config_manager_set_timezone_transient(const char *tz)
+{
+    if (!apply_timezone(tz)) return false;
+    ESP_LOGI(TAG, "Runtime timezone set to: %s", tz_string);
+    return true;
+}
 const char *config_manager_get_timezone(void)
 {
     if (tz_string[0] == '\0') {
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1002
+        return "UTC";
+#else
         return "UTC0";
+#endif
     }
     return tz_string;
 }
@@ -1199,25 +1219,6 @@ void config_manager_set_google_api_key(const char *key)
 const char *config_manager_get_google_api_key(void)
 {
     return google_api_key;
-}
-
-void config_manager_set_deep_sleep_enabled(bool enabled)
-{
-    deep_sleep_enabled = enabled;
-
-    nvs_handle_t nvs_handle;
-    if (nvs_open(NVS_NAMESPACE, NVS_READWRITE, &nvs_handle) == ESP_OK) {
-        nvs_set_u8(nvs_handle, NVS_DEEP_SLEEP_KEY, enabled ? 1 : 0);
-        nvs_commit(nvs_handle);
-        nvs_close(nvs_handle);
-    }
-
-    ESP_LOGI(TAG, "Deep sleep %s", enabled ? "enabled" : "disabled");
-}
-
-bool config_manager_get_deep_sleep_enabled(void)
-{
-    return deep_sleep_enabled;
 }
 
 void config_manager_set_debug_log_enabled(bool enabled)

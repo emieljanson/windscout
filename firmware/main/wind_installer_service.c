@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "cJSON.h"
+#include "wind_clock.h"
 
 #ifndef FIRMWARE_VERSION
 #define FIRMWARE_VERSION "development"
@@ -34,6 +35,29 @@ static void finish_session(wind_installer_service_t *service)
     set_wake_lock(service, false);
 }
 
+static void abort_session(wind_installer_service_t *service)
+{
+    if (service->dependencies.abort) {
+        service->dependencies.abort(service->dependencies.context);
+    }
+    finish_session(service);
+}
+
+static void rollback_candidate(wind_installer_service_t *service)
+{
+    if (service->dependencies.abort) {
+        service->dependencies.abort(service->dependencies.context);
+    }
+    clear_credentials(service);
+}
+
+static bool apply_in_progress(const wind_installer_service_t *service)
+{
+    if (!service || !service->dependencies.apply_state) return false;
+    const char *state = service->dependencies.apply_state(service->dependencies.context);
+    return state && strcmp(state, "applying") == 0;
+}
+
 void wind_installer_service_init(wind_installer_service_t *service,
                                  const wind_installer_dependencies_t *dependencies)
 {
@@ -61,15 +85,69 @@ static bool json_bool(const cJSON *object, const char *key, bool *output)
     return true;
 }
 
+static bool object_has_only_keys(const cJSON *object, const char *const *keys, size_t key_count)
+{
+    if (!cJSON_IsObject(object)) return false;
+    const cJSON *item = NULL;
+    cJSON_ArrayForEach(item, object)
+    {
+        bool known = false;
+        for (size_t index = 0; index < key_count; ++index) {
+            if (item->string && strcmp(item->string, keys[index]) == 0) {
+                known = true;
+                break;
+            }
+        }
+        if (!known) return false;
+    }
+    return true;
+}
+
+static bool valid_spot_id(const char *value)
+{
+    const size_t length = value ? strlen(value) : 0;
+    if (length == 0 || length > 64) return false;
+    for (size_t index = 0; index < length; ++index) {
+        const unsigned char character = (unsigned char) value[index];
+        const bool lower_alphanumeric = (character >= 'a' && character <= 'z') ||
+                                        (character >= '0' && character <= '9');
+        if (!lower_alphanumeric && character != '-') return false;
+        if ((index == 0 || index == length - 1) && !lower_alphanumeric) return false;
+    }
+    return true;
+}
+
+static bool valid_digest(const char *value)
+{
+    if (!value || strlen(value) != 16) return false;
+    for (size_t index = 0; index < 16; ++index) {
+        if (!(value[index] >= '0' && value[index] <= '9') &&
+            !(value[index] >= 'a' && value[index] <= 'f')) return false;
+    }
+    return true;
+}
+
 static bool parse_configuration(const cJSON *json, installed_configuration_t *configuration,
                                 char digest_text[17])
 {
     if (!cJSON_IsObject(json)) return false;
+    static const char *const root_keys[] = {
+        "version", "boardId", "spot", "forecastModel", "display", "digest",
+    };
+    static const char *const spot_keys[] = {
+        "id", "name", "latitude", "longitude", "timezone",
+    };
+    static const char *const display_keys[] = {
+        "showThreshold", "threshold", "showWeather", "showTemperature", "showTide",
+        "timeFormat", "temperatureUnit",
+    };
     memset(configuration, 0, sizeof(*configuration));
     const cJSON *version = cJSON_GetObjectItemCaseSensitive(json, "version");
     const cJSON *spot = cJSON_GetObjectItemCaseSensitive(json, "spot");
     const cJSON *display = cJSON_GetObjectItemCaseSensitive(json, "display");
-    if (!cJSON_IsNumber(version) || !cJSON_IsObject(spot) || !cJSON_IsObject(display) ||
+    if (!cJSON_IsNumber(version) || !object_has_only_keys(json, root_keys, 6) ||
+        !object_has_only_keys(spot, spot_keys, 5) ||
+        !object_has_only_keys(display, display_keys, 7) ||
         !copy_json_string(json, "boardId", configuration->board_id,
                           sizeof(configuration->board_id)) ||
         !copy_json_string(json, "forecastModel", configuration->forecast_model,
@@ -94,6 +172,11 @@ static bool parse_configuration(const cJSON *json, installed_configuration_t *co
         !json_bool(display, "showTemperature", &configuration->display.show_temperature) ||
         !json_bool(display, "showTide", &configuration->display.show_tide)) return false;
     if (version->valuedouble != INSTALLED_CONFIGURATION_VERSION ||
+        !valid_spot_id(configuration->spot.id) || strlen(configuration->spot.timezone) < 3 ||
+        !valid_digest(digest_text) ||
+        (strcmp(time_format, "24-hour") != 0 && strcmp(time_format, "12-hour") != 0) ||
+        (strcmp(temperature_unit, "celsius") != 0 &&
+         strcmp(temperature_unit, "fahrenheit") != 0) ||
         threshold->valuedouble < 0 || threshold->valuedouble > 99 ||
         threshold->valuedouble != (double) (uint8_t) threshold->valuedouble) return false;
     configuration->version = (uint32_t) version->valuedouble;
@@ -121,8 +204,9 @@ static esp_err_t handle_hello(char *response, size_t response_size)
     int written = snprintf(
         response, response_size,
         "{\"status\":\"ok\",\"boardId\":\"%s\",\"firmwareVersion\":\"%s\",\"protocolVersion\":1,"
-        "\"configurationVersion\":%u,\"capabilities\":[\"state\",\"wifi\","
-        "\"configuration\",\"render-verification\"]}",
+        "\"firmwareLayoutVersion\":1,\"configurationVersion\":%u,"
+        "\"capabilities\":[\"state\",\"wifi\","
+        "\"configuration\",\"render-verification\",\"clock-sync\"]}",
         WINDSCOUT_BOARD_ID, FIRMWARE_VERSION, INSTALLED_CONFIGURATION_VERSION);
     return written >= 0 && (size_t) written < response_size ? ESP_OK : ESP_ERR_INVALID_SIZE;
 }
@@ -133,18 +217,35 @@ static esp_err_t handle_state(wind_installer_service_t *service, char *response,
     installed_configuration_t active;
     esp_err_t result = installed_configuration_load(&active);
     if (result != ESP_OK) return write_response(response, response_size, "state_unavailable", NULL);
+    const char *apply = service->dependencies.apply_state
+                            ? service->dependencies.apply_state(service->dependencies.context)
+                            : "idle";
     int written = snprintf(
         response, response_size,
         "{\"status\":\"ok\",\"boardId\":\"%s\",\"configurationDigest\":"
-        "\"%016" PRIx64 "\",\"wifi\":\"%s\",\"render\":\"%s\"}",
+        "\"%016" PRIx64 "\",\"wifi\":\"%s\",\"render\":\"%s\",\"apply\":\"%s\"}",
         WINDSCOUT_BOARD_ID, installed_configuration_digest(&active),
         service->dependencies.wifi_connected &&
                 service->dependencies.wifi_connected(service->dependencies.context)
             ? "connected" : "disconnected",
         service->dependencies.render_succeeded &&
                 service->dependencies.render_succeeded(service->dependencies.context)
-            ? "valid" : "pending");
+            ? "valid" : "pending",
+        apply ? apply : "idle");
     return written >= 0 && (size_t) written < response_size ? ESP_OK : ESP_ERR_INVALID_SIZE;
+}
+
+static esp_err_t set_clock_from_request(wind_installer_service_t *service,
+                                        const cJSON *request)
+{
+    const cJSON *unix_time = cJSON_GetObjectItemCaseSensitive(request, "unixTime");
+    if (!cJSON_IsNumber(unix_time) || !service->dependencies.set_clock ||
+        unix_time->valuedouble != (double) (int64_t) unix_time->valuedouble ||
+        !wind_clock_is_valid_unix((int64_t) unix_time->valuedouble)) {
+        return ESP_ERR_INVALID_ARG;
+    }
+    return service->dependencies.set_clock(service->dependencies.context,
+                                           (int64_t) unix_time->valuedouble);
 }
 
 esp_err_t wind_installer_service_handle_json(wind_installer_service_t *service,
@@ -156,13 +257,21 @@ esp_err_t wind_installer_service_handle_json(wind_installer_service_t *service,
     }
     cJSON *request = cJSON_ParseWithLength(payload, payload_length);
     if (!request) {
-        finish_session(service);
+        // The asynchronous render/commit task still owns the candidate and
+        // credentials. Serial noise must not clear them underneath that task.
+        if (!apply_in_progress(service)) abort_session(service);
         return ESP_ERR_INVALID_ARG;
     }
     const cJSON *command = cJSON_GetObjectItemCaseSensitive(request, "command");
     esp_err_t result = ESP_OK;
     if (!cJSON_IsString(command)) {
         result = ESP_ERR_INVALID_ARG;
+    } else if (apply_in_progress(service) && strcmp(command->valuestring, "hello") != 0 &&
+               strcmp(command->valuestring, "get_state") != 0) {
+        // The render/commit transaction owns the staged configuration and
+        // credential buffers until it finishes. A second mutation cannot
+        // safely cancel or replace those values mid-apply.
+        result = write_response(response, response_size, "apply_busy", NULL);
     } else if (strcmp(command->valuestring, "hello") == 0) {
         result = handle_hello(response, response_size);
     } else if (strcmp(command->valuestring, "get_state") == 0) {
@@ -173,8 +282,12 @@ esp_err_t wind_installer_service_handle_json(wind_installer_service_t *service,
                                                        response_size)
                      : write_response(response, response_size, "scan_unavailable", NULL);
     } else if (strcmp(command->valuestring, "begin") == 0) {
-        set_wake_lock(service, true);
-        result = write_response(response, response_size, "ready", NULL);
+        if (set_clock_from_request(service, request) != ESP_OK) {
+            result = write_response(response, response_size, "clock_rejected", NULL);
+        } else {
+            set_wake_lock(service, true);
+            result = write_response(response, response_size, "ready", NULL);
+        }
     } else if (strcmp(command->valuestring, "stage_configuration") == 0) {
         const cJSON *json = cJSON_GetObjectItemCaseSensitive(request, "configuration");
         char supplied_digest[17] = {0};
@@ -198,8 +311,13 @@ esp_err_t wind_installer_service_handle_json(wind_installer_service_t *service,
             }
         }
     } else if (strcmp(command->valuestring, "test_wifi") == 0) {
+        static const char *const credential_keys[] = {"command", "ssid", "password"};
+        if (service->dependencies.abort) {
+            service->dependencies.abort(service->dependencies.context);
+        }
         clear_credentials(service);
-        if (!copy_json_string(request, "ssid", service->ssid, sizeof(service->ssid)) ||
+        if (!object_has_only_keys(request, credential_keys, 3) ||
+            !copy_json_string(request, "ssid", service->ssid, sizeof(service->ssid)) ||
             !copy_json_string(request, "password", service->password, sizeof(service->password)) ||
             !service->dependencies.test_wifi) {
             clear_credentials(service);
@@ -216,15 +334,27 @@ esp_err_t wind_installer_service_handle_json(wind_installer_service_t *service,
     } else if (strcmp(command->valuestring, "apply_configuration") == 0) {
         if (!service->candidate_staged) {
             result = write_response(response, response_size, "configuration_required", NULL);
+        } else if (service->dependencies.begin_apply) {
+            result = service->dependencies.begin_apply(
+                service->dependencies.context, &service->candidate,
+                service->wifi_ready ? service->ssid : NULL,
+                service->wifi_ready ? service->password : NULL);
+            if (result == ESP_OK) {
+                result = write_response(response, response_size, "applying", NULL);
+            } else {
+                result = write_response(response, response_size, "apply_busy", NULL);
+            }
         } else if (service->dependencies.render_candidate &&
                    service->dependencies.render_candidate(service->dependencies.context,
                                                           &service->candidate) != ESP_OK) {
             result = write_response(response, response_size, "render_failed", NULL);
+            rollback_candidate(service);
         } else if (!service->dependencies.commit ||
                    service->dependencies.commit(service->dependencies.context, &service->candidate,
                                                 service->wifi_ready ? service->ssid : NULL,
                                                 service->wifi_ready ? service->password : NULL) != ESP_OK) {
             result = write_response(response, response_size, "commit_failed", NULL);
+            rollback_candidate(service);
         } else {
             service->candidate_staged = false;
             result = write_response(response, response_size, "complete", NULL);
@@ -232,7 +362,7 @@ esp_err_t wind_installer_service_handle_json(wind_installer_service_t *service,
         }
     } else if (strcmp(command->valuestring, "cancel") == 0) {
         service->candidate_staged = false;
-        finish_session(service);
+        abort_session(service);
         result = write_response(response, response_size, "cancelled", NULL);
     } else {
         result = write_response(response, response_size, "unknown_command", NULL);
@@ -244,8 +374,9 @@ esp_err_t wind_installer_service_handle_json(wind_installer_service_t *service,
 void wind_installer_service_timeout(wind_installer_service_t *service)
 {
     if (!service) return;
+    if (apply_in_progress(service)) return;
     service->candidate_staged = false;
-    finish_session(service);
+    abort_session(service);
 }
 
 void wind_installer_service_disconnect(wind_installer_service_t *service)
@@ -253,29 +384,101 @@ void wind_installer_service_disconnect(wind_installer_service_t *service)
     wind_installer_service_timeout(service);
 }
 
+void wind_installer_service_complete_apply(wind_installer_service_t *service, bool succeeded)
+{
+    if (!service) return;
+    if (succeeded) {
+        service->candidate_staged = false;
+        finish_session(service);
+    } else {
+        rollback_candidate(service);
+    }
+}
+
 #ifdef ESP_PLATFORM
-#include "driver/usb_serial_jtag.h"
+#include <stdatomic.h>
+#include <sys/time.h>
+
+#include "board_hal.h"
+#include "driver/uart.h"
+#include "esp_log.h"
+#include "esp_log_level.h"
+#include "esp_rom_serial_output.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "power_manager.h"
 #include "wifi_manager.h"
 #include "wind_app.h"
+#include "wind_clock.h"
 #include "wind_spots.h"
 #include "wind_usb_protocol.h"
+
+#define WIND_INSTALLER_APPLY_STACK_SIZE 16384
+
+typedef enum {
+    PHYSICAL_APPLY_IDLE,
+    PHYSICAL_APPLY_RUNNING,
+    PHYSICAL_APPLY_COMPLETE,
+    PHYSICAL_APPLY_RENDER_FAILED,
+    PHYSICAL_APPLY_COMMIT_FAILED,
+} physical_apply_state_t;
 
 typedef struct {
     wind_installer_service_t service;
     wind_usb_parser_t parser;
+    char response[WIND_USB_MAX_PAYLOAD];
+    uint8_t output[WIND_USB_MAX_FRAME_SIZE];
+    char previous_ssid[WIND_INSTALLER_SSID_MAX + 1];
+    char previous_password[WIND_INSTALLER_PASSWORD_MAX + 1];
+    bool had_previous_wifi;
+    bool candidate_wifi_active;
+    atomic_int apply_state;
+    installed_configuration_t apply_candidate;
+    char apply_ssid[WIND_INSTALLER_SSID_MAX + 1];
+    char apply_password[WIND_INSTALLER_PASSWORD_MAX + 1];
+    bool apply_has_wifi;
     int64_t last_activity_us;
 } physical_installer_t;
 
 static physical_installer_t s_physical_installer;
 
+static void physical_clear_previous_wifi(physical_installer_t *installer)
+{
+    memset(installer->previous_ssid, 0, sizeof(installer->previous_ssid));
+    memset(installer->previous_password, 0, sizeof(installer->previous_password));
+    installer->had_previous_wifi = false;
+    installer->candidate_wifi_active = false;
+}
+
+static void physical_abort(void *context)
+{
+    physical_installer_t *installer = (physical_installer_t *) context;
+    if (!installer->candidate_wifi_active) return;
+    if (installer->had_previous_wifi) {
+        (void) wifi_manager_connect(installer->previous_ssid, installer->previous_password);
+    } else {
+        (void) wifi_manager_disconnect();
+    }
+    physical_clear_previous_wifi(installer);
+}
+
 static esp_err_t physical_test_wifi(void *context, const char *ssid, const char *password)
 {
-    (void) context;
-    return wifi_manager_connect(ssid, password);
+    physical_installer_t *installer = (physical_installer_t *) context;
+    physical_clear_previous_wifi(installer);
+    installer->had_previous_wifi = wifi_manager_load_credentials(
+        installer->previous_ssid, installer->previous_password) == ESP_OK;
+    const esp_err_t result = wifi_manager_connect(ssid, password);
+    if (result == ESP_OK) {
+        installer->candidate_wifi_active = true;
+        return ESP_OK;
+    }
+    if (installer->had_previous_wifi) {
+        (void) wifi_manager_connect(installer->previous_ssid, installer->previous_password);
+    }
+    physical_clear_previous_wifi(installer);
+    return result;
 }
 
 static esp_err_t physical_render(void *context, const installed_configuration_t *candidate)
@@ -287,12 +490,105 @@ static esp_err_t physical_render(void *context, const installed_configuration_t 
 static esp_err_t physical_commit(void *context, const installed_configuration_t *candidate,
                                  const char *ssid, const char *password)
 {
-    (void) context;
-    esp_err_t result = installed_configuration_promote_setup(candidate, ssid, password);
+    physical_installer_t *installer = (physical_installer_t *) context;
+    installed_configuration_t previous;
+    if (installed_configuration_load(&previous) != ESP_OK) return ESP_ERR_INVALID_STATE;
+    esp_err_t result = wind_app_activate_configuration(candidate);
     if (result != ESP_OK) return result;
+    result = installed_configuration_promote_setup(candidate, ssid, password);
+    if (result != ESP_OK) {
+        (void) wind_app_activate_configuration(&previous);
+        physical_abort(installer);
+        return result;
+    }
     result = wind_spots_reload_installed();
-    if (result != ESP_OK) return result;
-    return wind_app_activate_configuration(candidate);
+    if (result != ESP_OK) {
+        (void) installed_configuration_promote_setup(
+            &previous, installer->had_previous_wifi ? installer->previous_ssid : NULL,
+            installer->had_previous_wifi ? installer->previous_password : NULL);
+        (void) wind_app_activate_configuration(&previous);
+        physical_abort(installer);
+        return result;
+    }
+    physical_clear_previous_wifi(installer);
+    return ESP_OK;
+}
+
+static void physical_clear_apply(physical_installer_t *installer)
+{
+    volatile unsigned char *password =
+        (volatile unsigned char *) installer->apply_password;
+    for (size_t index = 0; index < sizeof(installer->apply_password); ++index) {
+        password[index] = 0;
+    }
+    memset(installer->apply_ssid, 0, sizeof(installer->apply_ssid));
+    memset(&installer->apply_candidate, 0, sizeof(installer->apply_candidate));
+    installer->apply_has_wifi = false;
+}
+
+static void physical_apply_task(void *argument)
+{
+    physical_installer_t *installer = (physical_installer_t *) argument;
+    ESP_LOGI("wind_installer", "Applying configuration (stack free: %u bytes)",
+             (unsigned) uxTaskGetStackHighWaterMark(NULL));
+    esp_err_t result = physical_render(installer, &installer->apply_candidate);
+    if (result != ESP_OK) {
+        wind_installer_service_complete_apply(&installer->service, false);
+        atomic_store(&installer->apply_state, PHYSICAL_APPLY_RENDER_FAILED);
+    } else {
+        ESP_LOGI("wind_installer", "Preview rendered (stack free: %u bytes)",
+                 (unsigned) uxTaskGetStackHighWaterMark(NULL));
+        result = physical_commit(installer, &installer->apply_candidate,
+                                 installer->apply_has_wifi ? installer->apply_ssid : NULL,
+                                 installer->apply_has_wifi ? installer->apply_password : NULL);
+        wind_installer_service_complete_apply(&installer->service, result == ESP_OK);
+        atomic_store(&installer->apply_state,
+                     result == ESP_OK ? PHYSICAL_APPLY_COMPLETE
+                                      : PHYSICAL_APPLY_COMMIT_FAILED);
+    }
+    physical_clear_apply(installer);
+    vTaskDelete(NULL);
+}
+
+static esp_err_t physical_begin_apply(void *context,
+                                      const installed_configuration_t *candidate,
+                                      const char *ssid, const char *password)
+{
+    physical_installer_t *installer = (physical_installer_t *) context;
+    if (atomic_load(&installer->apply_state) == PHYSICAL_APPLY_RUNNING) {
+        return ESP_ERR_INVALID_STATE;
+    }
+    physical_clear_apply(installer);
+    installer->apply_candidate = *candidate;
+    if (ssid && password) {
+        snprintf(installer->apply_ssid, sizeof(installer->apply_ssid), "%s", ssid);
+        snprintf(installer->apply_password, sizeof(installer->apply_password), "%s", password);
+        installer->apply_has_wifi = true;
+    }
+    atomic_store(&installer->apply_state, PHYSICAL_APPLY_RUNNING);
+    // Rendering and HTTPS forecast parsing run on this task. Keep its stack in
+    // line with the main task, which executes the same pipeline during normal
+    // refreshes. An 8 KiB stack corrupts the FreeRTOS task state on real E1002
+    // hardware before the first preview can finish.
+    if (xTaskCreate(physical_apply_task, "wind_apply", WIND_INSTALLER_APPLY_STACK_SIZE,
+                    installer, 6, NULL) != pdPASS) {
+        atomic_store(&installer->apply_state, PHYSICAL_APPLY_COMMIT_FAILED);
+        physical_clear_apply(installer);
+        return ESP_ERR_NO_MEM;
+    }
+    return ESP_OK;
+}
+
+static const char *physical_apply_state(void *context)
+{
+    const physical_installer_t *installer = (const physical_installer_t *) context;
+    switch (atomic_load(&installer->apply_state)) {
+    case PHYSICAL_APPLY_RUNNING: return "applying";
+    case PHYSICAL_APPLY_COMPLETE: return "complete";
+    case PHYSICAL_APPLY_RENDER_FAILED: return "render_failed";
+    case PHYSICAL_APPLY_COMMIT_FAILED: return "commit_failed";
+    default: return "idle";
+    }
 }
 
 static void physical_wake_lock(void *context, bool held)
@@ -311,6 +607,25 @@ static bool physical_render_succeeded(void *context)
 {
     (void) context;
     return wind_app_last_render_succeeded();
+}
+
+static esp_err_t physical_write_rtc(void *context, time_t value)
+{
+    (void) context;
+    return board_hal_rtc_set_time(value);
+}
+
+static esp_err_t physical_write_system_clock(void *context, time_t seconds)
+{
+    (void) context;
+    const struct timeval value = {.tv_sec = seconds, .tv_usec = 0};
+    return settimeofday(&value, NULL) == 0 ? ESP_OK : ESP_FAIL;
+}
+
+static esp_err_t physical_set_clock(void *context, int64_t unix_seconds)
+{
+    return wind_clock_set_unix(unix_seconds, context, physical_write_rtc,
+                               physical_write_system_clock);
 }
 
 static esp_err_t physical_scan_wifi(void *context, char *response, size_t response_size)
@@ -353,22 +668,33 @@ static esp_err_t physical_scan_wifi(void *context, char *response, size_t respon
 static void physical_frame(const wind_usb_frame_t *frame, void *context)
 {
     physical_installer_t *installer = (physical_installer_t *) context;
-    if (frame->message_type != WIND_USB_MESSAGE_REQUEST) return;
-    char response[WIND_USB_MAX_PAYLOAD] = {0};
-    esp_err_t result = wind_installer_service_handle_json(
-        &installer->service, (const char *) frame->payload, frame->payload_length,
-        response, sizeof(response));
+    memset(installer->response, 0, sizeof(installer->response));
+    esp_err_t result = ESP_ERR_NOT_SUPPORTED;
+    if (frame->message_type == WIND_USB_MESSAGE_REQUEST) {
+        result = wind_installer_service_handle_json(
+            &installer->service, (const char *) frame->payload, frame->payload_length,
+            installer->response, sizeof(installer->response));
+    }
     if (result != ESP_OK) {
-        snprintf(response, sizeof(response),
+        snprintf(installer->response, sizeof(installer->response),
                  "{\"status\":\"invalid_request\",\"code\":%d}", result);
     }
-    uint8_t output[WIND_USB_MAX_FRAME_SIZE];
     size_t output_size = wind_usb_encode_frame(
         frame->request_id, result == ESP_OK ? WIND_USB_MESSAGE_RESULT : WIND_USB_MESSAGE_ERROR,
-        (const uint8_t *) response, strlen(response), output, sizeof(output));
-    if (output_size > 0) {
-        (void) usb_serial_jtag_write_bytes(output, output_size, pdMS_TO_TICKS(1000));
+        (const uint8_t *) installer->response, strlen(installer->response), installer->output,
+        sizeof(installer->output));
+
+    // The E1002 USB-C connector is exposed through its UART bridge. Serialize
+    // this short binary response with the regular ESP-IDF console so a log line
+    // can never be inserted inside a CRC-protected frame.
+    flockfile(stdout);
+    const esp_log_level_t previous_log_level = esp_log_get_level_master();
+    esp_log_set_level_master(ESP_LOG_NONE);
+    for (size_t index = 0; index < output_size; ++index) {
+        if (esp_rom_output_tx_one_char(installer->output[index]) != 0) break;
     }
+    esp_log_set_level_master(previous_log_level);
+    funlockfile(stdout);
     installer->last_activity_us = esp_timer_get_time();
 }
 
@@ -376,8 +702,9 @@ static void installer_usb_task(void *argument)
 {
     physical_installer_t *installer = (physical_installer_t *) argument;
     uint8_t input[256];
+    ESP_LOGI("wind_installer", "Installer UART task ready");
     while (true) {
-        int read = usb_serial_jtag_read_bytes(input, sizeof(input), pdMS_TO_TICKS(250));
+        int read = uart_read_bytes(UART_NUM_0, input, sizeof(input), pdMS_TO_TICKS(250));
         if (read > 0) {
             esp_err_t result = wind_usb_parser_feed(&installer->parser, input, (size_t) read,
                                                     physical_frame, installer);
@@ -386,6 +713,7 @@ static void installer_usb_task(void *argument)
             }
         }
         if (installer->service.wake_lock_held &&
+            atomic_load(&installer->apply_state) != PHYSICAL_APPLY_RUNNING &&
             esp_timer_get_time() - installer->last_activity_us > INT64_C(120000000)) {
             wind_installer_service_timeout(&installer->service);
         }
@@ -394,23 +722,27 @@ static void installer_usb_task(void *argument)
 
 esp_err_t wind_installer_service_start(void)
 {
-    usb_serial_jtag_driver_config_t driver_config = {
-        .tx_buffer_size = 4096,
-        .rx_buffer_size = 4096,
-    };
-    esp_err_t result = usb_serial_jtag_driver_install(&driver_config);
-    if (result != ESP_OK) return result;
+    esp_err_t result = ESP_OK;
+    if (!uart_is_driver_installed(UART_NUM_0)) {
+        result = uart_driver_install(UART_NUM_0, 4096, 4096, 0, NULL, 0);
+        if (result != ESP_OK) return result;
+    }
     memset(&s_physical_installer, 0, sizeof(s_physical_installer));
+    atomic_init(&s_physical_installer.apply_state, PHYSICAL_APPLY_IDLE);
     wind_usb_parser_init(&s_physical_installer.parser);
     const wind_installer_dependencies_t dependencies = {
         .context = &s_physical_installer,
         .test_wifi = physical_test_wifi,
         .render_candidate = physical_render,
         .commit = physical_commit,
+        .begin_apply = physical_begin_apply,
+        .apply_state = physical_apply_state,
         .set_wake_lock = physical_wake_lock,
+        .abort = physical_abort,
         .scan_wifi = physical_scan_wifi,
         .wifi_connected = physical_wifi_connected,
         .render_succeeded = physical_render_succeeded,
+        .set_clock = physical_set_clock,
     };
     wind_installer_service_init(&s_physical_installer.service, &dependencies);
     s_physical_installer.last_activity_us = esp_timer_get_time();

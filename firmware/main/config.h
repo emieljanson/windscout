@@ -3,11 +3,6 @@
 
 #include <driver/gpio.h>
 
-// TEMPORARY DEVELOPMENT MODE:
-// Keep this enabled only on Emiel's development device. It keeps WiFi/local OTA
-// available continuously and disables deep sleep. Set to 0 before production.
-#define WINDSCOUT_DEVELOPMENT_MODE 1
-
 // Uncomment to debug deep sleep wake
 // #define DEBUG_DEEP_SLEEP_WAKE
 
@@ -159,7 +154,7 @@ typedef enum { IP_MODE_DHCP = 0, IP_MODE_STATIC = 1 } ip_mode_t;
 #define NVS_LAST_FETCH_ERROR_KEY "last_fetch_err"
 
 // Power
-#define NVS_DEEP_SLEEP_KEY "deep_sleep"
+#define NVS_DEEP_SLEEP_KEY "deep_sleep"  // legacy: product policy is always battery sleep
 
 // Debugging
 #define NVS_DEBUG_LOG_KEY "debug_log"

@@ -6,7 +6,9 @@
 #include <string.h>
 #include <time.h>
 
-static const int64_t UNAVAILABLE_RETRY_SECONDS = 60;
+#include "wind_timezone.h"
+
+static const int64_t FAILED_REFRESH_RETRY_SECONDS = 5 * 60;
 
 static wind_freshness_t freshness_for(const wind_forecast_t *forecast, int64_t now)
 {
@@ -23,16 +25,16 @@ static wind_freshness_t freshness_for(const wind_forecast_t *forecast, int64_t n
     return age >= 24 * 60 * 60 ? WIND_FRESHNESS_STALE : WIND_FRESHNESS_AGED;
 }
 
-static bool forecast_covers_dashboard_window(const wind_forecast_t *forecast, int64_t now)
+static bool forecast_covers_dashboard_window(const wind_forecast_t *forecast,
+                                             const char *timezone, int64_t now)
 {
-    if (!forecast || now <= 0 || !wind_forecast_validate(forecast)) {
+    if (!forecast || !timezone || now <= 0 || !wind_forecast_validate(forecast)) {
         return false;
     }
-    time_t current_time = (time_t) now;
-    struct tm local;
-    localtime_r(&current_time, &local);
+    wind_local_datetime_t local;
     char today[WIND_FORECAST_DATE_LENGTH];
-    if (strftime(today, sizeof(today), "%Y-%m-%d", &local) == 0) {
+    if (wind_timezone_from_unix(timezone, now, &local) != ESP_OK ||
+        wind_timezone_format_date(&local, today, sizeof(today)) != ESP_OK) {
         return false;
     }
     return strcmp(forecast->days[0].local_date, today) == 0;
@@ -71,19 +73,24 @@ static esp_err_t run_internal(wind_app_t *app, bool force_refresh, bool allow_fe
                                        &active) == ESP_OK;
     local.used_cache = have_active;
 
-    bool cache_has_coverage = have_active && forecast_covers_dashboard_window(&active, now);
+    bool cache_has_coverage = have_active &&
+                              forecast_covers_dashboard_window(
+                                  &active, app->config.identity.timezone, now);
     bool coverage_refresh_due =
         have_active && !cache_has_coverage &&
         (!app->coverage_refresh_attempted ||
          app->coverage_refresh_cache_retrieved_at != active.retrieved_at);
-    bool unavailable_retry_due =
-        !have_active && app->unavailable_retry_at > 0 && now >= app->unavailable_retry_at;
-    bool initial_fetch_due = !have_active && app->unavailable_retry_at == 0;
-
-    int64_t boundary = wind_schedule_latest_boundary((time_t) now);
+    int64_t boundary = 0;
     bool due = wind_schedule_is_due(&app->schedule, (time_t) now, &boundary);
+    int64_t retry_boundary = 0;
+    bool pending_retry_due = wind_schedule_retry_is_due(&app->schedule, (time_t) now,
+                                                        &retry_boundary);
+    // A regular boundary supersedes a missed retry. Treat this as a fresh
+    // scheduled attempt so a transient failure still earns its own one retry.
+    bool retry_due = pending_retry_due && !due;
+    bool initial_fetch_due = !have_active && app->schedule.last_attempted_boundary == 0;
     if (allow_fetch &&
-        (force_refresh || due || coverage_refresh_due || unavailable_retry_due || initial_fetch_due)) {
+        (force_refresh || due || coverage_refresh_due || retry_due || initial_fetch_due)) {
         local.attempted_fetch = true;
         if (coverage_refresh_due) {
             app->coverage_refresh_attempted = true;
@@ -91,6 +98,19 @@ static esp_err_t run_internal(wind_app_t *app, bool force_refresh, bool allow_fe
         }
         if (due) {
             wind_schedule_mark_attempted(&app->schedule, boundary);
+            if (pending_retry_due) {
+                wind_schedule_consume_retry(&app->schedule);
+            }
+            if (wind_schedule_state_store(app->config.schedule_path, &app->schedule) != ESP_OK) {
+                if (outcome) {
+                    *outcome = local;
+                }
+                return ESP_FAIL;
+            }
+        }
+        if (retry_due) {
+            boundary = retry_boundary;
+            wind_schedule_consume_retry(&app->schedule);
             if (wind_schedule_state_store(app->config.schedule_path, &app->schedule) != ESP_OK) {
                 if (outcome) {
                     *outcome = local;
@@ -102,24 +122,27 @@ static esp_err_t run_internal(wind_app_t *app, bool force_refresh, bool allow_fe
         wind_forecast_clear(&fetched);
         local.fetch_result = wind_provider_fetch(&app->config.provider, now, &fetched);
         if (local.fetch_result == ESP_OK && wind_forecast_validate(&fetched) &&
-            forecast_covers_dashboard_window(&fetched, now)) {
+            forecast_covers_dashboard_window(&fetched, app->config.identity.timezone, now)) {
             local.fetch_result = wind_cache_store(app->config.forecast_cache_path, &fetched);
             if (local.fetch_result == ESP_OK) {
                 active = fetched;
                 have_active = true;
                 local.used_cache = false;
                 local.published_forecast = true;
-                app->unavailable_retry_at = 0;
                 app->coverage_refresh_attempted = false;
                 app->coverage_refresh_cache_retrieved_at = 0;
+                wind_schedule_consume_retry(&app->schedule);
                 wind_schedule_mark_satisfied(&app->schedule, boundary);
                 wind_schedule_state_store(app->config.schedule_path, &app->schedule);
             }
         } else if (local.fetch_result == ESP_OK) {
             local.fetch_result = ESP_ERR_INVALID_RESPONSE;
         }
-        if (!have_active && local.fetch_result != ESP_OK) {
-            app->unavailable_retry_at = now + UNAVAILABLE_RETRY_SECONDS;
+        const bool automatic_attempt = due || coverage_refresh_due || initial_fetch_due;
+        if (local.fetch_result != ESP_OK && automatic_attempt && !retry_due) {
+            wind_schedule_schedule_retry(&app->schedule, boundary,
+                                         now + FAILED_REFRESH_RETRY_SECONDS);
+            wind_schedule_state_store(app->config.schedule_path, &app->schedule);
         }
     }
 
@@ -235,8 +258,14 @@ static wind_spot_runtime_t s_spots[1];
 static installed_configuration_t s_installed_configuration;
 static size_t s_selected_index;
 static SemaphoreHandle_t s_app_lock;
+// Serializes runtime reconfiguration with scheduled refreshes and button
+// actions. The installer temporarily swaps the active spot/display settings;
+// no other task may observe that preview state.
+static SemaphoreHandle_t s_runtime_lock;
 static bool s_ready;
 static bool s_last_render_succeeded;
+
+static esp_err_t wind_app_refresh_unlocked(bool force_refresh);
 
 static uint64_t current_render_signature(void)
 {
@@ -252,7 +281,9 @@ static void refresh_render_signatures(void)
     }
 }
 
-static void load_or_refresh_tide(wind_spot_runtime_t *runtime, bool allow_fetch, int64_t now)
+#define WIND_TIDE_REFRESH_INTERVAL_SECONDS (6 * 60 * 60)
+
+static void load_or_refresh_tide(wind_spot_runtime_t *runtime, bool force_refresh, int64_t now)
 {
     const wind_display_config_t display = config_manager_get_wind_display_config();
     runtime->have_tide = false;
@@ -269,7 +300,14 @@ static void load_or_refresh_tide(wind_spot_runtime_t *runtime, bool allow_fetch,
         runtime->have_tide = true;
     }
 
-    if (!allow_fetch && runtime->have_tide) {
+    const bool tide_is_fresh = runtime->have_tide && runtime->tide.retrieved_at <= now &&
+                               now - runtime->tide.retrieved_at <
+                                   WIND_TIDE_REFRESH_INTERVAL_SECONDS;
+    if (tide_is_fresh && !force_refresh) {
+        return;
+    }
+    if (!runtime->tide_provider.fetch) {
+        ESP_LOGW(TAG, "Tide provider is not configured for %s", runtime->spot->id);
         return;
     }
     wind_tide_t *fetched = malloc(sizeof(*fetched));
@@ -300,6 +338,13 @@ static const char *day_name(int weekday)
     static const char *names[] = {"SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY",
                                   "THURSDAY", "FRIDAY", "SATURDAY"};
     return weekday >= 0 && weekday < 7 ? names[weekday] : "";
+}
+
+static const char *month_name(unsigned month)
+{
+    static const char *names[] = {"", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+    return month <= 12 ? names[month] : "";
 }
 
 static void format_coordinates(char *output, size_t size, double latitude, double longitude)
@@ -391,7 +436,7 @@ static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast
     char updated[32] = "";
     char dates[WIND_RENDERER_DAY_COUNT][16] = {{0}};
     char times[WIND_RENDERER_DAY_COUNT][WIND_RENDERER_SAMPLES_PER_DAY][8] = {{{0}}};
-    struct tm local = {0};
+    wind_local_datetime_t local = {0};
 
     dashboard.spot_name = forecast ? forecast->spot_name : spot->display_name;
     dashboard.coordinates = coordinates;
@@ -415,27 +460,32 @@ static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast
                        forecast ? forecast->longitude : spot->longitude);
 
     if (forecast) {
-        time_t retrieved = (time_t) forecast->retrieved_at;
-        localtime_r(&retrieved, &local);
         char update_date[16] = "";
-        strftime(update_date, sizeof(update_date), "%d %b", &local);
+        if (wind_timezone_from_unix(spot->timezone, forecast->retrieved_at, &local) != ESP_OK) {
+            return ESP_ERR_INVALID_STATE;
+        }
+        snprintf(update_date, sizeof(update_date), "%02u %s", local.day,
+                 month_name(local.month));
         if (display.use_24_hour) {
             snprintf(updated, sizeof(updated), "%s %02d:%02d", update_date,
-                     local.tm_hour, local.tm_min);
+                     local.hour, local.minute);
         } else {
-            const int hour_12 = local.tm_hour % 12 == 0 ? 12 : local.tm_hour % 12;
+            const int hour_12 = local.hour % 12 == 0 ? 12 : local.hour % 12;
             snprintf(updated, sizeof(updated), "%s %d%s", update_date, hour_12,
-                     local.tm_hour < 12 ? "AM" : "PM");
+                     local.hour < 12 ? "AM" : "PM");
         }
         for (char *cursor = updated; *cursor; ++cursor) {
             *cursor = (char) toupper((unsigned char) *cursor);
         }
         for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day) {
             const wind_forecast_day_t *source_day = &forecast->days[day];
-            time_t day_time = (time_t) source_day->samples[0].timestamp;
-            localtime_r(&day_time, &local);
-            dashboard.days[day].day = day == 0 ? "TODAY" : day_name(local.tm_wday);
-            strftime(dates[day], sizeof(dates[day]), "%d %b", &local);
+            if (wind_timezone_from_unix(spot->timezone,
+                                        source_day->samples[0].timestamp, &local) != ESP_OK) {
+                return ESP_ERR_INVALID_STATE;
+            }
+            dashboard.days[day].day = day == 0 ? "TODAY" : day_name(wind_timezone_weekday(&local));
+            snprintf(dates[day], sizeof(dates[day]), "%02u %s", local.day,
+                     month_name(local.month));
             dashboard.days[day].date = dates[day];
             for (int sample = 0; sample < WIND_RENDERER_SAMPLES_PER_DAY; ++sample) {
                 const wind_forecast_sample_t *source = &source_day->samples[sample];
@@ -576,10 +626,6 @@ static esp_err_t ensure_ready(void)
             return ESP_ERR_INVALID_SIZE;
         }
         runtime->provider_config = (open_meteo_knmi_config_t) {
-            .endpoint = WIND_PROVIDER_ENDPOINT,
-            .api_key = WIND_PROVIDER_API_KEY,
-            .development_mode = WIND_PROVIDER_DEVELOPMENT_MODE,
-            .commercial_mode = WIND_PROVIDER_COMMERCIAL_MODE,
             .spot_id = runtime->spot->id,
             .spot_name = runtime->spot->display_name,
             .latitude = runtime->spot->latitude,
@@ -592,20 +638,20 @@ static esp_err_t ensure_ready(void)
             return ESP_ERR_INVALID_STATE;
         }
         runtime->marine_config = (open_meteo_marine_config_t) {
-            .endpoint = OPEN_METEO_MARINE_FREE_ENDPOINT,
-            .api_key = WIND_PROVIDER_API_KEY,
-            .development_mode = WIND_PROVIDER_DEVELOPMENT_MODE,
-            .commercial_mode = WIND_PROVIDER_COMMERCIAL_MODE,
             .spot_id = runtime->spot->id,
             .latitude = runtime->spot->latitude,
             .longitude = runtime->spot->longitude,
             .timezone = runtime->spot->timezone,
         };
         if (!open_meteo_marine_config_valid(&runtime->marine_config)) {
-            ESP_LOGE(TAG, "Marine provider configuration rejected for %s", runtime->spot->id);
-            return ESP_ERR_INVALID_STATE;
+            // Tide is an optional row. A missing licensed marine endpoint must
+            // not take the core wind forecast offline; the renderer will show
+            // tide as unavailable if the user enables it.
+            memset(&runtime->tide_provider, 0, sizeof(runtime->tide_provider));
+            ESP_LOGW(TAG, "Marine provider unavailable for %s", runtime->spot->id);
+        } else {
+            open_meteo_marine_provider_init(&runtime->tide_provider, &runtime->marine_config);
         }
-        open_meteo_marine_provider_init(&runtime->tide_provider, &runtime->marine_config);
         wind_provider_t provider;
         open_meteo_knmi_provider_init(&provider, &runtime->provider_config);
         wind_app_config_t config = {
@@ -633,14 +679,23 @@ static esp_err_t ensure_ready(void)
 
 esp_err_t wind_app_configure_runtime(void)
 {
-    static const char *rules[] = {"5 0 *", "0 7 *", "0 11 *", "0 15 *", "0 19 *"};
+    if (!s_runtime_lock) {
+        s_runtime_lock = xSemaphoreCreateMutex();
+        if (!s_runtime_lock) return ESP_ERR_NO_MEM;
+    }
     installed_configuration_t installed;
     if (installed_configuration_load(&installed) != ESP_OK) {
         return ESP_ERR_INVALID_STATE;
     }
-    config_manager_set_timezone(installed.spot.timezone);
+    if (!config_manager_set_timezone_transient(installed.spot.timezone)) {
+        return ESP_ERR_INVALID_ARG;
+    }
+#if BOARD_HAL_TYPE != BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+    // Other photo-frame boards still use the legacy cron-backed power manager.
+    static const char *rules[] = {"5 0 *", "0 7 *", "0 11 *", "0 15 *", "0 19 *"};
     config_manager_set_cron_rules(rules, 5);
     config_manager_set_auto_rotate(true);
+#endif
     return ESP_OK;
 }
 
@@ -663,32 +718,53 @@ static wind_display_config_t display_from_installed(const installed_configuratio
 esp_err_t wind_app_preview_configuration(const installed_configuration_t *candidate)
 {
     if (!installed_configuration_validate(candidate)) return ESP_ERR_INVALID_ARG;
+    if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE) {
+        return ESP_ERR_INVALID_STATE;
+    }
     installed_configuration_t active;
-    if (installed_configuration_load(&active) != ESP_OK) return ESP_ERR_INVALID_STATE;
+    if (installed_configuration_load(&active) != ESP_OK) {
+        xSemaphoreGive(s_runtime_lock);
+        return ESP_ERR_INVALID_STATE;
+    }
     const wind_display_config_t old_display = config_manager_get_wind_display_config();
     const wind_display_config_t preview_display = display_from_installed(candidate);
-    if (!config_manager_set_wind_display_config_transient(&preview_display) ||
-        wind_spots_use_configuration(candidate) != ESP_OK) return ESP_ERR_INVALID_STATE;
-    s_ready = false;
-    esp_err_t result = wind_app_refresh(true);
+    esp_err_t result = ESP_ERR_INVALID_STATE;
+    if (config_manager_set_wind_display_config_transient(&preview_display) &&
+        config_manager_set_timezone_transient(candidate->spot.timezone) &&
+        wind_spots_use_configuration(candidate) == ESP_OK) {
+        s_ready = false;
+        result = wind_app_refresh_unlocked(true);
+    }
     (void) wind_spots_use_configuration(&active);
+    (void) config_manager_set_timezone_transient(active.spot.timezone);
     (void) config_manager_set_wind_display_config_transient(&old_display);
     s_ready = false;
+    xSemaphoreGive(s_runtime_lock);
     return result;
 }
 
 esp_err_t wind_app_activate_configuration(const installed_configuration_t *configuration)
 {
     if (!installed_configuration_validate(configuration)) return ESP_ERR_INVALID_ARG;
+    if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE) {
+        return ESP_ERR_INVALID_STATE;
+    }
     const wind_display_config_t display = display_from_installed(configuration);
     if (!config_manager_set_wind_display_config(&display) ||
-        wind_spots_use_configuration(configuration) != ESP_OK) return ESP_ERR_INVALID_STATE;
-    config_manager_set_timezone(configuration->spot.timezone);
+        wind_spots_use_configuration(configuration) != ESP_OK) {
+        xSemaphoreGive(s_runtime_lock);
+        return ESP_ERR_INVALID_STATE;
+    }
+    if (!config_manager_set_timezone_transient(configuration->spot.timezone)) {
+        xSemaphoreGive(s_runtime_lock);
+        return ESP_ERR_INVALID_ARG;
+    }
     s_ready = false;
+    xSemaphoreGive(s_runtime_lock);
     return ESP_OK;
 }
 
-esp_err_t wind_app_refresh(bool force_refresh)
+static esp_err_t wind_app_refresh_unlocked(bool force_refresh)
 {
     esp_err_t result = ensure_ready();
     if (result != ESP_OK) {
@@ -698,7 +774,7 @@ esp_err_t wind_app_refresh(bool force_refresh)
     time_t now;
     time(&now);
     refresh_render_signatures();
-    load_or_refresh_tide(&s_spots[s_selected_index], true, now);
+    load_or_refresh_tide(&s_spots[s_selected_index], force_refresh, now);
     for (size_t index = 0; index < wind_spots_count(); ++index) {
         wind_app_outcome_t outcome;
         esp_err_t spot_result = index == s_selected_index
@@ -720,10 +796,24 @@ esp_err_t wind_app_refresh(bool force_refresh)
     return result;
 }
 
+esp_err_t wind_app_refresh(bool force_refresh)
+{
+    if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE) {
+        return ESP_ERR_INVALID_STATE;
+    }
+    esp_err_t result = wind_app_refresh_unlocked(force_refresh);
+    xSemaphoreGive(s_runtime_lock);
+    return result;
+}
+
 static esp_err_t navigate(int direction)
 {
+    if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE) {
+        return ESP_ERR_INVALID_STATE;
+    }
     esp_err_t result = ensure_ready();
     if (result != ESP_OK) {
+        xSemaphoreGive(s_runtime_lock);
         return result;
     }
     xSemaphoreTake(s_app_lock, portMAX_DELAY);
@@ -735,7 +825,7 @@ static esp_err_t navigate(int direction)
     time_t now;
     time(&now);
     refresh_render_signatures();
-    load_or_refresh_tide(runtime, !have_cache, now);
+    load_or_refresh_tide(runtime, false, now);
     wind_app_outcome_t outcome;
     result = have_cache ? wind_app_show_cached(&runtime->app, now, &outcome)
                         : wind_app_run(&runtime->app, true, now, &outcome);
@@ -748,6 +838,7 @@ static esp_err_t navigate(int direction)
         ESP_LOGI(TAG, "Selected spot %s (cached=%d)", runtime->spot->id, have_cache);
     }
     xSemaphoreGive(s_app_lock);
+    xSemaphoreGive(s_runtime_lock);
     return result;
 }
 
@@ -755,11 +846,16 @@ esp_err_t wind_app_select_previous(void) { return navigate(-1); }
 esp_err_t wind_app_select_next(void) { return navigate(1); }
 esp_err_t wind_app_select_next_display_mode(void)
 {
+    if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE) {
+        return ESP_ERR_INVALID_STATE;
+    }
     esp_err_t ready = ensure_ready();
     if (ready != ESP_OK) {
+        xSemaphoreGive(s_runtime_lock);
         return ready;
     }
     if (xSemaphoreTake(s_app_lock, portMAX_DELAY) != pdTRUE) {
+        xSemaphoreGive(s_runtime_lock);
         return ESP_ERR_TIMEOUT;
     }
 
@@ -767,6 +863,7 @@ esp_err_t wind_app_select_next_display_mode(void)
     display.display_mode = (uint8_t) ((display.display_mode + 1) % WIND_RENDERER_MODE_COUNT);
     if (!config_manager_set_wind_display_config(&display)) {
         xSemaphoreGive(s_app_lock);
+        xSemaphoreGive(s_runtime_lock);
         return ESP_FAIL;
     }
     refresh_render_signatures();
@@ -779,18 +876,26 @@ esp_err_t wind_app_select_next_display_mode(void)
     esp_err_t result = wind_app_show_cached(&s_spots[s_selected_index].app,
                                             now, &outcome);
     xSemaphoreGive(s_app_lock);
+    xSemaphoreGive(s_runtime_lock);
     return result;
 }
 
 bool wind_app_navigation_requires_network(int direction)
 {
+    if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE) {
+        return true;
+    }
     if (ensure_ready() != ESP_OK) {
+        xSemaphoreGive(s_runtime_lock);
         return true;
     }
     const size_t target = wind_spots_offset(s_selected_index, direction);
     wind_forecast_t cached;
-    return wind_cache_load(s_spots[target].forecast_path, &s_spots[target].app.config.identity,
-                           &cached) != ESP_OK;
+    const bool requires_network =
+        wind_cache_load(s_spots[target].forecast_path,
+                        &s_spots[target].app.config.identity, &cached) != ESP_OK;
+    xSemaphoreGive(s_runtime_lock);
+    return requires_network;
 }
 
 esp_err_t wind_app_start(void)
@@ -800,25 +905,25 @@ esp_err_t wind_app_start(void)
 
 esp_err_t wind_app_clear_panel_confirmation(void)
 {
+    // A splash or another out-of-band display write replaces the forecast
+    // even when the panel cache still describes the previously rendered frame.
+    // Keep installer verification tied to what is actually visible.
+    s_last_render_succeeded = false;
     return wind_cache_panel_invalidate(WIND_PANEL_CACHE_PATH);
 }
 
-int wind_app_seconds_until_next_boundary(void)
+int wind_app_seconds_until_next_wake(void)
 {
+    const bool locked = s_runtime_lock &&
+                        xSemaphoreTake(s_runtime_lock, portMAX_DELAY) == pdTRUE;
     time_t now;
     time(&now);
-    int64_t next = wind_schedule_next_boundary(now);
-    int seconds = next > now ? (int) (next - now) : 1;
+    int64_t next = wind_schedule_next_boundary(config_manager_get_timezone(), now);
     if (s_ready && s_selected_index < wind_spots_count()) {
-        int64_t retry_at = s_spots[s_selected_index].app.unavailable_retry_at;
-        if (retry_at > 0) {
-            int retry_seconds = retry_at > now ? (int) (retry_at - now) : 1;
-            if (retry_seconds < seconds) {
-                seconds = retry_seconds;
-            }
-        }
+        next = wind_schedule_next_attempt(&s_spots[s_selected_index].app.schedule, now);
     }
-    return seconds;
+    if (locked) xSemaphoreGive(s_runtime_lock);
+    return next > now ? (int) (next - now) : 1;
 }
 
 bool wind_app_last_render_succeeded(void)
@@ -842,7 +947,7 @@ bool wind_app_navigation_requires_network(int direction)
     return true;
 }
 esp_err_t wind_app_clear_panel_confirmation(void) { return ESP_ERR_NOT_SUPPORTED; }
-int wind_app_seconds_until_next_boundary(void) { return 0; }
+int wind_app_seconds_until_next_wake(void) { return 0; }
 bool wind_app_last_render_succeeded(void) { return false; }
 esp_err_t wind_app_preview_configuration(const installed_configuration_t *candidate)
 {

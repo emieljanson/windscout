@@ -1,4 +1,4 @@
-name: WindScout firmware
+name: WindScout release
 
 on:
   pull_request:
@@ -8,24 +8,65 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  # Pull requests may replace older runs, but a versioned publication must
+  # never be cancelled by a main-branch deployment that happens to overlap it.
+  group: windscout-${{ github.event_name == 'pull_request' && github.ref || github.ref_type == 'tag' && github.ref || 'production' }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' }}
 
 jobs:
-  test-and-build:
+  verify-web:
+    name: Verify configurator
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
-      - name: Run host tests
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install web dependencies
+        working-directory: web
+        run: npm ci
+
+      - name: Verify generated renderer and spot catalog
+        working-directory: web
+        run: |
+          npm run renderer:check
+          npm run spots:catalog:check
+
+      - name: Run web unit tests
+        working-directory: web
+        run: npm test
+
+      - name: Install browser test runtime
+        working-directory: web
+        run: npx playwright install --with-deps chromium
+
+      - name: Run web browser tests
+        working-directory: web
+        run: npm run test:e2e
+
+      - name: Build web configurator
+        if: github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/v')
+        working-directory: web
+        run: npm run build
+
+  build-firmware:
+    name: Verify and build E1002 firmware
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Run firmware host tests
         run: make -C firmware test
 
-      - uses: actions/setup-node@v5
-        with:
-          node-version: '20'
-
-      - name: Build embedded web interface
-        working-directory: firmware
-        run: python3 build.py --step webapp
+      - name: Test installer bundle generator
+        run: python3 firmware/scripts/test_generate_installer_manifest.py
 
       - name: Select firmware version
         id: version
@@ -38,16 +79,16 @@ jobs:
           fi
 
       - name: Build reTerminal E1002 firmware
-        uses: espressif/esp-idf-ci-action@v1
+        uses: espressif/esp-idf-ci-action@9d38657f3d789ca759b2b37aaf5ceffbc42c4f0d # v1
         with:
-          esp_idf_version: release-v6.0
+          esp_idf_version: v6.0.2
           target: esp32s3
           path: firmware
           command: >-
             python3 build.py --board seeedstudio_reterminal_e1002 --step firmware
             -DFIRMWARE_VERSION='${{ steps.version.outputs.value }}'
 
-      - name: Prepare firmware artifacts
+      - name: Prepare release and same-origin website bundles
         run: |
           mkdir -p release
           cp firmware/build/windscout.bin release/windscout-seeedstudio_reterminal_e1002.bin
@@ -55,20 +96,132 @@ jobs:
             --build-dir firmware/build \
             --partitions firmware/partitions.csv \
             --output release/installer \
+            --version '${{ steps.version.outputs.value }}' \
+            --flat
+          python3 firmware/scripts/generate_installer_manifest.py \
+            --build-dir firmware/build \
+            --partitions firmware/partitions.csv \
+            --output site-firmware \
             --version '${{ steps.version.outputs.value }}'
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload GitHub Release files
+        uses: actions/upload-artifact@v7
         with:
-          name: windscout-firmware
+          name: windscout-firmware-release
           path: release/
+          if-no-files-found: error
 
-      - name: Publish tagged firmware
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
+      - name: Upload website firmware files
+        uses: actions/upload-artifact@v7
+        with:
+          name: windscout-site-firmware
+          path: site-firmware/
+          if-no-files-found: error
+
+  build-site:
+    name: Build release website
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    needs: [verify-web, build-firmware]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Download firmware built by this release
+        uses: actions/download-artifact@v7
+        with:
+          name: windscout-site-firmware
+          path: web/public/firmware
+
+      - name: Install web dependencies
+        working-directory: web
+        run: npm ci
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Build website with bundled firmware
+        working-directory: web
+        run: npm run build
+
+      - name: Verify deployable installer files
+        shell: bash
+        run: |
+          test -s web/dist/firmware/latest.json
+          python3 - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          root = Path("web/dist/firmware")
+          pointer = json.loads((root / "latest.json").read_text())
+          manifest = root / pointer["manifest"]
+          if not manifest.is_file():
+              raise SystemExit(f"Missing installer manifest: {manifest}")
+          manifest_bytes = manifest.read_bytes()
+          if hashlib.sha256(manifest_bytes).hexdigest() != pointer["sha256"]:
+              raise SystemExit("Installer manifest does not match latest.json")
+          data = json.loads(manifest_bytes)
+          for part in data["parts"]:
+              path = manifest.parent / part["file"]
+              if (not path.is_file() or path.stat().st_size != part["size"] or
+                      hashlib.sha256(path.read_bytes()).hexdigest() != part["sha256"]):
+                  raise SystemExit(f"Missing or incomplete installer part: {path}")
+
+          for asset in Path("web/dist/assets").glob("*.js"):
+              source = asset.read_text(errors="ignore")
+              if '"/devices/e1002/' in source or '"/renderer/wind-renderer.wasm' in source:
+                  raise SystemExit(f"Root-relative public asset escaped the Pages base: {asset}")
+          PY
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: web/dist
+
+  deploy-site:
+    name: Deploy website
+    needs: build-site
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
+
+  publish-firmware:
+    name: Publish tagged firmware
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [verify-web, build-firmware]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download release files
+        uses: actions/download-artifact@v7
+        with:
+          name: windscout-firmware-release
+          path: release
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           draft: false
           files: |
             release/windscout-seeedstudio_reterminal_e1002.bin
-            release/installer/latest.json
-            release/installer/${{ steps.version.outputs.value }}/*
+            release/installer/*
           generate_release_notes: true

@@ -1,6 +1,8 @@
+import { publicAssetUrl } from './publicAssetUrl'
+
 export const E1002_MODEL = Object.freeze({
-  url: '/devices/e1002/e1002.glb',
-  provenanceUrl: '/devices/e1002/provenance.json',
+  url: publicAssetUrl('devices/e1002/e1002.glb'),
+  provenanceUrl: publicAssetUrl('devices/e1002/provenance.json'),
   sourceUrl: 'https://files.seeedstudio.com/wiki/reterminal_e10xx/res/reTerminal_E1001_E1002_3D.stp',
   sourceSha256: 'd007d0db5ecd78f2109ee9115aa562b31d058fc054172b7237a4692c6e30a6b1',
   enclosureMm: Object.freeze({ width: 176, height: 120, depth: 17, standDepth: 53 }),

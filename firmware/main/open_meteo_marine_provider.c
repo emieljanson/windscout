@@ -7,6 +7,7 @@
 #include <time.h>
 
 #include "cJSON.h"
+#include "wind_timezone.h"
 
 #ifdef ESP_PLATFORM
 #include "esp_crt_bundle.h"
@@ -22,14 +23,11 @@ static bool copy_text(char *destination, size_t size, const char *source)
 
 bool open_meteo_marine_config_valid(const open_meteo_marine_config_t *config)
 {
-    if (!config || !config->endpoint || config->endpoint[0] == '\0' || !config->spot_id ||
-        !config->timezone || !isfinite(config->latitude) || !isfinite(config->longitude) ||
-        (config->development_mode && config->commercial_mode)) return false;
-    if (strcmp(config->endpoint, OPEN_METEO_MARINE_FREE_ENDPOINT) == 0) {
-        return config->development_mode && !config->commercial_mode;
-    }
-    if (config->commercial_mode) return config->api_key && config->api_key[0] != '\0';
-    return config->development_mode;
+    return config && config->spot_id && config->spot_id[0] != '\0' && config->timezone &&
+           config->timezone[0] != '\0' && isfinite(config->latitude) &&
+           config->latitude >= -90.0 && config->latitude <= 90.0 &&
+           isfinite(config->longitude) && config->longitude >= -180.0 &&
+           config->longitude <= 180.0;
 }
 
 static cJSON *array(cJSON *object, const char *name)
@@ -99,13 +97,13 @@ esp_err_t open_meteo_marine_parse_json(const open_meteo_marine_config_t *config,
             level_value->valuedouble < -2147483.648 || level_value->valuedouble > 2147483.647) {
             goto cleanup;
         }
-        time_t epoch = (time_t) timestamp;
-        struct tm local;
-        if (!localtime_r(&epoch, &local)) goto cleanup;
+        wind_local_datetime_t local;
+        if (wind_timezone_from_unix(config->timezone, timestamp, &local) != ESP_OK) goto cleanup;
         wind_tide_sample_t *sample = &parsed.samples[index];
         sample->timestamp = timestamp;
-        sample->local_hour = (uint8_t) local.tm_hour;
-        if (strftime(sample->local_date, sizeof(sample->local_date), "%Y-%m-%d", &local) != 10) {
+        sample->local_hour = local.hour;
+        if (wind_timezone_format_date(&local, sample->local_date,
+                                      sizeof(sample->local_date)) != ESP_OK) {
             goto cleanup;
         }
         sample->sea_level_mm = (int32_t) lround(level_value->valuedouble * 1000.0);
@@ -147,7 +145,7 @@ static esp_err_t fetch_tide(void *context, int64_t retrieved_at, wind_tide_t *ou
     char url[640];
     int written = snprintf(url, sizeof(url),
         "%s?latitude=%.6f&longitude=%.6f&hourly=sea_level_height_msl&timezone=%s&forecast_days=5&timeformat=unixtime&cell_selection=sea",
-        config->endpoint, config->latitude, config->longitude, config->timezone);
+        OPEN_METEO_MARINE_ENDPOINT, config->latitude, config->longitude, config->timezone);
     if (written <= 0 || (size_t) written >= sizeof(url)) return ESP_ERR_INVALID_SIZE;
     response_t response = {.body = calloc(1, OPEN_METEO_MARINE_RESPONSE_LIMIT + 1)};
     if (!response.body) return ESP_ERR_NO_MEM;
@@ -160,7 +158,6 @@ static esp_err_t fetch_tide(void *context, int64_t retrieved_at, wind_tide_t *ou
         free(response.body);
         return ESP_FAIL;
     }
-    if (config->api_key && config->api_key[0]) esp_http_client_set_header(client, "X-API-Key", config->api_key);
     esp_err_t result = esp_http_client_perform(client);
     int status = esp_http_client_get_status_code(client);
     esp_http_client_cleanup(client);

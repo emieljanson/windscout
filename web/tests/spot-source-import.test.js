@@ -66,6 +66,30 @@ describe('spot source import', () => {
     expect(first.candidates[0]).toMatchObject({ latitude: 54.7, longitude: 18.4 })
     expect(second.candidates[0]).toMatchObject({ latitude: 54.7, longitude: 18.4 })
     expect(fetchImpl).toHaveBeenCalledTimes(1)
+    expect(fetchImpl).toHaveBeenCalledWith(
+      new URL('https://maps.app.goo.gl/example'),
+      expect.objectContaining({ redirect: 'manual' }),
+    )
+  })
+
+  it('never follows Varun location links outside the approved map hosts', async () => {
+    const fetchImpl = vi.fn()
+    const external = await importVarunRecords([{
+      name: 'External', country: 'NL', locationUrl: 'https://example.com/location',
+    }], { fetchImpl })
+    expect(external.failures[0].reason).toBe('location-resolution-failed')
+    expect(fetchImpl).not.toHaveBeenCalled()
+
+    const redirectingFetch = vi.fn(async () => ({
+      ok: false,
+      status: 302,
+      headers: { get: () => 'http://127.0.0.1/private' },
+    }))
+    const redirected = await importVarunRecords([{
+      name: 'Redirect', country: 'NL', locationUrl: 'https://maps.app.goo.gl/redirect',
+    }], { fetchImpl: redirectingFetch })
+    expect(redirected.failures[0].reason).toBe('location-resolution-failed')
+    expect(redirectingFetch).toHaveBeenCalledTimes(1)
   })
 
   it('reports malformed Varun rows without aborting valid rows', async () => {

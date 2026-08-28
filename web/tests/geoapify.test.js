@@ -29,6 +29,7 @@ describe('Geoapify place provider', () => {
 
     await expect(searchGeoapifyPlaces('Edam', {
       apiKey: 'test-key',
+      bias: { latitude: 52.2, longitude: 5.3 },
       fetchImpl,
     })).resolves.toEqual([{
       id: 'edam-id',
@@ -42,6 +43,8 @@ describe('Geoapify place provider', () => {
     expect(url.searchParams.get('text')).toBe('Edam')
     expect(url.searchParams.get('limit')).toBe('5')
     expect(url.searchParams.get('lang')).toBe('en')
+    expect(url.searchParams.get('type')).toBe('locality')
+    expect(url.searchParams.get('bias')).toBe('proximity:5.3,52.2')
   })
 
   it('keeps only the highest-ranked result when locations render identically', async () => {

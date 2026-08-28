@@ -21,11 +21,14 @@
 #include "config.h"
 #include "config_manager.h"
 #include "debug_log.h"
+#include "storage.h"
+#include "wifi_manager.h"
+#include "wind_app.h"
+
+#if BOARD_HAL_TYPE != BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
 #include "ha_integration.h"
 #include "periodic_tasks.h"
-#include "storage.h"
-#include "utils.h"
-#include "wifi_manager.h"
+#endif
 
 // RTC memory to store expected wakeup time (persists across deep sleep)
 RTC_DATA_ATTR static time_t expected_wakeup_time = 0;
@@ -39,26 +42,39 @@ static time_t wake_target_boundary = 0;
 static const char *TAG = "power_manager";
 
 static TaskHandle_t sleep_timer_task_handle = NULL;
+#if BOARD_HAL_TYPE != BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
 static TaskHandle_t rotation_timer_task_handle = NULL;
+#endif
 static int64_t next_sleep_time = 0;  // Use absolute time for sleep timer
 static uint32_t auto_sleep_timeout_sec = AUTO_SLEEP_TIMEOUT_SEC;
 static volatile bool installer_active;
 static wakeup_source_t wakeup_source = WAKEUP_SOURCE_NONE;
+#if BOARD_HAL_TYPE != BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
 static int64_t next_rotation_time = 0;  // Use absolute time for rotation
+#endif
 static uint64_t ext1_wakeup_pin_mask = 0;
+static uint32_t requested_sleep_seconds;
 
+static bool scheduled_wake_enabled(void)
+{
+#if BOARD_HAL_TYPE == BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+    // WindScout is a forecast appliance. Its refresh schedule is product
+    // behavior, not the legacy photo-frame auto-rotation preference.
+    return true;
+#else
+    return config_manager_get_auto_rotate();
+#endif
+}
+
+#if BOARD_HAL_TYPE != BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
 static void rotation_timer_task(void *arg)
 {
     while (1) {
         vTaskDelay(pdMS_TO_TICKS(1000));
 
-        // Run active rotation when:
-        // 1. USB is connected (device stays awake), OR
-        // 2. Deep sleep is disabled (device stays awake on battery)
-        bool should_use_active_rotation =
-            board_hal_is_usb_connected() || !config_manager_get_deep_sleep_enabled();
-
-        if (!should_use_active_rotation) {
+        // USB power is the only supported always-awake state. On battery, the
+        // deep-sleep timer owns scheduled forecast wakes.
+        if (!board_hal_is_usb_connected()) {
             // Device will auto-sleep after 120 seconds, no need to reset timer
             continue;
         }
@@ -72,15 +88,11 @@ static void rotation_timer_task(void *arg)
                 int seconds_until_next = get_seconds_until_next_wakeup();
 
                 next_rotation_time = now + (seconds_until_next * 1000000LL);
-                const char *reason =
-                    board_hal_is_usb_connected() ? "USB powered" : "deep sleep disabled";
-                ESP_LOGI(TAG, "Active rotation scheduled in %d seconds (%s, %s)",
-                         seconds_until_next, "cron", reason);
+                ESP_LOGI(TAG, "Active rotation scheduled in %d seconds (%s, USB powered)",
+                         seconds_until_next, "cron");
             } else if (now >= next_rotation_time) {
                 // Time to rotate
-                const char *reason =
-                    board_hal_is_usb_connected() ? "USB powered" : "deep sleep disabled";
-                ESP_LOGI(TAG, "Active rotation triggered (%s)", reason);
+                ESP_LOGI(TAG, "Active rotation triggered (USB powered)");
 
                 trigger_image_rotation();
                 ha_notify_update();
@@ -97,6 +109,7 @@ static void rotation_timer_task(void *arg)
         }
     }
 }
+#endif
 
 static void sleep_timer_task(void *arg)
 {
@@ -111,16 +124,12 @@ static void sleep_timer_task(void *arg)
         // an interactive wake on a deep-sleep frame (BOOT button or cold
         // boot/power-on, both bounded by the auto-sleep timeout), or whenever
         // external power is present. Automated wakes (timer/rotate/clear) and
-        // always-on-battery operation keep power save: nobody is browsing, and
+        // automated battery operation keeps power save: nobody is browsing, and
         // full RX costs ~60-70mA extra.
         bool usb_powered = board_hal_is_usb_connected() || installer_active;
         bool interactive_wake =
             (wakeup_source == WAKEUP_SOURCE_BOOT_BUTTON || wakeup_source == WAKEUP_SOURCE_NONE);
-        if (config_manager_get_deep_sleep_enabled()) {
-            wifi_manager_set_performance_mode(interactive_wake || usb_powered);
-        } else {
-            wifi_manager_set_performance_mode(usb_powered);
-        }
+        wifi_manager_set_performance_mode(interactive_wake || usb_powered);
 
 #ifndef DEBUG_DEEP_SLEEP_WAKE
         // Skip auto-sleep when USB is connected
@@ -131,52 +140,42 @@ static void sleep_timer_task(void *arg)
         }
 #endif
 
-        // Handle auto-sleep timer when on battery (only if deep sleep is enabled)
-        if (config_manager_get_deep_sleep_enabled()) {
-            int64_t now = esp_timer_get_time();
+        // Handle the auto-sleep timer while running on battery.
+        int64_t now = esp_timer_get_time();
 
-            if (next_sleep_time == 0) {
-                // Initialize sleep timer
-                next_sleep_time = now + ((int64_t) auto_sleep_timeout_sec * 1000000LL);
+        if (next_sleep_time == 0) {
+            next_sleep_time = now + ((int64_t) auto_sleep_timeout_sec * 1000000LL);
+            last_blink_time = now;
+            last_log_time = now;
+            ESP_LOGI(TAG, "Auto-sleep timer started, will sleep in %lu seconds",
+                     (unsigned long) auto_sleep_timeout_sec);
+        }
+
+        int64_t remaining_us = next_sleep_time - now;
+        int32_t remaining_sec = (int32_t) (remaining_us / 1000000LL);
+
+        if (remaining_sec > 0) {
+            // Visual indicator: blink GREEN LED every 10 seconds
+            if ((now - last_blink_time) >= 10000000LL) {
+                board_hal_led_set(BOARD_HAL_LED_ACTIVITY, true);
+                vTaskDelay(pdMS_TO_TICKS(200));
+                board_hal_led_set(BOARD_HAL_LED_ACTIVITY, false);
                 last_blink_time = now;
-                last_log_time = now;
-                ESP_LOGI(TAG, "Auto-sleep timer started, will sleep in %lu seconds",
-                         (unsigned long) auto_sleep_timeout_sec);
             }
 
-            int64_t remaining_us = next_sleep_time - now;
-            int32_t remaining_sec = (int32_t) (remaining_us / 1000000LL);
-
-            if (remaining_sec > 0) {
-                // Visual indicator: blink GREEN LED every 10 seconds
-                if ((now - last_blink_time) >= 10000000LL) {
-                    board_hal_led_set(BOARD_HAL_LED_ACTIVITY, true);
-                    vTaskDelay(pdMS_TO_TICKS(200));
-                    board_hal_led_set(BOARD_HAL_LED_ACTIVITY, false);
-                    last_blink_time = now;
-                }
-
-                // Log countdown every 30 seconds
-                if ((now - last_log_time) >= 30000000LL) {
-                    ESP_LOGI(TAG, "Auto-sleep countdown: %ld seconds remaining", remaining_sec);
-                    last_log_time = now;
-                }
-            } else {
-                // Time to sleep
-                ESP_LOGI(TAG, "Sleep timeout reached, entering deep sleep");
-                power_manager_enter_sleep();
+            if ((now - last_log_time) >= 30000000LL) {
+                ESP_LOGI(TAG, "Auto-sleep countdown: %ld seconds remaining", remaining_sec);
+                last_log_time = now;
             }
         } else {
-            // Deep sleep disabled - reset timer to prevent it from triggering
-            next_sleep_time = 0;
+            ESP_LOGI(TAG, "Sleep timeout reached, entering deep sleep");
+            power_manager_enter_sleep();
         }
     }
 }
 
 static void power_manager_enable_auto_light_sleep(void)
 {
-    bool stay_fully_awake = !config_manager_get_deep_sleep_enabled();
-
     // Configure automatic light sleep with CPU frequency scaling
     // This allows the ESP32 to automatically enter light sleep when idle
     // and scale CPU frequency down to save power while maintaining WiFi connectivity
@@ -189,9 +188,7 @@ static void power_manager_enable_auto_light_sleep(void)
         // corrupts SD reads. Keep CPU frequency scaling, but no light sleep.
         .light_sleep_enable = false,
 #else
-        // Development/always-on mode prioritizes stable WiFi and flash access.
-        // Production deep-sleep mode may still use automatic light sleep while awake.
-        .light_sleep_enable = !stay_fully_awake,
+        .light_sleep_enable = true,
 #endif
     };
 
@@ -224,11 +221,10 @@ static void power_manager_disable_auto_light_sleep(void)
 
 esp_err_t power_manager_init(void)
 {
-    bool deep_sleep_enabled = config_manager_get_deep_sleep_enabled();
-    ESP_LOGI(TAG, "Deep sleep %s", deep_sleep_enabled ? "enabled" : "disabled");
+    ESP_LOGI(TAG, "Battery deep-sleep policy enabled");
 
     // Get wakeup causes bitmap (new API in ESP-IDF v6.0)
-    uint32_t wakeup_causes = esp_sleep_get_wakeup_cause();
+    uint32_t wakeup_causes = esp_sleep_get_wakeup_causes();
     ext1_wakeup_pin_mask = 0;
 
     // Determine wakeup source
@@ -251,7 +247,9 @@ esp_err_t power_manager_init(void)
             // If drift exceeds 30 seconds, force NTP sync
             if (drift > 30 || drift < -30) {
                 ESP_LOGW(TAG, "Time drift exceeds 30s, will force NTP sync");
+#if BOARD_HAL_TYPE != BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
                 periodic_tasks_force_run(SNTP_TASK_NAME);
+#endif
             }
             expected_wakeup_time = 0;  // Reset after checking
         }
@@ -315,8 +313,8 @@ esp_err_t power_manager_init(void)
     }
 
     // LEDs are initialized by board_hal_init(), just set initial state
-    // Power LED on when deep sleep is enabled (to indicate battery mode)
-    board_hal_led_set(BOARD_HAL_LED_POWER, deep_sleep_enabled);
+    // The power LED remains on while the device is awake.
+    board_hal_led_set(BOARD_HAL_LED_POWER, true);
     board_hal_led_set(BOARD_HAL_LED_ACTIVITY, false);
 
     // Skip auto-sleep timer if woken by ROTATE button or timer (image generation can take >120s)
@@ -326,7 +324,9 @@ esp_err_t power_manager_init(void)
     } else {
         xTaskCreate(sleep_timer_task, "sleep_timer", 4096, NULL, 5, &sleep_timer_task_handle);
     }
+#if BOARD_HAL_TYPE != BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
     xTaskCreate(rotation_timer_task, "rotation_timer", 16384, NULL, 5, &rotation_timer_task_handle);
+#endif
 
     power_manager_enable_auto_light_sleep();
 
@@ -336,6 +336,14 @@ esp_err_t power_manager_init(void)
 
 void power_manager_enter_sleep(void)
 {
+    // External power means the device is available for the browser installer
+    // and live dashboard updates. A timer wake must not put it back to sleep
+    // when the user plugged in USB while it was waking.
+    if (board_hal_is_usb_connected() || installer_active) {
+        ESP_LOGI(TAG, "External power or installer active; staying awake");
+        return;
+    }
+
     power_manager_disable_auto_light_sleep();
 
     ESP_LOGI(TAG, "Preparing to enter deep sleep mode");
@@ -346,21 +354,25 @@ void power_manager_enter_sleep(void)
     // uninitialized network stack, resetting the device into normal-init with no
     // rotation (#105). wifi_manager_is_connected() reads a static bool, so it is
     // safe to call before WiFi init.
+#if BOARD_HAL_TYPE != BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
     if (wifi_manager_is_connected()) {
         ha_notify_offline();
     }
+#endif
 
     // Turn off LEDs before sleep
     board_hal_led_set(BOARD_HAL_LED_POWER, false);
     board_hal_led_set(BOARD_HAL_LED_ACTIVITY, false);
 
-    // Check if auto-rotate is enabled
-    if (config_manager_get_auto_rotate()) {
-        // Use timer-based sleep for auto-rotate
-        int wake_seconds = get_seconds_until_next_wakeup();
+    if (scheduled_wake_enabled()) {
+        // Wake on the next forecast boundary, or on the single five-minute
+        // retry scheduled after a failed forecast refresh.
+        int wake_seconds = requested_sleep_seconds > 0
+                               ? (int) requested_sleep_seconds
+                               : wind_app_seconds_until_next_wake();
+        requested_sleep_seconds = 0;
 
-        ESP_LOGI(TAG, "Auto-rotate enabled, setting timer wake-up for %d seconds (%s)",
-                 wake_seconds, "cron");
+        ESP_LOGI(TAG, "Forecast wake scheduled in %d seconds", wake_seconds);
         esp_sleep_enable_timer_wakeup(wake_seconds * 1000000ULL);
 
         // Store expected wakeup time in RTC memory for drift detection
@@ -420,6 +432,12 @@ void power_manager_enter_sleep(void)
     esp_deep_sleep_start();
 }
 
+void power_manager_enter_sleep_with_timer(uint32_t sleep_time_sec)
+{
+    requested_sleep_seconds = sleep_time_sec > 0 ? sleep_time_sec : 1;
+    power_manager_enter_sleep();
+}
+
 void power_manager_reset_sleep_timer(void)
 {
     next_sleep_time = esp_timer_get_time() + ((int64_t) auto_sleep_timeout_sec * 1000000LL);
@@ -434,11 +452,17 @@ void power_manager_set_auto_sleep_timeout(uint32_t seconds)
 
 void power_manager_reset_rotate_timer(void)
 {
+#if BOARD_HAL_TYPE != BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
     int seconds_until_next = get_seconds_until_next_wakeup();
 
     next_rotation_time = esp_timer_get_time() + (seconds_until_next * 1000000LL);
     ESP_LOGI(TAG, "Rotation timer reset, next rotation in %d seconds (%s)", seconds_until_next,
              "cron");
+#else
+    // WindScout recalculates its forecast wake from the persisted schedule;
+    // it does not run the legacy in-process photo rotation timer.
+    ESP_LOGD(TAG, "Forecast schedule owns the next E1002 wake");
+#endif
 }
 
 int power_manager_get_seconds_until_wake_target(void)
@@ -458,15 +482,6 @@ int power_manager_get_seconds_until_wake_target(void)
 wakeup_source_t power_manager_get_wakeup_source(void)
 {
     return wakeup_source;
-}
-
-void power_manager_set_deep_sleep_enabled(bool enabled)
-{
-    // Save to NVS via config_manager
-    config_manager_set_deep_sleep_enabled(enabled);
-
-    // Update power LED: on when deep sleep enabled, off when disabled
-    board_hal_led_set(BOARD_HAL_LED_POWER, enabled);
 }
 
 void power_manager_set_installer_active(bool active)

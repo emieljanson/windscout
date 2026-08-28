@@ -15,14 +15,16 @@ when the final bitmap changed.
 - Geometry sits on integer pixels; text and arrows pass through one final
   Floyd-Steinberg monochrome dither pass.
 
-## Local configuration
+## Forecast service
 
-Copy `main/wind_config.example.h` to `main/wind_config.local.h` and adjust the
-spot and provider settings. The local file is ignored by Git.
+WindScout uses Open-Meteo directly for wind, weather, temperature and optional
+sea-level forecasts. The website installs the spot, timezone and forecast model;
+every firmware build uses the same fixed Open-Meteo endpoints.
 
-The public Open-Meteo endpoint is only appropriate for development and
-non-commercial use. A product build must use a licensed customer endpoint and
-API key; commercial mode deliberately refuses an empty key.
+During USB setup the browser seeds both the device clock and its battery-backed
+RTC. Local forecast and wake times use the installed spot's IANA timezone via
+the bundled TZDB 2025b rules, including daylight-saving changes and fractional
+UTC offsets.
 
 ## Build and test
 
@@ -32,6 +34,7 @@ make test
 idf.py -p /dev/cu.usbmodemXXXX flash monitor
 ```
 
-Wi-Fi provisioning, deep sleep, battery reporting, hardware buttons and OTA are
-retained from the upstream ESP32 Photo Frame firmware. See `UPSTREAM.md` for
-origin and license details.
+The E1002 build contains only the WindScout dashboard, USB installer, Wi-Fi
+client, forecast cache and battery/deep-sleep runtime. The upstream photo-frame
+UI, albums, captive portal, Home Assistant and photo OTA runtime are excluded.
+See `UPSTREAM.md` for origin and license details.

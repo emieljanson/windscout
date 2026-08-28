@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "wind_renderer.h"
+
 #define CONFIG_RECORD_MAGIC UINT32_C(0x57434647)
 
 typedef struct {
@@ -46,7 +48,7 @@ void installed_configuration_default(installed_configuration_t *config)
     snprintf(config->spot.timezone, sizeof(config->spot.timezone), "Europe/Amsterdam");
     snprintf(config->forecast_model, sizeof(config->forecast_model), "best_match");
     config->display.show_threshold = false;
-    config->display.threshold_kt = 17;
+    config->display.threshold_kt = WIND_RENDERER_DEFAULT_THRESHOLD_KT;
     config->display.show_weather = true;
     config->display.show_temperature = false;
     config->display.show_tide = false;

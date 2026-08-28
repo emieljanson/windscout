@@ -15,7 +15,7 @@ extern "C" {
 #define INSTALLED_CONFIGURATION_WRITE_BOUNDARY_COUNT 3
 
 typedef struct {
-    char id[64];
+    char id[65];
     char display_name[65];
     double latitude;
     double longitude;

@@ -6,12 +6,12 @@
 
 extern "C" {
 #include "open_meteo_knmi_provider.h"
+#include "wind_timezone.h"
 }
 
-static open_meteo_knmi_config_t development_config()
+static open_meteo_knmi_config_t config()
 {
-    return {OPEN_METEO_FREE_ENDPOINT, "", true, false, "edam", "Edam", 52.5126, 5.0486,
-            "Europe/Amsterdam", "knmi_seamless"};
+    return {"edam", "Edam", 52.5126, 5.0486, "Europe/Amsterdam", "knmi_seamless"};
 }
 
 static std::string fixture()
@@ -24,9 +24,7 @@ static std::string fixture()
 
 TEST(WindProvider, ParsesCompleteLocalFiveDayForecast)
 {
-    setenv("TZ", "Europe/Amsterdam", 1);
-    tzset();
-    auto config = development_config();
+    auto config = ::config();
     auto json = fixture();
     wind_forecast_t forecast;
     ASSERT_EQ(open_meteo_knmi_parse_json(&config, json.data(), json.size(), 1787544000,
@@ -49,9 +47,7 @@ TEST(WindProvider, ParsesCompleteLocalFiveDayForecast)
 
 TEST(WindProvider, KeepsTemperatureIndependentWhenOneValueIsNull)
 {
-    setenv("TZ", "Europe/Amsterdam", 1);
-    tzset();
-    auto config = development_config();
+    auto config = ::config();
     auto json = fixture();
     const auto value = json.find("-2.35");
     ASSERT_NE(value, std::string::npos);
@@ -65,7 +61,7 @@ TEST(WindProvider, KeepsTemperatureIndependentWhenOneValueIsNull)
 
 TEST(WindProvider, RejectsTimezoneUnitsAndArrayLengthMismatch)
 {
-    auto config = development_config();
+    auto config = ::config();
     auto json = fixture();
     wind_forecast_t forecast;
     auto timezone = json;
@@ -87,7 +83,7 @@ TEST(WindProvider, RejectsTimezoneUnitsAndArrayLengthMismatch)
 
 TEST(WindProvider, RejectsPartialAndOversizedResponsesWithoutOutputMutation)
 {
-    auto config = development_config();
+    auto config = ::config();
     wind_forecast_t forecast;
     std::memset(&forecast, 0x5a, sizeof(forecast));
     auto before = forecast;
@@ -102,15 +98,24 @@ TEST(WindProvider, RejectsPartialAndOversizedResponsesWithoutOutputMutation)
               ESP_ERR_INVALID_ARG);
 }
 
-TEST(WindProvider, FailsClosedAcrossLicensingModes)
+TEST(WindProvider, UsesTheWindScoutOpenMeteoService)
 {
-    auto config = development_config();
+    auto config = ::config();
     EXPECT_TRUE(open_meteo_knmi_config_valid(&config));
-    config.commercial_mode = true;
-    config.development_mode = false;
+    EXPECT_STREQ(open_meteo_knmi_endpoint(), OPEN_METEO_ENDPOINT);
+}
+
+TEST(WindProvider, AcceptsEveryConfiguratorModelAndSpotTimezone)
+{
+    auto config = ::config();
+    const char *models[] = {
+        "best_match", "knmi_seamless", "ecmwf_ifs025", "icon_seamless", "gfs_seamless",
+    };
+    config.timezone = "America/New_York";
+    for (const char *model : models) {
+        config.model = model;
+        EXPECT_TRUE(open_meteo_knmi_config_valid(&config)) << model;
+    }
+    config.model = "unknown_model";
     EXPECT_FALSE(open_meteo_knmi_config_valid(&config));
-    config.endpoint = "https://customer.example/v1/forecast";
-    EXPECT_FALSE(open_meteo_knmi_config_valid(&config));
-    config.api_key = "customer-key";
-    EXPECT_TRUE(open_meteo_knmi_config_valid(&config));
 }

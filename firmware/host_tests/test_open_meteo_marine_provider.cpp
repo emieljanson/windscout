@@ -6,12 +6,12 @@
 
 extern "C" {
 #include "open_meteo_marine_provider.h"
+#include "wind_timezone.h"
 }
 
 static open_meteo_marine_config_t config()
 {
-    return {OPEN_METEO_MARINE_FREE_ENDPOINT, "", true, false, "brouwersdam",
-            51.7506, 3.8577, "Europe/Amsterdam"};
+    return {"brouwersdam", 51.7506, 3.8577, "Europe/Amsterdam"};
 }
 
 static std::string response(bool unsupported = false, bool partial = false, int count = 120,
@@ -37,8 +37,6 @@ static std::string response(bool unsupported = false, bool partial = false, int 
 
 TEST(OpenMeteoMarineProvider, PreservesBothTwoOClockHoursAcrossAutumnDst)
 {
-    setenv("TZ", "Europe/Amsterdam", 1);
-    tzset();
     auto settings = config();
     const int64_t start = 1792792800; // 2026-10-24 00:00 Europe/Amsterdam
     auto json = response(false, false, 121, start);
@@ -55,8 +53,6 @@ TEST(OpenMeteoMarineProvider, PreservesBothTwoOClockHoursAcrossAutumnDst)
 
 TEST(OpenMeteoMarineProvider, ParsesCompleteHourlySeries)
 {
-    setenv("TZ", "Europe/Amsterdam", 1);
-    tzset();
     auto settings = config();
     auto json = response();
     wind_tide_t tide;
@@ -70,8 +66,6 @@ TEST(OpenMeteoMarineProvider, ParsesCompleteHourlySeries)
 
 TEST(OpenMeteoMarineProvider, DistinguishesUnsupportedFromInvalidPartialData)
 {
-    setenv("TZ", "Europe/Amsterdam", 1);
-    tzset();
     auto settings = config();
     wind_tide_t tide;
     auto unsupported = response(true);

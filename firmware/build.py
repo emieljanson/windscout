@@ -26,11 +26,22 @@ def run_idf(args):
     export_script = os.path.join(idf_path, "export.sh")
 
     if os.path.isfile(export_script):
+        environment = os.environ.copy()
+        if not environment.get("IDF_PYTHON_ENV_PATH"):
+            env_root = Path.home() / ".espressif" / "python_env"
+            candidates = sorted(env_root.glob("idf6.0_py*_env"), reverse=True)
+            for candidate in candidates:
+                if candidate.joinpath("bin", "python").is_file():
+                    environment["IDF_PYTHON_ENV_PATH"] = str(candidate)
+                    break
         command = (
             f"source {shlex.quote(export_script)} >/dev/null && "
             f"exec idf.py {shlex.join(args)}"
         )
-        return subprocess.run(["/bin/zsh", "-lc", command], check=True)
+        # Keep the caller's PATH. A login shell may replace it and make tools
+        # such as CMake disappear even though ESP-IDF was launched from a
+        # correctly configured development environment.
+        return subprocess.run(["/bin/zsh", "-c", command], check=True, env=environment)
 
     if shutil.which("idf.py"):
         return subprocess.run(["idf.py", *args], check=True)

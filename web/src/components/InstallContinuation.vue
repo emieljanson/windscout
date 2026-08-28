@@ -1,27 +1,43 @@
 <script setup>
-import { ref } from 'vue'
+import { nextTick, ref } from 'vue'
+import InstallerPanel from './installer/InstallerPanel.vue'
 
 const open = ref(false)
+const trigger = ref(null)
+const props = defineProps({ configuration: { type: Object, required: true } })
+const testSessionFactory = import.meta.env.DEV
+  ? globalThis.__WINDSCOUT_INSTALLER_SESSION_FACTORY__
+  : undefined
+
+function start() {
+  open.value = true
+}
+
+async function close() {
+  open.value = false
+  await nextTick()
+  trigger.value?.focus()
+}
 </script>
 
 <template>
-  <section class="install-continuation" aria-labelledby="install-title">
+  <section class="install-continuation" aria-labelledby="install-entry-title">
     <button
+      ref="trigger"
       data-testid="install-continuation"
       class="install-button"
       type="button"
       :aria-expanded="open"
-      aria-controls="install-explanation"
-      @click="open = !open"
+      aria-controls="installer-flow"
+      @click="start"
     >
-      <span id="install-title">Install on device</span>
-      <svg aria-hidden="true" viewBox="0 0 16 16">
-        <path v-if="open" d="M4 8h8" />
-        <path v-else d="M3.5 8h9m-3.5-3.5L12.5 8 9 11.5" />
-      </svg>
+      <span id="install-entry-title">Install</span>
     </button>
-    <p v-if="open" id="install-explanation" class="install-explanation">
-      USB installation is the next build step. Soon this button will guide you through connecting, installing, and setting up Wi-Fi — it does not access your device yet.
-    </p>
+    <InstallerPanel
+      v-if="open"
+      :configuration="props.configuration"
+      :session-factory="testSessionFactory"
+      @close="close"
+    />
   </section>
 </template>

@@ -3,6 +3,8 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include "cJSON.h"
+
 static uint16_t read_u16(const uint8_t *input)
 {
     return (uint16_t) input[0] | ((uint16_t) input[1] << 8);
@@ -63,6 +65,18 @@ static void seek_magic(wind_usb_parser_t *parser)
     }
 }
 
+static bool starts_new_session(uint32_t request_id, uint16_t message_type,
+                               const uint8_t *payload, size_t length)
+{
+    if (request_id != 1 || message_type != WIND_USB_MESSAGE_REQUEST || !payload) return false;
+    cJSON *json = cJSON_ParseWithLength((const char *) payload, length);
+    const cJSON *command = json ? cJSON_GetObjectItemCaseSensitive(json, "command") : NULL;
+    const bool is_hello = cJSON_IsObject(json) && cJSON_IsString(command) &&
+                          command->valuestring && strcmp(command->valuestring, "hello") == 0;
+    cJSON_Delete(json);
+    return is_hello;
+}
+
 esp_err_t wind_usb_parser_feed(wind_usb_parser_t *parser, const uint8_t *bytes, size_t length,
                                wind_usb_frame_callback_t callback, void *context)
 {
@@ -99,9 +113,14 @@ esp_err_t wind_usb_parser_feed(wind_usb_parser_t *parser, const uint8_t *bytes, 
                 continue;
             }
             const uint32_t request_id = read_u32(parser->buffer + 12);
+            const uint16_t message_type = read_u16(parser->buffer + 10);
+            if (starts_new_session(request_id, message_type,
+                                   parser->buffer + WIND_USB_HEADER_SIZE, payload_length)) {
+                parser->has_last_request = false;
+            }
             if (!parser->has_last_request || request_id > parser->last_request_id) {
                 const wind_usb_frame_t frame = {
-                    .message_type = read_u16(parser->buffer + 10),
+                    .message_type = message_type,
                     .request_id = request_id,
                     .payload = parser->buffer + WIND_USB_HEADER_SIZE,
                     .payload_length = payload_length,

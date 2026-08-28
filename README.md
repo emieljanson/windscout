@@ -1,8 +1,23 @@
 # WindScout
 
+This is the WindScout monorepo. The production configurator, browser installer,
+device firmware, shared renderer, tests, and release workflow all live here.
+The former `windscout-site` repository is legacy and is not a build or release
+dependency.
+
 ## Browser installer artifacts
 
-Tagged E1002 firmware releases publish both the existing OTA application binary and a browser-installer bundle. The bundle is generated from ESP-IDF's `flasher_args.json`, contains separate checksummed flash parts, and exposes clean-install and preserving-update write sets. Generate and validate it locally after an E1002 build with:
+Owner instructions are in [`docs/setup.md`](docs/setup.md), USB recovery in
+[`docs/recovery.md`](docs/recovery.md), and release evidence in
+[`docs/release.md`](docs/release.md).
+
+Every push to `main` builds the configurator and the E1002 firmware together,
+then deploys a website containing that exact firmware bundle. Tagged E1002
+releases (`v*`) additionally publish the OTA application and browser-installer
+files as a GitHub Release. The bundle is generated from ESP-IDF's
+`flasher_args.json`, contains separate checksummed flash parts, and exposes
+clean-install and preserving-update write sets. Generate and validate it
+locally after an E1002 build with:
 
 ```sh
 cd firmware
