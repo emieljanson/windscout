@@ -62,6 +62,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Install host test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes libpng-dev
+
       - name: Run firmware host tests
         run: make -C firmware test
 
