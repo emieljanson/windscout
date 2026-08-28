@@ -133,7 +133,7 @@ describe('WindScout settings panel', () => {
       personal: true,
     }
     const addPersonalSpot = vi.spyOn(store, 'addPersonalSpot').mockReturnValue(personalSpot)
-    const selectSpot = vi.spyOn(store, 'selectSpot').mockResolvedValue(true)
+    const selectSpot = vi.spyOn(store, 'selectSpot').mockReturnValue(new Promise(() => {}))
     mountSettings()
     const spotCombobox = wrapper.findComponent(SettingCombobox)
 
@@ -146,9 +146,10 @@ describe('WindScout settings panel', () => {
     const dialog = wrapper.findComponent(SpotCreationDialog)
     expect(dialog.props('open')).toBe(true)
     expect(dialog.props('initialQuery')).toBe('Edam harbour')
-    await dialog.props('saveSpot')(personalSpot)
+    const savedSpot = dialog.props('saveSpot')(personalSpot)
     await nextTick()
 
+    expect(savedSpot).toBe(personalSpot)
     expect(addPersonalSpot).toHaveBeenCalledWith(personalSpot)
     expect(selectSpot).toHaveBeenCalledWith(personalSpot.id)
     expect(spotCombobox.props('searchTerm')).toBe('Edam harbour')

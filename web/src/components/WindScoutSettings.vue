@@ -95,12 +95,15 @@ function createSpot(query) {
   spotDialogOpen.value = true
 }
 
-async function saveSpot(input) {
+function saveSpot(input) {
   const spot = store.addPersonalSpot(input)
   if (!spot) return null
   spotHasUserSelection.value = true
-  await store.selectSpot(spot.id)
   spotSearchTerm.value = spot.name
+  // The spot is already persisted. Close the dialog immediately and let the
+  // forecast update in the background instead of making confirmation depend
+  // on network and rendering speed.
+  void store.selectSpot(spot.id)
   return spot
 }
 
