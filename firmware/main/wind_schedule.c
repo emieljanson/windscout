@@ -1,9 +1,10 @@
 #include "wind_schedule.h"
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#include "wind_timezone.h"
 
 #ifdef ESP_PLATFORM
 #include "wind_config.h"
@@ -28,25 +29,6 @@ static uint32_t checksum_bytes(const void *data, size_t length)
     return hash;
 }
 
-static const char *active_spot_id(void)
-{
-#ifdef ESP_PLATFORM
-    return WIND_SPOT_ID;
-#else
-    return "host";
-#endif
-}
-
-static const char *active_timezone(void)
-{
-#ifdef ESP_PLATFORM
-    return WIND_TIMEZONE;
-#else
-    const char *timezone = getenv("TZ");
-    return timezone && timezone[0] ? timezone : "UTC";
-#endif
-}
-
 static esp_err_t initialize_scope(wind_schedule_state_t *state, const char *spot_id,
                                   const char *timezone)
 {
@@ -59,13 +41,6 @@ static esp_err_t initialize_scope(wind_schedule_state_t *state, const char *spot
     memcpy(state->spot_id, spot_id, strlen(spot_id) + 1);
     memcpy(state->timezone, timezone, strlen(timezone) + 1);
     return ESP_OK;
-}
-
-void wind_schedule_state_clear(wind_schedule_state_t *state)
-{
-    if (state) {
-        initialize_scope(state, active_spot_id(), active_timezone());
-    }
 }
 
 esp_err_t wind_schedule_state_set_scope(wind_schedule_state_t *state, const char *spot_id,
@@ -82,50 +57,61 @@ bool wind_schedule_state_matches_scope(const wind_schedule_state_t *state, const
            strcmp(state->spot_id, spot_id) == 0 && strcmp(state->timezone, timezone) == 0;
 }
 
-static time_t boundary_for_day(const struct tm *day, int minutes)
+static int64_t boundary_for_day(const char *timezone, const wind_local_datetime_t *day,
+                                int minutes)
 {
-    struct tm value = *day;
-    value.tm_hour = minutes / 60;
-    value.tm_min = minutes % 60;
-    value.tm_sec = 0;
-    value.tm_isdst = -1;
-    return mktime(&value);
+    wind_local_datetime_t value = *day;
+    value.hour = (uint8_t) (minutes / 60);
+    value.minute = (uint8_t) (minutes % 60);
+    value.second = 0;
+    int64_t unix_seconds = 0;
+    return wind_timezone_to_unix(timezone, &value, &unix_seconds) == ESP_OK ? unix_seconds : 0;
 }
 
-int64_t wind_schedule_latest_boundary(time_t now)
+int64_t wind_schedule_latest_boundary(const char *timezone, time_t now)
 {
-    struct tm local;
-    localtime_r(&now, &local);
+    wind_local_datetime_t local;
+    if (wind_timezone_from_unix(timezone, now, &local) != ESP_OK) return 0;
     int64_t latest = 0;
     for (int i = 0; i < WIND_SCHEDULE_BOUNDARY_COUNT; ++i) {
-        time_t candidate = boundary_for_day(&local, BOUNDARY_MINUTES[i]);
+        int64_t candidate = boundary_for_day(timezone, &local, BOUNDARY_MINUTES[i]);
         if (candidate <= now && candidate > latest) {
             latest = candidate;
         }
     }
     if (latest == 0) {
-        local.tm_mday -= 1;
-        local.tm_isdst = -1;
-        mktime(&local);
-        latest = boundary_for_day(&local, BOUNDARY_MINUTES[WIND_SCHEDULE_BOUNDARY_COUNT - 1]);
+        if (wind_timezone_shift_date(&local, -1) != ESP_OK) return 0;
+        latest = boundary_for_day(timezone, &local,
+                                  BOUNDARY_MINUTES[WIND_SCHEDULE_BOUNDARY_COUNT - 1]);
     }
     return latest;
 }
 
-int64_t wind_schedule_next_boundary(time_t now)
+int64_t wind_schedule_next_boundary(const char *timezone, time_t now)
 {
-    struct tm local;
-    localtime_r(&now, &local);
+    wind_local_datetime_t local;
+    if (wind_timezone_from_unix(timezone, now, &local) != ESP_OK) return 0;
     for (int i = 0; i < WIND_SCHEDULE_BOUNDARY_COUNT; ++i) {
-        time_t candidate = boundary_for_day(&local, BOUNDARY_MINUTES[i]);
+        int64_t candidate = boundary_for_day(timezone, &local, BOUNDARY_MINUTES[i]);
         if (candidate > now) {
             return candidate;
         }
     }
-    local.tm_mday += 1;
-    local.tm_isdst = -1;
-    mktime(&local);
-    return boundary_for_day(&local, BOUNDARY_MINUTES[0]);
+    if (wind_timezone_shift_date(&local, 1) != ESP_OK) return 0;
+    return boundary_for_day(timezone, &local, BOUNDARY_MINUTES[0]);
+}
+
+int64_t wind_schedule_next_attempt(const wind_schedule_state_t *state, time_t now)
+{
+    if (!state || state->schema_version != WIND_SCHEDULE_SCHEMA_VERSION ||
+        state->timezone[0] == '\0') {
+        return 0;
+    }
+    int64_t next = wind_schedule_next_boundary(state->timezone, now);
+    if (state && state->retry_at > 0 && state->retry_at < next) {
+        return state->retry_at > now ? state->retry_at : now;
+    }
+    return next;
 }
 
 bool wind_schedule_is_due(const wind_schedule_state_t *state, time_t now, int64_t *out_boundary)
@@ -133,11 +119,24 @@ bool wind_schedule_is_due(const wind_schedule_state_t *state, time_t now, int64_
     if (!state || state->schema_version != WIND_SCHEDULE_SCHEMA_VERSION) {
         return false;
     }
-    int64_t boundary = wind_schedule_latest_boundary(now);
+    int64_t boundary = wind_schedule_latest_boundary(state->timezone, now);
     if (out_boundary) {
         *out_boundary = boundary;
     }
     return boundary > state->last_attempted_boundary && boundary > state->last_satisfied_boundary;
+}
+
+bool wind_schedule_retry_is_due(const wind_schedule_state_t *state, time_t now,
+                                int64_t *out_boundary)
+{
+    if (!state || state->schema_version != WIND_SCHEDULE_SCHEMA_VERSION ||
+        state->retry_at <= 0 || state->retry_at > now) {
+        return false;
+    }
+    if (out_boundary) {
+        *out_boundary = state->retry_boundary;
+    }
+    return true;
 }
 
 void wind_schedule_mark_attempted(wind_schedule_state_t *state, int64_t boundary)
@@ -152,6 +151,25 @@ void wind_schedule_mark_satisfied(wind_schedule_state_t *state, int64_t boundary
     if (state && boundary > state->last_satisfied_boundary) {
         state->last_satisfied_boundary = boundary;
     }
+}
+
+void wind_schedule_schedule_retry(wind_schedule_state_t *state, int64_t boundary,
+                                  int64_t retry_at)
+{
+    if (!state || boundary <= 0 || retry_at <= 0) {
+        return;
+    }
+    state->retry_boundary = boundary;
+    state->retry_at = retry_at;
+}
+
+void wind_schedule_consume_retry(wind_schedule_state_t *state)
+{
+    if (!state) {
+        return;
+    }
+    state->retry_boundary = 0;
+    state->retry_at = 0;
 }
 
 esp_err_t wind_schedule_state_load_scoped(const char *path, const char *spot_id,
@@ -181,11 +199,6 @@ esp_err_t wind_schedule_state_load_scoped(const char *path, const char *spot_id,
     }
     *out_state = record.state;
     return ESP_OK;
-}
-
-esp_err_t wind_schedule_state_load(const char *path, wind_schedule_state_t *out_state)
-{
-    return wind_schedule_state_load_scoped(path, active_spot_id(), active_timezone(), out_state);
 }
 
 esp_err_t wind_schedule_state_store(const char *path, const wind_schedule_state_t *state)

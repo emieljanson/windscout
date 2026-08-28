@@ -939,7 +939,7 @@ static esp_err_t decode_jpg_buffer(const uint8_t *jpg_data, size_t jpg_size, uin
 
     *rgb_buffer = (uint8_t *) heap_caps_malloc(outimg.output_len, MALLOC_CAP_SPIRAM);
     if (!*rgb_buffer) {
-        ESP_LOGE(TAG, "Failed to allocate JPG RGB buffer of %u bytes", outimg.output_len);
+        ESP_LOGE(TAG, "Failed to allocate JPG RGB buffer of %zu bytes", outimg.output_len);
         return ESP_ERR_NO_MEM;
     }
 

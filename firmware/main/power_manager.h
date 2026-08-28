@@ -38,6 +38,7 @@ void power_manager_reset_rotate_timer(void);
  */
 int power_manager_get_seconds_until_wake_target(void);
 wakeup_source_t power_manager_get_wakeup_source(void);
-void power_manager_set_deep_sleep_enabled(bool enabled);
+void power_manager_set_installer_active(bool active);
+bool power_manager_is_installer_active(void);
 
 #endif

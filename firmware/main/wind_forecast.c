@@ -62,6 +62,7 @@ bool wind_forecast_validate(const wind_forecast_t *forecast)
             if (sample->local_hour != REQUIRED_HOURS[s] || sample->timestamp <= previous_timestamp ||
                 sample->wind_knots < 0 || sample->gust_knots < 0 ||
                 sample->destination_degrees >= 360 || sample->weather_available > 1 ||
+                sample->temperature_available > 1 ||
                 (sample->weather_available &&
                  (sample->cloud_cover_percent > 100 || sample->is_day > 1))) {
                 return false;

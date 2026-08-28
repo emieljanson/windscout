@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "id": "osm-wind-watersports-2026-08-27",
+      "adapter": "osm",
+      "input": "sources/osm-wind-watersports-2026-08-27.json",
+      "upstream": "https://www.openstreetmap.org/",
+      "snapshot": "2026-08-27T14:48:11Z",
+      "query": "nwr[\"sport\"~\"(^|;)(kitesurfing|windsurfing|sailing)(;|$)\"]; out center tags bb;",
+      "releaseEligible": true,
+      "validation": {
+        "mode": "trusted-location",
+        "timezone": "geoapify-reverse"
+      },
+      "rights": {
+        "license": "ODbL-1.0",
+        "redistribution": true,
+        "attribution": "© OpenStreetMap contributors"
+      }
+    },
+    {
+      "id": "varun-8f304b9",
+      "adapter": "varun",
+      "input": "sources/varun-8f304b9-minimal.json",
+      "upstream": "https://github.com/pwittchen/varun.surf",
+      "snapshot": "8f304b9a15f633d4cde1f5e1489a9675b25d0d1d",
+      "releaseEligible": true,
+      "validation": {
+        "mode": "trusted-location",
+        "timezone": "geoapify-reverse"
+      },
+      "rights": {
+        "license": "Direct permission for Windscout",
+        "redistribution": true,
+        "attribution": "Varun spot dataset",
+        "permission": {
+          "recorded": "2026-08-27",
+          "grantedBy": "Varun maintainer",
+          "scope": "Use and publish spot names and coordinates in Windscout",
+          "evidence": "Permission relayed directly to the Windscout project owner"
+        }
+      }
+    }
+  ]
+}

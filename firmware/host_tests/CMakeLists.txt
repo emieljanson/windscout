@@ -27,6 +27,21 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(cjson)
 
+set(ACETIMEC_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../components/acetimec/src")
+file(GLOB ACETIMEC_HOST_SOURCES CONFIGURE_DEPENDS
+  "${ACETIMEC_SOURCE_DIR}/acetimec/*.c"
+  "${ACETIMEC_SOURCE_DIR}/zoneinfo/*.c"
+  "${ACETIMEC_SOURCE_DIR}/zonedb2025/*.c"
+)
+add_library(acetimec_host STATIC ${ACETIMEC_HOST_SOURCES})
+target_include_directories(acetimec_host PUBLIC ${ACETIMEC_SOURCE_DIR})
+add_library(wind_timezone_host STATIC ../main/wind_timezone.c)
+target_include_directories(wind_timezone_host PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/stubs
+  ${CMAKE_CURRENT_SOURCE_DIR}/../main
+)
+target_link_libraries(wind_timezone_host PUBLIC acetimec_host)
+
 # Enable testing
 enable_testing()
 
@@ -156,13 +171,71 @@ function(add_wind_test target test_source)
     ${CMAKE_CURRENT_SOURCE_DIR}/stubs
     ${CMAKE_CURRENT_SOURCE_DIR}/../main
   )
-  target_link_libraries(${target} GTest::gtest_main m)
+  target_link_libraries(${target} GTest::gtest_main wind_timezone_host m)
   gtest_discover_tests(${target})
 endfunction()
 
 add_wind_test(wind_forecast_test test_wind_forecast.cpp ../main/wind_forecast.c)
 
-add_wind_test(wind_spots_test test_wind_spots.cpp ../main/wind_spots.c)
+add_wind_test(wind_timezone_test test_wind_timezone.cpp)
+
+add_wind_test(wind_clock_test test_wind_clock.cpp ../main/wind_clock.c)
+
+add_wind_test(wind_tide_test test_wind_tide.cpp ../main/wind_tide.c)
+
+add_wind_test(
+  wind_display_config_test
+  test_wind_display_config.cpp
+  ../main/wind_display_config.c
+)
+
+add_wind_test(
+  open_meteo_marine_provider_test
+  test_open_meteo_marine_provider.cpp
+  ../main/wind_tide.c
+  ../main/open_meteo_marine_provider.c
+)
+target_link_libraries(open_meteo_marine_provider_test cjson)
+target_include_directories(open_meteo_marine_provider_test BEFORE PRIVATE ${cjson_SOURCE_DIR})
+
+add_wind_test(
+  wind_tide_cache_test
+  test_wind_tide_cache.cpp
+  ../main/wind_tide.c
+  ../main/wind_tide_cache.c
+)
+
+add_wind_test(
+  wind_spots_test
+  test_wind_spots.cpp
+  ../main/wind_spots.c
+  ../main/installed_configuration.c
+)
+
+add_wind_test(
+  installed_configuration_test
+  test_installed_configuration.cpp
+  ../main/installed_configuration.c
+  ../main/wind_display_config.c
+)
+
+add_wind_test(
+  wind_usb_protocol_test
+  test_wind_usb_protocol.cpp
+  ../main/wind_usb_protocol.c
+)
+target_link_libraries(wind_usb_protocol_test cjson)
+target_include_directories(wind_usb_protocol_test BEFORE PRIVATE ${cjson_SOURCE_DIR})
+
+add_wind_test(
+  installer_service_test
+  test_installer_service.cpp
+  ../main/wind_installer_service.c
+  ../main/installed_configuration.c
+  ../main/wind_clock.c
+)
+target_link_libraries(installer_service_test cjson)
+target_include_directories(installer_service_test BEFORE PRIVATE ${cjson_SOURCE_DIR})
 
 add_wind_test(
   wind_provider_test
@@ -190,6 +263,16 @@ add_wind_test(
   ../main/wind_schedule.c
 )
 
+add_wind_test(production_power_policy_test test_production_power_policy.cpp)
+target_compile_definitions(
+  production_power_policy_test
+  PRIVATE
+    WIND_MAIN_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/../main/windscout_main.c"
+    WIND_POWER_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/../main/power_manager.c"
+    WIFI_MANAGER_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/../main/wifi_manager.c"
+    WIND_CMAKE_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/../main/CMakeLists.txt"
+)
+
 add_wind_test(
   wind_app_test
   test_wind_app.cpp
@@ -197,15 +280,6 @@ add_wind_test(
   ../main/wind_cache.c
   ../main/wind_schedule.c
   ../main/wind_app.c
-)
-
-add_test(
-  NAME wind_config_validation_test
-  COMMAND ${CMAKE_COMMAND}
-    -DTEST_C_COMPILER=${CMAKE_C_COMPILER}
-    -DWIND_CONFIG_INCLUDE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/../main
-    -DTEST_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}/wind_config_validation
-    -P ${CMAKE_CURRENT_SOURCE_DIR}/test_wind_config.cmake
 )
 
 set(WIND_FONT_SOURCES
@@ -225,10 +299,37 @@ add_wind_test(wind_font_test test_wind_font.cpp ${WIND_FONT_SOURCES})
 add_wind_test(
   wind_renderer_test
   test_wind_renderer.cpp
+  ../../shared/renderer-fixtures/wind_renderer_fixture.c
   ../main/wind_renderer.c
   ${WIND_FONT_SOURCES}
 )
+target_include_directories(
+  wind_renderer_test
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../shared/renderer-fixtures
+)
 target_compile_definitions(
   wind_renderer_test
-  PRIVATE WIND_RENDERER_GOLDEN_DIR="${CMAKE_CURRENT_SOURCE_DIR}/goldens"
+  PRIVATE
+  WIND_RENDERER_GOLDEN_DIR="${CMAKE_CURRENT_SOURCE_DIR}/goldens"
+  WIND_RENDERER_SHARED_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../../shared/renderer-fixtures"
 )
+
+add_executable(
+  render_wind_fixture
+  render_wind_fixture.cpp
+  ../../shared/renderer-fixtures/wind_renderer_fixture.c
+  ../main/wind_renderer.c
+  ${WIND_FONT_SOURCES}
+)
+target_include_directories(
+  render_wind_fixture
+  PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/../main
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../shared/renderer-fixtures
+)
+target_compile_definitions(
+  render_wind_fixture
+  PRIVATE
+  WIND_RENDERER_SHARED_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../../shared/renderer-fixtures"
+)
+target_link_libraries(render_wind_fixture m)

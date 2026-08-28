@@ -1,0 +1,37 @@
+export const PRODUCT_LIGHTING = Object.freeze({
+  background: 0xf3f5f7,
+  hemisphere: Object.freeze({ sky: 0xf7f8fb, ground: 0x68717c, intensity: 0.32 }),
+  key: Object.freeze({
+    kind: 'spot',
+    color: 0xfff8ee,
+    intensity: 0.8,
+    position: Object.freeze([-0.075, 0.34, 0.2]),
+    angle: 0.82,
+    penumbra: 0.92,
+    decay: 1.35,
+    distance: 1.8,
+  }),
+  softbox: Object.freeze({
+    color: 0xfffcf4,
+    intensity: 3.15,
+    width: 0.46,
+    height: 0.28,
+    position: [0.3, 0.12, 0.43],
+  }),
+  accent: Object.freeze({
+    color: 0xd9edf0,
+    intensity: 0.75,
+    width: 0.12,
+    height: 0.42,
+    position: [0.34, 0.08, 0.28],
+  }),
+  rim: Object.freeze({ color: 0xc9dcde, intensity: 0.28, position: [0.34, 0.08, -0.2] }),
+  environment: Object.freeze({
+    background: 0xbdc4ca,
+    key: 0xfffcf5,
+    top: 0xf5f7fb,
+    rim: 0xd9e0e8,
+    rimWidth: 0.18,
+    backdrop: 0xd2d7dc,
+  }),
+})

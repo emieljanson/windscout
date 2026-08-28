@@ -11,6 +11,7 @@
 #include "qrcode.h"
 #include "splash_data/splash_meta.h"
 #include "utils.h"
+#include "wind_app.h"
 
 static const char *TAG = "splash_screen";
 
@@ -223,6 +224,10 @@ esp_err_t splash_screen_display(void)
     // Display on e-paper
     ESP_LOGI(TAG, "Displaying splash screen");
     epaper_display(epd_buffer);
+    // The splash replaces whatever dashboard frame the cache last confirmed.
+    // Without invalidating it, the installer may skip an identical dashboard
+    // render and falsely report success while this QR screen is still visible.
+    (void) wind_app_clear_panel_confirmation();
 
     heap_caps_free(epd_buffer);
     ESP_LOGI(TAG, "Splash screen displayed successfully");
@@ -285,6 +290,7 @@ esp_err_t splash_screen_display_setup_complete(const char *hostname)
 
     ESP_LOGI(TAG, "Displaying setup complete screen");
     epaper_display(epd_buffer);
+    (void) wind_app_clear_panel_confirmation();
 
     heap_caps_free(epd_buffer);
     ESP_LOGI(TAG, "Setup complete screen displayed successfully");

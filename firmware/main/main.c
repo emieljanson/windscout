@@ -46,6 +46,7 @@
 #include "wifi_manager.h"
 #include "wifi_provisioning.h"
 #include "wind_app.h"
+#include "wind_installer_service.h"
 
 #if CONFIG_ESP_COREDUMP_ENABLE_TO_FLASH
 #include "esp_core_dump.h"
@@ -329,8 +330,15 @@ static void wind_dashboard_task(void *arg)
     while (true) {
         // wind_app_start() already performed the boot refresh. Waiting first
         // avoids a duplicate cache/flash pass while app_main is still finishing.
-        int sleep_seconds = wind_app_seconds_until_next_boundary();
+        int sleep_seconds = wind_app_seconds_until_next_wake();
         vTaskDelay(pdMS_TO_TICKS((sleep_seconds > 0 ? sleep_seconds : 1) * 1000));
+
+        // The installer renders its staged configuration against the same global
+        // dashboard state. Let that short transaction own the renderer instead of
+        // racing it with a scheduled refresh.
+        if (power_manager_is_installer_active()) {
+            continue;
+        }
 
         esp_err_t result = wind_app_refresh(false);
         if (result != ESP_OK) {
@@ -566,14 +574,6 @@ void app_main(void)
     ESP_ERROR_CHECK(config_manager_init());
     ESP_ERROR_CHECK(wind_app_configure_runtime());
 
-#if WINDSCOUT_DEVELOPMENT_MODE
-    // Apply development power/storage policy before either subsystem starts.
-    // Persistent debug capture and forecast caching otherwise write to the same
-    // LittleFS partition concurrently during boot.
-    config_manager_set_deep_sleep_enabled(false);
-    config_manager_set_debug_log_enabled(false);
-#endif
-
     // Start mirroring console logs to storage if debug logging is enabled.
     debug_log_init();
 
@@ -676,21 +676,8 @@ void app_main(void)
 
     ESP_ERROR_CHECK(color_palette_init());
 
-#if WINDSCOUT_DEVELOPMENT_MODE
-    // TODO(production): remove this override by setting
-    // WINDSCOUT_DEVELOPMENT_MODE to 0. Production devices must deep-sleep and
-    // require a physical button press for local OTA maintenance.
-    ESP_LOGW(TAG, "DEVELOPMENT MODE: WiFi/local OTA always on; deep sleep disabled");
-#endif
-
     ESP_ERROR_CHECK(power_manager_init());
     buzzer_init();
-
-    // Always-awake devices are polled by wind_dashboard_task. Disable the inherited
-    // generic image-rotation worker so it cannot change the dashboard at a boundary.
-    if (board_hal_is_usb_connected() || !config_manager_get_deep_sleep_enabled()) {
-        config_manager_set_auto_rotate(false);
-    }
 
     ESP_ERROR_CHECK(ota_manager_init());
 
@@ -704,18 +691,10 @@ void app_main(void)
     case WAKEUP_SOURCE_TIMER:
     case WAKEUP_SOURCE_ROTATE_BUTTON:
     case WAKEUP_SOURCE_CLEAR_BUTTON:
-#if WINDSCOUT_DEVELOPMENT_MODE
-        // A software reboot (including OTA) can still expose the wake cause of
-        // the preceding deep-sleep cycle. Development devices must never re-enter
-        // the one-shot wake path, because it always ends in deep sleep.
-        ESP_LOGW(TAG, "DEVELOPMENT MODE: ignoring retained deep-sleep wake source");
-        break;
-#else
         ESP_LOGI(TAG, "Entering deep sleep wake path (timer or spot button)");
         deep_sleep_wake_main(wakeup_src);
         // Won't reach here after sleep
         break;
-#endif
 
     case WAKEUP_SOURCE_BOOT_BUTTON:
         ESP_LOGI(TAG, "BOOT button wakeup detected - starting WiFi and HTTP server");
@@ -730,6 +709,9 @@ void app_main(void)
 
     ESP_ERROR_CHECK(wifi_manager_init());
     ESP_ERROR_CHECK(wifi_provisioning_init());
+#if BOARD_HAL_TYPE == BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+    ESP_ERROR_CHECK(wind_installer_service_start());
+#endif
 
     if (!wifi_provisioning_is_provisioned()) {
         bool creds_loaded = false;
@@ -831,6 +813,7 @@ void app_main(void)
     http_server_set_ready();
 
     if (wifi_manager_is_connected()) {
+        bool restore_dashboard = false;
         char ip_str[16];
         wifi_manager_get_ip(ip_str, sizeof(ip_str));
 
@@ -853,9 +836,16 @@ void app_main(void)
                 nvs_erase_key(nvs_handle, NVS_SETUP_COMPLETE_KEY);
                 nvs_commit(nvs_handle);
                 ESP_LOGI(TAG, "First boot after provisioning — showing setup complete screen");
-                splash_screen_display_setup_complete(hostname);
+                restore_dashboard = splash_screen_display_setup_complete(hostname) == ESP_OK;
             }
             nvs_close(nvs_handle);
+        }
+        if (restore_dashboard) {
+            ESP_LOGI(TAG, "Restoring dashboard after setup complete screen");
+            ret = wind_app_start();
+            if (ret != ESP_OK) {
+                ESP_LOGE(TAG, "Dashboard restore failed: %s", esp_err_to_name(ret));
+            }
         }
     }
 

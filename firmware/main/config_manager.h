@@ -8,6 +8,7 @@
 #include "config.h"
 #include "cron.h"
 #include "esp_err.h"
+#include "wind_display_config.h"
 
 esp_err_t config_manager_init(void);
 
@@ -19,6 +20,9 @@ void config_manager_set_device_name(const char *name);
 const char *config_manager_get_device_name(void);
 
 void config_manager_set_timezone(const char *tz);
+// Applies the installed WindScout spot timezone without duplicating that
+// source-of-truth in the legacy photo-frame NVS settings.
+bool config_manager_set_timezone_transient(const char *tz);
 const char *config_manager_get_timezone(void);
 
 void config_manager_set_ntp_server(const char *server);
@@ -43,6 +47,10 @@ display_orientation_t config_manager_get_display_orientation(void);
 
 void config_manager_set_display_rotation_deg(int rotation_deg);
 int config_manager_get_display_rotation_deg(void);
+
+bool config_manager_set_wind_display_config(const wind_display_config_t *config);
+bool config_manager_set_wind_display_config_transient(const wind_display_config_t *config);
+wind_display_config_t config_manager_get_wind_display_config(void);
 
 void config_manager_set_wifi_ssid(const char *ssid);
 const char *config_manager_get_wifi_ssid(void);
@@ -127,13 +135,6 @@ const char *config_manager_get_openai_api_key(void);
 
 void config_manager_set_google_api_key(const char *key);
 const char *config_manager_get_google_api_key(void);
-
-// ============================================================================
-// Power
-// ============================================================================
-
-void config_manager_set_deep_sleep_enabled(bool enabled);
-bool config_manager_get_deep_sleep_enabled(void);
 
 // ============================================================================
 // Debugging

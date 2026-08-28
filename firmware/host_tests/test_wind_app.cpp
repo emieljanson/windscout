@@ -5,6 +5,7 @@
 
 extern "C" {
 #include "wind_app.h"
+#include "wind_timezone.h"
 }
 
 struct FakeIo {
@@ -93,8 +94,6 @@ class WindAppTest : public testing::Test {
   protected:
     void SetUp() override
     {
-        setenv("TZ", "Europe/Amsterdam", 1);
-        tzset();
         root = std::filesystem::temp_directory_path() / "einkwind-app-test";
         std::filesystem::remove_all(root);
         std::filesystem::create_directories(root);
@@ -214,7 +213,7 @@ TEST_F(WindAppTest, FirstBootFailureRendersUnavailableWithoutFabricatedForecast)
     EXPECT_FALSE(outcome.published_forecast);
 }
 
-TEST_F(WindAppTest, FirstBootFailureRetriesAfterOneMinute)
+TEST_F(WindAppTest, FirstBootFailureRetriesOnceAfterFiveMinutes)
 {
     const int64_t now = 1787544000;
     fake.fetch_result = ESP_ERR_TIMEOUT;
@@ -224,13 +223,18 @@ TEST_F(WindAppTest, FirstBootFailureRetriesAfterOneMinute)
     ASSERT_EQ(fake.fetches, 1);
 
     wind_app_outcome_t too_soon;
-    ASSERT_EQ(wind_app_run(&app, false, now + 30, &too_soon), ESP_OK);
+    ASSERT_EQ(wind_app_run(&app, false, now + 4 * 60, &too_soon), ESP_OK);
     EXPECT_FALSE(too_soon.attempted_fetch);
     EXPECT_EQ(fake.fetches, 1);
 
     wind_app_outcome_t retry;
-    ASSERT_EQ(wind_app_run(&app, false, now + 60, &retry), ESP_OK);
+    ASSERT_EQ(wind_app_run(&app, false, now + 5 * 60, &retry), ESP_OK);
     EXPECT_TRUE(retry.attempted_fetch);
+    EXPECT_EQ(fake.fetches, 2);
+
+    wind_app_outcome_t no_loop;
+    ASSERT_EQ(wind_app_run(&app, false, now + 10 * 60, &no_loop), ESP_OK);
+    EXPECT_FALSE(no_loop.attempted_fetch);
     EXPECT_EQ(fake.fetches, 2);
 }
 
@@ -269,14 +273,15 @@ TEST_F(WindAppTest, OutOfWindowCacheFetchesOnceThenReturnsToNormalSchedule)
     EXPECT_FALSE(same_boundary.attempted_fetch);
     EXPECT_EQ(fake.fetches, 2);
 
-    int64_t next_boundary = wind_schedule_next_boundary((time_t) (now + 120));
+    int64_t next_boundary = wind_schedule_next_boundary(fake.identity.timezone,
+                                                         (time_t) (now + 120));
     wind_app_outcome_t scheduled;
     ASSERT_EQ(wind_app_run(&app, false, next_boundary, &scheduled), ESP_OK);
     EXPECT_TRUE(scheduled.attempted_fetch);
     EXPECT_EQ(fake.fetches, 3);
 }
 
-TEST_F(WindAppTest, FailedOutOfWindowRecoveryKeepsCacheWithoutRetryLoop)
+TEST_F(WindAppTest, FailedOutOfWindowRecoveryRetriesOnceAfterFiveMinutes)
 {
     const int64_t now = 1787544000;
     wind_app_outcome_t initial;
@@ -292,11 +297,21 @@ TEST_F(WindAppTest, FailedOutOfWindowRecoveryKeepsCacheWithoutRetryLoop)
     EXPECT_TRUE(failed.used_cache);
     ASSERT_EQ(fake.fetches, 2);
 
-    wind_app_outcome_t repeated;
-    ASSERT_EQ(wind_app_run(&app, false, now + 120, &repeated), ESP_OK);
-    EXPECT_FALSE(repeated.attempted_fetch);
-    EXPECT_TRUE(repeated.used_cache);
-    EXPECT_EQ(fake.fetches, 2);
+    wind_app_outcome_t too_soon;
+    ASSERT_EQ(wind_app_run(&app, false, now + 5 * 60, &too_soon), ESP_OK);
+    EXPECT_FALSE(too_soon.attempted_fetch);
+    EXPECT_TRUE(too_soon.used_cache);
+
+    wind_app_outcome_t retry;
+    ASSERT_EQ(wind_app_run(&app, false, now + 6 * 60, &retry), ESP_OK);
+    EXPECT_TRUE(retry.attempted_fetch);
+    EXPECT_TRUE(retry.used_cache);
+    EXPECT_EQ(fake.fetches, 3);
+
+    wind_app_outcome_t no_loop;
+    ASSERT_EQ(wind_app_run(&app, false, now + 11 * 60, &no_loop), ESP_OK);
+    EXPECT_FALSE(no_loop.attempted_fetch);
+    EXPECT_EQ(fake.fetches, 3);
 }
 
 TEST_F(WindAppTest, FailedRefreshKeepsValidCacheAndMarksDashboardOffline)
@@ -317,4 +332,29 @@ TEST_F(WindAppTest, FailedRefreshKeepsValidCacheAndMarksDashboardOffline)
     EXPECT_EQ(fake.rendered_freshness, WIND_FRESHNESS_FRESH);
     EXPECT_TRUE(fake.rendered_refresh_failed);
     EXPECT_TRUE(second.displayed);
+}
+
+TEST_F(WindAppTest, MissedRetryDoesNotConsumeTheNextBoundaryRetry)
+{
+    const int64_t now = 1787544000;
+    wind_app_outcome_t initial;
+    ASSERT_EQ(wind_app_run(&app, true, now, &initial), ESP_OK);
+
+    fake.fetch_result = ESP_ERR_TIMEOUT;
+    const int64_t first_boundary = wind_schedule_next_boundary(fake.identity.timezone,
+                                                                (time_t) now);
+    wind_app_outcome_t first_failure;
+    ASSERT_EQ(wind_app_run(&app, false, first_boundary, &first_failure), ESP_OK);
+    ASSERT_TRUE(first_failure.attempted_fetch);
+
+    const int64_t second_boundary = wind_schedule_next_boundary(fake.identity.timezone,
+                                                                 (time_t) first_boundary);
+    wind_app_outcome_t second_failure;
+    ASSERT_EQ(wind_app_run(&app, false, second_boundary, &second_failure), ESP_OK);
+    ASSERT_TRUE(second_failure.attempted_fetch);
+
+    wind_app_outcome_t retry;
+    ASSERT_EQ(wind_app_run(&app, false, second_boundary + 5 * 60, &retry), ESP_OK);
+    EXPECT_TRUE(retry.attempted_fetch);
+    EXPECT_EQ(fake.fetches, 4);
 }

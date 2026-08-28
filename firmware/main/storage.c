@@ -18,9 +18,10 @@
 
 #include <sys/stat.h>
 
-#include "album_manager.h"
 #include "memfs.h"
-#include "utils.h"
+#if BOARD_HAL_TYPE != BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+#include "album_manager.h"
+#endif
 
 static const char *TAG = "storage";
 static storage_type_t current_storage_type = STORAGE_TYPE_NONE;
@@ -162,7 +163,9 @@ esp_err_t storage_format(void)
 
     // Recreate the images directory and default album regardless of backend
     mkdir(IMAGE_DIRECTORY, 0775);
+#if BOARD_HAL_TYPE != BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
     album_manager_ensure_default_album();
+#endif
 
     ESP_LOGI(TAG, "Storage format complete");
     return ESP_OK;

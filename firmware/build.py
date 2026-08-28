@@ -5,6 +5,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 # Add scripts to sys.path to import boards
 sys.path.append(os.path.join(os.path.dirname(__file__), "scripts"))
@@ -25,11 +26,22 @@ def run_idf(args):
     export_script = os.path.join(idf_path, "export.sh")
 
     if os.path.isfile(export_script):
+        environment = os.environ.copy()
+        if not environment.get("IDF_PYTHON_ENV_PATH"):
+            env_root = Path.home() / ".espressif" / "python_env"
+            candidates = sorted(env_root.glob("idf6.0_py*_env"), reverse=True)
+            for candidate in candidates:
+                if candidate.joinpath("bin", "python").is_file():
+                    environment["IDF_PYTHON_ENV_PATH"] = str(candidate)
+                    break
         command = (
             f"source {shlex.quote(export_script)} >/dev/null && "
             f"exec idf.py {shlex.join(args)}"
         )
-        return subprocess.run(["/bin/zsh", "-lc", command], check=True)
+        # Keep the caller's PATH. A login shell may replace it and make tools
+        # such as CMake disappear even though ESP-IDF was launched from a
+        # correctly configured development environment.
+        return subprocess.run(["/bin/zsh", "-c", command], check=True, env=environment)
 
     if shutil.which("idf.py"):
         return subprocess.run(["idf.py", *args], check=True)
@@ -145,6 +157,15 @@ def main():
         "partition table (adds a coredump partition) — do not ship to users.",
     )
     parser.add_argument(
+        "--installer-output",
+        type=Path,
+        help="After the firmware build, write a validated browser-installer bundle here.",
+    )
+    parser.add_argument(
+        "--installer-version",
+        help="Immutable version used by --installer-output.",
+    )
+    parser.add_argument(
         "--step",
         choices=STEPS,
         action="append",
@@ -176,6 +197,26 @@ def main():
 
     if "firmware" in steps:
         build_firmware(args.board, extra_args, debug=args.debug)
+        if args.installer_output:
+            if not args.installer_version:
+                parser.error("--installer-output requires --installer-version")
+            if args.board != "seeedstudio_reterminal_e1002" or args.debug:
+                parser.error("installer bundles are release-only and currently support E1002")
+            subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/generate_installer_manifest.py",
+                    "--build-dir",
+                    "build",
+                    "--partitions",
+                    "partitions.csv",
+                    "--output",
+                    str(args.installer_output),
+                    "--version",
+                    args.installer_version,
+                ],
+                check=True,
+            )
 
 
 if __name__ == "__main__":
