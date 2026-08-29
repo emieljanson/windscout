@@ -57,3 +57,36 @@ test('keeps the installer available at narrow desktop zoom without horizontal ov
   await expect(page.getByRole('heading', { name: 'Connect your reTerminal' })).toBeVisible()
   expect(await page.evaluate(() => document.body.scrollWidth)).toBe(640)
 })
+
+test('keeps the inspector height when the installer opens with threshold hidden or shown', async ({ page }) => {
+  await installFakeDevice(page)
+  await page.setViewportSize({ width: 1280, height: 720 })
+  await page.goto('/')
+
+  const panel = page.getByRole('complementary', { name: 'WindScout settings' })
+  const install = page.getByRole('button', { name: 'Install', exact: true })
+  const threshold = page.getByRole('switch', { name: 'Wind threshold' })
+  const panelHeight = async () => (await panel.boundingBox()).height
+
+  for (const showThreshold of [false, true]) {
+    if (showThreshold) await threshold.click()
+
+    const settingsHeight = await panelHeight()
+    await install.click()
+    await expect(page.getByRole('heading', { name: 'Connect your reTerminal' })).toBeVisible()
+    expect(await panelHeight()).toBe(settingsHeight)
+
+    await page.getByRole('button', { name: 'Continue' }).click()
+    const confirmation = page.getByRole('button', { name: 'Yes, continue' })
+    await expect(confirmation).toBeVisible()
+    expect(await panelHeight()).toBe(settingsHeight)
+
+    const panelBounds = await panel.boundingBox()
+    const confirmationBounds = await confirmation.boundingBox()
+    expect(confirmationBounds.y + confirmationBounds.height).toBeLessThanOrEqual(
+      panelBounds.y + panelBounds.height,
+    )
+
+    await page.getByRole('button', { name: 'Back to configurator' }).click()
+  }
+})

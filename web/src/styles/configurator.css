@@ -150,10 +150,6 @@
   padding-top: 0;
 }
 
-.settings-panel:has(.installer-layer) {
-  min-height: min(21.5rem, calc(100dvh - 2rem));
-}
-
 .settings-panel--compact:has(.installer-layer) {
   inline-size: min(15.625rem, calc(100% - 2rem));
 }
