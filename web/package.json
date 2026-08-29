@@ -21,6 +21,7 @@
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
+    "@sentry/browser": "10.72.0",
     "esptool-js": "0.6.1",
     "maplibre-gl": "^5.24.0",
     "pinia": "^3.0.3",
@@ -31,6 +32,7 @@
     "vue-sonner": "^2.0.9"
   },
   "devDependencies": {
+    "@sentry/vite-plugin": "5.4.0",
     "@playwright/test": "^1.55.0",
     "@vitejs/plugin-vue": "^6.0.1",
     "@vue/test-utils": "^2.4.6",

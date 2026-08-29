@@ -151,6 +151,12 @@ jobs:
 
       - name: Build website with bundled firmware
         working-directory: web
+        env:
+          VITE_SENTRY_DSN: ${{ vars.VITE_SENTRY_DSN }}
+          VITE_SENTRY_RELEASE: ${{ github.sha }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
         run: npm run build
 
       - name: Verify deployable installer files
@@ -181,6 +187,10 @@ jobs:
               source = asset.read_text(errors="ignore")
               if '"/devices/e1002/' in source or '"/renderer/wind-renderer.wasm' in source:
                   raise SystemExit(f"Root-relative public asset escaped the Pages base: {asset}")
+
+          source_maps = list(Path("web/dist").rglob("*.map"))
+          if source_maps:
+              raise SystemExit(f"Source maps must not be published: {source_maps[0]}")
           PY
 
       - name: Upload GitHub Pages artifact

@@ -4,6 +4,7 @@ import { BOARD_ID, CONFIGURATION_VERSION } from '../config/configuration'
 import { asInstallerError, InstallerError, INSTALLER_ERROR_CODES } from './installerErrors'
 import { createEsptoolAdapter } from './esptoolAdapter'
 import { createInstallerDiagnostics } from './installerDiagnostics'
+import { installerSentryReporter } from './sentryReporter'
 import { createSerialProtocol, requestInstallerPort } from './serialPortAdapter'
 
 const INITIAL_STATE = Object.freeze({
@@ -14,6 +15,7 @@ const REQUIRED_CAPABILITIES = ['state', 'wifi', 'configuration', 'render-verific
 // A failed candidate may take 45 seconds, followed by up to 45 seconds to
 // restore the previously saved network. Keep enough serial margin for both.
 const WIFI_TEST_REQUEST_TIMEOUT_MS = 105000
+let diagnosticSessionSequence = 0
 
 function validHello(hello) {
   return hello?.status === 'ok' && typeof hello.boardId === 'string' &&
@@ -28,7 +30,7 @@ export function createInstallerSession({
   releaseLoader = loadFirmwareRelease,
   partsLoader = loadFirmwareParts,
   diagnostics = createInstallerDiagnostics(),
-  reporter = { report: async () => ({ status: 'failed' }) },
+  reporter = installerSentryReporter,
   protocolFactory = createSerialProtocol,
   esptool = createEsptoolAdapter({ diagnostics }),
   requestPort = () => requestInstallerPort(navigatorApi),
@@ -46,6 +48,7 @@ export function createInstallerSession({
   let operationController = null
   let failureOccurrence = 0
   let latestDiagnosticOccurrence = null
+  const diagnosticSession = ++diagnosticSessionSequence
   const pendingFailures = []
   const listeners = new Set()
 
@@ -106,7 +109,7 @@ export function createInstallerSession({
     if (!isReportable(error)) return
     const failure = {
       attempt,
-      occurrence: `${attempt}:${++failureOccurrence}`,
+      occurrence: `${diagnosticSession}:${attempt}:${++failureOccurrence}`,
       phase,
       error,
     }
