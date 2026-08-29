@@ -9,6 +9,7 @@ const describedBy = computed(() => props.error ? 'installer-wifi-help installer-
 
 function submit() {
   emit('submit', { ssid: ssid.value.trim(), password: password.value })
+  ssid.value = ''
   password.value = ''
 }
 </script>

@@ -3,10 +3,12 @@ import { CHIP_FAMILY, loadFirmwareParts, loadFirmwareRelease } from './firmwareM
 import { BOARD_ID, CONFIGURATION_VERSION } from '../config/configuration'
 import { asInstallerError, InstallerError, INSTALLER_ERROR_CODES } from './installerErrors'
 import { createEsptoolAdapter } from './esptoolAdapter'
+import { createInstallerDiagnostics } from './installerDiagnostics'
 import { createSerialProtocol, requestInstallerPort } from './serialPortAdapter'
 
 const INITIAL_STATE = Object.freeze({
   phase: 'ready', progress: 0, safeToDisconnect: true, error: null, action: null,
+  diagnosticStatus: 'idle', diagnosticReference: null,
 })
 const REQUIRED_CAPABILITIES = ['state', 'wifi', 'configuration', 'render-verification', 'clock-sync']
 // A failed candidate may take 45 seconds, followed by up to 45 seconds to
@@ -25,8 +27,10 @@ export function createInstallerSession({
   navigatorApi = globalThis.navigator,
   releaseLoader = loadFirmwareRelease,
   partsLoader = loadFirmwareParts,
+  diagnostics = createInstallerDiagnostics(),
+  reporter = { report: async () => ({ status: 'failed' }) },
   protocolFactory = createSerialProtocol,
-  esptool = createEsptoolAdapter(),
+  esptool = createEsptoolAdapter({ diagnostics }),
   requestPort = () => requestInstallerPort(navigatorApi),
   waitFor = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
   now = () => Date.now(),
@@ -40,11 +44,77 @@ export function createInstallerSession({
   let attempt = 0
   let confirmed = false
   let operationController = null
+  let failureOccurrence = 0
+  let latestDiagnosticOccurrence = null
+  const pendingFailures = []
   const listeners = new Set()
+
+  try {
+    diagnostics.registerSensitiveValues?.(configuration)
+    diagnostics.setContext?.({ boardId: BOARD_ID, chipFamily: CHIP_FAMILY })
+  } catch {}
 
   function update(patch) {
     state = { ...state, ...patch }
+    try { diagnostics.setContext?.({ phase: state.phase, action: state.action?.action, attempt }) } catch {}
     for (const listener of listeners) listener(state)
+  }
+
+  function completeAttempt(patch = {}) {
+    update({ phase: 'complete', progress: 1, safeToDisconnect: true, ...patch })
+    try { diagnostics.destroy?.() } catch {}
+  }
+
+  function isReportable(error) {
+    return ![
+      INSTALLER_ERROR_CODES.UNSUPPORTED,
+      INSTALLER_ERROR_CODES.INCOMPATIBLE_DEVICE,
+      INSTALLER_ERROR_CODES.UNCONFIRMED_DEVICE,
+    ].includes(error?.code)
+  }
+
+  function sendFailure(failure) {
+    const snapshot = diagnostics.snapshot?.()
+    if (!snapshot) {
+      pendingFailures.push(failure)
+      return
+    }
+    latestDiagnosticOccurrence = failure.occurrence
+    update({ diagnosticStatus: 'sending', diagnosticReference: null })
+    Promise.resolve(reporter.report({ ...failure, snapshot }))
+      .then((result) => {
+        if (failure.attempt !== attempt || latestDiagnosticOccurrence !== failure.occurrence) return
+        const sent = result?.status === 'sent' && typeof result.reference === 'string'
+        update({
+          diagnosticStatus: sent ? 'sent' : 'failed',
+          diagnosticReference: sent ? result.reference : null,
+        })
+      })
+      .catch(() => {
+        if (failure.attempt === attempt && latestDiagnosticOccurrence === failure.occurrence) {
+          update({ diagnosticStatus: 'failed', diagnosticReference: null })
+        }
+      })
+  }
+
+  function flushPendingFailures() {
+    if (diagnostics.credentialsLocked) return
+    for (const failure of pendingFailures.splice(0)) sendFailure(failure)
+  }
+
+  function reportFailure(error, phase = state.phase) {
+    if (!isReportable(error)) return
+    const failure = {
+      attempt,
+      occurrence: `${attempt}:${++failureOccurrence}`,
+      phase,
+      error,
+    }
+    try {
+      diagnostics.setContext?.({ phase, errorCode: error?.code, action: action?.action, attempt })
+      diagnostics.record?.({ category: 'installer', operation: phase, status: 'failed', message: error?.message })
+    } catch {}
+    sendFailure(failure)
   }
 
   async function releaseConnections({ clearDevice = false } = {}) {
@@ -63,7 +133,7 @@ export function createInstallerSession({
   }
 
   async function probeApp(selectedPort) {
-    const candidate = protocolFactory(selectedPort)
+    const candidate = protocolFactory(selectedPort, { diagnostics })
     let hello
     try {
       await candidate.open()
@@ -102,7 +172,7 @@ export function createInstallerSession({
     confirmed = false
     operationController?.abort()
     operationController = new AbortController()
-    update({ phase: 'choosing-device', error: null })
+    update({ phase: 'choosing-device', error: null, diagnosticStatus: 'idle', diagnosticReference: null })
     let selectedPort
     try {
       selectedPort = await requestPort()
@@ -110,6 +180,7 @@ export function createInstallerSession({
       if (currentAttempt !== attempt) return state
       const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.DEVICE_NOT_ALLOWED, 'WindScout could not access the selected USB device.')
       update({ phase: 'error', error: installerError, safeToDisconnect: true })
+      reportFailure(installerError, 'choosing-device')
       return state
     }
     if (currentAttempt !== attempt) return state
@@ -156,6 +227,7 @@ export function createInstallerSession({
       await releaseConnections({ clearDevice: true })
       const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'WindScout could not check this device.')
       update({ phase: installerError.code === INSTALLER_ERROR_CODES.CONNECTION_LOST ? 'reconnect' : 'error', error: installerError, safeToDisconnect: installerError.safeToDisconnect })
+      reportFailure(installerError, 'checking-device')
     }
     return state
   }
@@ -169,8 +241,15 @@ export function createInstallerSession({
 
   async function scanNetworks() {
     if (!protocol) return []
-    const response = await protocol.request('scan_networks', {}, 45000)
-    return Array.isArray(response.networks) ? response.networks : []
+    try {
+      const response = await protocol.request('scan_networks', {}, 45000)
+      return Array.isArray(response.networks) ? response.networks : []
+    } catch (error) {
+      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.WIFI_FAILED, 'WindScout could not scan for Wi-Fi networks.')
+      update({ phase: 'wifi', error: installerError, safeToDisconnect: true })
+      reportFailure(installerError, 'wifi')
+      throw installerError
+    }
   }
 
   async function configure(credentials, expectedAttempt = attempt) {
@@ -190,7 +269,6 @@ export function createInstallerSession({
     if (staged.status !== 'configuration_staged') throw new InstallerError(INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'WindScout rejected this configuration.')
     if (credentials) {
       const wifi = await protocol.request('test_wifi', credentials, WIFI_TEST_REQUEST_TIMEOUT_MS)
-      credentials.password = ''
       if (!isCurrent(expectedAttempt)) return false
       if (wifi.status !== 'wifi_ready') throw new InstallerError(INSTALLER_ERROR_CODES.WIFI_FAILED, 'WindScout could not connect to that Wi-Fi network.')
     }
@@ -221,7 +299,7 @@ export function createInstallerSession({
     const currentAttempt = attempt
     try {
       if (action.action === INSTALL_ACTIONS.UP_TO_DATE) {
-        update({ phase: 'complete', progress: 1 })
+        completeAttempt()
         return state
       }
       if ([INSTALL_ACTIONS.INSTALL, INSTALL_ACTIONS.REINSTALL, INSTALL_ACTIONS.UPDATE_FIRMWARE].includes(action.action)) {
@@ -256,7 +334,7 @@ export function createInstallerSession({
         return state
       }
       if (!await configure(undefined, currentAttempt)) return state
-      update({ phase: 'complete', progress: 1, safeToDisconnect: true })
+      completeAttempt()
     } catch (error) {
       if (currentAttempt !== attempt) return state
       const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'WindScout setup could not continue.')
@@ -265,6 +343,7 @@ export function createInstallerSession({
         error: installerError,
         safeToDisconnect: installerError.safeToDisconnect,
       })
+      reportFailure(installerError, state.phase)
     }
     return state
   }
@@ -304,7 +383,7 @@ export function createInstallerSession({
     if (!device.wifiHealthy) update({ phase: 'wifi', progress: 0.8, safeToDisconnect: true })
     else {
       if (!await configure(undefined, expectedAttempt)) return state
-      update({ phase: 'complete', progress: 1, safeToDisconnect: true })
+      completeAttempt()
     }
     return state
   }
@@ -331,6 +410,7 @@ export function createInstallerSession({
       await releaseConnections({ clearDevice: true })
       const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.CONNECTION_LOST, 'WindScout did not reconnect yet.')
       update({ phase: 'reconnect', error: installerError, safeToDisconnect: true })
+      reportFailure(installerError, 'reconnect')
       return state
     }
   }
@@ -339,17 +419,24 @@ export function createInstallerSession({
     if (state.phase !== 'wifi') return state
     const currentAttempt = attempt
     const credentials = { ssid: String(ssid), password: String(password) }
+    let releaseCredentialLock = () => {}
+    try { releaseCredentialLock = diagnostics.acquireCredentialLock?.(credentials) ?? releaseCredentialLock } catch {}
     try {
       if (!await configure(credentials, currentAttempt)) return state
-      update({ phase: 'complete', progress: 1, safeToDisconnect: true })
+      completeAttempt()
     } catch (error) {
-      credentials.password = ''
       if (currentAttempt !== attempt) return state
       const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.WIFI_FAILED, 'WindScout could not connect to that Wi-Fi network.')
       const phase = installerError.code === INSTALLER_ERROR_CODES.WIFI_FAILED
         ? 'wifi'
         : installerError.code === INSTALLER_ERROR_CODES.CONNECTION_LOST ? 'reconnect' : 'error'
       update({ phase, error: installerError, safeToDisconnect: true })
+      reportFailure(installerError, phase)
+    } finally {
+      credentials.ssid = ''
+      credentials.password = ''
+      releaseCredentialLock()
+      flushPendingFailures()
     }
     return state
   }
@@ -362,6 +449,7 @@ export function createInstallerSession({
     operationController = null
     await releaseConnections({ clearDevice: true })
     port = null
+    diagnostics.destroy?.()
     update({ ...INITIAL_STATE })
     return state
   }

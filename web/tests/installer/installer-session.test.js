@@ -25,9 +25,11 @@ function appProtocol(state = {}) {
 
 describe('installer session', () => {
   it('returns to ready when the system chooser is cancelled', async () => {
-    const session = createInstallerSession({ configuration, requestPort: async () => null })
+    const reporter = { report: vi.fn() }
+    const session = createInstallerSession({ configuration, requestPort: async () => null, reporter })
     await session.connect()
     expect(session.getState()).toMatchObject({ phase: 'ready', error: null })
+    expect(reporter.report).not.toHaveBeenCalled()
   })
 
   it('turns a device chooser failure into a recoverable installer state', async () => {
@@ -199,6 +201,60 @@ describe('installer session', () => {
     expect(sentCredentials).toEqual([{ ssid: 'Home', password: 'secret' }])
     const transmittedReference = protocol.request.mock.calls.find(([command]) => command === 'test_wifi')[1]
     expect(transmittedReference.password).toBe('')
+    expect(transmittedReference.ssid).toBe('')
+  })
+
+  it('reports a Wi-Fi failure only after credential references are cleared', async () => {
+    const protocol = appProtocol({ wifiHealthy: false })
+    const originalRequest = protocol.request.getMockImplementation()
+    let transmittedReference
+    protocol.request.mockImplementation(async (command, values, timeout) => {
+      if (command === 'test_wifi') {
+        transmittedReference = values
+        throw new InstallerError(INSTALLER_ERROR_CODES.WIFI_FAILED, 'wifi rejected')
+      }
+      return originalRequest(command, values, timeout)
+    })
+    const reporter = { report: vi.fn(async () => ({ status: 'sent', reference: 'WS-TEST12345' })) }
+    const session = createInstallerSession({
+      configuration,
+      requestPort: async () => ({}),
+      releaseLoader: async () => release,
+      protocolFactory: () => protocol,
+      reporter,
+    })
+
+    await session.connect()
+    await session.run()
+    await session.submitWifi({ ssid: 'Home', password: 'secret' })
+    await vi.waitFor(() => expect(reporter.report).toHaveBeenCalledOnce())
+
+    expect(transmittedReference).toEqual({ ssid: '', password: '' })
+    expect(JSON.stringify(reporter.report.mock.calls[0][0].snapshot)).not.toMatch(/Home|secret/)
+  })
+
+  it('reports a failed Wi-Fi scan once while leaving retry available', async () => {
+    const protocol = appProtocol({ wifiHealthy: false })
+    const originalRequest = protocol.request.getMockImplementation()
+    protocol.request.mockImplementation(async (command, values, timeout) => {
+      if (command === 'scan_networks') throw new Error('scan failed')
+      return originalRequest(command, values, timeout)
+    })
+    const reporter = { report: vi.fn(async () => ({ status: 'failed' })) }
+    const session = createInstallerSession({
+      configuration,
+      requestPort: async () => ({}),
+      releaseLoader: async () => release,
+      protocolFactory: () => protocol,
+      reporter,
+    })
+
+    await session.connect()
+    await session.run()
+    await expect(session.scanNetworks()).rejects.toMatchObject({ code: INSTALLER_ERROR_CODES.WIFI_FAILED })
+    await vi.waitFor(() => expect(reporter.report).toHaveBeenCalledOnce())
+
+    expect(session.getState()).toMatchObject({ phase: 'wifi', safeToDisconnect: true })
   })
 
   it('releases a timed-out serial session before reopening the device', async () => {

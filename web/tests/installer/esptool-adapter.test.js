@@ -4,6 +4,7 @@ import { INSTALLER_ERROR_CODES } from '../../src/installer/installerErrors'
 
 describe('esptool adapter', () => {
   it('enters the bootloader, verifies writes with MD5, resets and disconnects', async () => {
+    const diagnostics = { record: vi.fn() }
     const disconnect = vi.fn().mockResolvedValue(undefined)
     class Transport {
       constructor(port, tracing) { this.port = port; this.tracing = tracing }
@@ -16,9 +17,14 @@ describe('esptool adapter', () => {
       }),
       after: vi.fn(),
     }
-    class ESPLoader { constructor() { return loader } }
+    class ESPLoader {
+      constructor({ terminal }) {
+        terminal.writeLine('Connecting to ESP32-S3')
+        return loader
+      }
+    }
     const SparkMD5 = { ArrayBuffer: { hash: vi.fn(() => 'verified-md5') } }
-    const adapter = createEsptoolAdapter({ moduleLoader: async () => ({ Transport, ESPLoader, SparkMD5 }) })
+    const adapter = createEsptoolAdapter({ diagnostics, moduleLoader: async () => ({ Transport, ESPLoader, SparkMD5 }) })
 
     const identity = await adapter.identify({ id: 'port' })
     expect(loader.main).toHaveBeenCalledWith('default_reset')
@@ -30,6 +36,9 @@ describe('esptool adapter', () => {
       'D0|R1|W100|R0|W500|D0',
     )
     expect(disconnect).toHaveBeenCalledOnce()
+    expect(diagnostics.record).toHaveBeenCalledWith(expect.objectContaining({
+      category: 'bootloader', operation: 'terminal', message: 'Connecting to ESP32-S3',
+    }))
   })
 
   it('reports a failed write as safe after transport cleanup', async () => {

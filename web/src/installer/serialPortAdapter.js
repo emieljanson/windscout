@@ -84,12 +84,23 @@ export function decodeProtocolFrame(frame) {
   return { messageType: view.getUint16(10, true), requestId: view.getUint32(12, true), payload: JSON.parse(new TextDecoder().decode(body)) }
 }
 
-export function createSerialProtocol(port, { baudRate = 115200, timeoutMs = 15000 } = {}) {
+export function createSerialProtocol(port, { baudRate = 115200, timeoutMs = 15000, diagnostics } = {}) {
   let requestId = 0
   let reader
   let writer
   let buffered = new Uint8Array(0)
   let requestQueue = Promise.resolve()
+
+  function record(entry) {
+    try { diagnostics?.record?.(entry) } catch {}
+  }
+
+  function recordUart(bytes) {
+    if (!bytes?.length) return
+    let message
+    try { message = new TextDecoder().decode(bytes) } catch { return }
+    if (message.trim()) record({ category: 'serial', operation: 'uart', status: 'output', message })
+  }
 
   function append(chunk) {
     const combined = new Uint8Array(buffered.length + chunk.length)
@@ -102,10 +113,15 @@ export function createSerialProtocol(port, { baudRate = 115200, timeoutMs = 1500
     while (true) {
       const offset = magicOffset(buffered, buffered.length)
       if (offset < 0) {
-        buffered = buffered.slice(Math.max(0, buffered.length - (MAGIC.length - 1)))
+        const retainedOffset = Math.max(0, buffered.length - (MAGIC.length - 1))
+        recordUart(buffered.slice(0, retainedOffset))
+        buffered = buffered.slice(retainedOffset)
         return null
       }
-      if (offset > 0) buffered = buffered.slice(offset)
+      if (offset > 0) {
+        recordUart(buffered.slice(0, offset))
+        buffered = buffered.slice(offset)
+      }
       if (buffered.length < HEADER_SIZE) return null
       const declared = new DataView(buffered.buffer, buffered.byteOffset).getUint32(16, true)
       if (declared > MAX_PAYLOAD_SIZE) {
@@ -127,6 +143,8 @@ export function createSerialProtocol(port, { baudRate = 115200, timeoutMs = 1500
 
   async function performRequest(command, values, requestedTimeout) {
     const id = ++requestId
+    const startedAt = Date.now()
+    record({ category: 'protocol', operation: command, status: 'started' })
     await writer.write(encodeProtocolFrame({ requestId: id, payload: { command, ...values } }))
     let timeoutId
     const timeout = new Promise((_, reject) => {
@@ -144,7 +162,20 @@ export function createSerialProtocol(port, { baudRate = 115200, timeoutMs = 1500
         append(result.value)
       }
     })()
-    try { return await Promise.race([read, timeout]) } finally { clearTimeout(timeoutId) }
+    try {
+      const response = await Promise.race([read, timeout])
+      record({
+        category: 'protocol', operation: command, status: response?.status ?? 'ok',
+        measurements: { durationMs: Date.now() - startedAt },
+      })
+      return response
+    } catch (error) {
+      record({
+        category: 'protocol', operation: command, status: 'failed', message: error?.message,
+        measurements: { durationMs: Date.now() - startedAt },
+      })
+      throw error
+    } finally { clearTimeout(timeoutId) }
   }
   return {
     async open() {

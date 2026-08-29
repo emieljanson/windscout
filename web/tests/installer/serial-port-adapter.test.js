@@ -60,6 +60,7 @@ describe('serial port adapter', () => {
 
   it('ignores UART logs and accepts a frame whose magic spans chunks', async () => {
     const chunks = []
+    const diagnostics = { record: vi.fn() }
     const reader = { read: vi.fn(async () => ({ done: false, value: chunks.shift() })), cancel: vi.fn(), releaseLock: vi.fn() }
     const writer = {
       write: vi.fn(async (bytes) => {
@@ -71,9 +72,14 @@ describe('serial port adapter', () => {
       releaseLock: vi.fn(),
     }
     const port = { open: vi.fn(), close: vi.fn(), readable: { getReader: () => reader }, writable: { getWriter: () => writer } }
-    const protocol = createSerialProtocol(port)
+    const protocol = createSerialProtocol(port, { diagnostics })
     await protocol.open()
     await expect(protocol.request('hello')).resolves.toEqual({ status: 'ok' })
+    const uartText = diagnostics.record.mock.calls
+      .map(([entry]) => entry.category === 'serial' ? entry.message : '')
+      .join('')
+    expect(uartText).toContain('ordinary boot log')
+    expect(JSON.stringify(diagnostics.record.mock.calls)).not.toContain('payload')
   })
 
   it('consumes delayed frames and preserves another frame from the same serial chunk', async () => {

@@ -1,14 +1,29 @@
 import { InstallerError, INSTALLER_ERROR_CODES } from './installerErrors'
 
 export function createEsptoolAdapter({
+  diagnostics,
   moduleLoader = async () => {
     const [esptool, sparkMd5] = await Promise.all([import('esptool-js'), import('spark-md5')])
     return { ...esptool, SparkMD5: sparkMd5.default }
   },
 } = {}) {
   let calculateMD5Hash
+
+  function record(entry) {
+    try { diagnostics?.record?.(entry) } catch {}
+  }
+
+  function diagnosticTerminal(terminal) {
+    const emit = (message) => record({ category: 'bootloader', operation: 'terminal', status: 'output', message })
+    return {
+      clean() { try { terminal?.clean?.() } catch {} },
+      writeLine(message) { emit(message); try { terminal?.writeLine?.(message) } catch {} },
+      write(message) { emit(message); try { terminal?.write?.(message) } catch {} },
+    }
+  }
+
   return {
-    async identify(port, terminal = { clean() {}, writeLine() {}, write() {} }) {
+    async identify(port, terminal) {
       const { Transport, ESPLoader, SparkMD5 } = await moduleLoader()
       calculateMD5Hash = SparkMD5
         ? (image) => SparkMD5.ArrayBuffer.hash(
@@ -18,7 +33,7 @@ export function createEsptoolAdapter({
           )
         : undefined
       const transport = new Transport(port, false)
-      const loader = new ESPLoader({ transport, baudrate: 115200, terminal })
+      const loader = new ESPLoader({ transport, baudrate: 115200, terminal: diagnosticTerminal(terminal) })
       try {
         const chip = await loader.main('default_reset')
         return { chipFamily: /ESP32-S3/i.test(chip) ? 'ESP32-S3' : chip, loader, transport }
@@ -38,7 +53,13 @@ export function createEsptoolAdapter({
           flashFreq: 'keep',
           eraseAll: false,
           compress: true,
-          reportProgress: (fileIndex, written, total) => onProgress({ fileIndex, written, total }),
+          reportProgress: (fileIndex, written, total) => {
+            record({
+              category: 'flash', operation: 'write', status: 'progress',
+              measurements: { fileIndex, writtenBytes: written, totalBytes: total },
+            })
+            onProgress({ fileIndex, written, total })
+          },
           calculateMD5Hash,
         })
         await loader.after('custom_reset', undefined, 'D0|R1|W100|R0|W500|D0')

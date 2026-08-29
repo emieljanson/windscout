@@ -49,13 +49,14 @@ describe('installer inspector panel', () => {
     expect(wrapper.get('[role="progressbar"]').attributes('aria-valuenow')).toBe('50')
   })
 
-  it('clears the password input immediately after Wi-Fi submission', async () => {
+  it('clears both credential inputs immediately after Wi-Fi submission', async () => {
     const session = fakeSession({ phase: 'wifi', progress: 0.8, safeToDisconnect: true, error: null })
     mountPanel(session)
     await wrapper.get('input[name="ssid"]').setValue('Home')
     await wrapper.get('input[name="wifi-password"]').setValue('super-secret')
     await wrapper.get('form').trigger('submit')
     expect(session.submitWifi).toHaveBeenCalledWith({ ssid: 'Home', password: 'super-secret' })
+    expect(wrapper.get('input[name="ssid"]').element.value).toBe('')
     expect(wrapper.get('input[name="wifi-password"]').element.value).toBe('')
     expect(JSON.stringify(wrapper.html())).not.toContain('super-secret')
   })
