@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia } from 'pinia'
+import InstallerPanel from '../src/components/installer/InstallerPanel.vue'
 
 const { fetchForecast, fetchTide } = vi.hoisted(() => ({
   fetchForecast: vi.fn().mockRejectedValue(new Error('offline')),
@@ -67,20 +68,62 @@ describe('configurator experience', () => {
   })
 
   it('opens the guided installer inside the inspector before requesting a device', async () => {
-    const wrapper = mount(ConfiguratorView, { global: { plugins: [createPinia()] } })
-    expect(wrapper.find('.installer-layer').exists()).toBe(false)
-    await wrapper.get('[data-testid="install-continuation"]').trigger('click')
-    expect(wrapper.get('.installer-layer').text()).toContain('Connect your reTerminal')
-    expect(wrapper.get('.installer-layer').text()).toContain('Connect your reTerminal')
+    const originalSerialDescriptor = Object.getOwnPropertyDescriptor(window.navigator, 'serial')
+    Object.defineProperty(window.navigator, 'serial', {
+      configurable: true,
+      value: { requestPort: vi.fn() },
+    })
+
+    try {
+      const wrapper = mount(ConfiguratorView, {
+        global: {
+          plugins: [createPinia()],
+          stubs: {
+            WindScoutScene: {
+              props: ['focusUsbConnection', 'showUsbCable'],
+              template: '<div data-testid="3d-scene" :data-cable-visible="String(showUsbCable)" :data-usb-focused="String(focusUsbConnection)"></div>',
+            },
+          },
+        },
+      })
+      expect(wrapper.find('.installer-layer').exists()).toBe(false)
+      expect(wrapper.get('[data-testid="3d-scene"]').attributes('data-cable-visible')).toBe('false')
+      expect(wrapper.get('[data-testid="3d-scene"]').attributes('data-usb-focused')).toBe('false')
+      expect(wrapper.get('[data-testid="3d-scene"]').attributes('firmware-transfer-active')).toBeUndefined()
+      await wrapper.get('[data-testid="install-continuation"]').trigger('click')
+      expect(wrapper.get('.installer-layer').text()).toContain('Connect your reTerminal')
+      expect(wrapper.get('[data-testid="3d-scene"]').attributes('data-cable-visible')).toBe('true')
+      expect(wrapper.get('[data-testid="3d-scene"]').attributes('data-usb-focused')).toBe('true')
+      wrapper.getComponent(InstallerPanel).vm.$emit('usb-step-change', false)
+      wrapper.getComponent(InstallerPanel).vm.$emit('installer-phase-change', 'installing-firmware')
+      await wrapper.vm.$nextTick()
+      expect(wrapper.get('[data-testid="3d-scene"]').attributes('data-cable-visible')).toBe('true')
+      expect(wrapper.get('[data-testid="3d-scene"]').attributes('data-usb-focused')).toBe('false')
+      expect(wrapper.get('[data-testid="3d-scene"]').attributes('firmware-transfer-active')).toBeUndefined()
+      await wrapper.get('[aria-label="Back to configurator"]').trigger('click')
+      expect(wrapper.get('[data-testid="3d-scene"]').attributes('data-cable-visible')).toBe('false')
+      wrapper.unmount()
+    } finally {
+      if (originalSerialDescriptor) Object.defineProperty(window.navigator, 'serial', originalSerialDescriptor)
+      else delete window.navigator.serial
+    }
   })
 
   it.each([
-    { width: 896, compact: true },
-    { width: 897, compact: false },
-  ])('renders one active settings surface at $width CSS pixels', async ({ width, compact }) => {
+    { width: 390, mobile: true, compact: true, installer: false },
+    { width: 320, mobile: false, compact: false, installer: true },
+    { width: 640, mobile: false, compact: false, installer: true },
+    { width: 896, mobile: false, compact: false, installer: true },
+    { width: 897, mobile: false, compact: false, installer: true },
+  ])('renders the right settings surface for $width px mobile=$mobile', async ({ width, mobile, compact, installer }) => {
     const originalWidth = window.innerWidth
     const originalMatchMedia = window.matchMedia
+    const originalUserAgent = window.navigator.userAgent
     Object.defineProperty(window, 'innerWidth', { configurable: true, value: width })
+    Object.defineProperty(window.navigator, 'userAgent', {
+      configurable: true,
+      value: mobile ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)' : 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+    })
     Object.defineProperty(window, 'matchMedia', {
       configurable: true,
       value: vi.fn(() => ({
@@ -105,11 +148,12 @@ describe('configurator experience', () => {
       expect(wrapper.findAll('[data-testid="settings-surface"]')).toHaveLength(1)
       expect(wrapper.find('.mobile-settings-sheet').exists()).toBe(false)
       expect(wrapper.get('.settings-panel').classes()).toContain(compact ? 'settings-panel--compact' : 'settings-panel')
-      expect(wrapper.find('[data-testid="install-continuation"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="install-continuation"]').exists()).toBe(installer)
       wrapper.unmount()
     } finally {
       Object.defineProperty(window, 'innerWidth', { configurable: true, value: originalWidth })
       Object.defineProperty(window, 'matchMedia', { configurable: true, value: originalMatchMedia })
+      Object.defineProperty(window.navigator, 'userAgent', { configurable: true, value: originalUserAgent })
     }
   })
 

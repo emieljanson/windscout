@@ -18,12 +18,9 @@ TEST(WindFont, MeasuresGeneratedMetricsAtEveryDashboardSize) {
         int ascent;
         int descent;
     } cases[] = {
-        {WIND_FONT_BERKELEY_MONO, 12, "52.5126°N 5.0486°E", 126, 12, 3},
-        {WIND_FONT_BERKELEY_MONO, 14, "KNMI 11:05", 80, 14, 4},
-        {WIND_FONT_BERKELEY_MONO, 32, "44 kt", 95, 31, 8},
-        {WIND_FONT_INTER, 16, "MON 08:00", 89, 16, 4},
-        {WIND_FONT_INTER, 28, "Edam", 74, 28, 7},
-        {WIND_FONT_INTER, 58, "Edam", 163, 57, 14},
+        {WIND_FONT_BERKELEY_MONO_BOLD, 15, "KNMI 11:05", 90, 15, 4},
+        {WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, 15, "44 kt", 40, 15, 4},
+        {WIND_FONT_INTER, 43, "Edam", 121, 42, 11},
     };
     for (const auto &item : cases) {
         const auto measured = wind_font_measure(item.family, item.size, item.text);
@@ -33,32 +30,15 @@ TEST(WindFont, MeasuresGeneratedMetricsAtEveryDashboardSize) {
     }
 }
 
-TEST(WindFont, DropsCoordinatesBeforeEllipsizingName) {
-    const char *name = "Edam";
-    const char *coordinates = "52.5126°N, 5.0486°E";
-    char fitted[128];
-    int coordinates_included = 0;
-    const int full_width = wind_font_measure(WIND_FONT_INTER, 28,
-                                             "Edam 52.5126°N, 5.0486°E").width;
-    size_t bytes = wind_font_fit_ellipsis(WIND_FONT_INTER, 28, name, coordinates,
-                                          full_width, fitted, sizeof(fitted),
-                                          &coordinates_included);
-    EXPECT_GT(bytes, 0u);
-    EXPECT_STREQ(fitted, "Edam 52.5126°N, 5.0486°E");
-    EXPECT_EQ(coordinates_included, 1);
+TEST(WindFont, ProvidesASmallerCondensedFaceForTheFooter) {
+    const auto footer = wind_font_measure(
+        WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, 12, "08h");
+    const auto status = wind_font_measure(
+        WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, 15, "08h");
 
-    const int name_width = wind_font_measure(WIND_FONT_INTER, 28, name).width;
-    wind_font_fit_ellipsis(WIND_FONT_INTER, 28, name, coordinates, name_width,
-                           fitted, sizeof(fitted), &coordinates_included);
-    EXPECT_STREQ(fitted, "Edam");
-    EXPECT_EQ(coordinates_included, 0);
-
-    wind_font_fit_ellipsis(WIND_FONT_INTER, 28, "Noord-Holland Windmeetpost",
-                           coordinates, name_width, fitted, sizeof(fitted),
-                           &coordinates_included);
-    EXPECT_EQ(coordinates_included, 0);
-    EXPECT_NE(std::strstr(fitted, "…"), nullptr);
-    EXPECT_LE(wind_font_measure(WIND_FONT_INTER, 28, fitted).width, name_width);
+    EXPECT_GT(footer.width, 0);
+    EXPECT_LT(footer.width, status.width);
+    EXPECT_LT(footer.ascent, status.ascent);
 }
 
 TEST(WindFont, DrawsAccentsAndFallbackInsideClippedBuffer) {
@@ -71,7 +51,7 @@ TEST(WindFont, DrawsAccentsAndFallbackInsideClippedBuffer) {
     std::fill(luma, luma + stride * height, 255);
 
     wind_font_draw(luma, width, height, stride, -5, 17,
-                   WIND_FONT_BERKELEY_MONO, 14, 0, "Edam ëé ☃");
+                   WIND_FONT_BERKELEY_MONO_BOLD, 15, 0, "Edam ëé ☃");
 
     EXPECT_TRUE(std::all_of(storage.begin(), storage.begin() + guard,
                             [](uint8_t value) { return value == 0xa5; }));
@@ -79,21 +59,34 @@ TEST(WindFont, DrawsAccentsAndFallbackInsideClippedBuffer) {
                             [](uint8_t value) { return value == 0xa5; }));
     EXPECT_TRUE(std::any_of(luma, luma + stride * height,
                             [](uint8_t value) { return value < 255; }));
-    EXPECT_EQ(wind_font_measure(WIND_FONT_BERKELEY_MONO, 14, "☃").width,
-              wind_font_measure(WIND_FONT_BERKELEY_MONO, 14, "?").width);
+    EXPECT_EQ(wind_font_measure(WIND_FONT_BERKELEY_MONO_BOLD, 15, "☃").width,
+              wind_font_measure(WIND_FONT_BERKELEY_MONO_BOLD, 15, "?").width);
+}
+
+TEST(WindFont, DrawsGlyphCoverageAsSolidBlackOrWhitePixels) {
+    constexpr int width = 160;
+    constexpr int height = 56;
+    std::vector<uint8_t> luma(width * height, 255);
+
+    wind_font_draw(luma.data(), width, height, width, 4, 44,
+                   WIND_FONT_INTER, 43, 0, "WIND");
+
+    EXPECT_TRUE(std::any_of(luma.begin(), luma.end(),
+                            [](uint8_t value) { return value == 0; }));
+    EXPECT_TRUE(std::all_of(luma.begin(), luma.end(),
+                            [](uint8_t value) {
+                                return value == 0 || value == 255;
+                            }));
 }
 
 TEST(WindFont, UsesBaselineMetricsForCrossFamilyPlacement) {
-    const auto spot = wind_font_measure(WIND_FONT_INTER, 28, "Edam");
-    const auto coordinates = wind_font_measure(WIND_FONT_BERKELEY_MONO, 12,
-                                               "52.5126°N");
-    const auto status = wind_font_measure(WIND_FONT_BERKELEY_MONO, 14,
+    const auto spot = wind_font_measure(WIND_FONT_INTER, 43, "EDAM");
+    const auto status = wind_font_measure(WIND_FONT_BERKELEY_MONO_BOLD, 15,
                                           "KNMI 11:05");
-    const int baseline = 40;
-    EXPECT_EQ(baseline - spot.ascent, 12);
-    EXPECT_EQ(baseline - coordinates.ascent, 28);
-    EXPECT_EQ(baseline - status.ascent, 26);
-    EXPECT_EQ(baseline + spot.descent, 47);
+    const int baseline = 78;
+    EXPECT_EQ(baseline - spot.ascent, 36);
+    EXPECT_EQ(baseline - status.ascent, 63);
+    EXPECT_EQ(baseline + spot.descent, 89);
 }
 
 TEST(WindFont, UnsupportedSizeIsAStableNoOp) {

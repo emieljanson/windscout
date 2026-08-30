@@ -1,7 +1,6 @@
 #include "wind_renderer_fixture.h"
 
 static const char *const FIXTURE_NAMES[WIND_RENDERER_FIXTURE_COUNT] = {
-    "background-fade-17",
     "threshold-05",
     "threshold-17",
     "threshold-35",
@@ -41,12 +40,11 @@ int wind_renderer_fixture_build(size_t fixture_index,
 
     wind_renderer_input_v2_init(input);
     if (wind_renderer_input_v2_set_metadata(
-            input, "Brouwersdam", "51.7506N 3.8577E", "KNMI SEAMLESS",
-            "26 AUG 11AM") != 0) {
+            input, "Brouwersdam", "BEST MATCH", "26 AUG 11AM") != 0) {
         return -2;
     }
 
-    wind_renderer_display_mode_t mode = WIND_RENDERER_MODE_BACKGROUND_FADE;
+    wind_renderer_display_mode_t mode = WIND_RENDERER_MODE_SOLID;
     int threshold_kt = WIND_RENDERER_DEFAULT_THRESHOLD_KT;
     switch (fixture_index) {
         case WIND_RENDERER_FIXTURE_THRESHOLD_MIN:

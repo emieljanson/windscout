@@ -22,13 +22,13 @@ export function getSerialSupport({
 export async function requestInstallerPort(navigatorApi = globalThis.navigator) {
   const support = getSerialSupport({ navigatorApi })
   if (!support.supported) {
-    throw new InstallerError(INSTALLER_ERROR_CODES.UNSUPPORTED, 'Open WindScout in Chrome or Edge on a desktop computer.', { recoverable: false })
+    throw new InstallerError(INSTALLER_ERROR_CODES.UNSUPPORTED, 'Open Windscout in Chrome or Edge on a desktop computer.', { recoverable: false })
   }
   try {
     return await navigatorApi.serial.requestPort()
   } catch (error) {
     if (isChooserCancellation(error)) return null
-    throw new InstallerError(INSTALLER_ERROR_CODES.DEVICE_NOT_ALLOWED, 'WindScout could not access the selected USB device.', { cause: error })
+    throw new InstallerError(INSTALLER_ERROR_CODES.DEVICE_NOT_ALLOWED, 'Windscout could not access the selected USB device.', { cause: error })
   }
 }
 
@@ -84,7 +84,12 @@ export function decodeProtocolFrame(frame) {
   return { messageType: view.getUint16(10, true), requestId: view.getUint32(12, true), payload: JSON.parse(new TextDecoder().decode(body)) }
 }
 
-export function createSerialProtocol(port, { baudRate = 115200, timeoutMs = 15000, diagnostics } = {}) {
+export function createSerialProtocol(port, {
+  baudRate = 115200,
+  timeoutMs = 15000,
+  diagnostics,
+  waitFor = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
+} = {}) {
   let requestId = 0
   let reader
   let writer
@@ -93,13 +98,6 @@ export function createSerialProtocol(port, { baudRate = 115200, timeoutMs = 1500
 
   function record(entry) {
     try { diagnostics?.record?.(entry) } catch {}
-  }
-
-  function recordUart(bytes) {
-    if (!bytes?.length) return
-    let message
-    try { message = new TextDecoder().decode(bytes) } catch { return }
-    if (message.trim()) record({ category: 'serial', operation: 'uart', status: 'output', message })
   }
 
   function append(chunk) {
@@ -114,12 +112,10 @@ export function createSerialProtocol(port, { baudRate = 115200, timeoutMs = 1500
       const offset = magicOffset(buffered, buffered.length)
       if (offset < 0) {
         const retainedOffset = Math.max(0, buffered.length - (MAGIC.length - 1))
-        recordUart(buffered.slice(0, retainedOffset))
         buffered = buffered.slice(retainedOffset)
         return null
       }
       if (offset > 0) {
-        recordUart(buffered.slice(0, offset))
         buffered = buffered.slice(offset)
       }
       if (buffered.length < HEADER_SIZE) return null
@@ -179,7 +175,23 @@ export function createSerialProtocol(port, { baudRate = 115200, timeoutMs = 1500
   }
   return {
     async open() {
-      await port.open({ baudRate, bufferSize: 8192 })
+      await port.open({ baudRate, bufferSize: 16384 })
+      if (typeof port.setSignals === 'function') {
+        // The E1002 USB-UART bridge maps DTR to boot mode and RTS to reset.
+        // Chrome can leave those lines asserted when opening the port, so give
+        // the device an explicit normal reset before speaking our protocol.
+        try {
+          await port.setSignals({ dataTerminalReady: false, requestToSend: false })
+          await port.setSignals({ dataTerminalReady: false, requestToSend: true })
+          await waitFor(150)
+          await port.setSignals({ dataTerminalReady: false, requestToSend: false })
+          await waitFor(2_000)
+        } catch {
+          // Some USB bridges do not expose modem-control lines. The app may
+          // already be running, so continue with the protocol connection.
+          record({ category: 'serial', operation: 'reset-signals', status: 'unavailable' })
+        }
+      }
       reader = port.readable.getReader()
       writer = port.writable.getWriter()
       buffered = new Uint8Array(0)

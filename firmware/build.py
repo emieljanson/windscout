@@ -5,6 +5,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Add scripts to sys.path to import boards
@@ -18,6 +19,24 @@ PINNED_IDF_VERSION = "v6.0.2"
 DEFAULT_IDF_PATH = os.path.expanduser(
     f"~/.espressif/frameworks/esp-idf-{PINNED_IDF_VERSION}"
 )
+
+
+def local_installer_version(requested, now=None):
+    """Return an explicit version or a fresh version for a local device build."""
+    if requested:
+        return requested
+    instant = now or datetime.now(timezone.utc)
+    return f"dev-local-{instant.strftime('%Y%m%d-%H%M%S')}"
+
+
+def with_firmware_version(extra_args, version):
+    """Ensure the manifest version is also embedded in the device firmware."""
+    prefix = "-DFIRMWARE_VERSION="
+    configured = [argument[len(prefix):].strip("'\"") for argument in extra_args
+                  if argument.startswith(prefix)]
+    if configured and any(value != version for value in configured):
+        raise ValueError("The installer version must match the embedded firmware version.")
+    return list(extra_args) if configured else [*extra_args, f"{prefix}{version}"]
 
 
 def run_idf(args):
@@ -177,6 +196,17 @@ def main():
 
     steps = args.step if args.step else STEPS
 
+    installer_version = None
+    if args.installer_output:
+        if args.board != "seeedstudio_reterminal_e1002" or args.debug:
+            parser.error("installer bundles are release-only and currently support E1002")
+        installer_version = local_installer_version(args.installer_version)
+        try:
+            extra_args = with_firmware_version(extra_args, installer_version)
+        except ValueError as error:
+            parser.error(str(error))
+        print(f"Installer firmware version: {installer_version}")
+
     if args.fullclean:
         print("Performing full clean...")
         import shutil
@@ -198,10 +228,6 @@ def main():
     if "firmware" in steps:
         build_firmware(args.board, extra_args, debug=args.debug)
         if args.installer_output:
-            if not args.installer_version:
-                parser.error("--installer-output requires --installer-version")
-            if args.board != "seeedstudio_reterminal_e1002" or args.debug:
-                parser.error("installer bundles are release-only and currently support E1002")
             subprocess.run(
                 [
                     sys.executable,
@@ -213,7 +239,7 @@ def main():
                     "--output",
                     str(args.installer_output),
                     "--version",
-                    args.installer_version,
+                    installer_version,
                 ],
                 check=True,
             )

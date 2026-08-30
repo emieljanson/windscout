@@ -3,9 +3,24 @@ import {
   HERO_CAMERA,
   NARROW_CAMERA,
   ORBIT_LIMITS,
+  USB_CAMERA,
+  USB_CAMERA_DURATION_MS,
   applyHeroPose,
   calculateSceneComposition,
+  configureOrbitControls,
+  createUsbCameraAnimation,
+  easeCameraMovement,
 } from '../src/configurator/sceneController'
+
+function vector(values) {
+  return {
+    x: values[0],
+    y: values[1],
+    z: values[2],
+    set(x, y, z) { this.x = x; this.y = y; this.z = z },
+    toArray() { return [this.x, this.y, this.z] },
+  }
+}
 
 describe('scene controller', () => {
   it('restores the designed camera and orbit target', () => {
@@ -27,6 +42,15 @@ describe('scene controller', () => {
     expect(camera.values).toEqual(NARROW_CAMERA.position)
     expect(camera.values[0]).toBeLessThan(0)
     expect(camera.values[1]).toBeLessThan(0.05)
+  })
+
+  it('uses the distant product camera whenever the panel overlays a narrow stage', () => {
+    const camera = { position: { set: (...values) => { camera.values = values } } }
+    const controls = { target: { set: vi.fn() }, update: vi.fn() }
+
+    applyHeroPose(camera, controls, 0.92, true)
+
+    expect(camera.values).toEqual(NARROW_CAMERA.position)
   })
 
   it('centres the product in the free space above the floating settings panel', () => {
@@ -65,6 +89,20 @@ describe('scene controller', () => {
       })
   })
 
+  it('keeps a narrow desktop model visible when the panel sits beside the stage', () => {
+    expect(calculateSceneComposition({
+      width: 844,
+      height: 390,
+      settingsTop: 16,
+      panelPlacement: 'side',
+    })).toEqual({
+      availableHeight: 390,
+      viewOffsetX: 110,
+      viewOffsetY: 0,
+      zoom: 1,
+    })
+  })
+
   it('uses the available width instead of unnecessarily shrinking a compact tablet', () => {
     const composition = calculateSceneComposition({
       width: 768,
@@ -76,14 +114,90 @@ describe('scene controller', () => {
     expect(composition.viewOffsetY).toBeGreaterThan(0)
   })
 
-  it('reveals the sides and top without letting the camera move behind the display', () => {
-    expect(ORBIT_LIMITS.maxAzimuth).toBeGreaterThan((Math.PI * 50) / 180)
-    expect(ORBIT_LIMITS.maxAzimuth).toBeLessThan((Math.PI * 60) / 180)
-    expect(ORBIT_LIMITS.minPolar).toBeLessThan((Math.PI * 45) / 180)
-    expect(ORBIT_LIMITS.minPolar).toBeGreaterThan((Math.PI * 35) / 180)
-    expect(ORBIT_LIMITS.maxAzimuth - ORBIT_LIMITS.minAzimuth).toBeLessThan(Math.PI)
+  it('allows a complete orbit and a higher top view without moving underneath', () => {
+    expect(ORBIT_LIMITS.minAzimuth).toBe(-Infinity)
+    expect(ORBIT_LIMITS.maxAzimuth).toBe(Infinity)
+    expect(ORBIT_LIMITS.minPolar).toBeLessThan((Math.PI * 20) / 180)
+    expect(ORBIT_LIMITS.minPolar).toBeGreaterThan(0)
     expect(ORBIT_LIMITS.maxPolar).toBeLessThan(Math.PI / 2)
     expect(ORBIT_LIMITS.minDistance).toBeGreaterThan(0)
     expect(ORBIT_LIMITS.maxDistance).toBeLessThan(1)
   })
+
+  it('keeps the restrained orbit even when legacy inspection options are passed', () => {
+    const controls = {}
+
+    configureOrbitControls(controls, { allowBackView: true })
+
+    expect(controls.minAzimuthAngle).toBe(ORBIT_LIMITS.minAzimuth)
+    expect(controls.maxAzimuthAngle).toBe(ORBIT_LIMITS.maxAzimuth)
+    expect(controls.maxPolarAngle).toBe(ORBIT_LIMITS.maxPolar)
+  })
+
+  it('moves to the USB connection view and retargets smoothly back when interrupted', () => {
+    const camera = { position: vector(HERO_CAMERA.position), lookAt: vi.fn() }
+    const controls = {
+      enabled: true,
+      target: vector(HERO_CAMERA.target),
+      update: vi.fn(),
+    }
+    const requestRender = vi.fn()
+    const animation = createUsbCameraAnimation({
+      camera,
+      controls,
+      reducedMotion: () => false,
+      requestRender,
+    })
+
+    animation.setUsbView(true)
+    animation.update(100)
+    animation.update(500)
+    const interruptedPosition = camera.position.toArray()
+
+    expect(interruptedPosition).not.toEqual(HERO_CAMERA.position)
+    expect(interruptedPosition).not.toEqual(USB_CAMERA.position)
+    expect(Math.hypot(...interruptedPosition)).toBeGreaterThan(0.3)
+    expect(camera.lookAt).toHaveBeenLastCalledWith(
+      controls.target.x,
+      controls.target.y,
+      controls.target.z,
+    )
+    expect(controls.enabled).toBe(false)
+
+    animation.setUsbView(false)
+    expect(camera.position.toArray()).toEqual(interruptedPosition)
+    animation.update(500)
+    animation.update(2_000)
+
+    expect(camera.position.toArray()).toEqual(HERO_CAMERA.position)
+    expect(controls.target.toArray()).toEqual(HERO_CAMERA.target)
+    expect(controls.enabled).toBe(true)
+    expect(requestRender).toHaveBeenCalled()
+  })
+
+  it('uses a strong ease-out so the camera spends its final phase settling', () => {
+    expect(USB_CAMERA_DURATION_MS).toBe(1500)
+    expect(easeCameraMovement(0)).toBe(0)
+    expect(easeCameraMovement(0.25)).toBeGreaterThan(0.5)
+    expect(easeCameraMovement(0.5)).toBeGreaterThan(0.8)
+    expect(easeCameraMovement(1)).toBe(1)
+  })
+
+  it('uses an immediate position change when reduced motion is requested', () => {
+    const camera = { position: vector(HERO_CAMERA.position) }
+    const controls = { enabled: true, target: vector(HERO_CAMERA.target), update: vi.fn() }
+    const animation = createUsbCameraAnimation({
+      camera,
+      controls,
+      reducedMotion: () => true,
+      requestRender: vi.fn(),
+    })
+
+    animation.setUsbView(true)
+
+    expect(camera.position.toArray()).toEqual(USB_CAMERA.position)
+    expect(controls.target.toArray()).toEqual(USB_CAMERA.target)
+    expect(controls.enabled).toBe(true)
+  })
+
 })

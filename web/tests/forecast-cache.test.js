@@ -15,7 +15,6 @@ function forecast(modelId = 'best_match', model = 'BEST MATCH') {
     schemaVersion: 2,
     spotId: 'brouwersdam',
     spotName: 'BROUWERSDAM',
-    coordinates: `51°45'02"N 3°51'28"E`,
     timezone: 'Europe/Amsterdam',
     provider: 'OPEN-METEO',
     modelId,

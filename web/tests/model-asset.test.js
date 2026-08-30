@@ -1,5 +1,14 @@
+import { readFile } from 'node:fs/promises'
+import { resolve } from 'node:path'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { describe, expect, it } from 'vitest'
 import { E1002_MODEL, validateModelProvenance } from '../src/assets/e1002'
+
+async function loadGeneratedModel() {
+  const source = await readFile(resolve(process.cwd(), 'public/devices/e1002/e1002.glb'))
+  const buffer = source.buffer.slice(source.byteOffset, source.byteOffset + source.byteLength)
+  return new Promise((resolve, reject) => new GLTFLoader().parse(buffer, '', resolve, reject))
+}
 
 describe('E1002 model contract', () => {
   it('records the documented enclosure and native screen proportions', () => {
@@ -16,6 +25,23 @@ describe('E1002 model contract', () => {
     expect(provenance.default.conversion.angularDeflection).toBeLessThanOrEqual(0.25)
     expect(provenance.default.conversion.normalTreatment).toMatch(/crease/i)
     expect(provenance.default.conversion.normalTreatment).toMatch(/planar front-face/i)
+  })
+
+  it('renders the four rear screw heads as brushed metal', async () => {
+    const { scene } = await loadGeneratedModel()
+    const rearScrewMeshes = []
+
+    scene.traverse((object) => {
+      if ([39, 50, 51, 52].includes(object.userData.sourceMesh)) rearScrewMeshes.push(object)
+    })
+
+    expect(rearScrewMeshes).toHaveLength(4)
+    for (const screw of rearScrewMeshes) {
+      expect(screw.material.name).toBe('rear-fastener-brushed-steel')
+      expect(screw.material.metalness).toBeGreaterThanOrEqual(0.9)
+      expect(screw.material.roughness).toBeGreaterThan(0.25)
+      expect(screw.material.roughness).toBeLessThan(0.5)
+    }
   })
 
   it('requires every scene role and recorded publication permission', () => {

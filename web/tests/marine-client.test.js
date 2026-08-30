@@ -4,19 +4,26 @@ import { SPOTS } from '../src/spots'
 
 function response() {
   const time = Array.from({ length: 120 }, (_, index) => Date.UTC(2026, 7, 25, 22) / 1000 + index * 3600)
+  const minutelyTime = Array.from({ length: 477 }, (_, index) => time[0] + index * 900)
   return {
     timezone: 'Europe/Amsterdam',
     utc_offset_seconds: 7200,
     hourly_units: { time: 'unixtime', sea_level_height_msl: 'm' },
     hourly: { time, sea_level_height_msl: time.map((_, index) => Math.sin(index / 6)) },
+    minutely_15_units: { time: 'unixtime', sea_level_height_msl: 'm' },
+    minutely_15: {
+      time: minutelyTime,
+      sea_level_height_msl: minutelyTime.map((_, index) => Math.cos((index - 25) * Math.PI / 24)),
+    },
   }
 }
 
 describe('Open-Meteo marine client', () => {
-  it('requests hourly sea-level data for the selected spot', () => {
+  it('requests hourly curve data and quarter-hour tide timing for the selected spot', () => {
     const url = new URL(buildMarineUrl(SPOTS[1]))
     expect(url.origin + url.pathname).toBe('https://marine-api.open-meteo.com/v1/marine')
     expect(url.searchParams.get('hourly')).toBe('sea_level_height_msl')
+    expect(url.searchParams.get('minutely_15')).toBe('sea_level_height_msl')
     expect(url.searchParams.get('forecast_days')).toBe('5')
     expect(url.searchParams.get('timeformat')).toBe('unixtime')
     expect(url.searchParams.get('cell_selection')).toBe('sea')

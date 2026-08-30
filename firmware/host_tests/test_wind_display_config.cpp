@@ -10,13 +10,23 @@ TEST(WindDisplayConfig, UsesSettledDefaults)
     wind_display_config_default(&config);
     EXPECT_TRUE(wind_display_config_validate(&config));
     EXPECT_EQ(config.version, WIND_DISPLAY_CONFIG_VERSION);
-    EXPECT_EQ(config.display_mode, WIND_RENDERER_MODE_BACKGROUND_FADE);
+    EXPECT_EQ(config.display_mode, WIND_RENDERER_MODE_SOLID);
     EXPECT_EQ(config.threshold_kt, WIND_RENDERER_DEFAULT_THRESHOLD_KT);
     EXPECT_TRUE(config.show_weather);
     EXPECT_FALSE(config.show_temperature);
     EXPECT_FALSE(config.show_tide);
+    EXPECT_FALSE(config.show_dedicated_footer);
     EXPECT_TRUE(config.use_24_hour);
     EXPECT_FALSE(config.temperature_fahrenheit);
+}
+
+TEST(WindDisplayConfig, AcceptsEveryPreviouslyStoredVersionForLoading)
+{
+    EXPECT_FALSE(wind_display_config_stored_version_supported(0));
+    EXPECT_TRUE(wind_display_config_stored_version_supported(1));
+    EXPECT_TRUE(wind_display_config_stored_version_supported(2));
+    EXPECT_TRUE(wind_display_config_stored_version_supported(WIND_DISPLAY_CONFIG_VERSION));
+    EXPECT_FALSE(wind_display_config_stored_version_supported(WIND_DISPLAY_CONFIG_VERSION + 1));
 }
 
 TEST(WindDisplayConfig, AcceptsEveryVisibilityCombinationAndRejectsBadBounds)
@@ -35,6 +45,9 @@ TEST(WindDisplayConfig, AcceptsEveryVisibilityCombinationAndRejectsBadBounds)
     config.threshold_kt = WIND_RENDERER_MAX_THRESHOLD_KT + 1;
     EXPECT_FALSE(wind_display_config_validate(&config));
     config.threshold_kt = WIND_RENDERER_DEFAULT_THRESHOLD_KT;
+    config.display_mode = 0;
+    EXPECT_FALSE(wind_display_config_validate(&config));
+    config.display_mode = WIND_RENDERER_MODE_SOLID;
     config.version += 1;
     EXPECT_FALSE(wind_display_config_validate(&config));
 }

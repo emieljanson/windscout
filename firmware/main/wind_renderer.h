@@ -15,13 +15,13 @@ enum {
     WIND_RENDERER_SAMPLES_PER_DAY = 5,
     WIND_RENDERER_PALETTE_BYTES = WIND_RENDERER_WIDTH * WIND_RENDERER_HEIGHT,
     WIND_RENDERER_RGBA_BYTES = WIND_RENDERER_PALETTE_BYTES * 4,
-    WIND_RENDERER_CONTRACT_VERSION = 3,
+    WIND_RENDERER_CONTRACT_VERSION = 6,
     WIND_RENDERER_MAX_TIDE_SAMPLES = 121,
+    WIND_RENDERER_MAX_TIDE_EXTREMA = 32,
     WIND_RENDERER_MIN_THRESHOLD_KT = 5,
     WIND_RENDERER_DEFAULT_THRESHOLD_KT = 17,
     WIND_RENDERER_MAX_THRESHOLD_KT = 35,
     WIND_RENDERER_SPOT_NAME_CAPACITY = 96,
-    WIND_RENDERER_COORDINATES_CAPACITY = 64,
     WIND_RENDERER_PROVIDER_CAPACITY = 32,
     WIND_RENDERER_UPDATED_TIME_CAPACITY = 32,
     WIND_RENDERER_DAY_LABEL_CAPACITY = 16,
@@ -37,10 +37,9 @@ typedef enum {
 } wind_renderer_state_t;
 
 typedef enum {
-    WIND_RENDERER_MODE_BACKGROUND_FADE = 0,
-    WIND_RENDERER_MODE_THRESHOLD,
-    WIND_RENDERER_MODE_SOLID,
-    WIND_RENDERER_MODE_COUNT,
+    WIND_RENDERER_MODE_THRESHOLD = 1,
+    WIND_RENDERER_MODE_SOLID = 2,
+    WIND_RENDERER_MODE_COUNT = 3,
 } wind_renderer_display_mode_t;
 
 typedef enum {
@@ -74,6 +73,15 @@ typedef struct {
 } wind_renderer_tide_sample_t;
 
 typedef struct {
+    int day_index;
+    int local_hour;
+    int local_minute;
+    int sea_level_mm;
+    int is_high;
+    int available;
+} wind_renderer_tide_extremum_t;
+
+typedef struct {
     const char *day;
     const char *date;
     wind_renderer_sample_t samples[WIND_RENDERER_SAMPLES_PER_DAY];
@@ -81,7 +89,6 @@ typedef struct {
 
 typedef struct {
     const char *spot_name;
-    const char *coordinates;
     const char *provider;
     const char *updated_time;
     wind_renderer_state_t state;
@@ -94,11 +101,14 @@ typedef struct {
     int show_weather;
     int show_temperature;
     int show_tide;
+    int show_dedicated_footer;
     int use_24_hour;
     int temperature_fahrenheit;
     int tide_available;
     int tide_sample_count;
     wind_renderer_tide_sample_t tide_samples[WIND_RENDERER_MAX_TIDE_SAMPLES];
+    int tide_extremum_count;
+    wind_renderer_tide_extremum_t tide_extrema[WIND_RENDERER_MAX_TIDE_EXTREMA];
     wind_renderer_day_t days[WIND_RENDERER_DAY_COUNT];
 } wind_renderer_dashboard_t;
 
@@ -132,9 +142,17 @@ typedef struct {
 } wind_renderer_input_tide_sample_v2_t;
 
 typedef struct {
+    int32_t day_index;
+    int32_t local_hour;
+    int32_t local_minute;
+    int32_t sea_level_mm;
+    int32_t is_high;
+    int32_t available;
+} wind_renderer_input_tide_extremum_v2_t;
+
+typedef struct {
     uint32_t version;
     char spot_name[WIND_RENDERER_SPOT_NAME_CAPACITY];
-    char coordinates[WIND_RENDERER_COORDINATES_CAPACITY];
     char provider[WIND_RENDERER_PROVIDER_CAPACITY];
     char updated_time[WIND_RENDERER_UPDATED_TIME_CAPACITY];
     int32_t state;
@@ -146,17 +164,19 @@ typedef struct {
     int32_t show_weather;
     int32_t show_temperature;
     int32_t show_tide;
+    int32_t show_dedicated_footer;
     int32_t use_24_hour;
     int32_t temperature_fahrenheit;
     int32_t tide_available;
     int32_t tide_sample_count;
     wind_renderer_input_tide_sample_v2_t tide_samples[WIND_RENDERER_MAX_TIDE_SAMPLES];
+    int32_t tide_extremum_count;
+    wind_renderer_input_tide_extremum_v2_t tide_extrema[WIND_RENDERER_MAX_TIDE_EXTREMA];
     wind_renderer_input_day_v2_t days[WIND_RENDERER_DAY_COUNT];
 } wind_renderer_input_v2_t;
 
 typedef struct {
     int dither_passes;
-    int coordinates_included;
     int status_right;
     int clipped_primitives;
     int wind_baseline;
@@ -189,7 +209,6 @@ void wind_renderer_input_v2_init(wind_renderer_input_v2_t *input);
 
 int wind_renderer_input_v2_set_metadata(wind_renderer_input_v2_t *input,
                                         const char *spot_name,
-                                        const char *coordinates,
                                         const char *provider,
                                         const char *updated_time);
 
@@ -208,7 +227,8 @@ int wind_renderer_input_v2_set_display_rows(wind_renderer_input_v2_t *input,
 
 int wind_renderer_input_v2_set_preferences(wind_renderer_input_v2_t *input,
                                            int use_24_hour,
-                                           int temperature_fahrenheit);
+                                           int temperature_fahrenheit,
+                                           int show_dedicated_footer);
 
 int wind_renderer_input_v2_set_day(wind_renderer_input_v2_t *input,
                                    int day_index, const char *day,
@@ -227,6 +247,11 @@ int wind_renderer_input_v2_set_tide_sample(wind_renderer_input_v2_t *input,
                                            int tide_index, int day_index,
                                            int local_hour, int sea_level_mm,
                                            int available);
+
+int wind_renderer_input_v2_set_tide_extremum(
+    wind_renderer_input_v2_t *input, int extremum_index, int day_index,
+    int local_hour, int local_minute, int sea_level_mm, int is_high,
+    int available);
 
 /*
  * Creates the canonical pointer-based dashboard view over input. The returned

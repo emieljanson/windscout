@@ -24,10 +24,8 @@ function safeScalar(value) {
 }
 
 function collectSensitiveValues(input, output, seen) {
-  const scalar = safeScalar(input)
-  if (scalar !== undefined) {
-    const value = String(scalar)
-    if (value) output.add(value)
+  if (typeof input === 'string') {
+    if (input) output.add(input)
     return
   }
   if (!input || typeof input !== 'object' || seen.has(input)) return
@@ -60,6 +58,7 @@ export function sanitizeDiagnosticText(input, sensitiveValues = []) {
     .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, REDACTED)
     .replace(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g, REDACTED)
     .replace(/\b(?:[A-F0-9]{2}:){5}[A-F0-9]{2}\b/gi, REDACTED)
+    .replace(/(?<![0-9A-F:])(?=[0-9A-F:]*:[0-9A-F:]*:)(?:[0-9A-F]{0,4}:){2,7}[0-9A-F]{0,4}(?![0-9A-F:])/gi, REDACTED)
     .replace(/\b(?:latitude|longitude|lat|lon|lng)\s*[:=]\s*-?\d+(?:\.\d+)?/gi, (match) => `${match.split(/[:=]/, 1)[0]}=${REDACTED}`)
     .replace(/(https?:\/\/[^\s?]+)\?[^\s]*/gi, '$1?[redacted]')
 }
@@ -143,7 +142,12 @@ export function createInstallerDiagnostics({
       message = safeScalar(candidate.message)
     } catch {}
     if (status !== undefined) entry.status = sanitizeKey(status, sensitiveValues)
-    if (message !== undefined) entry.message = truncate(sanitizeDiagnosticText(message, sensitiveValues), maxTextEntryChars)
+    // Credentials may be split across multiple serial messages, which makes
+    // exact-value redaction insufficient. Keep the structured event, but no
+    // free-form text, for the short period credentials are in memory.
+    if (message !== undefined && credentialLocks === 0) {
+      entry.message = truncate(sanitizeDiagnosticText(message, sensitiveValues), maxTextEntryChars)
+    }
 
     if (candidate.measurements && typeof candidate.measurements === 'object') {
       const measurements = {}

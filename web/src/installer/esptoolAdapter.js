@@ -32,14 +32,36 @@ export function createEsptoolAdapter({
               : image.buffer.slice(image.byteOffset, image.byteOffset + image.byteLength),
           )
         : undefined
-      const transport = new Transport(port, false)
-      const loader = new ESPLoader({ transport, baudrate: 115200, terminal: diagnosticTerminal(terminal) })
+      const connect = async (baudrate) => {
+        const transport = new Transport(port, false)
+        const loader = new ESPLoader({ transport, baudrate, terminal: diagnosticTerminal(terminal) })
+        try {
+          const chip = await loader.main('default_reset')
+          record({ category: 'bootloader', operation: 'baudrate', status: 'ready', measurements: { baudrate } })
+          return { chip, loader, transport }
+        } catch (error) {
+          await transport.disconnect().catch(() => {})
+          throw error
+        }
+      }
       try {
-        const chip = await loader.main('default_reset')
-        return { chipFamily: /ESP32-S3/i.test(chip) ? 'ESP32-S3' : chip, loader, transport }
+        let identity
+        try {
+          identity = await connect(460800)
+        } catch (fastError) {
+          record({
+            category: 'bootloader', operation: 'baudrate', status: 'fallback',
+            message: fastError?.message, measurements: { baudrate: 115200 },
+          })
+          identity = await connect(115200)
+        }
+        return {
+          chipFamily: /ESP32-S3/i.test(identity.chip) ? 'ESP32-S3' : identity.chip,
+          loader: identity.loader,
+          transport: identity.transport,
+        }
       } catch (error) {
-        await transport.disconnect().catch(() => {})
-        throw new InstallerError(INSTALLER_ERROR_CODES.INCOMPATIBLE_DEVICE, 'This USB device is not a compatible WindScout.', { cause: error })
+        throw new InstallerError(INSTALLER_ERROR_CODES.INCOMPATIBLE_DEVICE, 'This USB device is not a compatible Windscout.', { cause: error })
       }
     },
     async flash({ loader, transport, bundle, onProgress = () => {} }) {

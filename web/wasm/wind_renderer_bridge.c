@@ -8,7 +8,6 @@
 
 enum {
     METADATA_SPOT_NAME = 0,
-    METADATA_COORDINATES,
     METADATA_PROVIDER,
     METADATA_UPDATED_TIME,
     DAY_LABEL_DAY = 0,
@@ -104,10 +103,6 @@ EMSCRIPTEN_KEEPALIVE int wind_wasm_set_metadata_field(int field) {
             result = copy_text(renderer_input.spot_name,
                                sizeof(renderer_input.spot_name));
             break;
-        case METADATA_COORDINATES:
-            result = copy_text(renderer_input.coordinates,
-                               sizeof(renderer_input.coordinates));
-            break;
         case METADATA_PROVIDER:
             result = copy_text(renderer_input.provider,
                                sizeof(renderer_input.provider));
@@ -141,10 +136,11 @@ EMSCRIPTEN_KEEPALIVE int wind_wasm_set_display_rows(
 }
 
 EMSCRIPTEN_KEEPALIVE int wind_wasm_set_preferences(
-    int use_24_hour, int temperature_fahrenheit) {
+    int use_24_hour, int temperature_fahrenheit, int show_dedicated_footer) {
     if (!input_ready || input_error) return -1;
     return accept_result(wind_renderer_input_v2_set_preferences(
-        &renderer_input, use_24_hour, temperature_fahrenheit));
+        &renderer_input, use_24_hour, temperature_fahrenheit,
+        show_dedicated_footer));
 }
 
 EMSCRIPTEN_KEEPALIVE int wind_wasm_set_day_field(int day_index, int field) {
@@ -200,6 +196,15 @@ EMSCRIPTEN_KEEPALIVE int wind_wasm_set_tide_sample(
     return accept_result(wind_renderer_input_v2_set_tide_sample(
         &renderer_input, tide_index, day_index, local_hour, sea_level_mm,
         available));
+}
+
+EMSCRIPTEN_KEEPALIVE int wind_wasm_set_tide_extremum(
+    int extremum_index, int day_index, int local_hour, int local_minute,
+    int sea_level_mm, int is_high, int available) {
+    if (!input_ready || input_error) return -1;
+    return accept_result(wind_renderer_input_v2_set_tide_extremum(
+        &renderer_input, extremum_index, day_index, local_hour, local_minute,
+        sea_level_mm, is_high, available));
 }
 
 EMSCRIPTEN_KEEPALIVE int wind_wasm_render(void) {

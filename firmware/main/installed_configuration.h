@@ -10,7 +10,7 @@
 extern "C" {
 #endif
 
-#define INSTALLED_CONFIGURATION_VERSION 2u
+#define INSTALLED_CONFIGURATION_VERSION 3u
 #define WINDSCOUT_BOARD_ID "seeedstudio_reterminal_e1002"
 #define INSTALLED_CONFIGURATION_WRITE_BOUNDARY_COUNT 3
 
@@ -28,6 +28,7 @@ typedef struct {
     bool show_weather;
     bool show_temperature;
     bool show_tide;
+    bool show_dedicated_footer;
     bool use_24_hour;
     bool temperature_fahrenheit;
 } installed_display_configuration_t;
@@ -54,6 +55,8 @@ esp_err_t installed_configuration_load_credentials(char *ssid, size_t ssid_size,
 #ifndef ESP_PLATFORM
 void installed_configuration_reset_host_storage(void);
 void installed_configuration_set_host_failure_boundary(int boundary);
+void installed_configuration_seed_v2_host_storage(const installed_configuration_t *config,
+                                                   const char *ssid, const char *password);
 #endif
 
 #ifdef __cplusplus

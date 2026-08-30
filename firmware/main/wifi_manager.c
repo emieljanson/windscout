@@ -35,6 +35,8 @@ static EventGroupHandle_t s_wifi_event_group;
 static int s_retry_num = 0;
 static int s_max_retries = WIFI_INTERACTIVE_MAX_RETRIES;
 static bool s_is_connected = false;
+static bool s_wifi_started = false;
+static bool s_connect_on_start = false;
 static esp_netif_t *s_sta_netif = NULL;
 
 static void apply_dns_override(void);
@@ -43,7 +45,7 @@ static void event_handler(void *arg, esp_event_base_t event_base, int32_t event_
                           void *event_data)
 {
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
-        esp_wifi_connect();
+        if (s_connect_on_start) esp_wifi_connect();
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_CONNECTED) {
         // Bring up an IPv6 link-local address so mDNS can answer AAAA queries.
         // Without one the responder stays silent on AAAA, and clients resolving
@@ -240,7 +242,8 @@ static esp_err_t connect_with_policy(const char *ssid, const char *password,
     if (password) {
         strncpy((char *) wifi_config.sta.password, password, sizeof(wifi_config.sta.password) - 1);
     }
-    wifi_config.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
+    wifi_config.sta.threshold.authmode =
+        password && password[0] != '\0' ? WIFI_AUTH_WPA2_PSK : WIFI_AUTH_OPEN;
     wifi_config.sta.pmf_cfg.capable = true;
     wifi_config.sta.pmf_cfg.required = false;
 
@@ -252,6 +255,8 @@ static esp_err_t connect_with_policy(const char *ssid, const char *password,
         ESP_LOGE(TAG, "Failed to stop WiFi: %s", esp_err_to_name(result));
         return result;
     }
+    s_wifi_started = false;
+    s_connect_on_start = false;
     result = esp_wifi_set_mode(WIFI_MODE_STA);
     if (result != ESP_OK) {
         ESP_LOGE(TAG, "Failed to enter station mode: %s", esp_err_to_name(result));
@@ -269,11 +274,14 @@ static esp_err_t connect_with_policy(const char *ssid, const char *password,
     s_max_retries = max_retries;
     s_is_connected = false;
     xEventGroupClearBits(s_wifi_event_group, WIFI_CONNECTED_BIT | WIFI_FAIL_BIT);
+    s_connect_on_start = true;
     result = esp_wifi_start();
     if (result != ESP_OK) {
+        s_connect_on_start = false;
         ESP_LOGE(TAG, "Failed to start WiFi: %s", esp_err_to_name(result));
         return result;
     }
+    s_wifi_started = true;
     result = esp_wifi_set_ps(WIFI_PS_MIN_MODEM);  // Enable power save at boot/connect
     if (result != ESP_OK) {
         ESP_LOGE(TAG, "Failed to enable WiFi power save: %s", esp_err_to_name(result));
@@ -420,11 +428,32 @@ int wifi_manager_scan(wifi_ap_record_t *results, int max_results)
         return 0;
     }
 
+    // A clean E1002 deliberately leaves the station stopped until setup. A
+    // blocking scan against that stopped driver can occupy the installer UART
+    // until the browser times out, so bring the radio up only for this scan.
+    const bool started_for_scan = !s_wifi_started;
+    if (started_for_scan) {
+        // WIFI_EVENT_STA_START normally begins a requested connection. A scan
+        // on an unconfigured device must not race that connection state
+        // machine for the radio.
+        s_connect_on_start = false;
+        esp_err_t start_result = esp_wifi_start();
+        if (start_result != ESP_OK) {
+            ESP_LOGE(TAG, "Failed to start WiFi for scan: %s", esp_err_to_name(start_result));
+            return 0;
+        }
+        s_wifi_started = true;
+    }
+
     // Save current WiFi mode
     wifi_mode_t original_mode;
     esp_err_t err = esp_wifi_get_mode(&original_mode);
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Failed to get WiFi mode: %s", esp_err_to_name(err));
+        if (started_for_scan) {
+            (void) esp_wifi_stop();
+            s_wifi_started = false;
+        }
         return 0;
     }
 
@@ -433,6 +462,10 @@ int wifi_manager_scan(wifi_ap_record_t *results, int max_results)
         err = esp_wifi_set_mode(WIFI_MODE_APSTA);
         if (err != ESP_OK) {
             ESP_LOGE(TAG, "Failed to set APSTA mode: %s", esp_err_to_name(err));
+            if (started_for_scan) {
+                (void) esp_wifi_stop();
+                s_wifi_started = false;
+            }
             return 0;
         }
     }
@@ -444,6 +477,10 @@ int wifi_manager_scan(wifi_ap_record_t *results, int max_results)
         ESP_LOGE(TAG, "WiFi scan failed: %s", esp_err_to_name(err));
         if (original_mode == WIFI_MODE_AP) {
             esp_wifi_set_mode(original_mode);
+        }
+        if (started_for_scan) {
+            (void) esp_wifi_stop();
+            s_wifi_started = false;
         }
         return 0;
     }
@@ -457,6 +494,10 @@ int wifi_manager_scan(wifi_ap_record_t *results, int max_results)
         if (original_mode == WIFI_MODE_AP) {
             esp_wifi_set_mode(original_mode);
         }
+        if (started_for_scan) {
+            (void) esp_wifi_stop();
+            s_wifi_started = false;
+        }
         return 0;
     }
 
@@ -468,12 +509,20 @@ int wifi_manager_scan(wifi_ap_record_t *results, int max_results)
         if (original_mode == WIFI_MODE_AP) {
             esp_wifi_set_mode(original_mode);
         }
+        if (started_for_scan) {
+            (void) esp_wifi_stop();
+            s_wifi_started = false;
+        }
         return 0;
     }
 
     // Restore original WiFi mode
     if (original_mode == WIFI_MODE_AP) {
         esp_wifi_set_mode(original_mode);
+    }
+    if (started_for_scan) {
+        (void) esp_wifi_stop();
+        s_wifi_started = false;
     }
 
     ESP_LOGI(TAG, "WiFi scan found %d APs (returning %d)", ap_count, fetch_count);

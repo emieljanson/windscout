@@ -29,6 +29,15 @@ describe('installer action resolver', () => {
     expect(resolveInstallAction({ device: { ...current, firmwareLayoutVersion: 2 }, release, configurationDigest: 'wanted' })).toEqual({ action: INSTALL_ACTIONS.REINSTALL, reason: 'flash-layout-changed' })
   })
 
+  it('updates firmware to migrate an older supported configuration version', () => {
+    expect(resolveInstallAction({
+      device: { ...current, configurationVersion: 2 },
+      release,
+      configurationDigest: 'wanted',
+      requiredConfigurationVersion: 3,
+    })).toEqual({ action: INSTALL_ACTIONS.UPDATE_FIRMWARE, reason: 'configuration-version-outdated' })
+  })
+
   it('requires enclosure confirmation for an otherwise compatible ESP32-S3', () => {
     expect(resolveInstallAction({ device: { kind: 'rom', verifiedBoard: false, chipFamily: 'ESP32-S3' }, release, configurationDigest: 'wanted' }).action).toBe(INSTALL_ACTIONS.CONFIRM_E1002)
   })

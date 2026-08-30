@@ -7,6 +7,7 @@
   --settings-control-muted: #949496;
   --settings-control-danger: #a93624;
   --settings-focus: #000;
+  --settings-label-size: 0.8125rem;
 }
 
 .setting-row__copy {
@@ -40,7 +41,7 @@
 .setting-row__label {
   overflow: hidden;
   color: var(--settings-control-muted);
-  font-size: 0.8125rem;
+  font-size: var(--settings-label-size);
   font-weight: 400;
   line-height: normal;
   text-overflow: ellipsis;
@@ -103,6 +104,14 @@
   text-align: start;
 }
 
+.setting-select__value {
+  min-inline-size: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .setting-select__native-shell {
   position: relative;
   min-inline-size: 0;
@@ -152,7 +161,11 @@
   -webkit-font-smoothing: antialiased;
 }
 
-.setting-select__content { min-inline-size: var(--reka-select-trigger-width); }
+.setting-select__content {
+  inline-size: var(--reka-select-trigger-width);
+  min-inline-size: 0;
+  max-inline-size: calc(100vw - 1.5rem);
+}
 .setting-combobox__content {
   inline-size: var(--reka-combobox-trigger-width);
   min-inline-size: var(--reka-combobox-trigger-width);
@@ -367,6 +380,13 @@
 
 .setting-option[data-highlighted] { background: var(--settings-control-surface); }
 .setting-option[data-disabled] { opacity: 0.42; }
+.setting-option__text {
+  min-inline-size: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .setting-option__copy { display: grid; gap: 0.15rem; min-inline-size: 0; overflow: hidden; }
 .setting-option__copy > span,
 .setting-option--create > span {

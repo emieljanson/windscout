@@ -39,6 +39,7 @@ const EXPECTED_EXPORTS = [
   'wind_wasm_set_sample_label',
   'wind_wasm_set_sample_values',
   'wind_wasm_set_tide_sample',
+  'wind_wasm_set_tide_extremum',
   'wind_wasm_render',
   'wind_wasm_render_preview',
 ]
@@ -80,14 +81,14 @@ function validateInput(input) {
   if (input.version !== RENDERER_CONTRACT_VERSION) {
     fail('INCOMPATIBLE_CONTRACT', `Renderer input contract ${input.version ?? 'missing'} is not supported`)
   }
-  for (const name of ['spotName', 'coordinates', 'provider', 'updatedTime']) {
+  for (const name of ['spotName', 'provider', 'updatedTime']) {
     requireString(input[name], name, RENDERER_TEXT_CAPACITIES[name])
   }
   for (const name of ['state', 'ageHours', 'batteryPercent', 'displayMode', 'thresholdKt']) {
     requireInteger(input[name], name)
   }
   requireFlag(input.refreshFailed, 'refreshFailed')
-  for (const name of ['showWeather', 'showTemperature', 'showTide', 'tideAvailable']) {
+  for (const name of ['showWeather', 'showTemperature', 'showTide', 'showDedicatedFooter', 'tideAvailable']) {
     requireFlag(input[name], name)
   }
   requireFlag(input.use24Hour, 'use24Hour')
@@ -103,6 +104,16 @@ function validateInput(input) {
       requireInteger(sample?.[name], `tideSamples[${index}].${name}`)
     }
     requireFlag(sample?.available, `tideSamples[${index}].available`)
+  })
+  if (!Array.isArray(input.tideExtrema) || input.tideExtrema.length > 32) {
+    fail('INVALID_INPUT', 'Renderer input tideExtrema must contain at most 32 extrema')
+  }
+  input.tideExtrema.forEach((extremum, index) => {
+    for (const name of ['dayIndex', 'localHour', 'localMinute', 'seaLevelMm']) {
+      requireInteger(extremum?.[name], `tideExtrema[${index}].${name}`)
+    }
+    requireFlag(extremum?.isHigh, `tideExtrema[${index}].isHigh`)
+    requireFlag(extremum?.available, `tideExtrema[${index}].available`)
   })
   if (!Array.isArray(input.days) || input.days.length !== 5) {
     fail('INVALID_INPUT', 'Renderer input must contain exactly five days')
@@ -171,7 +182,7 @@ class SharedRenderer {
     validateInput(input)
     this.#call('wind_wasm_reset', input.version)
 
-    ;['spotName', 'coordinates', 'provider', 'updatedTime'].forEach((name, field) => {
+    ;['spotName', 'provider', 'updatedTime'].forEach((name, field) => {
       this.#writeString(input[name], name)
       this.#call('wind_wasm_set_metadata_field', field)
     })
@@ -195,6 +206,7 @@ class SharedRenderer {
       'wind_wasm_set_preferences',
       input.use24Hour ? 1 : 0,
       input.temperatureFahrenheit ? 1 : 0,
+      input.showDedicatedFooter ? 1 : 0,
     )
 
     input.days.forEach((day, dayIndex) => {
@@ -227,6 +239,18 @@ class SharedRenderer {
         sample.localHour,
         sample.seaLevelMm,
         sample.available ? 1 : 0,
+      )
+    })
+    input.tideExtrema.forEach((extremum, extremumIndex) => {
+      this.#call(
+        'wind_wasm_set_tide_extremum',
+        extremumIndex,
+        extremum.dayIndex,
+        extremum.localHour,
+        extremum.localMinute,
+        extremum.seaLevelMm,
+        extremum.isHigh ? 1 : 0,
+        extremum.available ? 1 : 0,
       )
     })
   }
@@ -293,13 +317,13 @@ export async function loadSharedRenderer({
       paletteBytes !== RENDERER_PALETTE_BYTES ||
       previewBytes !== RENDERER_RGBA_BYTES
     ) {
-      fail('INCOMPATIBLE_RENDERER', 'Renderer dimensions do not match the WindScout display')
+      fail('INCOMPATIBLE_RENDERER', 'Renderer dimensions do not match the Windscout display')
     }
     return new SharedRenderer(exports)
   } catch (error) {
     if (error instanceof SharedRendererError) throw error
-    if (didTimeout) fail('LOAD_TIMEOUT', 'The WindScout screen renderer took too long to load', error)
-    fail('LOAD_FAILED', 'The WindScout screen renderer could not be loaded', error)
+    if (didTimeout) fail('LOAD_TIMEOUT', 'The Windscout screen renderer took too long to load', error)
+    fail('LOAD_FAILED', 'The Windscout screen renderer could not be loaded', error)
   } finally {
     if (timeout) clearTimeout(timeout)
   }

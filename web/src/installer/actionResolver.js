@@ -8,7 +8,12 @@ export const INSTALL_ACTIONS = Object.freeze({
   BLOCKED: 'blocked',
 })
 
-export function resolveInstallAction({ device, release, configurationDigest }) {
+export function resolveInstallAction({
+  device,
+  release,
+  configurationDigest,
+  requiredConfigurationVersion,
+}) {
   if (!device || device.kind === 'unknown') {
     return { action: INSTALL_ACTIONS.BLOCKED, reason: 'device-not-recognized' }
   }
@@ -29,6 +34,11 @@ export function resolveInstallAction({ device, release, configurationDigest }) {
   }
   if (!device.firmwareVersion) {
     return { action: INSTALL_ACTIONS.INSTALL, reason: 'windscout-not-installed' }
+  }
+  if (Number.isInteger(requiredConfigurationVersion) &&
+      Number.isInteger(device.configurationVersion) &&
+      device.configurationVersion < requiredConfigurationVersion) {
+    return { action: INSTALL_ACTIONS.UPDATE_FIRMWARE, reason: 'configuration-version-outdated' }
   }
   if (device.firmwareVersion !== release.version) {
     return { action: INSTALL_ACTIONS.UPDATE_FIRMWARE, reason: 'firmware-outdated' }

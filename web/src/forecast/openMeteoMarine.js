@@ -8,6 +8,7 @@ export function buildMarineUrl(spot) {
     latitude: Number(spot.latitude).toFixed(6),
     longitude: Number(spot.longitude).toFixed(6),
     hourly: 'sea_level_height_msl',
+    minutely_15: 'sea_level_height_msl',
     timezone: spot.timezone,
     forecast_days: '5',
     timeformat: 'unixtime',

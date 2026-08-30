@@ -13,13 +13,14 @@ import { resolveTimeFormat } from '../src/config/localeTimeFormat'
 describe('display configuration', () => {
   afterEach(() => vi.restoreAllMocks())
 
-  it('keeps version 2 output while deriving its treatment from threshold visibility', () => {
+  it('keeps version 3 output while deriving its treatment from threshold visibility', () => {
     const settings = {
       showThreshold: false,
       threshold: 23,
       showWeather: true,
       showTemperature: false,
       showTide: false,
+      showDedicatedFooter: true,
       timeFormat: '24-hour',
       temperatureUnit: 'celsius',
     }
@@ -32,6 +33,7 @@ describe('display configuration', () => {
       showWeather: true,
       showTemperature: false,
       showTide: false,
+      showDedicatedFooter: true,
       timeFormat: '24-hour',
       temperatureUnit: 'celsius',
     })
@@ -46,6 +48,7 @@ describe('display configuration', () => {
       showWeather: true,
       showTemperature: false,
       showTide: true,
+      showDedicatedFooter: true,
       tideAvailable: false,
       timeFormat: '24-hour',
       temperatureUnit: 'celsius',
@@ -62,6 +65,7 @@ describe('display configuration', () => {
       showWeather: true,
       showTemperature: false,
       showTide: false,
+      showDedicatedFooter: true,
       timeFormat: '24-hour',
       temperatureUnit: 'celsius',
     })
@@ -104,6 +108,7 @@ describe('display configuration', () => {
     expect(createDefaultDisplayConfiguration('en-US')).toMatchObject({
       showThreshold: false,
       threshold: 17,
+      showDedicatedFooter: false,
       timeFormat: '12-hour',
     })
   })
@@ -124,6 +129,7 @@ describe('display configuration', () => {
         showWeather: true,
         showTemperature: false,
         showTide: false,
+        showDedicatedFooter: true,
         timeFormat: '24-hour',
         temperatureUnit: 'celsius',
       },
@@ -151,10 +157,11 @@ describe('display configuration', () => {
       display: {
         showThreshold: false, threshold: 17, showWeather: true,
         showTemperature: false, showTide: false, timeFormat: '24-hour',
+        showDedicatedFooter: false,
         temperatureUnit: 'celsius',
       },
     })
-    expect(configuration.digest).toBe('f70d51b9a49fdddb')
+    expect(configuration.digest).toBe('50efeebc7b4f6a3e')
   })
 
   it('changes the digest for a spot change but not for object key order', () => {

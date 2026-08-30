@@ -29,7 +29,7 @@ describe('canonical screen texture', () => {
 
     const source = await createScreenTexture({
       forecast: brouwersdamForecast,
-      config: { showThreshold: false, treatment: 'background-fade', threshold: 17 },
+      config: { showThreshold: false, threshold: 17 },
       rendererLoader,
     })
 
@@ -92,6 +92,12 @@ describe('canonical screen texture', () => {
           localTime: `${String(hour).padStart(2, '0')}:00`,
           seaLevelMm: dayIndex * 100 + hour,
         }))),
+      extrema: [{
+        localDate: brouwersdamForecast.days[1].localDate,
+        localTime: '14:15',
+        seaLevelMm: 725,
+        type: 'high',
+      }],
     }
 
     const input = createRendererInput(brouwersdamForecast, {
@@ -109,12 +115,35 @@ describe('canonical screen texture', () => {
       showWeather: false,
       showTemperature: true,
       showTide: true,
+      showDedicatedFooter: false,
       tideAvailable: true,
       use24Hour: false,
       temperatureFahrenheit: true,
     })
     expect(input.tideSamples).toHaveLength(120)
     expect(input.tideSamples[24]).toMatchObject({ dayIndex: 1, localHour: 0 })
+    expect(input.tideExtrema).toEqual([{
+      dayIndex: 1,
+      localHour: 14,
+      localMinute: 15,
+      seaLevelMm: 725,
+      isHigh: true,
+      available: true,
+    }])
+  })
+
+  it('formats sample labels for the selected clock mode before they cross the renderer bridge', () => {
+    const twentyFourHour = createRendererInput(brouwersdamForecast, {
+      showThreshold: false, threshold: 17, timeFormat: '24-hour', temperatureUnit: 'celsius',
+    })
+    const twelveHour = createRendererInput(brouwersdamForecast, {
+      showThreshold: false, threshold: 17, timeFormat: '12-hour', temperatureUnit: 'celsius',
+    })
+
+    expect(twentyFourHour.days[0].samples.map((sample) => sample.time))
+      .toEqual(['08', '11', '14', '17', '20'])
+    expect(twelveHour.days[0].samples.map((sample) => sample.time))
+      .toEqual(['8AM', '11AM', '2PM', '5PM', '8PM'])
   })
 
   it('formats the update time from one timestamp using the selected clock', () => {
@@ -195,9 +224,8 @@ describe('canonical screen texture', () => {
     expect(disposed).toHaveBeenCalledOnce()
   })
 
-  it('keeps all historical renderer mode numbers stable at the shared ABI boundary', () => {
+  it('keeps supported renderer mode numbers stable at the shared ABI boundary', () => {
     expect(DISPLAY_MODES).toEqual({
-      'background-fade': 0,
       'threshold-line': 1,
       solid: 2,
     })

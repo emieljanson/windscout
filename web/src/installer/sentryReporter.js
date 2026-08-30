@@ -1,6 +1,7 @@
 import { sanitizeDiagnosticText } from './installerDiagnostics'
 
 const REFERENCE_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'
+const REFERENCE_PATTERN = /^WS-[0-9A-HJKMNP-TV-Z]{10}$/
 const INSTALLER_MARKER = 'installer'
 const MAX_REPORTED_OCCURRENCES = 200
 
@@ -127,6 +128,10 @@ function createReference(randomBytes) {
   return `WS-${output}`
 }
 
+export function isInstallerDiagnosticReference(value) {
+  return typeof value === 'string' && REFERENCE_PATTERN.test(value)
+}
+
 function defaultRandomBytes() {
   const bytes = new Uint8Array(7)
   globalThis.crypto.getRandomValues(bytes)
@@ -169,7 +174,10 @@ function createDeliveryTracker() {
     if (waiter) {
       pending.delete(eventId)
       waiter(result)
-    } else completed.set(eventId, result)
+    } else {
+      completed.set(eventId, result)
+      if (completed.size > MAX_REPORTED_OCCURRENCES) completed.delete(completed.keys().next().value)
+    }
   }
   function wait(eventId, timeoutMs) {
     if (completed.has(eventId)) {

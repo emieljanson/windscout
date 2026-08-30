@@ -26,7 +26,9 @@ bool wind_tide_validate(const wind_tide_t *tide)
         tide->capability > WIND_TIDE_AVAILABLE) {
         return false;
     }
-    if (tide->capability == WIND_TIDE_UNSUPPORTED) return tide->sample_count == 0;
+    if (tide->capability == WIND_TIDE_UNSUPPORTED) {
+        return tide->sample_count == 0 && tide->extremum_count == 0;
+    }
     if (tide->sample_count < WIND_TIDE_MIN_SAMPLES || tide->sample_count > WIND_TIDE_MAX_SAMPLES) {
         return false;
     }
@@ -45,5 +47,23 @@ bool wind_tide_validate(const wind_tide_t *tide)
         }
         previous_timestamp = sample->timestamp;
     }
-    return distinct_days == 5;
+    if (distinct_days != 5 || tide->extremum_count == 0 ||
+        tide->extremum_count > WIND_TIDE_MAX_EXTREMA) return false;
+    previous_timestamp = 0;
+    for (size_t index = 0; index < tide->extremum_count; ++index) {
+        const wind_tide_extremum_t *extremum = &tide->extrema[index];
+        bool date_matches_series = false;
+        for (size_t sample_index = 0; sample_index < tide->sample_count; ++sample_index) {
+            if (strcmp(extremum->local_date, tide->samples[sample_index].local_date) == 0) {
+                date_matches_series = true;
+                break;
+            }
+        }
+        if (!valid_date(extremum->local_date) || extremum->local_hour > 23 ||
+            extremum->local_minute > 59 || extremum->local_minute % 15 != 0 ||
+            extremum->is_high > 1 || extremum->timestamp <= previous_timestamp ||
+            !date_matches_series) return false;
+        previous_timestamp = extremum->timestamp;
+    }
+    return true;
 }

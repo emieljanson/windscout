@@ -46,7 +46,6 @@ describe('forecast normalizer', () => {
       timezone: 'Europe/Amsterdam',
       provider: 'OPEN-METEO',
       model: 'KNMI SEAMLESS',
-      coordinates: `51°45'02"N 3°51'28"E`,
       updatedTime: '26 AUG 2PM',
     })
     expect(forecast.days.map((day) => day.day)).toEqual(['TODAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'])

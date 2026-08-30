@@ -1,7 +1,7 @@
 import { resolveTimeFormat } from './localeTimeFormat'
 import { DEFAULT_THRESHOLD } from '../renderer/contract'
 
-export const CONFIGURATION_VERSION = 2
+export const CONFIGURATION_VERSION = 3
 export const BOARD_ID = 'seeedstudio_reterminal_e1002'
 
 const SPOT_ID_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/
@@ -18,6 +18,7 @@ export const DEFAULT_DISPLAY_CONFIGURATION = Object.freeze({
   showWeather: true,
   showTemperature: false,
   showTide: false,
+  showDedicatedFooter: false,
   timeFormat: '24-hour',
   temperatureUnit: 'celsius',
 })
@@ -38,6 +39,7 @@ export function displayConfigurationFromStore(store) {
     showWeather: store.showWeather,
     showTemperature: store.showTemperature,
     showTide: Boolean(store.showTide && store.tideAvailable !== false),
+    showDedicatedFooter: store.showDedicatedFooter,
     timeFormat: store.timeFormat,
     temperatureUnit: store.temperatureUnit,
   }
@@ -59,6 +61,7 @@ function canonicalInstalledConfiguration(configuration) {
     display.showWeather ? 1 : 0,
     display.showTemperature ? 1 : 0,
     display.showTide ? 1 : 0,
+    display.showDedicatedFooter ? 1 : 0,
     display.timeFormat,
     display.temperatureUnit,
   ].join('|')
@@ -89,6 +92,7 @@ export function validateInstalledConfiguration(configuration) {
       !Number.isInteger(display.threshold) || display.threshold < 0 || display.threshold > 99 ||
       typeof display.showWeather !== 'boolean' ||
       typeof display.showTemperature !== 'boolean' || typeof display.showTide !== 'boolean' ||
+      typeof display.showDedicatedFooter !== 'boolean' ||
       !TIME_FORMATS.includes(display.timeFormat) ||
       !TEMPERATURE_UNITS.includes(display.temperatureUnit)) return false
   return typeof configuration.digest !== 'string' ||
@@ -113,13 +117,14 @@ export function createInstalledConfiguration({ spot, modelId, display }, { allow
       showWeather: Boolean(display?.showWeather),
       showTemperature: Boolean(display?.showTemperature),
       showTide: Boolean(display?.showTide),
+      showDedicatedFooter: Boolean(display?.showDedicatedFooter),
       timeFormat: String(display?.timeFormat ?? ''),
       temperatureUnit: String(display?.temperatureUnit ?? ''),
     },
   }
   configuration.digest = installedConfigurationDigest(configuration)
   if (!allowInvalid && !validateInstalledConfiguration(configuration)) {
-    throw new TypeError('Invalid WindScout installation configuration')
+    throw new TypeError('Invalid Windscout installation configuration')
   }
   return configuration
 }

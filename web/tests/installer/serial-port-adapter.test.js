@@ -30,6 +30,63 @@ describe('serial port adapter', () => {
     expect(result).toBe(ports[1])
   })
 
+  it('boots an E1002 into its app before opening the installer protocol', async () => {
+    const waitFor = vi.fn().mockResolvedValue(undefined)
+    const reader = { cancel: vi.fn(), releaseLock: vi.fn() }
+    const writer = { releaseLock: vi.fn() }
+    const port = {
+      open: vi.fn(),
+      setSignals: vi.fn(),
+      readable: { getReader: () => reader },
+      writable: { getWriter: () => writer },
+    }
+
+    const protocol = createSerialProtocol(port, { waitFor })
+    await protocol.open()
+
+    expect(port.setSignals.mock.calls).toEqual([
+      [{ dataTerminalReady: false, requestToSend: false }],
+      [{ dataTerminalReady: false, requestToSend: true }],
+      [{ dataTerminalReady: false, requestToSend: false }],
+    ])
+    expect(waitFor.mock.calls).toEqual([[150], [2_000]])
+  })
+
+  it('continues when modem-control signals are unavailable', async () => {
+    const responses = []
+    const diagnostics = { record: vi.fn() }
+    const reader = {
+      read: vi.fn(async () => ({ done: false, value: responses.shift() })),
+      cancel: vi.fn(),
+      releaseLock: vi.fn(),
+    }
+    const writer = {
+      write: vi.fn(async (bytes) => {
+        const request = decodeProtocolFrame(bytes)
+        responses.push(encodeProtocolFrame({
+          requestId: request.requestId,
+          messageType: 2,
+          payload: { status: 'ok' },
+        }))
+      }),
+      releaseLock: vi.fn(),
+    }
+    const port = {
+      open: vi.fn(),
+      setSignals: vi.fn().mockRejectedValue(new Error('not supported')),
+      readable: { getReader: () => reader },
+      writable: { getWriter: () => writer },
+    }
+    const protocol = createSerialProtocol(port, { diagnostics })
+
+    await protocol.open()
+    await expect(protocol.request('hello')).resolves.toEqual({ status: 'ok' })
+
+    expect(diagnostics.record).toHaveBeenCalledWith({
+      category: 'serial', operation: 'reset-signals', status: 'unavailable',
+    })
+  })
+
   it('serializes overlapping protocol requests on one reader', async () => {
     const responses = []
     const commands = []
@@ -75,10 +132,7 @@ describe('serial port adapter', () => {
     const protocol = createSerialProtocol(port, { diagnostics })
     await protocol.open()
     await expect(protocol.request('hello')).resolves.toEqual({ status: 'ok' })
-    const uartText = diagnostics.record.mock.calls
-      .map(([entry]) => entry.category === 'serial' ? entry.message : '')
-      .join('')
-    expect(uartText).toContain('ordinary boot log')
+    expect(JSON.stringify(diagnostics.record.mock.calls)).not.toContain('ordinary boot log')
     expect(JSON.stringify(diagnostics.record.mock.calls)).not.toContain('payload')
   })
 

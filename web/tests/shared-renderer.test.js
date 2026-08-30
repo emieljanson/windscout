@@ -20,15 +20,14 @@ async function loadRealRenderer() {
   return loadSharedRenderer({ wasmBytes: await readFile(wasmPath) })
 }
 
-function fixtureInput(displayMode = 0, thresholdKt = 17, rowMask = 1, missingData = false) {
+function fixtureInput(displayMode = 2, thresholdKt = 17, rowMask = 1, missingData = false) {
   const dayNames = ['TODAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']
   const dates = ['26 AUG', '27 AUG', '28 AUG', '29 AUG', '30 AUG']
   const times = ['08', '11', '14', '17', '20']
   return {
     version: RENDERER_CONTRACT_VERSION,
     spotName: 'Brouwersdam',
-    coordinates: '51.7506N 3.8577E',
-    provider: 'KNMI SEAMLESS',
+    provider: 'BEST MATCH',
     updatedTime: '26 AUG 11AM',
     state: 0,
     refreshFailed: false,
@@ -41,7 +40,9 @@ function fixtureInput(displayMode = 0, thresholdKt = 17, rowMask = 1, missingDat
     showWeather: Boolean(rowMask & 1),
     showTemperature: Boolean(rowMask & 2),
     showTide: Boolean(rowMask & 4),
+    showDedicatedFooter: true,
     tideAvailable: Boolean(rowMask & 4) && !missingData,
+    tideExtrema: [],
     tideSamples: (rowMask & 4) && !missingData
       ? Array.from({ length: 120 }, (_, index) => {
           const hour = index % 24
@@ -81,20 +82,18 @@ describe('shared WebAssembly renderer', { timeout: RENDERER_TEST_TIMEOUT_MS }, (
     const renderer = await loadRealRenderer()
     const fixtureNames = (await readdir(fixtureDirectory)).filter((name) => name.endsWith('.bin'))
     const fixtures = [
-      ['background-fade-17.bin', fixtureInput(0, 17)],
       ['threshold-05.bin', fixtureInput(1, 5)],
       ['threshold-17.bin', fixtureInput(1, 17)],
       ['threshold-35.bin', fixtureInput(1, 35)],
       ['solid-17.bin', fixtureInput(2, 17)],
       ...Array.from({ length: 8 }, (_, rowMask) => [
         `rows-${Boolean(rowMask & 1) ? 1 : 0}${Boolean(rowMask & 2) ? 1 : 0}${Boolean(rowMask & 4) ? 1 : 0}.bin`,
-        fixtureInput(0, 17, rowMask),
+        fixtureInput(2, 17, rowMask),
       ]),
-      ['rows-111-missing.bin', fixtureInput(0, 17, 7, true)],
+      ['rows-111-missing.bin', fixtureInput(2, 17, 7, true)],
     ]
 
     expect(fixtureNames.sort()).toEqual([
-      'background-fade-17.bin',
       'rows-000.bin',
       'rows-001.bin',
       'rows-010.bin',
@@ -133,18 +132,18 @@ describe('shared WebAssembly renderer', { timeout: RENDERER_TEST_TIMEOUT_MS }, (
 
   it('returns a clean grayscale preview with red accents from the same renderer', async () => {
     const renderer = await loadRealRenderer()
-    const background = renderer.renderPreview(fixtureInput(0, 17))
+    const solid = renderer.renderPreview(fixtureInput(2, 17))
     const threshold = renderer.renderPreview(fixtureInput(1, 17))
 
-    expect(background).toHaveLength(RENDERER_RGBA_BYTES)
+    expect(solid).toHaveLength(RENDERER_RGBA_BYTES)
     let hasContinuousGray = false
     let hasRed = false
     let allAlphaOpaque = true
-    for (let offset = 0; offset < background.length; offset += 4) {
-      allAlphaOpaque &&= background[offset + 3] === 255
-      if (background[offset] === background[offset + 1] &&
-          background[offset + 1] === background[offset + 2] &&
-          background[offset] > 0 && background[offset] < 255) hasContinuousGray = true
+    for (let offset = 0; offset < solid.length; offset += 4) {
+      allAlphaOpaque &&= solid[offset + 3] === 255
+      if (solid[offset] === solid[offset + 1] &&
+          solid[offset + 1] === solid[offset + 2] &&
+          solid[offset] > 0 && solid[offset] < 255) hasContinuousGray = true
       if (threshold[offset] === 255 && threshold[offset + 1] === 0 &&
           threshold[offset + 2] === 0 && threshold[offset + 3] === 255) hasRed = true
     }
@@ -155,7 +154,7 @@ describe('shared WebAssembly renderer', { timeout: RENDERER_TEST_TIMEOUT_MS }, (
 
   it('crosses the flat setter bridge without depending on native struct layout', async () => {
     const renderer = await loadRealRenderer()
-    const expected = new Uint8Array(await readFile(join(fixtureDirectory, 'background-fade-17.bin')))
+    const expected = new Uint8Array(await readFile(join(fixtureDirectory, 'solid-17.bin')))
 
     const first = renderer.render(fixtureInput())
     const second = renderer.render(fixtureInput())
@@ -176,6 +175,14 @@ describe('shared WebAssembly renderer', { timeout: RENDERER_TEST_TIMEOUT_MS }, (
       seaLevelMm: Math.round(Math.sin(index / 6) * 800),
       available: true,
     }))
+    input.tideExtrema = [{
+      dayIndex: 0,
+      localHour: 14,
+      localMinute: 15,
+      seaLevelMm: 800,
+      isHigh: true,
+      available: true,
+    }]
 
     const first = renderer.renderPreview(input)
     const second = renderer.renderPreview(input)
@@ -186,7 +193,7 @@ describe('shared WebAssembly renderer', { timeout: RENDERER_TEST_TIMEOUT_MS }, (
 
   it('renders clock and temperature-unit preferences through the shared bridge', async () => {
     const renderer = await loadRealRenderer()
-    const metric = fixtureInput(0, 17, 7)
+    const metric = fixtureInput(2, 17, 7)
     const imperial = structuredClone(metric)
     imperial.use24Hour = true
     imperial.temperatureFahrenheit = true

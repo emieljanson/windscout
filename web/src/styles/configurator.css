@@ -59,6 +59,7 @@
   top: 1rem;
   right: 1rem;
   display: flex;
+  block-size: auto;
   width: min(15.625rem, calc(100% - 2rem));
   max-height: calc(100dvh - 2rem);
   flex-direction: column;
@@ -74,6 +75,21 @@
     0 4px 29px rgba(0, 0, 0, 0.12);
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
+  interpolate-size: allow-keywords;
+  transition: block-size 180ms cubic-bezier(0.77, 0, 0.175, 1) 160ms;
+}
+
+.settings-panel:has(.installer-layer[data-phase='wifi']) {
+  block-size: min(24.5rem, calc(100dvh - 2rem));
+  transition-delay: 0ms;
+}
+
+.settings-panel:has(.installer-layer[data-phase='wifi'][data-has-error='true']) {
+  block-size: min(28.5rem, calc(100dvh - 2rem));
+}
+
+.settings-panel:has(.installer-layer[data-phase='wifi'][data-has-diagnostic-reference='true']) {
+  block-size: min(30rem, calc(100dvh - 2rem));
 }
 
 .settings-shell {
@@ -178,99 +194,107 @@
   box-shadow: inset 0 0 0 1px var(--settings-focus, #000);
 }
 
-@media (max-width: 56rem) {
-  .configurator-page {
-    width: 100%;
-    height: 100vh;
-    height: 100lvh;
-    min-height: 0;
-    overflow: hidden;
-  }
+.configurator-page.configurator-page--compact {
+  width: 100%;
+  height: 100vh;
+  height: 100lvh;
+  min-height: 0;
+  overflow: hidden;
+}
 
-  .configurator-layout {
-    width: 100%;
-    height: 100vh;
-    height: 100lvh;
-    min-height: 0;
-    overflow: hidden;
-    background: var(--studio-background);
-  }
+.configurator-page--compact .configurator-layout {
+  width: 100%;
+  height: 100vh;
+  height: 100lvh;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--studio-background);
+}
 
-  .product-stage {
-    width: 100%;
-    height: 100vh;
-    height: 100lvh;
-    min-height: 0;
-    overflow: hidden;
-  }
+.configurator-page--compact .product-stage {
+  width: 100%;
+  height: 100vh;
+  height: 100lvh;
+  min-height: 0;
+  overflow: hidden;
+}
 
-  .product-stage::before,
-  .configurator-layout::after {
-    content: '';
+.configurator-page--compact .product-stage::before,
+.configurator-page--compact .configurator-layout::after {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  inset-inline: 0;
+  pointer-events: none;
+}
+
+.configurator-page--compact .product-stage::before {
+  inset-block-start: 0;
+  block-size: max(7rem, 22svh);
+  background: linear-gradient(
+    to bottom,
+    rgb(243, 245, 247) 0%,
+    rgba(243, 245, 247, 0.82) 22%,
+    rgba(243, 245, 247, 0) 100%
+  );
+}
+
+.configurator-page--compact .configurator-layout::after {
+  position: fixed;
+  inset-block-end: 0;
+  block-size: max(16rem, 42svh);
+  background: linear-gradient(
+    to top,
+    rgb(243, 245, 247) 0%,
+    rgb(243, 245, 247) 28%,
+    rgba(243, 245, 247, 0.9) 44%,
+    rgba(243, 245, 247, 0.54) 70%,
+    rgba(243, 245, 247, 0) 100%
+  );
+}
+
+.configurator-page--compact .settings-panel.settings-panel--compact {
+  position: fixed;
+  top: auto;
+  right: auto;
+  bottom: max(
+    calc(2rem + var(--visual-viewport-bottom)),
+    calc(2rem + env(safe-area-inset-bottom))
+  );
+  left: 50%;
+  width: max-content;
+  max-inline-size: calc(100% - 2rem);
+  max-height: calc(
+    100dvh
+    - max(1rem, env(safe-area-inset-top))
+    - max(1rem, env(safe-area-inset-bottom))
+    - var(--visual-viewport-bottom)
+  );
+  margin: 0;
+  gap: 0;
+  padding: 0.375rem;
+  border-radius: 1.5rem;
+  background: rgba(255, 255, 255, 0.38);
+  box-shadow:
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.78),
+    0 10px 30px rgba(31, 39, 44, 0.16);
+  backdrop-filter: blur(16px) saturate(145%);
+  -webkit-backdrop-filter: blur(16px) saturate(145%);
+  transform: translateX(-50%);
+}
+
+.configurator-page--compact .settings-panel--compact > .settings-shell {
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+@media (max-width: 56rem) and (min-height: 40rem) {
+  .configurator-page:not(.configurator-page--compact) .settings-panel {
     position: absolute;
-    z-index: 2;
-    inset-inline: 0;
-    pointer-events: none;
-  }
-
-  .product-stage::before {
-    inset-block-start: 0;
-    block-size: max(7rem, 22svh);
-    background: linear-gradient(
-      to bottom,
-      rgb(243, 245, 247) 0%,
-      rgba(243, 245, 247, 0.82) 22%,
-      rgba(243, 245, 247, 0) 100%
-    );
-  }
-
-  .configurator-layout::after {
-    position: fixed;
-    inset-block-end: 0;
-    block-size: max(16rem, 42svh);
-    background: linear-gradient(
-      to top,
-      rgb(243, 245, 247) 0%,
-      rgb(243, 245, 247) 28%,
-      rgba(243, 245, 247, 0.9) 44%,
-      rgba(243, 245, 247, 0.54) 70%,
-      rgba(243, 245, 247, 0) 100%
-    );
-  }
-
-  .settings-panel.settings-panel--compact {
-    position: fixed;
-    top: auto;
-    right: auto;
-    bottom: max(
-      calc(2rem + var(--visual-viewport-bottom)),
-      calc(2rem + env(safe-area-inset-bottom))
-    );
-    left: 50%;
-    width: max-content;
-    max-inline-size: calc(100% - 2rem);
-    max-height: calc(
-      100dvh
-      - max(1rem, env(safe-area-inset-top))
-      - max(1rem, env(safe-area-inset-bottom))
-      - var(--visual-viewport-bottom)
-    );
+    inset: auto auto 1rem 50%;
+    max-block-size: calc(100dvh - 2rem);
     margin: 0;
-    gap: 0;
-    padding: 0.375rem;
-    border-radius: 1.5rem;
-    background: rgba(255, 255, 255, 0.38);
-    box-shadow:
-      inset 0 0 0 0.5px rgba(255, 255, 255, 0.78),
-      0 10px 30px rgba(31, 39, 44, 0.16);
-    backdrop-filter: blur(16px) saturate(145%);
-    -webkit-backdrop-filter: blur(16px) saturate(145%);
     transform: translateX(-50%);
-  }
-
-  .settings-panel--compact > .settings-shell {
-    min-height: 0;
-    flex: 1 1 auto;
   }
 }
 
@@ -279,5 +303,13 @@
     background: #fff;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-panel {
+    transition-duration: 100ms;
+    transition-timing-function: linear;
+    transition-delay: 100ms;
   }
 }

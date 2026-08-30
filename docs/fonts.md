@@ -8,8 +8,9 @@ the firmware cost to the characters and sizes used by the 800 x 480 layout.
 
 | Family | Pixel sizes | Dashboard roles |
 | --- | --- | --- |
-| Berkeley Mono Regular | 12, 14, 32 | Coordinates and times, status/model metadata, wind values |
-| Inter Regular | 16, 28 | Day labels, spot name |
+| Berkeley Mono Bold | 15 | Model, update and day labels |
+| Berkeley Mono Bold Condensed | 12, 15 | Footer labels; wind, threshold, temperature and tide values |
+| Inter Black | 43 | Uppercase spot name |
 
 Each size contains printable ASCII, `°`, `…`, and common Western European
 accented characters used in Dutch place names. Any unsupported or malformed
@@ -21,11 +22,6 @@ in `wind_font.h`.
 and advances are generated from the source face, and drawing is clipped to the
 provided 8-bit luminance buffer. Coverage is alpha-blended toward `gray`; no
 dithering is performed in this layer.
-
-`wind_font_fit_ellipsis` first tries `name + space + coordinates`. If that does
-not fit, it removes coordinates. Only when the unchanged-size name still does
-not fit does it replace the trailing characters with `…`. Its result is valid
-UTF-8 and never exceeds the requested measured width.
 
 ## Sources and licensing
 

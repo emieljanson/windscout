@@ -1,5 +1,5 @@
 <script setup>
-defineProps({ title: String, message: String, progress: Number, safeToDisconnect: Boolean })
+defineProps({ title: String, message: String, progress: Number })
 </script>
 
 <template>
@@ -10,13 +10,8 @@ defineProps({ title: String, message: String, progress: Number, safeToDisconnect
         <p v-if="message">{{ message }}</p>
       </div>
       <div class="installer-progress" :aria-valuenow="Math.round(progress * 100)" aria-valuemin="0" aria-valuemax="100" role="progressbar">
-        <span :style="{ inlineSize: `${Math.round(progress * 100)}%` }" />
+        <span :style="{ transform: `scaleX(${progress})` }" />
       </div>
-    </div>
-    <div class="installer-actions">
-      <p class="installer-connection-state" :class="{ 'is-unsafe': !safeToDisconnect }">
-        {{ safeToDisconnect ? 'Safe to disconnect' : 'Keep the USB cable connected' }}
-      </p>
     </div>
   </div>
 </template>

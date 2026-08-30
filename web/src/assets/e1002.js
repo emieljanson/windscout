@@ -1,4 +1,4 @@
-import { publicAssetUrl } from './publicAssetUrl'
+import { publicAssetUrl } from './publicAssetUrl.js'
 
 export const E1002_MODEL = Object.freeze({
   url: publicAssetUrl('devices/e1002/e1002.glb'),

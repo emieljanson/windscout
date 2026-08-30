@@ -11,7 +11,7 @@ function storage() {
 
 function tide(spotId = 'brouwersdam') {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     spotId,
     timezone: 'Europe/Amsterdam',
     provider: 'OPEN-METEO MARINE',
@@ -23,6 +23,16 @@ function tide(spotId = 'brouwersdam') {
       localTime: `${String(index % 24).padStart(2, '0')}:00`,
       seaLevelMm: index - 60,
     })),
+    extrema: Array.from({ length: 20 }, (_, index) => {
+      const sampleIndex = 3 + index * 6
+      return {
+        timestamp: Date.UTC(2026, 7, 25, 22) / 1000 + sampleIndex * 3600,
+        localDate: `2026-08-${String(26 + Math.floor(sampleIndex / 24)).padStart(2, '0')}`,
+        localTime: `${String(sampleIndex % 24).padStart(2, '0')}:00`,
+        seaLevelMm: sampleIndex - 60,
+        type: index % 2 === 0 ? 'high' : 'low',
+      }
+    }),
   }
 }
 

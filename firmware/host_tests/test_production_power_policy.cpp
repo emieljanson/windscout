@@ -63,3 +63,12 @@ TEST(ProductionPowerPolicy, ScheduledWifiRefreshHasABoundedRadioBudget)
     EXPECT_NE(main_source.find("wifi_manager_connect_for_refresh(ssid, password)"),
               std::string::npos);
 }
+
+TEST(ProductionPowerPolicy, OpenWifiUsesAnOpenAuthenticationThreshold)
+{
+    const std::string wifi_source = read_source(WIFI_MANAGER_SOURCE);
+
+    EXPECT_NE(wifi_source.find(
+                  "password && password[0] != '\\0' ? WIFI_AUTH_WPA2_PSK : WIFI_AUTH_OPEN"),
+              std::string::npos);
+}

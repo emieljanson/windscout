@@ -25,6 +25,13 @@ static wind_tide_t cached_tide(int64_t retrieved_at)
         tide.samples[index].local_hour = static_cast<uint8_t>(index % 24);
         tide.samples[index].sea_level_mm = index - 60;
     }
+    tide.extremum_count = 1;
+    tide.extrema[0].timestamp = 1787716800;
+    std::strcpy(tide.extrema[0].local_date, "2026-08-26");
+    tide.extrema[0].local_hour = 6;
+    tide.extrema[0].local_minute = 15;
+    tide.extrema[0].is_high = 1;
+    tide.extrema[0].sea_level_mm = 800;
     return tide;
 }
 

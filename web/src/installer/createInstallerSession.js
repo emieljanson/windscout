@@ -4,7 +4,7 @@ import { BOARD_ID, CONFIGURATION_VERSION } from '../config/configuration'
 import { asInstallerError, InstallerError, INSTALLER_ERROR_CODES } from './installerErrors'
 import { createEsptoolAdapter } from './esptoolAdapter'
 import { createInstallerDiagnostics } from './installerDiagnostics'
-import { installerSentryReporter } from './sentryReporter'
+import { installerSentryReporter, isInstallerDiagnosticReference } from './sentryReporter'
 import { createSerialProtocol, requestInstallerPort } from './serialPortAdapter'
 
 const INITIAL_STATE = Object.freeze({
@@ -15,12 +15,24 @@ const REQUIRED_CAPABILITIES = ['state', 'wifi', 'configuration', 'render-verific
 // A failed candidate may take 45 seconds, followed by up to 45 seconds to
 // restore the previously saved network. Keep enough serial margin for both.
 const WIFI_TEST_REQUEST_TIMEOUT_MS = 105000
+// Rendering the first full e-paper preview performs network parsing and image
+// composition on the device. The UART may be unable to answer a status poll
+// during that work even though the apply task is still healthy, so keep this
+// individual request alive for the same generous production window.
+const APPLY_STATUS_REQUEST_TIMEOUT_MS = 120000
+const POST_FLASH_BOOT_ATTEMPTS = 20
+const POST_FLASH_BOOT_RETRY_MS = 500
+const SAVED_WIFI_CONNECT_ATTEMPTS = 12
+const SAVED_WIFI_CONNECT_RETRY_MS = 500
+const MIN_UPGRADEABLE_CONFIGURATION_VERSION = 2
 let diagnosticSessionSequence = 0
 
 function validHello(hello) {
   return hello?.status === 'ok' && typeof hello.boardId === 'string' &&
     typeof hello.firmwareVersion === 'string' && hello.protocolVersion === 1 &&
-    hello.configurationVersion === CONFIGURATION_VERSION && Array.isArray(hello.capabilities) &&
+    Number.isInteger(hello.configurationVersion) &&
+    hello.configurationVersion >= MIN_UPGRADEABLE_CONFIGURATION_VERSION &&
+    hello.configurationVersion <= CONFIGURATION_VERSION && Array.isArray(hello.capabilities) &&
     REQUIRED_CAPABILITIES.every((capability) => hello.capabilities.includes(capability))
 }
 
@@ -48,24 +60,54 @@ export function createInstallerSession({
   let operationController = null
   let failureOccurrence = 0
   let latestDiagnosticOccurrence = null
+  let awaitingWrittenFirmware = false
   const diagnosticSession = ++diagnosticSessionSequence
   const pendingFailures = []
   const listeners = new Set()
 
   try {
-    diagnostics.registerSensitiveValues?.(configuration)
+    diagnostics.registerSensitiveValues?.([
+      configuration?.spot?.id,
+      configuration?.spot?.name,
+      configuration?.spot?.timezone,
+    ])
     diagnostics.setContext?.({ boardId: BOARD_ID, chipFamily: CHIP_FAMILY })
   } catch {}
 
   function update(patch) {
+    const previousPhase = state.phase
     state = { ...state, ...patch }
     try { diagnostics.setContext?.({ phase: state.phase, action: state.action?.action, attempt }) } catch {}
+    if (state.phase !== previousPhase) {
+      try { diagnostics.record?.({ category: 'state', operation: state.phase, status: 'entered' }) } catch {}
+    }
     for (const listener of listeners) listener(state)
   }
 
   function completeAttempt(patch = {}) {
-    update({ phase: 'complete', progress: 1, safeToDisconnect: true, ...patch })
+    latestDiagnosticOccurrence = null
+    update({
+      phase: 'complete', progress: 1, safeToDisconnect: true,
+      diagnosticStatus: 'idle', diagnosticReference: null, ...patch,
+    })
     try { diagnostics.destroy?.() } catch {}
+  }
+
+  function resetDiagnosticDelivery() {
+    latestDiagnosticOccurrence = null
+    update({ diagnosticStatus: 'idle', diagnosticReference: null })
+  }
+
+  function setReleaseDiagnosticContext() {
+    try {
+      diagnostics.setContext?.({
+        release: release?.manifest?.version,
+        route: action?.action,
+        boardId: device?.boardId ?? release?.manifest?.boardId,
+        chipFamily: device?.chipFamily ?? release?.manifest?.chipFamily,
+        layoutVersion: device?.firmwareLayoutVersion ?? release?.manifest?.firmwareLayoutVersion,
+      })
+    } catch {}
   }
 
   function isReportable(error) {
@@ -77,17 +119,29 @@ export function createInstallerSession({
   }
 
   function sendFailure(failure) {
-    const snapshot = diagnostics.snapshot?.()
+    let snapshot
+    try {
+      snapshot = diagnostics.snapshot?.()
+    } catch {
+      if (failure.attempt === attempt) update({ diagnosticStatus: 'failed', diagnosticReference: null })
+      return
+    }
     if (!snapshot) {
       pendingFailures.push(failure)
       return
     }
     latestDiagnosticOccurrence = failure.occurrence
     update({ diagnosticStatus: 'sending', diagnosticReference: null })
-    Promise.resolve(reporter.report({ ...failure, snapshot }))
+    let report
+    try {
+      report = reporter.report({ ...failure, snapshot })
+    } catch (error) {
+      report = Promise.reject(error)
+    }
+    Promise.resolve(report)
       .then((result) => {
         if (failure.attempt !== attempt || latestDiagnosticOccurrence !== failure.occurrence) return
-        const sent = result?.status === 'sent' && typeof result.reference === 'string'
+        const sent = result?.status === 'sent' && isInstallerDiagnosticReference(result.reference)
         update({
           diagnosticStatus: sent ? 'sent' : 'failed',
           diagnosticReference: sent ? result.reference : null,
@@ -101,7 +155,13 @@ export function createInstallerSession({
   }
 
   function flushPendingFailures() {
-    if (diagnostics.credentialsLocked) return
+    try {
+      if (diagnostics.credentialsLocked) return
+    } catch {
+      pendingFailures.length = 0
+      update({ diagnosticStatus: 'failed', diagnosticReference: null })
+      return
+    }
     for (const failure of pendingFailures.splice(0)) sendFailure(failure)
   }
 
@@ -141,13 +201,23 @@ export function createInstallerSession({
     try {
       await candidate.open()
       hello = await candidate.request('hello')
-      if (!validHello(hello)) throw new Error('Incomplete WindScout identity')
+      if (!validHello(hello)) throw new Error('Incomplete Windscout identity')
     } catch {
       try { await candidate.close() } catch {}
       return null
     }
     try {
-      const current = await candidate.request('get_state')
+      let current = await candidate.request('get_state')
+      // Opening Web Serial performs a normal device reset. A saved network
+      // commonly needs another second or two to obtain an IP address, so do
+      // not mistake that short boot window for missing Wi-Fi setup.
+      for (let wifiAttempt = 1;
+        current.wifiConfigured === true && current.wifi !== 'connected' &&
+        wifiAttempt < SAVED_WIFI_CONNECT_ATTEMPTS;
+        wifiAttempt += 1) {
+        await waitFor(SAVED_WIFI_CONNECT_RETRY_MS)
+        current = await candidate.request('get_state')
+      }
       return {
         protocol: candidate,
         device: {
@@ -156,23 +226,28 @@ export function createInstallerSession({
           boardId: hello.boardId,
           chipFamily: hello.chipFamily ?? CHIP_FAMILY,
           firmwareVersion: hello.firmwareVersion,
+          configurationVersion: hello.configurationVersion,
           // Firmware released before this field was introduced uses the same
           // original partition layout, so it is safely version 1.
           firmwareLayoutVersion: hello.firmwareLayoutVersion ?? 1,
           configurationDigest: current.configurationDigest ?? null,
           wifiHealthy: current.wifiHealthy ?? current.wifi === 'connected',
+          wifiConfigured: current.wifiConfigured === true,
+          renderValid: current.render === 'valid',
+          applyState: current.apply ?? 'idle',
           damaged: false,
         },
       }
     } catch (error) {
       try { await candidate.close() } catch {}
-      throw new InstallerError(INSTALLER_ERROR_CODES.CONNECTION_LOST, 'WindScout disconnected while its setup was checked.', { cause: error })
+      throw new InstallerError(INSTALLER_ERROR_CODES.CONNECTION_LOST, 'Windscout disconnected while its setup was checked.', { cause: error })
     }
   }
 
   async function connect() {
     const currentAttempt = ++attempt
     confirmed = false
+    awaitingWrittenFirmware = false
     operationController?.abort()
     operationController = new AbortController()
     update({ phase: 'choosing-device', error: null, diagnosticStatus: 'idle', diagnosticReference: null })
@@ -181,7 +256,7 @@ export function createInstallerSession({
       selectedPort = await requestPort()
     } catch (error) {
       if (currentAttempt !== attempt) return state
-      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.DEVICE_NOT_ALLOWED, 'WindScout could not access the selected USB device.')
+      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.DEVICE_NOT_ALLOWED, 'Windscout could not access the selected USB device.')
       update({ phase: 'error', error: installerError, safeToDisconnect: true })
       reportFailure(installerError, 'choosing-device')
       return state
@@ -220,85 +295,116 @@ export function createInstallerSession({
         }
         device = { kind: 'rom', chipFamily: identity.chipFamily, verifiedBoard: false, firmwareVersion: null, bootloader: identity }
       }
-      action = resolveInstallAction({ device, release: release.manifest, configurationDigest: configuration.digest })
+      action = resolveInstallAction({
+        device,
+        release: release.manifest,
+        configurationDigest: configuration.digest,
+        requiredConfigurationVersion: CONFIGURATION_VERSION,
+      })
       if (action.action === INSTALL_ACTIONS.BLOCKED) {
         throw new InstallerError(INSTALLER_ERROR_CODES.INCOMPATIBLE_DEVICE, 'This is not a supported reTerminal E1002.', { recoverable: false })
       }
+      setReleaseDiagnosticContext()
       update({ phase: action.action === INSTALL_ACTIONS.CONFIRM_E1002 ? 'confirm-device' : 'review', action })
     } catch (error) {
       if (currentAttempt !== attempt) return state
       await releaseConnections({ clearDevice: true })
-      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'WindScout could not check this device.')
+      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'Windscout could not check this device.')
       update({ phase: installerError.code === INSTALLER_ERROR_CODES.CONNECTION_LOST ? 'reconnect' : 'error', error: installerError, safeToDisconnect: installerError.safeToDisconnect })
       reportFailure(installerError, 'checking-device')
     }
     return state
   }
 
-  function confirmDevice() {
-    if (state.phase !== 'confirm-device') return
+  async function confirmDevice() {
+    if (state.phase !== 'confirm-device') return state
     confirmed = true
     action = { action: INSTALL_ACTIONS.INSTALL, reason: 'confirmed-e1002' }
-    update({ phase: 'review', action })
+    update({ action })
+    return executeAction()
   }
 
   async function scanNetworks() {
     if (!protocol) return []
+    const scanAttempt = attempt
+    resetDiagnosticDelivery()
     try {
       const response = await protocol.request('scan_networks', {}, 45000)
       return Array.isArray(response.networks) ? response.networks : []
     } catch (error) {
-      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.WIFI_FAILED, 'WindScout could not scan for Wi-Fi networks.')
-      update({ phase: 'wifi', error: installerError, safeToDisconnect: true })
-      reportFailure(installerError, 'wifi')
+      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.WIFI_FAILED, 'Windscout could not scan for Wi-Fi networks.')
+      // A network scan can finish after the user has already submitted the
+      // chosen network. Its late failure must not pull a successfully applying
+      // or completed installer back to the Wi-Fi form.
+      if (scanAttempt === attempt && state.phase === 'wifi') {
+        update({ phase: 'wifi', error: installerError, safeToDisconnect: true })
+        reportFailure(installerError, 'wifi')
+      }
       throw installerError
     }
   }
 
   async function configure(credentials, expectedAttempt = attempt) {
-    if (!protocol) throw new InstallerError(INSTALLER_ERROR_CODES.CONNECTION_LOST, 'Reconnect WindScout to finish setup.')
+    if (!protocol) throw new InstallerError(INSTALLER_ERROR_CODES.CONNECTION_LOST, 'Select your reTerminal again to finish setup.')
     update({ phase: 'configuring', progress: 0.82, safeToDisconnect: true })
     const unixTime = Math.floor(now() / 1000)
     if (!Number.isSafeInteger(unixTime)) {
-      throw new InstallerError(INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'WindScout could not read this computer’s time.')
+      throw new InstallerError(INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'Windscout could not read this computer’s time.')
     }
     const begun = await protocol.request('begin', { unixTime })
     if (begun.status === 'clock_rejected') {
-      throw new InstallerError(INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'WindScout could not set its clock from this computer.')
+      throw new InstallerError(INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'Windscout could not set its clock from this computer.')
     }
     if (!isCurrent(expectedAttempt)) return false
     const staged = await protocol.request('stage_configuration', { configuration })
     if (!isCurrent(expectedAttempt)) return false
-    if (staged.status !== 'configuration_staged') throw new InstallerError(INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'WindScout rejected this configuration.')
+    if (staged.status !== 'configuration_staged') throw new InstallerError(INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'Windscout rejected this configuration.')
     if (credentials) {
       const wifi = await protocol.request('test_wifi', credentials, WIFI_TEST_REQUEST_TIMEOUT_MS)
       if (!isCurrent(expectedAttempt)) return false
-      if (wifi.status !== 'wifi_ready') throw new InstallerError(INSTALLER_ERROR_CODES.WIFI_FAILED, 'WindScout could not connect to that Wi-Fi network.')
+      if (wifi.status !== 'wifi_ready') throw new InstallerError(INSTALLER_ERROR_CODES.WIFI_FAILED, 'Windscout could not connect to that Wi-Fi network.')
     }
     update({ phase: 'verifying', progress: 0.92 })
-    const applied = await protocol.request('apply_configuration')
+    const applied = await protocol.request('apply_configuration', undefined, APPLY_STATUS_REQUEST_TIMEOUT_MS)
     if (!isCurrent(expectedAttempt)) return false
     if (!['applying', 'complete'].includes(applied.status)) {
-      throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'WindScout could not apply the new setup.')
+      throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'Windscout could not apply the new setup.')
     }
     for (let poll = 0; poll < 180; poll += 1) {
       if (poll > 0 || applied.status === 'applying') await waitFor(1000)
       if (!isCurrent(expectedAttempt)) return false
-      const status = await protocol.request('get_state')
+      const status = await protocol.request('get_state', undefined, APPLY_STATUS_REQUEST_TIMEOUT_MS)
       if (!isCurrent(expectedAttempt)) return false
       if (['render_failed', 'commit_failed'].includes(status.apply)) {
-        throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'WindScout could not apply the new setup.')
+        throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'Windscout could not apply the new setup.')
       }
       const applyComplete = status.apply === 'complete' ||
         (applied.status === 'complete' && [undefined, 'idle'].includes(status.apply))
       if (applyComplete && status.configurationDigest === configuration.digest &&
           status.wifi === 'connected' && status.render === 'valid') return true
     }
-    throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'WindScout could not verify the new setup.')
+    throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'Windscout could not verify the new setup.')
   }
 
-  async function run() {
-    if (state.phase !== 'review') return state
+  async function verifyCurrentConfiguration(expectedAttempt, initialDevice) {
+    update({ phase: 'verifying', progress: 0.92, safeToDisconnect: true })
+    if (initialDevice.configurationDigest === configuration.digest &&
+        initialDevice.wifiHealthy && initialDevice.renderValid) return true
+    for (let poll = 0; poll < 60; poll += 1) {
+      await waitFor(1000)
+      if (!isCurrent(expectedAttempt)) return false
+      const status = await protocol.request('get_state', undefined, APPLY_STATUS_REQUEST_TIMEOUT_MS)
+      if (!isCurrent(expectedAttempt)) return false
+      if (['render_failed', 'commit_failed'].includes(status.apply)) {
+        throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'Windscout could not apply the new setup.')
+      }
+      if (status.configurationDigest === configuration.digest &&
+          status.wifi === 'connected' && status.render === 'valid') return true
+    }
+    throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'Windscout could not verify the current setup.')
+  }
+
+  async function executeAction() {
     const currentAttempt = attempt
     try {
       if (action.action === INSTALL_ACTIONS.UP_TO_DATE) {
@@ -328,6 +434,7 @@ export function createInstallerSession({
             }
           },
         })
+        awaitingWrittenFirmware = true
         protocol = null
         update({ phase: 'reconnect', progress: 0.78, safeToDisconnect: true })
         return state
@@ -340,7 +447,7 @@ export function createInstallerSession({
       completeAttempt()
     } catch (error) {
       if (currentAttempt !== attempt) return state
-      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'WindScout setup could not continue.')
+      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'Windscout setup could not continue.')
       update({
         phase: installerError.code === INSTALLER_ERROR_CODES.FLASH_FAILED ? 'reconnect' : 'error',
         error: installerError,
@@ -351,14 +458,32 @@ export function createInstallerSession({
     return state
   }
 
+  async function run() {
+    if (state.phase !== 'review') return state
+    return executeAction()
+  }
+
   async function attachReconnectedPort(reconnectedPort, expectedAttempt = attempt) {
     port = reconnectedPort
-    const appProbe = await probeApp(port)
+    let appProbe = await probeApp(port)
+    if (!appProbe && awaitingWrittenFirmware) {
+      for (let bootAttempt = 1; bootAttempt < POST_FLASH_BOOT_ATTEMPTS && !appProbe; bootAttempt += 1) {
+        await waitFor(POST_FLASH_BOOT_RETRY_MS)
+        if (expectedAttempt !== attempt) return state
+        appProbe = await probeApp(port)
+      }
+    }
     if (expectedAttempt !== attempt) {
       try { await appProbe?.protocol.close() } catch {}
       return state
     }
     if (!appProbe) {
+      if (awaitingWrittenFirmware) {
+        throw new InstallerError(
+          INSTALLER_ERROR_CODES.CONNECTION_LOST,
+          'Windscout is still restarting. Wait a moment, then select it again.',
+        )
+      }
       const identity = await esptool.identify(port)
       if (expectedAttempt !== attempt) {
         try { await identity.transport?.disconnect() } catch {}
@@ -373,17 +498,26 @@ export function createInstallerSession({
         try { await identity.transport?.disconnect() } catch {}
         return state
       }
-      action = resolveInstallAction({ device, release: release.manifest, configurationDigest: configuration.digest })
+      action = resolveInstallAction({
+        device,
+        release: release.manifest,
+        configurationDigest: configuration.digest,
+        requiredConfigurationVersion: CONFIGURATION_VERSION,
+      })
       if (action.action === INSTALL_ACTIONS.BLOCKED) {
         throw new InstallerError(INSTALLER_ERROR_CODES.INCOMPATIBLE_DEVICE, 'This is not a supported reTerminal E1002.', { recoverable: false })
       }
+      setReleaseDiagnosticContext()
       confirmed = false
       update({ phase: 'confirm-device', progress: 0, safeToDisconnect: true, action })
       return state
     }
     protocol = appProbe.protocol
     device = appProbe.device
-    if (!device.wifiHealthy) update({ phase: 'wifi', progress: 0.8, safeToDisconnect: true })
+    if (device.configurationDigest === configuration.digest && device.wifiHealthy) {
+      if (!await verifyCurrentConfiguration(expectedAttempt, device)) return state
+      completeAttempt()
+    } else if (!device.wifiHealthy) update({ phase: 'wifi', progress: 0.8, safeToDisconnect: true })
     else {
       if (!await configure(undefined, expectedAttempt)) return state
       completeAttempt()
@@ -393,6 +527,7 @@ export function createInstallerSession({
 
   async function reconnect() {
     const currentAttempt = ++attempt
+    resetDiagnosticDelivery()
     operationController?.abort()
     operationController = new AbortController()
     update({ phase: 'reconnecting', error: null, safeToDisconnect: true })
@@ -411,7 +546,7 @@ export function createInstallerSession({
     } catch (error) {
       if (currentAttempt !== attempt) return state
       await releaseConnections({ clearDevice: true })
-      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.CONNECTION_LOST, 'WindScout did not reconnect yet.')
+      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.CONNECTION_LOST, 'Windscout did not reconnect yet.')
       update({ phase: 'reconnect', error: installerError, safeToDisconnect: true })
       reportFailure(installerError, 'reconnect')
       return state
@@ -420,6 +555,7 @@ export function createInstallerSession({
 
   async function submitWifi({ ssid, password }) {
     if (state.phase !== 'wifi') return state
+    resetDiagnosticDelivery()
     const currentAttempt = attempt
     const credentials = { ssid: String(ssid), password: String(password) }
     let releaseCredentialLock = () => {}
@@ -429,7 +565,7 @@ export function createInstallerSession({
       completeAttempt()
     } catch (error) {
       if (currentAttempt !== attempt) return state
-      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.WIFI_FAILED, 'WindScout could not connect to that Wi-Fi network.')
+      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.WIFI_FAILED, 'Windscout could not connect to that Wi-Fi network.')
       const phase = installerError.code === INSTALLER_ERROR_CODES.WIFI_FAILED
         ? 'wifi'
         : installerError.code === INSTALLER_ERROR_CODES.CONNECTION_LOST ? 'reconnect' : 'error'
@@ -438,7 +574,7 @@ export function createInstallerSession({
     } finally {
       credentials.ssid = ''
       credentials.password = ''
-      releaseCredentialLock()
+      try { releaseCredentialLock() } catch {}
       flushPendingFailures()
     }
     return state
@@ -448,11 +584,14 @@ export function createInstallerSession({
     if (!state.safeToDisconnect) return state
     attempt += 1
     confirmed = false
+    awaitingWrittenFirmware = false
     operationController?.abort()
     operationController = null
     await releaseConnections({ clearDevice: true })
     port = null
-    diagnostics.destroy?.()
+    pendingFailures.length = 0
+    latestDiagnosticOccurrence = null
+    try { diagnostics.destroy?.() } catch {}
     update({ ...INITIAL_STATE })
     return state
   }

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { E1002_MODEL } from '../src/assets/e1002'
-import { findMissingModelRoles, loadE1002Model } from '../src/configurator/modelLoader'
+import { findMissingModelRoles, hideE1002Stand, loadE1002Model } from '../src/configurator/modelLoader'
 
 function modelWithRoles(roles) {
   return {
@@ -17,6 +17,14 @@ describe('E1002 model loader contract', () => {
 
   it('reports every missing role before the scene becomes interactive', () => {
     expect(findMissingModelRoles(modelWithRoles(['BODY', 'SCREEN']))).toEqual(['CONTROLS', 'PORTS', 'STAND'])
+  })
+
+  it('hides the printed stand while retaining it for model cleanup', () => {
+    const stand = { visible: true }
+    const model = { getObjectByName: vi.fn(() => stand) }
+
+    expect(hideE1002Stand(model)).toBe(true)
+    expect(stand.visible).toBe(false)
   })
 
   it('aborts a model request that never settles', async () => {

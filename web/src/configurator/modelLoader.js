@@ -8,6 +8,15 @@ export function findMissingModelRoles(scene) {
   return E1002_MODEL.requiredRoles.filter((role) => !scene.getObjectByName(role))
 }
 
+export function hideE1002Stand(scene) {
+  const stand = scene.getObjectByName('STAND')
+  if (!stand) return false
+  // Keep the hidden object attached so the normal scene disposal path still
+  // releases its imported geometry and materials.
+  stand.visible = false
+  return true
+}
+
 export async function loadE1002Model({
   loaderFactory = (manager) => new GLTFLoader(manager),
   timeoutMs = MODEL_LOAD_TIMEOUT_MS,

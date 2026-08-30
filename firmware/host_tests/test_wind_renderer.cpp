@@ -23,17 +23,19 @@ using Frame = std::vector<uint8_t>;
 wind_renderer_dashboard_t Dashboard(wind_renderer_state_t state = WIND_RENDERER_FRESH) {
     static const char *days[] = {"MON", "TUE", "WED", "THU", "FRI"};
     static const char *dates[] = {"24 AUG", "25 AUG", "26 AUG", "27 AUG", "28 AUG"};
-    static const char *times[] = {"08:00", "11:00", "14:00", "17:00", "20:00"};
+    static const char *times[] = {"08", "11", "14", "17", "20"};
     wind_renderer_dashboard_t result{};
     result.spot_name = "Edam";
-    result.coordinates = "52.5126N 5.0486E";
-    result.provider = "KNMI";
-    result.updated_time = "11:05";
+    result.provider = "HARMONIE SEAMLESS";
+    result.updated_time = "24 AUG 21:00";
     result.state = state;
     result.age_hours = state == WIND_RENDERER_STALE ? 25 : 1;
     result.battery_percent = 74;
+    result.display_mode = WIND_RENDERER_MODE_SOLID;
     result.threshold_kt = WIND_RENDERER_DEFAULT_THRESHOLD_KT;
     result.show_weather = 1;
+    result.show_dedicated_footer = 1;
+    result.use_24_hour = 1;
     for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day) {
         result.days[day].day = days[day];
         result.days[day].date = dates[day];
@@ -83,6 +85,20 @@ int CountColor(const Frame &frame, int left, int top, int right, int bottom,
         for (int x = left; x <= right; ++x)
             count += frame[y * WIND_RENDERER_WIDTH + x] == color;
     return count;
+}
+
+struct FooterDiff {
+    bool above_changed;
+    bool footer_changed;
+};
+
+FooterDiff CompareFooterRegions(const Frame &first, const Frame &second) {
+    const auto footer = first.begin() + 450 * WIND_RENDERER_WIDTH;
+    const auto second_footer = second.begin() + 450 * WIND_RENDERER_WIDTH;
+    return {
+        !std::equal(first.begin(), footer, second.begin()),
+        !std::equal(footer, first.end(), second_footer),
+    };
 }
 
 std::string FixturePath(const char *name) {
@@ -165,13 +181,13 @@ TEST(WindRenderer, ProducesOneDeterministicMonochromeFrameWithoutClipping) {
     EXPECT_EQ(first_stats.clipped_primitives, 0);
     EXPECT_EQ(first_stats.status_right, 770);
     EXPECT_EQ(first[12 * 800 + 12], 0);
-    EXPECT_EQ(first[103 * 800 + 400], 0);
-    EXPECT_EQ(first[467 * 800 + 787], 0);
+    EXPECT_EQ(first[80 * 800 + 400], 0);
+    EXPECT_EQ(first[449 * 800 + 787], 0);
 }
 
 TEST(WindRenderer, UsesTheSameCompositionForACleanUnditheredPreview) {
     auto dashboard = Dashboard();
-    dashboard.display_mode = WIND_RENDERER_MODE_BACKGROUND_FADE;
+    dashboard.display_mode = WIND_RENDERER_MODE_SOLID;
     const Frame palette_before = Render(dashboard);
     wind_renderer_stats_t stats{};
     const Frame preview = RenderPreview(dashboard, &stats);
@@ -181,18 +197,11 @@ TEST(WindRenderer, UsesTheSameCompositionForACleanUnditheredPreview) {
     EXPECT_EQ(preview.size(), static_cast<size_t>(WIND_RENDERER_RGBA_BYTES));
     EXPECT_EQ(stats.dither_passes, 0);
     EXPECT_EQ(stats.clipped_primitives, 0);
-    bool has_continuous_gray = false;
     bool all_alpha_opaque = true;
     for (size_t offset = 0; offset < preview.size(); offset += 4) {
         all_alpha_opaque = all_alpha_opaque && preview[offset + 3] == 255;
-        if (preview[offset] == preview[offset + 1] &&
-            preview[offset + 1] == preview[offset + 2] &&
-            preview[offset] > 0 && preview[offset] < 255) {
-            has_continuous_gray = true;
-        }
     }
     EXPECT_TRUE(all_alpha_opaque);
-    EXPECT_TRUE(has_continuous_gray);
 
     dashboard.display_mode = WIND_RENDERER_MODE_THRESHOLD;
     const Frame threshold = RenderPreview(dashboard);
@@ -233,15 +242,15 @@ TEST(WindRenderer, UsesFixedScaleAndPinsOverflowValueAboveTheBar) {
     }
     const Frame frame = Render(dashboard);
     const auto black = [&frame](int x, int y) { return frame[y * 800 + x] == 0; };
-    constexpr int baseline = 424;
+    constexpr int baseline = 406;
     EXPECT_FALSE(black(38, baseline - 1));
     EXPECT_TRUE(black(64, baseline - 6));
     EXPECT_FALSE(black(64, baseline - 7));
-    EXPECT_TRUE(black(90, baseline - 234));
-    EXPECT_FALSE(black(90, baseline - 235));
-    EXPECT_TRUE(black(116, baseline - 240));
+    EXPECT_TRUE(black(90, baseline - 240));
+    EXPECT_FALSE(black(90, baseline - 241));
+    EXPECT_TRUE(black(116, baseline - 243));
     int overflow_label_pixels = 0;
-    for (int y = baseline - 261; y <= baseline - 242; ++y)
+    for (int y = baseline - 251; y <= baseline - 232; ++y)
         for (int x = 132; x <= 152; ++x)
             if (black(x, y)) ++overflow_label_pixels;
     EXPECT_GT(overflow_label_pixels, 0);
@@ -256,7 +265,7 @@ TEST(WindRenderer, PlacesFiveTimeSlotsAcrossEachDayOnOneBaseline) {
         }
 
     const Frame frame = Render(dashboard);
-    constexpr int baseline = 424;
+    constexpr int baseline = 389;
     for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day) {
         std::array<int, WIND_RENDERER_SAMPLES_PER_DAY> centers{};
         std::array<int, WIND_RENDERER_SAMPLES_PER_DAY> baselines{};
@@ -274,7 +283,65 @@ TEST(WindRenderer, PlacesFiveTimeSlotsAcrossEachDayOnOneBaseline) {
     }
 }
 
-TEST(WindRenderer, SupportsBackgroundThresholdAndSolidDisplayModes) {
+TEST(WindRenderer, UsesTheBottomBandAsATimeAxisAndStatusArea) {
+    auto dashboard = Dashboard();
+    dashboard.use_24_hour = 1;
+    const Frame original = Render(dashboard);
+
+    auto first_day_time_changed = dashboard;
+    first_day_time_changed.days[0].samples[0].time = "09";
+    const Frame changed_time = Render(first_day_time_changed);
+    const FooterDiff time_diff = CompareFooterRegions(original, changed_time);
+    EXPECT_TRUE(time_diff.footer_changed);
+    EXPECT_FALSE(time_diff.above_changed);
+
+    auto hidden_time_changed = dashboard;
+    hidden_time_changed.days[4].samples[0].time = "09";
+    EXPECT_EQ(Render(hidden_time_changed), original);
+
+    auto third_day_time_changed = dashboard;
+    third_day_time_changed.days[2].samples[0].time = "09";
+    EXPECT_NE(Render(third_day_time_changed), original);
+
+    auto long_status = dashboard;
+    long_status.provider = "A VERY LONG FORECAST MODEL NAME";
+    const Frame long_status_frame = Render(long_status);
+    auto long_status_hidden_time_changed = long_status;
+    long_status_hidden_time_changed.days[2].samples[0].time = "09";
+    EXPECT_EQ(Render(long_status_hidden_time_changed), long_status_frame);
+
+    auto status_changed = dashboard;
+    status_changed.provider = "BEST MATCH";
+    status_changed.updated_time = "11:05";
+    const Frame changed_status = Render(status_changed);
+    const FooterDiff status_diff = CompareFooterRegions(original, changed_status);
+    EXPECT_TRUE(status_diff.footer_changed);
+    EXPECT_FALSE(status_diff.above_changed);
+
+    for (int day = 1; day < WIND_RENDERER_DAY_COUNT; ++day) {
+        const int divider_x = 12 + day * 155;
+        EXPECT_EQ(original[450 * WIND_RENDERER_WIDTH + divider_x], 1)
+            << "footer divider for day " << day;
+    }
+}
+
+TEST(WindRenderer, ShowsOnlyBatteryAndUpdateBelowItWhenLegendIsHidden) {
+    auto dashboard = Dashboard();
+    dashboard.show_dedicated_footer = 0;
+    const Frame original = Render(dashboard);
+
+    auto provider_changed = dashboard;
+    provider_changed.provider = "A COMPLETELY DIFFERENT MODEL";
+    EXPECT_EQ(Render(provider_changed), original);
+
+    auto update_changed = dashboard;
+    update_changed.updated_time = "30 AUG 22:00";
+    EXPECT_NE(Render(update_changed), original);
+
+    EXPECT_GT(CountColor(original, 746, 30, 771, 42, 0), 0);
+}
+
+TEST(WindRenderer, SupportsThresholdAndSolidDisplayModes) {
     auto dashboard = Dashboard();
     for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day)
         for (int sample = 0; sample < WIND_RENDERER_SAMPLES_PER_DAY; ++sample) {
@@ -282,24 +349,16 @@ TEST(WindRenderer, SupportsBackgroundThresholdAndSolidDisplayModes) {
             dashboard.days[day].samples[sample].gust_kt = 14;
         }
 
-    dashboard.display_mode = WIND_RENDERER_MODE_BACKGROUND_FADE;
-    const Frame background = Render(dashboard);
     dashboard.display_mode = WIND_RENDERER_MODE_THRESHOLD;
     const Frame threshold = Render(dashboard);
     dashboard.display_mode = WIND_RENDERER_MODE_SOLID;
     const Frame solid = Render(dashboard);
 
-    // The background treatment reaches both outer edges and the row directly
-    // above the black value separator, but is absent in the other modes.
-    EXPECT_GT(CountBlack(background, 13, 330, 20, 431), 0);
-    EXPECT_GT(CountBlack(background, 779, 330, 786, 431), 0);
-    const int background_bottom = CountBlack(background, 13, 425, 786, 431);
-    const int threshold_bottom = CountBlack(threshold, 13, 425, 786, 431);
-    const int solid_bottom = CountBlack(solid, 13, 425, 786, 431);
-    EXPECT_GT(background_bottom, threshold_bottom);
+    const int threshold_bottom = CountBlack(threshold, 13, 390, 786, 433);
+    const int solid_bottom = CountBlack(solid, 13, 390, 786, 433);
     EXPECT_EQ(threshold_bottom, solid_bottom);
-    EXPECT_GT(CountColor(threshold, 28, 320, 771, 324, 3), 0);
-    EXPECT_EQ(CountColor(solid, 28, 320, 771, 324, 3), 0);
+    EXPECT_GT(CountColor(threshold, 28, 300, 771, 304, 3), 0);
+    EXPECT_EQ(CountColor(solid, 28, 300, 771, 304, 3), 0);
 }
 
 TEST(WindRenderer, UsesTheConfiguredThresholdAcrossItsSupportedRange) {
@@ -314,7 +373,7 @@ TEST(WindRenderer, UsesTheConfiguredThresholdAcrossItsSupportedRange) {
     dashboard.threshold_kt = WIND_RENDERER_MAX_THRESHOLD_KT;
     const Frame maximum = Render(dashboard);
 
-    const auto threshold_y = [](int knots) { return 424 - knots * 240 / 40; };
+    const auto threshold_y = [](int knots) { return 406 - knots * 247 / 40; };
     EXPECT_GT(CountColor(minimum, 36, threshold_y(WIND_RENDERER_MIN_THRESHOLD_KT),
                          762, threshold_y(WIND_RENDERER_MIN_THRESHOLD_KT), 3),
               0);
@@ -361,14 +420,14 @@ TEST(WindRenderer, ConvertsVersionedBoundedInputToTheCanonicalDashboard) {
     EXPECT_EQ(input.threshold_kt, WIND_RENDERER_DEFAULT_THRESHOLD_KT);
 
     EXPECT_EQ(wind_renderer_input_v2_set_metadata(
-                  &input, "Brouwersdam", "51.7506N 3.8577E", "KNMI", "11:05"),
+                  &input, "Brouwersdam", "KNMI", "11:05"),
               0);
     EXPECT_EQ(wind_renderer_input_v2_set_status(
                   &input, WIND_RENDERER_FRESH, 0, 1, 74,
                   WIND_RENDERER_MODE_THRESHOLD, 23),
               0);
     EXPECT_EQ(wind_renderer_input_v2_set_display_rows(&input, 1, 1, 1, 1), 0);
-    EXPECT_EQ(wind_renderer_input_v2_set_preferences(&input, 1, 1), 0);
+    EXPECT_EQ(wind_renderer_input_v2_set_preferences(&input, 1, 1, 1), 0);
     EXPECT_EQ(wind_renderer_input_v2_set_day(&input, 0, "TODAY", "24 AUG"), 0);
     EXPECT_EQ(wind_renderer_input_v2_set_sample(
                   &input, 0, 0, "08", 18, 24, 245, 1,
@@ -376,20 +435,23 @@ TEST(WindRenderer, ConvertsVersionedBoundedInputToTheCanonicalDashboard) {
               0);
     EXPECT_EQ(wind_renderer_input_v2_set_tide_sample(&input, 0, 0, 8, -350, 1), 0);
     EXPECT_EQ(wind_renderer_input_v2_set_tide_sample(&input, 1, 0, 9, -300, 1), 0);
+    EXPECT_EQ(wind_renderer_input_v2_set_tide_extremum(&input, 0, 0, 8, 15, -350, 0, 1), 0);
 
     wind_renderer_dashboard_t dashboard{};
     EXPECT_EQ(wind_renderer_input_v2_to_dashboard(&input, &dashboard), 0);
     EXPECT_STREQ(dashboard.spot_name, "Brouwersdam");
     EXPECT_EQ(dashboard.threshold_kt, 23);
+    EXPECT_EQ(dashboard.show_dedicated_footer, 1);
     EXPECT_EQ(dashboard.use_24_hour, 1);
     EXPECT_EQ(dashboard.temperature_fahrenheit, 1);
     EXPECT_EQ(dashboard.days[0].samples[0].sustained_kt, 18);
     EXPECT_EQ(dashboard.days[0].samples[0].temperature_tenths_c, -24);
     EXPECT_EQ(dashboard.tide_samples[0].sea_level_mm, -350);
+    EXPECT_EQ(dashboard.tide_extrema[0].local_minute, 15);
 
     const std::string oversized(WIND_RENDERER_SPOT_NAME_CAPACITY, 'W');
     EXPECT_NE(wind_renderer_input_v2_set_metadata(
-                  &input, oversized.c_str(), "", "KNMI", "11:05"),
+                  &input, oversized.c_str(), "KNMI", "11:05"),
               0);
     EXPECT_NE(wind_renderer_input_v2_set_status(
                   &input, WIND_RENDERER_FRESH, 0, 1, 74,
@@ -441,7 +503,7 @@ TEST(WindRenderer, AllocatesEveryOptionalRowCombinationAndKeepsWindFlexible) {
                 ? 54
                 : dashboard.show_weather || dashboard.show_temperature ? 35 : 0;
         EXPECT_EQ(stats.wind_baseline,
-                  459 - conditions_height -
+                  441 - conditions_height -
                       (dashboard.show_tide ? 60 : 0)) << mask;
         EXPECT_EQ(frame[(stats.wind_baseline - 1) * 800 + 38], 0) << mask;
     }
@@ -509,6 +571,9 @@ TEST(WindRenderer, DoesNotLabelTideExtremaOutsideForecastCenters) {
         if (hour == 23) level = 0;
         dashboard.tide_samples[hour] = {0, hour, level, 1};
     }
+    for (int day = 0; day < 3; ++day)
+        for (auto &sample : dashboard.days[day].samples)
+            sample.available = 0;
 
     dashboard.use_24_hour = 0;
     const Frame twelve_hour = Render(dashboard);
@@ -520,6 +585,7 @@ TEST(WindRenderer, DoesNotLabelTideExtremaOutsideForecastCenters) {
 
 TEST(WindRenderer, AppliesClockAndTemperaturePreferencesInTheSharedComposition) {
     auto dashboard = Dashboard();
+    dashboard.use_24_hour = 0;
     dashboard.show_temperature = 1;
     dashboard.show_tide = 1;
     dashboard.tide_available = 1;
@@ -541,6 +607,26 @@ TEST(WindRenderer, AppliesClockAndTemperaturePreferencesInTheSharedComposition) 
     EXPECT_NE(imperialTwentyFourHour, metricTwentyFourHour);
 }
 
+TEST(WindRenderer, PlacesExplicitQuarterHourTideExtremaBetweenHourPoints) {
+    auto dashboard = Dashboard();
+    dashboard.show_tide = 1;
+    dashboard.tide_available = 1;
+    dashboard.tide_sample_count = 24;
+    for (int hour = 0; hour < 24; ++hour) {
+        dashboard.tide_samples[hour] = {
+            0, hour, static_cast<int>(std::sin(hour / 6.0) * 800), 1,
+        };
+    }
+    dashboard.tide_extremum_count = 1;
+    dashboard.tide_extrema[0] = {0, 14, 0, 800, 1, 1};
+    const Frame whole_hour = Render(dashboard);
+
+    dashboard.tide_extrema[0].local_minute = 15;
+    const Frame quarter_hour = Render(dashboard);
+
+    EXPECT_NE(whole_hour, quarter_hour);
+}
+
 TEST(WindRenderer, KeepsStraightStructuralPixelsAtFullLumaInCleanPreview) {
     auto dashboard = Dashboard();
     dashboard.show_temperature = 1;
@@ -549,7 +635,7 @@ TEST(WindRenderer, KeepsStraightStructuralPixelsAtFullLumaInCleanPreview) {
     const auto channel = [&preview](int x, int y) { return preview[(y * 800 + x) * 4]; };
     for (int x = 12; x <= 787; ++x) {
         EXPECT_TRUE(channel(x, 12) == 0 || channel(x, 12) == 255);
-        EXPECT_TRUE(channel(x, 359) == 0 || channel(x, 359) == 255);
+        EXPECT_TRUE(channel(x, 449) == 0 || channel(x, 449) == 255);
     }
 }
 
@@ -557,25 +643,31 @@ TEST(WindRenderer, MakesBatteryRedBelowTenPercentOnly) {
     auto dashboard = Dashboard();
     dashboard.battery_percent = 9;
     const Frame low = Render(dashboard);
-    EXPECT_GT(CountColor(low, 746, 65, 771, 78, 3), 0);
+    EXPECT_GT(CountColor(low, 746, 457, 771, 470, 3), 0);
 
     dashboard.battery_percent = 10;
     const Frame ten = Render(dashboard);
-    EXPECT_EQ(CountColor(ten, 746, 65, 771, 78, 3), 0);
+    EXPECT_EQ(CountColor(ten, 746, 457, 771, 470, 3), 0);
 }
 
-TEST(WindRenderer, KeepsStatusRightAlignedAndDropsCoordinatesBeforeFadingLongTitle) {
+TEST(WindRenderer, KeepsStatusRightAlignedWhenFadingLongTitle) {
     auto dashboard = Dashboard();
     wind_renderer_stats_t normal_stats{};
     (void)Render(dashboard, &normal_stats);
-    EXPECT_EQ(normal_stats.coordinates_included, 1);
-
     dashboard.spot_name = "Noord-Holland Windmeetpost Met Een Uitzonderlijk Lange Naam";
     wind_renderer_stats_t long_stats{};
     (void)Render(dashboard, &long_stats);
-    EXPECT_EQ(long_stats.coordinates_included, 0);
     EXPECT_EQ(long_stats.status_right, normal_stats.status_right);
     EXPECT_EQ(long_stats.clipped_primitives, 0);
+}
+
+TEST(WindRenderer, UppercasesTheSpotNameInTheSharedComposition) {
+    auto mixed_case = Dashboard();
+    mixed_case.spot_name = "Edam é";
+    auto uppercase = mixed_case;
+    uppercase.spot_name = "EDAM É";
+
+    EXPECT_EQ(Render(mixed_case), Render(uppercase));
 }
 
 TEST(WindRenderer, FadesLongTitleIntoDitherWithoutTouchingStatus) {
@@ -608,7 +700,7 @@ TEST(WindRenderer, EndsFadeAtLastVisibleGlyphInsteadOfTextAdvanceBox) {
     constexpr int title_left = 30;
     const auto rightmost_title_pixel = [=](const Frame &preview) {
         int rightmost = -1;
-        for (int y = 20; y <= 82; ++y)
+        for (int y = 20; y <= 70; ++y)
             for (int x = title_left; x <= 565; ++x)
                 if (preview[(y * WIND_RENDERER_WIDTH + x) * 4] < 255 &&
                     x > rightmost)
@@ -626,7 +718,7 @@ TEST(WindRenderer, EndsFadeAtLastVisibleGlyphInsteadOfTextAdvanceBox) {
 
     const Frame preview = RenderPreview(dashboard);
     int intermediate_luma = 0;
-    for (int y = 20; y <= 82; ++y) {
+    for (int y = 20; y <= 70; ++y) {
         for (int x = title_left; x <= 565; ++x) {
             const uint8_t luma = preview[(y * WIND_RENDERER_WIDTH + x) * 4];
             intermediate_luma += luma > 0 && luma < 255;

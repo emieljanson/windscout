@@ -17,7 +17,6 @@ export const brouwersdamForecast = Object.freeze({
   schemaVersion: 2,
   spotId: 'brouwersdam',
   spotName: 'Brouwersdam',
-  coordinates: '51.767°N · 3.859°E',
   timezone: 'Europe/Amsterdam',
   provider: 'OPEN-METEO',
   modelId: 'best_match',

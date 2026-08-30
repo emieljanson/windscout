@@ -15,14 +15,10 @@ const sources = [
   'web/wasm/wind_renderer_bridge.c',
   'firmware/main/wind_renderer.c',
   'firmware/main/wind_font.c',
-  'firmware/main/fonts/berkeley_mono_12.c',
-  'firmware/main/fonts/berkeley_mono_14.c',
-  'firmware/main/fonts/berkeley_mono_32.c',
   'firmware/main/fonts/berkeley_mono_bold_15.c',
+  'firmware/main/fonts/berkeley_mono_bold_condensed_12.c',
   'firmware/main/fonts/berkeley_mono_bold_condensed_15.c',
-  'firmware/main/fonts/inter_bold_15.c',
-  'firmware/main/fonts/inter_16.c',
-  'firmware/main/fonts/inter_28.c',
+  'firmware/main/fonts/inter_43.c',
 ]
 
 async function main() {

@@ -21,33 +21,31 @@ html { min-width: 320px; background: var(--studio-background); }
 body { min-width: 320px; min-height: 100vh; margin: 0; background: var(--studio-background); }
 button, input, select { font: inherit; }
 
-@media (max-width: 56rem) {
-  html,
-  body,
-  #app {
-    inline-size: 100%;
-    block-size: 100vh;
-    block-size: 100lvh;
-    max-inline-size: 100%;
-    overflow: hidden;
-    overflow: clip;
-    overscroll-behavior: none;
-  }
+html.configurator-is-compact,
+html.configurator-is-compact body,
+html.configurator-is-compact #app {
+  inline-size: 100%;
+  block-size: 100vh;
+  block-size: 100lvh;
+  max-inline-size: 100%;
+  overflow: hidden;
+  overflow: clip;
+  overscroll-behavior: none;
+}
 
-  body {
-    position: fixed;
-    inset: 0;
-  }
+html.configurator-is-compact body {
+  position: fixed;
+  inset: 0;
+}
 
-  [data-sonner-toaster] {
-    inset-inline: 1rem !important;
-    inline-size: calc(100% - 2rem) !important;
-    max-inline-size: calc(100% - 2rem) !important;
-  }
+html.configurator-is-compact [data-sonner-toaster] {
+  inset-inline: 1rem !important;
+  inline-size: calc(100% - 2rem) !important;
+  max-inline-size: calc(100% - 2rem) !important;
+}
 
-  [data-sonner-toaster] [data-sonner-toast] {
-    inline-size: 100% !important;
-  }
+html.configurator-is-compact [data-sonner-toaster] [data-sonner-toast] {
+  inline-size: 100% !important;
 }
 
 .skip-link {
@@ -71,10 +69,8 @@ button, input, select { font: inherit; }
   font-family: 'Inter Variable', Inter, system-ui, sans-serif;
 }
 
-@media (max-width: 56rem) {
-  [data-sonner-toaster][data-y-position='top'] {
-    top: max(0.75rem, env(safe-area-inset-top)) !important;
-  }
+html.configurator-is-compact [data-sonner-toaster][data-y-position='top'] {
+  top: max(0.75rem, env(safe-area-inset-top)) !important;
 }
 
 [data-sonner-toast] {

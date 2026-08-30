@@ -102,6 +102,33 @@ describe('Sentry installer reporter', () => {
     }))
   })
 
+  it('keeps the real SDK envelope inside the final allowlist', async () => {
+    const sdk = await import('@sentry/browser')
+    let envelope
+    const reporter = createSentryReporter({
+      enabled: true,
+      dsn: 'https://public@example.test/1',
+      release: 'build-real-sdk',
+      loadSentry: async () => ({
+        ...sdk,
+        makeFetchTransport: () => ({
+          async send(nextEnvelope) { envelope = nextEnvelope; return { statusCode: 200, headers: {} } },
+          async flush() { return true },
+        }),
+      }),
+      randomBytes: () => new Uint8Array([1, 2, 3, 4, 5, 6, 7]),
+    })
+    sdk.setUser({ email: 'planted@example.test', ip_address: '2001:db8::1' })
+
+    await expect(reporter.report(reportInput({ occurrence: 'real-sdk' })))
+      .resolves.toEqual({ status: 'sent', reference: expect.stringMatching(/^WS-/) })
+
+    const serialized = JSON.stringify(envelope)
+    expect(serialized).toContain('windscout.reference')
+    expect(serialized).not.toMatch(/planted@example\.test|2001:db8::1|request|cookies|user_agent/)
+    await sdk.close()
+  })
+
   it.each([
     ['non-2xx response', { statusCode: 429 }],
     ['transport rejection', { sendError: new Error('blocked') }],

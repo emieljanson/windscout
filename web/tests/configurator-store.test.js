@@ -35,7 +35,6 @@ function liveForecast(
     schemaVersion: 2,
     spotId,
     spotName: spot.displayName,
-    coordinates: '52°00\'00"N 4°00\'00"E',
     timezone: spot.timezone,
     provider: 'OPEN-METEO',
     modelId,
@@ -62,7 +61,7 @@ function forecastSet(...forecasts) {
 function tideFor(spotId = 'brouwersdam', capability = 'available') {
   const spot = getSpot(spotId)
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     spotId,
     timezone: spot.timezone,
     provider: 'OPEN-METEO MARINE',
@@ -75,6 +74,18 @@ function tideFor(spotId = 'brouwersdam', capability = 'available') {
         localTime: `${String(index % 24).padStart(2, '0')}:00`,
         seaLevelMm: Math.round(Math.sin(index / 6) * 800),
       }))
+      : [],
+    extrema: capability === 'available'
+      ? Array.from({ length: 20 }, (_, index) => {
+        const sampleIndex = 3 + index * 6
+        return {
+          timestamp: 1_777_000_000 + sampleIndex * 3600,
+          localDate: `2026-08-${String(26 + Math.floor(sampleIndex / 24)).padStart(2, '0')}`,
+          localTime: `${String(sampleIndex % 24).padStart(2, '0')}:00`,
+          seaLevelMm: Math.round(Math.sin(sampleIndex / 6) * 800),
+          type: index % 2 === 0 ? 'high' : 'low',
+        }
+      })
       : [],
   }
 }
@@ -90,6 +101,7 @@ describe('configurator store', () => {
     expect(store.showWeather).toBe(true)
     expect(store.showTemperature).toBe(false)
     expect(store.showTide).toBe(false)
+    expect(store.showDedicatedFooter).toBe(false)
     expect(['12-hour', '24-hour']).toContain(store.timeFormat)
     expect(store.temperatureUnit).toBe('celsius')
     expect(store.selectedSpotId).toBe('brouwersdam')

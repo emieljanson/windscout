@@ -22,10 +22,17 @@ enum {
     OUTER_BOTTOM = 467,
     CONTENT_LEFT = 30,
     CONTENT_RIGHT = 770,
-    HEADER_BOTTOM = 103,
-    DAY_HEADER_BOTTOM = 138,
-    GRAPH_TOP = 180,
-    BAR_GRAPH_TOP = 184,
+    HEADER_BOTTOM = 80,
+    DAY_HEADER_BOTTOM = 113,
+    FOOTER_TOP = 449,
+    FOOTER_TIME_DAY_COUNT = 3,
+    FOOTER_STATUS_GAP = 8,
+    FOOTER_TEXT_OFFSET_Y = 2,
+    GRAPH_TOP = 155,
+    BAR_GRAPH_TOP = 159,
+    HEADER_TEXT_BASELINE = 62,
+    DAY_LABEL_BASELINE = 102,
+    DIRECTION_CENTER_Y = 133,
     SUSTAINED_BAR_WIDTH = 16,
     WEATHER_ROW_HEIGHT = 35,
     TEMPERATURE_ROW_HEIGHT = 35,
@@ -73,11 +80,47 @@ typedef struct {
 
 static const char *safe_text(const char *text) { return text ? text : ""; }
 
+static void uppercase_spot_name(char *output, size_t output_size,
+                                const char *input) {
+    const unsigned char *source = (const unsigned char *)safe_text(input);
+    size_t used = 0;
+    if (!output || output_size == 0) return;
+    while (*source && used + 1 < output_size) {
+        if (*source >= 'a' && *source <= 'z') {
+            output[used++] = (char)(*source - ('a' - 'A'));
+            ++source;
+            continue;
+        }
+        if (source[0] == 0xc3 && source[1] && used + 2 < output_size) {
+            unsigned char second = source[1];
+            switch (second) {
+                case 0xa0: case 0xa1: case 0xa4: case 0xa7:
+                case 0xa8: case 0xa9: case 0xab: case 0xac:
+                case 0xad: case 0xaf: case 0xb1: case 0xb2:
+                case 0xb3: case 0xb6: case 0xb9: case 0xba:
+                case 0xbc:
+                    second = (unsigned char)(second - 0x20);
+                    break;
+                default:
+                    break;
+            }
+            output[used++] = (char)source[0];
+            output[used++] = (char)second;
+            source += 2;
+            continue;
+        }
+        output[used++] = (char)*source++;
+    }
+    output[used] = '\0';
+}
+
 static int divide_rounded(int value, int divisor);
+static void draw_battery(canvas_t *canvas, int right, int center_y,
+                         int percent);
 
 static dashboard_layout_t dashboard_layout(const wind_renderer_dashboard_t *dashboard) {
     dashboard_layout_t layout = {0};
-    int cursor = OUTER_BOTTOM;
+    int cursor = dashboard->show_dedicated_footer ? FOOTER_TOP : OUTER_BOTTOM;
     if (dashboard->show_tide) {
         layout.tide_bottom = cursor - 1;
         cursor -= TIDE_ROW_HEIGHT;
@@ -125,15 +168,19 @@ static int forecast_sample_center_x(int day, int sample) {
     return day_column_x(day) + (sample + 1) * sample_step;
 }
 
-static int tide_hour_x(int day, int hour) {
+static int tide_time_x(int day, int hour, int minute) {
     /* The forecast centers are the time axis: 08:00 and 20:00 therefore
      * share exactly the same pixels as the first and last wind samples. */
     const int first_x = forecast_sample_center_x(day, 0);
     const int last_x = forecast_sample_center_x(
         day, WIND_RENDERER_SAMPLES_PER_DAY - 1);
     return first_x + divide_rounded(
-        (hour - FORECAST_FIRST_HOUR) * (last_x - first_x),
-        FORECAST_LAST_HOUR - FORECAST_FIRST_HOUR);
+        ((hour - FORECAST_FIRST_HOUR) * 60 + minute) * (last_x - first_x),
+        (FORECAST_LAST_HOUR - FORECAST_FIRST_HOUR) * 60);
+}
+
+static int tide_hour_x(int day, int hour) {
+    return tide_time_x(day, hour, 0);
 }
 
 static int text_fits(const char *text, size_t capacity) {
@@ -156,21 +203,24 @@ static int dashboard_valid(const wind_renderer_dashboard_t *dashboard) {
         (dashboard->refresh_failed != 0 && dashboard->refresh_failed != 1) ||
         dashboard->age_hours < 0 ||
         dashboard->battery_percent < -1 || dashboard->battery_percent > 100 ||
-        dashboard->display_mode < WIND_RENDERER_MODE_BACKGROUND_FADE ||
-        dashboard->display_mode >= WIND_RENDERER_MODE_COUNT ||
+        (dashboard->display_mode != WIND_RENDERER_MODE_THRESHOLD &&
+         dashboard->display_mode != WIND_RENDERER_MODE_SOLID) ||
         dashboard->threshold_kt < WIND_RENDERER_MIN_THRESHOLD_KT ||
         dashboard->threshold_kt > WIND_RENDERER_MAX_THRESHOLD_KT ||
         (dashboard->show_weather != 0 && dashboard->show_weather != 1) ||
         (dashboard->show_temperature != 0 && dashboard->show_temperature != 1) ||
         (dashboard->show_tide != 0 && dashboard->show_tide != 1) ||
+        (dashboard->show_dedicated_footer != 0 &&
+         dashboard->show_dedicated_footer != 1) ||
         (dashboard->use_24_hour != 0 && dashboard->use_24_hour != 1) ||
         (dashboard->temperature_fahrenheit != 0 &&
          dashboard->temperature_fahrenheit != 1) ||
         (dashboard->tide_available != 0 && dashboard->tide_available != 1) ||
         dashboard->tide_sample_count < 0 ||
         dashboard->tide_sample_count > WIND_RENDERER_MAX_TIDE_SAMPLES ||
+        dashboard->tide_extremum_count < 0 ||
+        dashboard->tide_extremum_count > WIND_RENDERER_MAX_TIDE_EXTREMA ||
         !text_fits(dashboard->spot_name, WIND_RENDERER_SPOT_NAME_CAPACITY) ||
-        !text_fits(dashboard->coordinates, WIND_RENDERER_COORDINATES_CAPACITY) ||
         !text_fits(dashboard->provider, WIND_RENDERER_PROVIDER_CAPACITY) ||
         !text_fits(dashboard->updated_time, WIND_RENDERER_UPDATED_TIME_CAPACITY)) {
         return 0;
@@ -200,6 +250,15 @@ static int dashboard_valid(const wind_renderer_dashboard_t *dashboard) {
             sample->day_index < 0 || sample->day_index >= WIND_RENDERER_DAY_COUNT ||
             sample->local_hour < 0 || sample->local_hour > 23) return 0;
     }
+    for (int index = 0; index < dashboard->tide_extremum_count; ++index) {
+        const wind_renderer_tide_extremum_t *extremum = &dashboard->tide_extrema[index];
+        if ((extremum->available != 0 && extremum->available != 1) ||
+            (extremum->is_high != 0 && extremum->is_high != 1) ||
+            extremum->day_index < 0 || extremum->day_index >= WIND_RENDERER_DAY_COUNT ||
+            extremum->local_hour < 0 || extremum->local_hour > 23 ||
+            extremum->local_minute < 0 || extremum->local_minute > 59 ||
+            extremum->local_minute % 15 != 0) return 0;
+    }
     if (dashboard->tide_available && dashboard->tide_sample_count < 2) return 0;
     return 1;
 }
@@ -222,43 +281,6 @@ static void fill_rect(canvas_t *canvas, int x, int y, int width, int height,
     }
     for (int row = y; row < y + height; ++row)
         memset(canvas->pixels + row * WIND_RENDERER_WIDTH + x, gray, (size_t)width);
-}
-
-static const uint8_t BAYER8[8][8] = {
-    { 0, 48, 12, 60,  3, 51, 15, 63},
-    {32, 16, 44, 28, 35, 19, 47, 31},
-    { 8, 56,  4, 52, 11, 59,  7, 55},
-    {40, 24, 36, 20, 43, 27, 39, 23},
-    { 2, 50, 14, 62,  1, 49, 13, 61},
-    {34, 18, 46, 30, 33, 17, 45, 29},
-    {10, 58,  6, 54,  9, 57,  5, 53},
-    {42, 26, 38, 22, 41, 25, 37, 21},
-};
-
-static bool dither_pixel_is_black(int x, int y, int density) {
-    if (density >= 100) return true;
-    if (density <= 0) return false;
-    return BAYER8[y & 7][x & 7] * 100 < density * 64;
-}
-
-static void draw_low_wind_background(canvas_t *canvas, bool clean_preview,
-                                     const dashboard_layout_t *layout) {
-    const int y_20kt = layout->wind_baseline - 20 * layout->chart_scale_height / 40;
-    const int y_15kt = layout->wind_baseline - 15 * layout->chart_scale_height / 40;
-    const int fade_height = y_15kt - y_20kt;
-    for (int py = y_20kt; py < layout->wind_baseline + 8; ++py) {
-        const int density = py >= y_15kt
-                                ? 12
-                                : (py - y_20kt) * 12 / fade_height;
-        for (int px = OUTER_X + 1; px < OUTER_RIGHT; ++px) {
-            if (clean_preview) {
-                set_pixel(canvas, px, py,
-                          (uint8_t)(CANVAS_WHITE - density * CANVAS_WHITE / 100));
-            } else if (dither_pixel_is_black(px, py, density)) {
-                set_pixel(canvas, px, py, CANVAS_BLACK);
-            }
-        }
-    }
 }
 
 static void horizontal_line(canvas_t *canvas, int x0, int x1, int y,
@@ -493,7 +515,8 @@ static void draw_sample(canvas_t *canvas, int center_x,
         return;
     }
 
-    draw_arrow(canvas, center_x, 158, sample->destination_degrees);
+    draw_arrow(canvas, center_x, DIRECTION_CENTER_Y,
+               sample->destination_degrees);
 
     const int sustained = clamp_int(sample->sustained_kt, 0, 40);
     const int gust = clamp_int(sample->gust_kt, 0, 40);
@@ -599,6 +622,42 @@ static void draw_tide_curve(canvas_t *canvas, const int *point_x,
             previous_y = y;
         }
     }
+}
+
+static void draw_tide_time_label(canvas_t *canvas,
+                                 const wind_renderer_dashboard_t *dashboard,
+                                 const dashboard_layout_t *layout, int day,
+                                 int hour, int minute, bool is_high,
+                                 bool show_minutes, int center_x,
+                                 int extremum_y) {
+    if (hour < FORECAST_FIRST_HOUR || hour > FORECAST_LAST_HOUR) return;
+    char time[8];
+    if (dashboard->use_24_hour) {
+        snprintf(time, sizeof(time), "%02d:%02d", hour, minute);
+    } else {
+        const int hour_12 = hour % 12 == 0 ? 12 : hour % 12;
+        if (show_minutes) {
+            snprintf(time, sizeof(time), "%d:%02d%s", hour_12, minute,
+                     hour < 12 ? "AM" : "PM");
+        } else {
+            snprintf(time, sizeof(time), "%d%s", hour_12,
+                     hour < 12 ? "AM" : "PM");
+        }
+    }
+
+    const wind_text_metrics_t metrics = wind_font_measure(
+        WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, WIND_FONT_SIZE_STATUS, time);
+    const int label_margin = metrics.width / 2 + 10;
+    const int label_center = clamp_int(
+        center_x, day_column_x(day) + label_margin,
+        day_column_x(day + 1) - label_margin);
+    const int baseline = clamp_int(
+        is_high ? extremum_y - 3 : extremum_y + 16,
+        layout->tide_top + 14, layout->tide_bottom - 5);
+    draw_outlined_text_center(
+        canvas, label_center, baseline,
+        WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED,
+        WIND_FONT_SIZE_STATUS, time);
 }
 
 static void draw_tide(canvas_t *canvas, const wind_renderer_dashboard_t *dashboard,
@@ -737,65 +796,157 @@ static void draw_tide(canvas_t *canvas, const wind_renderer_dashboard_t *dashboa
         draw_tide_curve(canvas, point_x, point_y, point_count,
                         first_x, last_x, curve_top, curve_bottom);
 
+        bool has_explicit_extrema = false;
+        for (int extremum = 0; extremum < dashboard->tide_extremum_count; ++extremum) {
+            const wind_renderer_tide_extremum_t *event = &dashboard->tide_extrema[extremum];
+            if (!event->available || event->day_index != day) continue;
+            has_explicit_extrema = true;
+            const int event_y = range == 0 ? curve_middle : clamp_int(
+                curve_bottom - divide_rounded(
+                    (event->sea_level_mm - minimum) * (curve_bottom - curve_top), range),
+                curve_top, curve_bottom);
+            draw_tide_time_label(
+                canvas, dashboard, layout, day, event->local_hour,
+                event->local_minute, event->is_high != 0, true,
+                tide_time_x(day, event->local_hour, event->local_minute), event_y);
+        }
+        if (has_explicit_extrema) continue;
+
         for (int extremum = 0; extremum < extrema_count; ++extremum) {
             const int position = extrema[extremum];
             const int index = points[position];
-            const bool is_high = extrema_is_high[extremum];
-
-            char time[8];
-            const int hour = dashboard->tide_samples[index].local_hour;
-            if (hour < FORECAST_FIRST_HOUR || hour > FORECAST_LAST_HOUR)
-                continue;
-            if (dashboard->use_24_hour) {
-                snprintf(time, sizeof(time), "%02d:00", hour);
-            } else {
-                const int hour_12 = hour % 12 == 0 ? 12 : hour % 12;
-                snprintf(time, sizeof(time), "%d%s", hour_12,
-                         hour < 12 ? "AM" : "PM");
-            }
-
-            const wind_text_metrics_t metrics = wind_font_measure(
-                WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED,
-                WIND_FONT_SIZE_STATUS, time);
-            const int label_margin = metrics.width / 2 + 10;
-            const int label_center = clamp_int(
-                point_x[position],
-                day_column_x(day) + label_margin,
-                day_column_x(day + 1) - label_margin);
-            const int extremum_y = point_y[position];
-            /* Both labels share the same optical shift so their outside
-             * margins read equally against the top and bottom borders. */
-            const int baseline = clamp_int(
-                is_high ? extremum_y - 3 : extremum_y + 16,
-                layout->tide_top + 14,
-                layout->tide_bottom - 5);
-            draw_outlined_text_center(
-                canvas, label_center, baseline,
-                WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED,
-                WIND_FONT_SIZE_STATUS, time);
+            draw_tide_time_label(
+                canvas, dashboard, layout, day,
+                dashboard->tide_samples[index].local_hour, 0,
+                extrema_is_high[extremum], false,
+                point_x[position], point_y[position]);
         }
     }
 }
 
-static void build_status(const wind_renderer_dashboard_t *dashboard,
-                         char *model, size_t model_size, char *update,
-                         size_t update_size) {
+static void build_footer_status(const wind_renderer_dashboard_t *dashboard,
+                                char *status, size_t status_size) {
     const char *provider = safe_text(dashboard->provider);
     const char *updated = safe_text(dashboard->updated_time);
     if (dashboard->state == WIND_RENDERER_UNAVAILABLE) {
-        snprintf(model, model_size, "/// UNAVAILABLE");
+        snprintf(status, status_size, "UNAVAILABLE // %s", updated);
     } else if (dashboard->state == WIND_RENDERER_STALE) {
-        snprintf(model, model_size, "/// %s / STALE %dh", provider,
-                 dashboard->age_hours);
+        snprintf(status, status_size, "%s // STALE %dh // %s", provider,
+                 dashboard->age_hours, updated);
     } else if (dashboard->refresh_failed) {
-        snprintf(model, model_size, "/// %s / OFFLINE", provider);
+        snprintf(status, status_size, "%s // OFFLINE // %s", provider,
+                 updated);
     } else if (dashboard->state == WIND_RENDERER_AGED) {
-        snprintf(model, model_size, "/// %s / AGED %dh", provider,
-                 dashboard->age_hours);
+        snprintf(status, status_size, "%s // AGED %dh // %s", provider,
+                 dashboard->age_hours, updated);
     } else {
-        snprintf(model, model_size, "/// %s", provider);
+        snprintf(status, status_size, "%s // %s", provider, updated);
     }
-    snprintf(update, update_size, ">> %s", updated);
+}
+
+static void build_header_update(const wind_renderer_dashboard_t *dashboard,
+                                char *update, size_t update_size) {
+    const char *updated = safe_text(dashboard->updated_time);
+    if (dashboard->state == WIND_RENDERER_UNAVAILABLE) {
+        snprintf(update, update_size, "UNAVAILABLE // %s", updated);
+    } else if (dashboard->state == WIND_RENDERER_STALE) {
+        snprintf(update, update_size, "STALE %dh // %s", dashboard->age_hours,
+                 updated);
+    } else if (dashboard->refresh_failed) {
+        snprintf(update, update_size, "OFFLINE // %s", updated);
+    } else if (dashboard->state == WIND_RENDERER_AGED) {
+        snprintf(update, update_size, "AGED %dh // %s", dashboard->age_hours,
+                 updated);
+    } else {
+        snprintf(update, update_size, "%s", updated);
+    }
+}
+
+static void build_time_axis_label(const wind_renderer_dashboard_t *dashboard,
+                                  const wind_renderer_sample_t *sample,
+                                  char *label, size_t label_size) {
+    const char *time = safe_text(sample->time);
+    if (!sample->available || !time[0]) {
+        label[0] = '\0';
+    } else if (dashboard->use_24_hour) {
+        snprintf(label, label_size, "%sh", time);
+    } else {
+        copy_bounded_text(label, label_size, time);
+    }
+}
+
+static void draw_footer(canvas_t *canvas,
+                        const wind_renderer_dashboard_t *dashboard) {
+    if (!dashboard->show_dedicated_footer) return;
+    const int row_top = FOOTER_TOP + 1;
+    const int row_bottom = WIND_RENDERER_HEIGHT - 1;
+    const int row_height = row_bottom - row_top + 1;
+    const wind_text_metrics_t footer_metrics = wind_font_measure(
+        WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, WIND_FONT_SIZE_FOOTER, "");
+    const int footer_text_baseline =
+        row_top + (row_height + footer_metrics.ascent - footer_metrics.descent) / 2 +
+        FOOTER_TEXT_OFFSET_Y;
+    const int footer_battery_center_y = row_top + (row_height - 1) / 2;
+
+    horizontal_line(canvas, OUTER_X, OUTER_RIGHT, FOOTER_TOP, CANVAS_BLACK);
+
+    char status[104];
+    build_footer_status(dashboard, status, sizeof(status));
+    const wind_text_metrics_t status_metrics = wind_font_measure(
+        WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED, WIND_FONT_SIZE_FOOTER,
+        status);
+    const int status_right = CONTENT_RIGHT - 34;
+    const int status_left = status_right - status_metrics.width + 1;
+
+    if (dashboard->state != WIND_RENDERER_UNAVAILABLE) {
+        for (int day = 0; day < FOOTER_TIME_DAY_COUNT; ++day) {
+            char last_label[WIND_RENDERER_TIME_LABEL_CAPACITY + 2];
+            build_time_axis_label(
+                dashboard,
+                &dashboard->days[day].samples[WIND_RENDERER_SAMPLES_PER_DAY - 1],
+                last_label, sizeof(last_label));
+            const wind_text_metrics_t last_metrics = wind_font_measure(
+                WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED,
+                WIND_FONT_SIZE_FOOTER, last_label);
+            const int last_label_right = forecast_sample_center_x(
+                day, WIND_RENDERER_SAMPLES_PER_DAY - 1) +
+                (last_metrics.width + 1) / 2;
+            if (last_label_right + FOOTER_STATUS_GAP > status_left) break;
+
+            for (int sample = 0; sample < WIND_RENDERER_SAMPLES_PER_DAY; ++sample) {
+                char label[WIND_RENDERER_TIME_LABEL_CAPACITY + 2];
+                build_time_axis_label(dashboard,
+                                      &dashboard->days[day].samples[sample],
+                                      label, sizeof(label));
+                if (!label[0]) continue;
+                const wind_text_metrics_t metrics = wind_font_measure(
+                    WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED,
+                    WIND_FONT_SIZE_FOOTER, label);
+                draw_text(canvas,
+                          forecast_sample_center_x(day, sample) -
+                              metrics.width / 2,
+                          footer_text_baseline,
+                          WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED,
+                          WIND_FONT_SIZE_FOOTER, label);
+            }
+        }
+    }
+
+    draw_text_right(canvas, status_right, footer_text_baseline,
+                    WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED,
+                    WIND_FONT_SIZE_FOOTER, status);
+    draw_battery(canvas, CONTENT_RIGHT, footer_battery_center_y,
+                 dashboard->battery_percent);
+}
+
+static void draw_header_status(canvas_t *canvas,
+                               const wind_renderer_dashboard_t *dashboard) {
+    char update[48];
+    build_header_update(dashboard, update, sizeof(update));
+    draw_battery(canvas, CONTENT_RIGHT, 36, dashboard->battery_percent);
+    draw_text_right(canvas, CONTENT_RIGHT, HEADER_TEXT_BASELINE,
+                    WIND_FONT_BERKELEY_MONO_BOLD_CONDENSED,
+                    WIND_FONT_SIZE_STATUS, update);
 }
 
 static void draw_wind_reference_lines(canvas_t *canvas, const dashboard_layout_t *layout) {
@@ -822,23 +973,6 @@ static void draw_battery(canvas_t *canvas, int right, int center_y,
         const int fill = clamp_int(percent, 0, 100) * (body_width - 4) / 100;
         fill_rect(canvas, x + 2, y + 2, fill, body_height - 4, CANVAS_BLACK);
     }
-}
-
-static void split_coordinates(const char *coordinates, char *first,
-                              size_t first_size, char *second,
-                              size_t second_size) {
-    const char *text = safe_text(coordinates);
-    const char *space = strchr(text, ' ');
-    if (!space) {
-        snprintf(first, first_size, "%s", text);
-        second[0] = '\0';
-        return;
-    }
-    const size_t first_length = (size_t)(space - text);
-    const size_t copied = first_length < first_size - 1 ? first_length : first_size - 1;
-    memcpy(first, text, copied);
-    first[copied] = '\0';
-    snprintf(second, second_size, "%s", space + 1);
 }
 
 static int divide_rounded(int value, int divisor) {
@@ -1001,12 +1135,22 @@ static void draw_threshold_overlay(canvas_t *scratch,
 
 static void draw_low_battery_overlay(canvas_t *scratch,
                                      output_surface_t *output,
-                                     int battery_percent) {
+                                     int battery_percent,
+                                     bool show_dedicated_footer) {
     if (battery_percent < 0 || battery_percent >= 10) return;
+    int battery_center_y = 50;
+    if (show_dedicated_footer) {
+        const int row_top = FOOTER_TOP + 1;
+        const int row_bottom = WIND_RENDERER_HEIGHT - 1;
+        const int row_height = row_bottom - row_top + 1;
+        battery_center_y = row_top + (row_height - 1) / 2;
+    }
+
     memset(scratch->pixels, CANVAS_WHITE, WIND_RENDERER_PALETTE_BYTES);
-    draw_battery(scratch, CONTENT_RIGHT, 72, battery_percent);
-    apply_mask_to_output(scratch, output, CONTENT_RIGHT - 24, 65,
-                         CONTENT_RIGHT + 1, 78, OUTPUT_RED);
+    draw_battery(scratch, CONTENT_RIGHT, battery_center_y, battery_percent);
+    apply_mask_to_output(scratch, output, CONTENT_RIGHT - 24,
+                         battery_center_y - 7, CONTENT_RIGHT + 1,
+                         battery_center_y + 6, OUTPUT_RED);
 }
 
 uint32_t wind_renderer_contract_version(void) {
@@ -1020,22 +1164,20 @@ void wind_renderer_input_v2_init(wind_renderer_input_v2_t *input) {
     input->battery_percent = -1;
     input->threshold_kt = WIND_RENDERER_DEFAULT_THRESHOLD_KT;
     input->show_weather = 1;
+    input->show_dedicated_footer = 1;
 }
 
 int wind_renderer_input_v2_set_metadata(wind_renderer_input_v2_t *input,
                                         const char *spot_name,
-                                        const char *coordinates,
                                         const char *provider,
                                         const char *updated_time) {
     if (!input || input->version != WIND_RENDERER_CONTRACT_VERSION ||
         !text_fits(safe_text(spot_name), sizeof(input->spot_name)) ||
-        !text_fits(safe_text(coordinates), sizeof(input->coordinates)) ||
         !text_fits(safe_text(provider), sizeof(input->provider)) ||
         !text_fits(safe_text(updated_time), sizeof(input->updated_time))) {
         return -1;
     }
     copy_bounded_text(input->spot_name, sizeof(input->spot_name), spot_name);
-    copy_bounded_text(input->coordinates, sizeof(input->coordinates), coordinates);
     copy_bounded_text(input->provider, sizeof(input->provider), provider);
     copy_bounded_text(input->updated_time, sizeof(input->updated_time), updated_time);
     return 0;
@@ -1052,8 +1194,8 @@ int wind_renderer_input_v2_set_status(wind_renderer_input_v2_t *input,
         state > WIND_RENDERER_UNAVAILABLE ||
         (refresh_failed != 0 && refresh_failed != 1) || age_hours < 0 ||
         battery_percent < -1 || battery_percent > 100 ||
-        display_mode < WIND_RENDERER_MODE_BACKGROUND_FADE ||
-        display_mode >= WIND_RENDERER_MODE_COUNT ||
+        (display_mode != WIND_RENDERER_MODE_THRESHOLD &&
+         display_mode != WIND_RENDERER_MODE_SOLID) ||
         threshold_kt < WIND_RENDERER_MIN_THRESHOLD_KT ||
         threshold_kt > WIND_RENDERER_MAX_THRESHOLD_KT) {
         return -1;
@@ -1086,14 +1228,17 @@ int wind_renderer_input_v2_set_display_rows(wind_renderer_input_v2_t *input,
 
 int wind_renderer_input_v2_set_preferences(wind_renderer_input_v2_t *input,
                                            int use_24_hour,
-                                           int temperature_fahrenheit) {
+                                           int temperature_fahrenheit,
+                                           int show_dedicated_footer) {
     if (!input || input->version != WIND_RENDERER_CONTRACT_VERSION ||
         (use_24_hour != 0 && use_24_hour != 1) ||
-        (temperature_fahrenheit != 0 && temperature_fahrenheit != 1)) {
+        (temperature_fahrenheit != 0 && temperature_fahrenheit != 1) ||
+        (show_dedicated_footer != 0 && show_dedicated_footer != 1)) {
         return -1;
     }
     input->use_24_hour = use_24_hour;
     input->temperature_fahrenheit = temperature_fahrenheit;
+    input->show_dedicated_footer = show_dedicated_footer;
     return 0;
 }
 
@@ -1166,6 +1311,29 @@ int wind_renderer_input_v2_set_tide_sample(wind_renderer_input_v2_t *input,
     return 0;
 }
 
+int wind_renderer_input_v2_set_tide_extremum(
+    wind_renderer_input_v2_t *input, int extremum_index, int day_index,
+    int local_hour, int local_minute, int sea_level_mm, int is_high,
+    int available) {
+    if (!input || input->version != WIND_RENDERER_CONTRACT_VERSION ||
+        extremum_index < 0 || extremum_index >= WIND_RENDERER_MAX_TIDE_EXTREMA ||
+        day_index < 0 || day_index >= WIND_RENDERER_DAY_COUNT ||
+        local_hour < 0 || local_hour > 23 || local_minute < 0 ||
+        local_minute > 59 || local_minute % 15 != 0 ||
+        (is_high != 0 && is_high != 1) || (available != 0 && available != 1)) return -1;
+    input->tide_extrema[extremum_index] = (wind_renderer_input_tide_extremum_v2_t) {
+        .day_index = day_index,
+        .local_hour = local_hour,
+        .local_minute = local_minute,
+        .sea_level_mm = sea_level_mm,
+        .is_high = is_high,
+        .available = available,
+    };
+    if (extremum_index >= input->tide_extremum_count)
+        input->tide_extremum_count = extremum_index + 1;
+    return 0;
+}
+
 int wind_renderer_input_v2_to_dashboard(const wind_renderer_input_v2_t *input,
                                         wind_renderer_dashboard_t *dashboard) {
     if (!input || !dashboard || input->version != WIND_RENDERER_CONTRACT_VERSION)
@@ -1173,7 +1341,6 @@ int wind_renderer_input_v2_to_dashboard(const wind_renderer_input_v2_t *input,
 
     wind_renderer_dashboard_t result = {0};
     result.spot_name = input->spot_name;
-    result.coordinates = input->coordinates;
     result.provider = input->provider;
     result.updated_time = input->updated_time;
     result.state = (wind_renderer_state_t)input->state;
@@ -1185,6 +1352,7 @@ int wind_renderer_input_v2_to_dashboard(const wind_renderer_input_v2_t *input,
     result.show_weather = input->show_weather;
     result.show_temperature = input->show_temperature;
     result.show_tide = input->show_tide;
+    result.show_dedicated_footer = input->show_dedicated_footer;
     result.use_24_hour = input->use_24_hour;
     result.temperature_fahrenheit = input->temperature_fahrenheit;
     result.tide_available = input->tide_available;
@@ -1195,6 +1363,17 @@ int wind_renderer_input_v2_to_dashboard(const wind_renderer_input_v2_t *input,
             .local_hour = input->tide_samples[index].local_hour,
             .sea_level_mm = input->tide_samples[index].sea_level_mm,
             .available = input->tide_samples[index].available,
+        };
+    }
+    result.tide_extremum_count = input->tide_extremum_count;
+    for (int index = 0; index < input->tide_extremum_count; ++index) {
+        result.tide_extrema[index] = (wind_renderer_tide_extremum_t) {
+            .day_index = input->tide_extrema[index].day_index,
+            .local_hour = input->tide_extrema[index].local_hour,
+            .local_minute = input->tide_extrema[index].local_minute,
+            .sea_level_mm = input->tide_extrema[index].sea_level_mm,
+            .is_high = input->tide_extrema[index].is_high,
+            .available = input->tide_extrema[index].available,
         };
     }
     for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day) {
@@ -1274,42 +1453,29 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
     if (stats) memset(stats, 0, sizeof(*stats));
     const dashboard_layout_t layout = dashboard_layout(dashboard);
 
+    const int frame_bottom = dashboard->show_dedicated_footer
+                                 ? FOOTER_TOP
+                                 : OUTER_BOTTOM;
     outline_rect(&canvas, OUTER_X, OUTER_TOP, OUTER_RIGHT - OUTER_X + 1,
-                 OUTER_BOTTOM - OUTER_TOP + 1);
+                 frame_bottom - OUTER_TOP + 1);
     horizontal_line(&canvas, OUTER_X, OUTER_RIGHT, HEADER_BOTTOM, CANVAS_BLACK);
 
-    char model[64];
-    char update[32];
-    build_status(dashboard, model, sizeof(model), update, sizeof(update));
-
-    if (dashboard->display_mode == WIND_RENDERER_MODE_BACKGROUND_FADE)
-        draw_low_wind_background(&canvas, output_format == OUTPUT_RGBA, &layout);
     draw_wind_reference_lines(&canvas, &layout);
 
-    const int header_text_right = 565;
+    const int header_text_right = dashboard->show_dedicated_footer
+                                      ? CONTENT_RIGHT
+                                      : 630;
     const int header_width = header_text_right - CONTENT_LEFT + 1;
-    char coordinate_first[64];
-    char coordinate_second[64];
-    split_coordinates(dashboard->coordinates, coordinate_first,
-                      sizeof(coordinate_first), coordinate_second,
-                      sizeof(coordinate_second));
+    char spot_name[WIND_RENDERER_SPOT_NAME_CAPACITY];
+    uppercase_spot_name(spot_name, sizeof(spot_name), dashboard->spot_name);
     const wind_text_metrics_t name_metrics = wind_font_measure(
-        WIND_FONT_INTER, WIND_FONT_SIZE_SPOT, safe_text(dashboard->spot_name));
-    const wind_text_metrics_t coordinate_first_metrics = wind_font_measure(
-        WIND_FONT_BERKELEY_MONO_BOLD, WIND_FONT_SIZE_STATUS, coordinate_first);
-    const wind_text_metrics_t coordinate_second_metrics = wind_font_measure(
-        WIND_FONT_BERKELEY_MONO_BOLD, WIND_FONT_SIZE_STATUS, coordinate_second);
-    const int coordinate_width = coordinate_first_metrics.width > coordinate_second_metrics.width
-                                     ? coordinate_first_metrics.width
-                                     : coordinate_second_metrics.width;
-    const int coordinates_included = *safe_text(dashboard->coordinates) &&
-        name_metrics.width + 20 + coordinate_width <= header_width;
-    draw_text(&canvas, CONTENT_LEFT, 78, WIND_FONT_INTER, WIND_FONT_SIZE_SPOT,
-              safe_text(dashboard->spot_name));
+        WIND_FONT_INTER, WIND_FONT_SIZE_SPOT, spot_name);
+    draw_text(&canvas, CONTENT_LEFT, HEADER_TEXT_BASELINE, WIND_FONT_INTER,
+              WIND_FONT_SIZE_SPOT, spot_name);
     if (name_metrics.width > header_width) {
         const int fade_width = 240;
-        const int name_top = 78 - name_metrics.ascent;
-        const int name_bottom = 78 + name_metrics.descent;
+        const int name_top = HEADER_TEXT_BASELINE - name_metrics.ascent;
+        const int name_bottom = HEADER_TEXT_BASELINE + name_metrics.descent;
         const int ink_right = rightmost_ink_pixel(
             &canvas, CONTENT_LEFT, name_top, header_text_right, name_bottom);
         fade_region_to_white(&canvas,
@@ -1323,23 +1489,7 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
                   WIND_RENDERER_WIDTH - OUTER_RIGHT - 1,
                   name_bottom - name_top + 1, CANVAS_WHITE);
     }
-    if (coordinates_included) {
-        const int coordinate_x = CONTENT_LEFT + name_metrics.width + 20;
-        draw_text(&canvas, coordinate_x, 59, WIND_FONT_BERKELEY_MONO_BOLD,
-                  WIND_FONT_SIZE_STATUS, coordinate_first);
-        draw_text(&canvas, coordinate_x, 78, WIND_FONT_BERKELEY_MONO_BOLD,
-                  WIND_FONT_SIZE_STATUS, coordinate_second);
-    }
-
-    draw_text_right(&canvas, CONTENT_RIGHT, 58, WIND_FONT_BERKELEY_MONO_BOLD,
-                    WIND_FONT_SIZE_STATUS, model);
-    draw_battery(&canvas, CONTENT_RIGHT, 72, dashboard->battery_percent);
-    const int status_character_width = wind_font_measure(
-        WIND_FONT_BERKELEY_MONO_BOLD, WIND_FONT_SIZE_STATUS, "0").width;
-    draw_text_right(&canvas, CONTENT_RIGHT - 30 - status_character_width, 78,
-                    WIND_FONT_BERKELEY_MONO_BOLD,
-                    WIND_FONT_SIZE_STATUS, update);
-
+    if (!dashboard->show_dedicated_footer) draw_header_status(&canvas, dashboard);
     horizontal_line(&canvas, OUTER_X, OUTER_RIGHT, DAY_HEADER_BOTTOM,
                     CANVAS_BLACK);
     if (dashboard->show_weather || dashboard->show_temperature) {
@@ -1355,10 +1505,12 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
     for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day) {
         const int column_x = day_column_x(day);
         if (day > 0)
-            vertical_line(&canvas, column_x, HEADER_BOTTOM, OUTER_BOTTOM,
+            vertical_line(&canvas, column_x, HEADER_BOTTOM,
+                          dashboard->show_dedicated_footer ? FOOTER_TOP : OUTER_BOTTOM,
                           CANVAS_BLACK);
-        draw_text(&canvas, column_x + 17, 126, WIND_FONT_BERKELEY_MONO_BOLD,
-                  WIND_FONT_SIZE_DAY, safe_text(dashboard->days[day].day));
+        draw_text(&canvas, column_x + 17, DAY_LABEL_BASELINE,
+                  WIND_FONT_BERKELEY_MONO_BOLD, WIND_FONT_SIZE_DAY,
+                  safe_text(dashboard->days[day].day));
         for (int sample = 0; sample < WIND_RENDERER_SAMPLES_PER_DAY; ++sample) {
             if (dashboard->state != WIND_RENDERER_UNAVAILABLE)
                 draw_sample(&canvas,
@@ -1387,9 +1539,11 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
         const char *message = "FORECAST UNAVAILABLE";
         const wind_text_metrics_t metrics = wind_font_measure(
             WIND_FONT_BERKELEY_MONO_BOLD, WIND_FONT_SIZE_DAY, message);
-        draw_text(&canvas, (WIND_RENDERER_WIDTH - metrics.width) / 2, 312,
+        draw_text(&canvas, (WIND_RENDERER_WIDTH - metrics.width) / 2, 299,
                   WIND_FONT_BERKELEY_MONO_BOLD, WIND_FONT_SIZE_DAY, message);
     }
+
+    draw_footer(&canvas, dashboard);
 
     int output_result = 0;
     if (output_format == OUTPUT_PALETTE) {
@@ -1414,13 +1568,13 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
         draw_threshold_overlay(&canvas, &output, dashboard, &layout);
     if (output_result == 0)
         draw_low_battery_overlay(&canvas, &output,
-                                 dashboard->battery_percent);
+                                 dashboard->battery_percent,
+                                 dashboard->show_dedicated_footer != 0);
     if (stats) {
         stats->dither_passes = output_result == 0 &&
                                       output_format == OUTPUT_PALETTE
                                   ? 1
                                   : 0;
-        stats->coordinates_included = coordinates_included;
         stats->status_right = CONTENT_RIGHT;
         stats->clipped_primitives = canvas.clipped;
         stats->wind_baseline = layout.wind_baseline;

@@ -79,6 +79,17 @@ TEST(WindForecast, ConvertsSourceDirectionToDestinationDirection)
     EXPECT_EQ(wind_forecast_destination_degrees(359), 179);
 }
 
+TEST(WindForecast, FormatsEveryModelIdForTheDashboard)
+{
+    EXPECT_STREQ(wind_forecast_model_screen_name("best_match"), "BEST MATCH");
+    EXPECT_STREQ(wind_forecast_model_screen_name("knmi_seamless"), "KNMI SEAMLESS");
+    EXPECT_STREQ(wind_forecast_model_screen_name("ecmwf_ifs025"), "ECMWF IFS");
+    EXPECT_STREQ(wind_forecast_model_screen_name("icon_seamless"), "DWD ICON");
+    EXPECT_STREQ(wind_forecast_model_screen_name("gfs_seamless"), "NOAA GFS");
+    EXPECT_STREQ(wind_forecast_model_screen_name("future_model"), "future_model");
+    EXPECT_STREQ(wind_forecast_model_screen_name(nullptr), "");
+}
+
 TEST(WindForecast, ClassifiesWeatherAtExactCloudAndRainBoundaries)
 {
     wind_forecast_sample_t sample{};

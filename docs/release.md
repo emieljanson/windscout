@@ -42,6 +42,39 @@ Before enabling the Pages deployment:
 - Keep the custom domain on `windscout-site` until the new Pages deployment has
   passed at its temporary URL.
 
+## Installer diagnostics setup
+
+Installer failures are reported to Sentry only from production builds. This is
+not general website monitoring: successful installs, configurator use and
+errors outside the installer must not create events.
+
+To enable diagnostics, configure all of these Actions values. A release still
+builds without them; diagnostics and source-map upload are then disabled:
+
+- Repository variable `VITE_SENTRY_DSN`: the public browser DSN.
+- Repository variables `SENTRY_ORG` and `SENTRY_PROJECT`: both currently use
+  `windscout`.
+- Actions secret `SENTRY_AUTH_TOKEN`: a Sentry token with release and project
+  access. Never put this token in source, logs, screenshots or artifacts.
+
+The Sentry project must keep these defenses enabled:
+
+- Store no visitor IP addresses and apply Sentry's default data scrubber.
+- Scrub passwords, passphrases, SSIDs, BSSIDs, authorization values, cookies,
+  tokens, API keys, secrets, coordinates, email addresses, IP addresses and
+  configuration fields.
+- Accept browser events only from `windscout.emieljanson.com` and the temporary
+  `emieljanson.github.io` Pages origin.
+- Keep spike protection enabled.
+- Keep the active `WindScout installer failures` alert. It emails issue owners,
+  or recently active project members when no owner exists, for new or regressed
+  events tagged `windscout.diagnostic=installer`.
+
+When Sentry is configured, the release build uses the Git commit SHA as the
+Sentry release, uploads hidden source maps, and removes every `.map` file before
+GitHub Pages packaging. The public DSN may be exposed in the JavaScript bundle;
+the auth token may not.
+
 ## Moving the production domain
 
 The DNS record already targets `emieljanson.github.io`, so no DNS redesign is
@@ -65,6 +98,8 @@ checked-in `CNAME` file is not a replacement when Pages is deployed by Actions.
 - `npm run renderer:check` in `web/`
 - `npm run spots:catalog:check` in `web/`
 - `npm run build` in `web/`; verify `esptool-js` remains in a lazy chunk
+- A Sentry-enabled release uploads source maps; every release leaves no `.map`
+  file in the deployable site artifact
 - `make -C firmware test`
 - `python3 firmware/scripts/test_generate_installer_manifest.py`
 - E1002 ESP-IDF 6.0.2 release build
@@ -94,6 +129,27 @@ Use a unique test password, then confirm it appears nowhere in browser storage,
 URLs, analytics, network requests other than the active USB exchange, console
 output, firmware logs, diagnostics, screenshots, toasts, or test artifacts.
 Confirm the password input clears after submission and rejection.
+
+Before enabling a new diagnostics release, create one controlled installer
+failure and verify all of the following:
+
+1. The Sonner toast changes from `Sending technical details…` to
+   `Technical details sent`, and the same `WS-…` reference stays selectable in
+   the recovery screen.
+2. Searching Sentry for `windscout.reference:<reference>` finds exactly that
+   event. The phase, stable error code and filtered timeline are useful.
+3. The event payload contains none of the planted password, SSID, configuration
+   values, coordinates, email, IP address, cookies, headers, request body, full
+   user agent or URL query values.
+4. Blocking `ingest.de.sentry.io` changes the toast to
+   `Technical details could not be sent.` without changing recovery controls or
+   USB safe-to-disconnect guidance, and no reference is displayed.
+5. A complete successful install sends no Sentry request.
+6. The deployed site serves no JavaScript source-map file, while the controlled
+   Sentry event still resolves to readable production source locations.
+
+Record the tested release, browser and reference in the release notes. Do not
+paste the planted password or raw diagnostic payload into those notes.
 
 The E1002 has one setup path: the website over USB. Do not publish the installer
 as generally available until the physical matrix has passed on one real E1002.

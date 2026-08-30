@@ -1,33 +1,15 @@
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { ref } from 'vue'
 
-export const COMPACT_VIEWPORT_QUERY = '(max-width: 56rem)'
+export const FLOATING_INSPECTOR_VIEWPORT_QUERY = '(min-width: 56.0625rem)'
+
+function isMobileDevice() {
+  if (typeof navigator === 'undefined') return false
+  if (navigator.userAgentData?.mobile === true) return true
+  const userAgent = navigator.userAgent ?? ''
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(userAgent)
+    || (/Macintosh/i.test(userAgent) && navigator.maxTouchPoints > 1)
+}
 
 export function useCompactViewport() {
-  const initialMediaQuery = typeof window === 'undefined'
-    ? null
-    : window.matchMedia?.(COMPACT_VIEWPORT_QUERY) ?? null
-  const isCompact = ref(initialMediaQuery?.matches ?? (
-    typeof window !== 'undefined' && window.innerWidth <= 896
-  ))
-  let mediaQuery = initialMediaQuery
-
-  function update(event) {
-    isCompact.value = event?.matches
-      ?? mediaQuery?.matches
-      ?? window.innerWidth <= 896
-  }
-
-  onMounted(() => {
-    mediaQuery = window.matchMedia?.(COMPACT_VIEWPORT_QUERY) ?? null
-    update()
-    mediaQuery?.addEventListener?.('change', update)
-    if (!mediaQuery?.addEventListener) mediaQuery?.addListener?.(update)
-  })
-
-  onBeforeUnmount(() => {
-    mediaQuery?.removeEventListener?.('change', update)
-    if (!mediaQuery?.removeEventListener) mediaQuery?.removeListener?.(update)
-  })
-
-  return { isCompact }
+  return { isCompact: ref(isMobileDevice()) }
 }

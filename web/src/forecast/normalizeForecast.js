@@ -62,23 +62,6 @@ function updatedTimeAt(timestamp, timezone) {
   return `${values.day} ${values.month.toUpperCase()} ${values.hour}${values.dayPeriod.toUpperCase()}`
 }
 
-function dms(value, positive, negative) {
-  const absolute = Math.abs(value)
-  let degrees = Math.trunc(absolute)
-  const minutesFull = (absolute - degrees) * 60
-  let minutes = Math.trunc(minutesFull)
-  let seconds = Math.floor((minutesFull - minutes) * 60 + 0.5)
-  if (seconds === 60) {
-    seconds = 0
-    minutes += 1
-  }
-  if (minutes === 60) {
-    minutes = 0
-    degrees += 1
-  }
-  return `${degrees}\u00b0${String(minutes).padStart(2, '0')}'${String(seconds).padStart(2, '0')}"${value >= 0 ? positive : negative}`
-}
-
 function weatherState(cloudCover, precipitation, isDay) {
   if (![cloudCover, precipitation, isDay].every(Number.isFinite) ||
       cloudCover < 0 || cloudCover > 100 || precipitation < 0 || precipitation > 655.35 ||
@@ -209,7 +192,6 @@ export function normalizeForecast(response, spot, {
     schemaVersion: 2,
     spotId: spot.id,
     spotName: spot.displayName,
-    coordinates: `${dms(spot.latitude, 'N', 'S')} ${dms(spot.longitude, 'E', 'W')}`,
     timezone: spot.timezone,
     provider: 'OPEN-METEO',
     modelId: model.id,
@@ -233,14 +215,13 @@ export function normalizeForecastModels(response, spot, {
 export function isNormalizedForecast(value) {
   const model = getForecastModel(value?.modelId)
   if (!value || value.schemaVersion !== 2 || typeof value.spotId !== 'string' || !value.spotId ||
-      typeof value.spotName !== 'string' || !value.spotName || typeof value.coordinates !== 'string' ||
+      typeof value.spotName !== 'string' || !value.spotName ||
       !validTimezone(value.timezone) || value.provider !== 'OPEN-METEO' ||
       !model || value.model !== model.screenLabel ||
       typeof value.updatedTime !== 'string' ||
       !Number.isFinite(value.retrievedAt) || value.retrievedAt <= 0 ||
       !Array.isArray(value.days) || value.days.length !== 5) return false
   if (!textFitsRenderer(value.spotName, RENDERER_TEXT_CAPACITIES.spotName) ||
-      !textFitsRenderer(value.coordinates, RENDERER_TEXT_CAPACITIES.coordinates) ||
       !textFitsRenderer(value.model, RENDERER_TEXT_CAPACITIES.provider) ||
       !textFitsRenderer(value.updatedTime, RENDERER_TEXT_CAPACITIES.updatedTime)) return false
 

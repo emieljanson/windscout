@@ -51,6 +51,7 @@ describe('WindScout settings panel', () => {
       'Weather',
       'Temperature',
       'Tide',
+      'Legend',
     ])
     expect(wrapper.text()).not.toContain('Treatment')
     expect(wrapper.text()).not.toContain('Time format')

@@ -1,5 +1,5 @@
 <script setup>
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
@@ -17,11 +17,12 @@ import {
   enhanceE1002Surface,
   fitScreenUnderBezel,
 } from '../configurator/deviceSurface'
-import { loadE1002Model } from '../configurator/modelLoader'
+import { hideE1002Stand, loadE1002Model } from '../configurator/modelLoader'
 import {
   applyHeroPose,
   calculateSceneComposition,
   configureOrbitControls,
+  createUsbCameraAnimation,
   isWebGLAvailable,
 } from '../configurator/sceneController'
 import { createResourceLifetime } from '../configurator/sceneLifetime'
@@ -30,8 +31,28 @@ import { createProductStudioEnvironment } from '../configurator/studioEnvironmen
 import { configureAmbientOcclusion } from '../configurator/ambientOcclusion'
 import { PRODUCT_LIGHTING } from '../configurator/productLighting'
 import { scheduleSceneLoadingLabel } from '../configurator/sceneLoadingState'
+import {
+  cablePoseAt,
+  createUsbCable,
+  createUsbCableAnimation,
+} from '../configurator/usbCable'
 
+const props = defineProps({
+  focusUsbConnection: { type: Boolean, default: false },
+  showUsbCable: { type: Boolean, default: false },
+})
 const emit = defineEmits(['ready', 'error'])
+const cableLabEnabled = import.meta.env.DEV
+  && new URLSearchParams(window.location.search).has('cableLab')
+const cableLab = reactive({
+  distance: 0.9,
+  gridHorizonEnd: 3.2,
+  gridHorizonStart: 0.9,
+  hazeEnd: 1.2,
+  hazeStart: 0.5,
+  speed: 0.45,
+})
+const cableLabDuration = computed(() => cableLab.distance / cableLab.speed)
 const host = ref(null)
 const status = ref('loading')
 const showLoadingStatus = ref(false)
@@ -43,6 +64,7 @@ const {
   pendingForecastRevision,
   selectedModelId,
   selectedSpotId,
+  showDedicatedFooter,
   showThreshold,
   threshold,
   showWeather,
@@ -71,6 +93,10 @@ let keyLight
 let softbox
 let accent
 let rimLight
+let usbCable
+let usbCableAnimation
+let usbCameraAnimation
+let reduceMotionQuery
 
 function currentDisplayConfig() {
   return {
@@ -79,6 +105,7 @@ function currentDisplayConfig() {
     showWeather: showWeather.value,
     showTemperature: showTemperature.value,
     showTide: effectiveShowTide.value,
+    showDedicatedFooter: showDedicatedFooter.value,
     timeFormat: timeFormat.value,
     temperatureUnit: temperatureUnit.value,
     tide: tide.value,
@@ -104,18 +131,27 @@ function resize() {
   const hostBounds = host.value.getBoundingClientRect()
   const settingsBounds = settingsPanel?.getBoundingClientRect()
   const settingsTop = settingsBounds ? settingsBounds.top - hostBounds.top : height
-  const composition = calculateSceneComposition({ width, height, settingsTop })
-  const nextCompositionMode = width <= 56 * 16 ? 'compact' : 'wide'
+  const panelIsCentered = settingsBounds && Math.abs(
+    (settingsBounds.left - hostBounds.left) - (hostBounds.right - settingsBounds.right),
+  ) <= 1
+  const panelPlacement = settingsPanel?.classList.contains('settings-panel--compact') || panelIsCentered
+    ? 'overlay'
+    : settingsBounds && settingsBounds.top < hostBounds.bottom
+      ? 'side'
+      : 'stacked'
+  const composition = calculateSceneComposition({ width, height, settingsTop, panelPlacement })
+  const nextCompositionMode = panelPlacement === 'side' ? 'wide' : 'compact'
+  usbCable?.setCompositionMode(nextCompositionMode)
   renderer.setSize(width, height, false)
   composer?.setSize(width, height)
   camera.aspect = width / height
   camera.zoom = composition.zoom
-  if ((status.value === 'loading' || compositionMode !== nextCompositionMode) && controls) {
-    applyHeroPose(camera, controls, width / height)
+  if ((status.value === 'loading' || compositionMode !== nextCompositionMode) && controls && !props.focusUsbConnection) {
+    applyHeroPose(camera, controls, width / height, nextCompositionMode === 'compact')
   }
   compositionMode = nextCompositionMode
-  // Keep the orbit target on the product, while composing it inside the actual
-  // space left free by the floating inspector.
+  // Keep the orbit target on the product while composing it inside the space
+  // left free by the panel in its current placement.
   if (composition.viewOffsetX || composition.viewOffsetY) {
     camera.setViewOffset(
       width,
@@ -139,12 +175,14 @@ function scheduleViewportResize() {
   })
 }
 
-function renderFrame() {
+function renderFrame(timestamp) {
   animationFrame = undefined
-  const changed = controls?.update() ?? false
+  const cameraAnimating = usbCameraAnimation?.update(timestamp) ?? false
+  const changed = cameraAnimating ? false : (controls?.update() ?? false)
+  const cableAnimating = usbCableAnimation?.update(timestamp) ?? false
   if (composer) composer.render()
   else renderer?.render(scene, camera)
-  if (changed) requestRender()
+  if (changed || cameraAnimating || cableAnimating) requestRender()
 }
 
 function requestRender() {
@@ -169,9 +207,53 @@ function stopLoadingStatus() {
 function resetView() {
   if (camera && controls) {
     const aspect = host.value ? host.value.clientWidth / Math.max(host.value.clientHeight, 1) : 1.5
-    applyHeroPose(camera, controls, aspect)
+    applyHeroPose(camera, controls, aspect, compositionMode === 'compact')
     requestRender()
   }
+}
+
+function updateUsbCableVisibility(visible) {
+  usbCableAnimation?.setVisible(visible)
+}
+
+function updateSceneFocus() {
+  usbCameraAnimation?.setUsbView(props.focusUsbConnection)
+}
+
+function applyCableLabSettings() {
+  if (!cableLabEnabled) return
+  const connectedX = cablePoseAt(1).connector.x
+  const hazeEnd = Math.max(cableLab.hazeStart + 0.02, cableLab.hazeEnd)
+  usbCable?.setTravelStartX(connectedX + cableLab.distance)
+  usbCable?.setDistanceFade(cableLab.hazeStart, hazeEnd)
+  usbCableAnimation?.setDuration(cableLabDuration.value * 1000)
+  const gridUniforms = scene?.getObjectByName('SURFACE_GRID')?.material?.uniforms
+  if (gridUniforms) {
+    gridUniforms.stageFadeStart.value = cableLab.hazeStart
+    gridUniforms.stageFadeEnd.value = hazeEnd
+    gridUniforms.horizonFadeStart.value = cableLab.gridHorizonStart
+    gridUniforms.horizonFadeEnd.value = Math.max(
+      cableLab.gridHorizonStart + 0.05,
+      cableLab.gridHorizonEnd,
+    )
+  }
+  requestRender()
+}
+
+function runCableLab(visible) {
+  applyCableLabSettings()
+  usbCableAnimation?.setVisible(visible)
+}
+
+function setCableLabCamera(view) {
+  if (view === 'cable') usbCameraAnimation?.setCableView(true)
+  else usbCameraAnimation?.setUsbView(view === 'usb')
+}
+
+function handleReducedMotionChange(event) {
+  if (!event.matches) return
+  usbCableAnimation?.finishForReducedMotion()
+  usbCameraAnimation?.finishForReducedMotion()
 }
 
 function createPerspectiveSurface() {
@@ -182,8 +264,12 @@ function createPerspectiveSurface() {
     toneMapped: false,
     extensions: { derivatives: true },
     uniforms: {
+      horizonFadeEnd: { value: 1.35 },
+      horizonFadeStart: { value: 0.58 },
       lineColor: { value: new THREE.Color(0x6f7784) },
       spacing: { value: 0.032 },
+      stageFadeEnd: { value: 0.82 },
+      stageFadeStart: { value: 0.28 },
     },
     vertexShader: `
       varying vec3 vWorldPosition;
@@ -197,6 +283,10 @@ function createPerspectiveSurface() {
     fragmentShader: `
       uniform vec3 lineColor;
       uniform float spacing;
+      uniform float horizonFadeStart;
+      uniform float horizonFadeEnd;
+      uniform float stageFadeStart;
+      uniform float stageFadeEnd;
       varying vec3 vWorldPosition;
 
       void main() {
@@ -207,8 +297,8 @@ function createPerspectiveSurface() {
         float cellSizeInPixels = 1.0 / max(footprint.x, footprint.y);
         float densityFade = smoothstep(3.5, 9.0, cellSizeInPixels);
         float cameraDistance = distance(cameraPosition, vWorldPosition);
-        float horizonFade = 1.0 - smoothstep(0.58, 1.35, cameraDistance);
-        float stageFade = 1.0 - smoothstep(0.28, 0.82, length(vWorldPosition.xz));
+        float horizonFade = 1.0 - smoothstep(horizonFadeStart, horizonFadeEnd, cameraDistance);
+        float stageFade = 1.0 - smoothstep(stageFadeStart, stageFadeEnd, length(vWorldPosition.xz));
 
         float surfaceVeil = horizonFade * stageFade * 0.032;
         float gridAlpha = line * densityFade * horizonFade * stageFade * stageFade * 0.24;
@@ -314,6 +404,13 @@ async function initialize() {
     configureOrbitControls(controls)
     controls.addEventListener('change', requestRender)
     resetView()
+    usbCameraAnimation = createUsbCameraAnimation({
+      camera,
+      controls,
+      reducedMotion: () => reduceMotionQuery.matches,
+      requestRender,
+    })
+    updateSceneFocus()
 
     environmentMap = createProductStudioEnvironment(renderer, lighting.environment)
     scene.environment = environmentMap
@@ -367,6 +464,7 @@ async function initialize() {
     const loadedModel = await loadE1002Model()
     if (!lifetime.adopt(loadedModel, disposeObject)) return
     model = loadedModel
+    hideE1002Stand(model)
     disposeSurface = enhanceE1002Surface(model, renderer)
     model.traverse((child) => {
       if (child.isMesh) {
@@ -383,6 +481,7 @@ async function initialize() {
     if (showThreshold.value !== initialConfig.showThreshold || threshold.value !== initialConfig.threshold ||
         showWeather.value !== initialConfig.showWeather ||
         showTemperature.value !== initialConfig.showTemperature ||
+        showDedicatedFooter.value !== initialConfig.showDedicatedFooter ||
         timeFormat.value !== initialConfig.timeFormat ||
         temperatureUnit.value !== initialConfig.temperatureUnit ||
         effectiveShowTide.value !== initialConfig.showTide || tide.value !== initialConfig.tide ||
@@ -404,7 +503,18 @@ async function initialize() {
     const screenBacking = createEpaperBacking(screen)
     createScreenRecessShadow(screenBacking)
     createMatteScreenFinish(screenBacking)
-    scene.add(createPhysicalShadowLayer(), createContactOcclusion(), model)
+    const initialCompositionMode = host.value.clientWidth <= 56 * 16 ? 'compact' : 'wide'
+    compositionMode = initialCompositionMode
+    usbCable = createUsbCable(initialCompositionMode)
+    usbCableAnimation = createUsbCableAnimation({
+      cable: usbCable,
+      reducedMotion: () => reduceMotionQuery.matches,
+      requestRender,
+    })
+    if (cableLabEnabled) applyCableLabSettings()
+    scene.add(createPhysicalShadowLayer(), createContactOcclusion(), model, usbCable.object)
+    updateUsbCableVisibility(props.showUsbCable)
+    requestRender()
 
     settingsPanel = host.value.closest('.configurator-layout')?.querySelector('.settings-panel')
     resizeObserver = new ResizeObserver(resize)
@@ -431,6 +541,7 @@ watch([
   showWeather,
   showTemperature,
   effectiveShowTide,
+  showDedicatedFooter,
   tide,
   timeFormat,
   temperatureUnit,
@@ -458,7 +569,15 @@ watch(forecastRevision, () => {
   }
 })
 
-onMounted(initialize)
+watch(() => props.focusUsbConnection, updateSceneFocus)
+watch(() => props.showUsbCable, updateUsbCableVisibility)
+watch(cableLab, applyCableLabSettings)
+
+onMounted(() => {
+  reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+  reduceMotionQuery.addEventListener('change', handleReducedMotionChange)
+  initialize()
+})
 onBeforeUnmount(() => {
   lifetime.cancel()
   stopLoadingStatus()
@@ -467,6 +586,7 @@ onBeforeUnmount(() => {
   resizeObserver?.disconnect()
   window.visualViewport?.removeEventListener('resize', scheduleViewportResize)
   window.visualViewport?.removeEventListener('scroll', scheduleViewportResize)
+  reduceMotionQuery?.removeEventListener('change', handleReducedMotionChange)
   controls?.removeEventListener('change', requestRender)
   controls?.dispose()
   screenSource?.dispose()
@@ -480,6 +600,7 @@ onBeforeUnmount(() => {
   disposeObject(scene?.getObjectByName('SURFACE_GRID'))
   disposeObject(scene?.getObjectByName('PHYSICAL_SHADOW_LAYER'))
   disposeObject(scene?.getObjectByName('CONTACT_OCCLUSION'))
+  usbCable?.dispose()
   renderer?.dispose()
   renderer?.domElement.remove()
 })
@@ -495,7 +616,48 @@ onBeforeUnmount(() => {
     :data-forecast-model="selectedModelId"
     :data-forecast-revision="forecastRevision"
   >
-    <span v-if="status === 'loading' && showLoadingStatus" class="scene-status" role="status">Building your WindScout…</span>
+    <span v-if="status === 'loading' && showLoadingStatus" class="scene-status" role="status">Building your Windscout…</span>
+    <aside v-if="cableLabEnabled" class="cable-lab" aria-label="Cable motion lab">
+      <header>
+        <strong>Cable motion lab</strong>
+        <span>Temporary prototype</span>
+      </header>
+
+      <label>
+        <span>Route distance <output>{{ cableLab.distance.toFixed(2) }}</output></span>
+        <input v-model.number="cableLab.distance" type="range" min="0.35" max="1.8" step="0.05">
+      </label>
+      <label>
+        <span>3D speed <output>{{ cableLab.speed.toFixed(2) }}/s</output></span>
+        <input v-model.number="cableLab.speed" type="range" min="0.15" max="0.9" step="0.05">
+      </label>
+      <p class="cable-lab__duration">Duration <strong>{{ cableLabDuration.toFixed(2) }}s</strong></p>
+
+      <label>
+        <span>Shared haze start <output>{{ cableLab.hazeStart.toFixed(2) }}</output></span>
+        <input v-model.number="cableLab.hazeStart" type="range" min="0.15" max="1.4" step="0.05">
+      </label>
+      <label>
+        <span>Shared haze end <output>{{ cableLab.hazeEnd.toFixed(2) }}</output></span>
+        <input v-model.number="cableLab.hazeEnd" type="range" min="0.25" max="2.5" step="0.05">
+      </label>
+      <label>
+        <span>Grid horizon start <output>{{ cableLab.gridHorizonStart.toFixed(2) }}</output></span>
+        <input v-model.number="cableLab.gridHorizonStart" type="range" min="0.4" max="2.5" step="0.1">
+      </label>
+      <label>
+        <span>Grid horizon end <output>{{ cableLab.gridHorizonEnd.toFixed(2) }}</output></span>
+        <input v-model.number="cableLab.gridHorizonEnd" type="range" min="0.8" max="5" step="0.1">
+      </label>
+
+      <div class="cable-lab__actions">
+        <button type="button" @click="runCableLab(true)">Insert</button>
+        <button type="button" @click="runCableLab(false)">Retract</button>
+        <button type="button" @click="setCableLabCamera('usb')">USB view</button>
+        <button type="button" @click="setCableLabCamera('cable')">Cable detail</button>
+        <button type="button" @click="setCableLabCamera('hero')">Hero view</button>
+      </div>
+    </aside>
   </div>
 </template>
 
@@ -520,4 +682,52 @@ onBeforeUnmount(() => {
   text-transform: uppercase;
   transform: translate(-50%, -50%);
 }
+.cable-lab {
+  position: absolute;
+  z-index: 10;
+  inset: auto auto 1rem 1rem;
+  width: min(18rem, calc(100% - 2rem));
+  padding: 0.9rem;
+  border: 1px solid rgb(255 255 255 / 72%);
+  border-radius: 0.9rem;
+  background: rgb(245 247 249 / 88%);
+  box-shadow: 0 1rem 3rem rgb(31 38 43 / 14%);
+  color: #20262b;
+  cursor: default;
+  backdrop-filter: blur(20px);
+  max-height: calc(100% - 2rem);
+  overflow: auto;
+  scrollbar-width: thin;
+}
+.cable-lab header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: baseline;
+  margin-block-end: 0.75rem;
+}
+.cable-lab header strong { font-size: 0.8rem; }
+.cable-lab header span,
+.cable-lab__duration { color: #687078; font-size: 0.65rem; }
+.cable-lab label { display: grid; gap: 0.2rem; margin-block: 0.55rem; }
+.cable-lab label > span {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.68rem;
+}
+.cable-lab output { font-family: 'JetBrains Mono Variable', monospace; }
+.cable-lab input { width: 100%; accent-color: #70ad32; }
+.cable-lab__duration { margin: -0.15rem 0 0.75rem; }
+.cable-lab__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+.cable-lab button {
+  min-height: 2rem;
+  border: 1px solid rgb(32 38 43 / 12%);
+  border-radius: 0.55rem;
+  background: #fff;
+  color: inherit;
+  font: 600 0.68rem/1 Inter, sans-serif;
+  cursor: pointer;
+}
+.cable-lab button:active { transform: translateY(1px); }
 </style>

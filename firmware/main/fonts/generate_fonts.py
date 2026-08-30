@@ -17,15 +17,10 @@ GLYPHS = "".join(chr(value) for value in range(32, 127)) + (
 )
 
 SPECS = (
-    ("berkeley_mono", 12, "Regular"),
-    ("berkeley_mono", 14, "Regular"),
-    ("berkeley_mono", 32, "Regular"),
     ("berkeley_mono_bold", 15, "Bold"),
+    ("berkeley_mono_bold_condensed", 12, "Bold Condensed"),
     ("berkeley_mono_bold_condensed", 15, "Bold Condensed"),
-    ("inter_bold", 15, "Bold"),
-    ("inter", 16, "Regular"),
-    ("inter", 28, "Regular"),
-    ("inter", 58, "Black"),
+    ("inter", 43, "Black"),
 )
 
 

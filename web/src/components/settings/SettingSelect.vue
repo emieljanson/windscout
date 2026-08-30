@@ -24,6 +24,7 @@ const props = defineProps({
   ariaLabelledby: { type: String, default: undefined },
   ariaDescribedby: { type: String, default: undefined },
   native: { type: Boolean, default: false },
+  autofocus: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -50,6 +51,7 @@ function updateNativeValue(event) {
       :aria-label="props.ariaLabel"
       :aria-labelledby="props.ariaLabelledby || row?.labelId"
       :aria-describedby="props.ariaDescribedby || row?.describedBy?.value"
+      :data-autofocus="props.autofocus ? '' : undefined"
       @pointerdown="pointerFocus = true"
       @keydown="pointerFocus = false"
       @blur="pointerFocus = false"
@@ -85,11 +87,12 @@ function updateNativeValue(event) {
       :aria-label="props.ariaLabel"
       :aria-labelledby="props.ariaLabelledby || row?.labelId"
       :aria-describedby="props.ariaDescribedby || row?.describedBy?.value"
+      :data-autofocus="props.autofocus ? '' : undefined"
       @pointerdown="pointerFocus = true"
       @keydown="pointerFocus = false"
       @blur="pointerFocus = false"
     >
-      <SelectValue :placeholder="props.placeholder" />
+      <SelectValue class="setting-select__value" :placeholder="props.placeholder" />
       <SelectIcon class="setting-select__chevron" aria-hidden="true">
         <svg viewBox="0 0 16 16" fill="none" focusable="false">
           <path fill="currentColor" d="M4.53033 5.46967C4.23744 5.17678 3.76256 5.17678 3.46967 5.46967C3.17678 5.76256 3.17678 6.23744 3.46967 6.53033L7.46967 10.5303C7.76001 10.8207 8.22986 10.8236 8.52376 10.5368L12.5238 6.63419C12.8202 6.34493 12.8261 5.87009 12.5368 5.57361C12.2476 5.27713 11.7727 5.27128 11.4762 5.56054L8.00649 8.94583L4.53033 5.46967Z" />
@@ -112,7 +115,7 @@ function updateNativeValue(event) {
             :value="option.value"
             :disabled="option.disabled"
           >
-            <SelectItemText>{{ option.label }}</SelectItemText>
+            <SelectItemText class="setting-option__text">{{ option.label }}</SelectItemText>
             <SelectItemIndicator class="setting-option__indicator" aria-hidden="true">
               <svg viewBox="0 0 16 16" fill="none" focusable="false">
                 <path fill="currentColor" d="M4.2996 7.23968C4.01775 6.93614 3.5432 6.91857 3.23966 7.20042C2.93613 7.48227 2.91856 7.95682 3.20041 8.26035L6.45041 11.7603C6.7612 12.095 7.29647 12.0766 7.58346 11.7212L12.8335 5.22127C13.0937 4.89904 13.0435 4.42683 12.7213 4.16657C12.399 3.9063 11.9268 3.95654 11.6665 4.27877L6.96051 10.1053L4.2996 7.23968Z" />

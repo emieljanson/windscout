@@ -53,4 +53,35 @@ describe('esptool adapter', () => {
       .rejects.toMatchObject({ code: INSTALLER_ERROR_CODES.FLASH_FAILED, safeToDisconnect: true })
     expect(disconnect).toHaveBeenCalledOnce()
   })
+
+  it('falls back to the safe baud rate when fast bootloader setup fails', async () => {
+    const disconnects = []
+    const baudRates = []
+    class Transport {
+      constructor() {
+        const disconnect = vi.fn().mockResolvedValue(undefined)
+        disconnects.push(disconnect)
+        this.disconnect = disconnect
+      }
+    }
+    class ESPLoader {
+      constructor({ baudrate, transport }) {
+        baudRates.push(baudrate)
+        return {
+          transport,
+          main: baudrate === 460800
+            ? vi.fn().mockRejectedValue(new Error('fast baud unavailable'))
+            : vi.fn().mockResolvedValue('ESP32-S3'),
+        }
+      }
+    }
+    const adapter = createEsptoolAdapter({ moduleLoader: async () => ({ Transport, ESPLoader }) })
+
+    const identity = await adapter.identify({})
+
+    expect(identity.chipFamily).toBe('ESP32-S3')
+    expect(baudRates).toEqual([460800, 115200])
+    expect(disconnects[0]).toHaveBeenCalledOnce()
+    expect(disconnects[1]).not.toHaveBeenCalled()
+  })
 })

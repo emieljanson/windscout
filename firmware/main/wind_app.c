@@ -238,7 +238,7 @@ esp_err_t wind_app_show_cached(wind_app_t *app, int64_t now, wind_app_outcome_t 
 #include "wind_renderer.h"
 
 // Bump this whenever layout, typography, palette encoding, or final bitmap semantics change.
-#define WIND_DASHBOARD_RENDER_SIGNATURE UINT64_C(0x57494E440000000C)
+#define WIND_DASHBOARD_RENDER_SIGNATURE UINT64_C(0x57494E440000000D)
 
 static const char *TAG = "wind_app";
 typedef struct {
@@ -347,22 +347,6 @@ static const char *month_name(unsigned month)
     return month <= 12 ? names[month] : "";
 }
 
-static void format_coordinates(char *output, size_t size, double latitude, double longitude)
-{
-    int lat_degrees = (int) latitude;
-    int lon_degrees = (int) longitude;
-    double lat_minutes_full = (latitude - lat_degrees) * 60.0;
-    double lon_minutes_full = (longitude - lon_degrees) * 60.0;
-    int lat_minutes = (int) lat_minutes_full;
-    int lon_minutes = (int) lon_minutes_full;
-    int lat_seconds = (int) ((lat_minutes_full - lat_minutes) * 60.0 + 0.5);
-    int lon_seconds = (int) ((lon_minutes_full - lon_minutes) * 60.0 + 0.5);
-    snprintf(output, size,
-             "%d\xC2\xB0" "%02d'%02d\"N "
-             "%d\xC2\xB0" "%02d'%02d\"E",
-             lat_degrees, lat_minutes, lat_seconds, lon_degrees, lon_minutes, lon_seconds);
-}
-
 static wind_renderer_state_t renderer_state(wind_freshness_t freshness)
 {
     switch (freshness) {
@@ -371,14 +355,6 @@ static wind_renderer_state_t renderer_state(wind_freshness_t freshness)
         case WIND_FRESHNESS_STALE: return WIND_RENDERER_STALE;
         default: return WIND_RENDERER_UNAVAILABLE;
     }
-}
-
-static const char *display_model_name(const char *model)
-{
-    if (model && strcmp(model, "knmi_seamless") == 0) {
-        return "KNMI SEAMLESS";
-    }
-    return model;
 }
 
 static esp_err_t write_dashboard_preview(const uint8_t *bitmap, size_t bitmap_size)
@@ -432,15 +408,13 @@ static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast
     const wind_spot_t *spot = runtime->spot;
     const wind_display_config_t display = config_manager_get_wind_display_config();
     wind_renderer_dashboard_t dashboard = {0};
-    char coordinates[64] = "";
     char updated[32] = "";
     char dates[WIND_RENDERER_DAY_COUNT][16] = {{0}};
     char times[WIND_RENDERER_DAY_COUNT][WIND_RENDERER_SAMPLES_PER_DAY][8] = {{{0}}};
     wind_local_datetime_t local = {0};
 
     dashboard.spot_name = forecast ? forecast->spot_name : spot->display_name;
-    dashboard.coordinates = coordinates;
-    dashboard.provider = display_model_name(forecast ? forecast->model : WIND_MODEL);
+    dashboard.provider = wind_forecast_model_screen_name(forecast ? forecast->model : WIND_MODEL);
     dashboard.updated_time = updated;
     dashboard.state = renderer_state(freshness);
     dashboard.refresh_failed = refresh_failed ? 1 : 0;
@@ -453,12 +427,9 @@ static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast
     dashboard.show_weather = display.show_weather;
     dashboard.show_temperature = display.show_temperature;
     dashboard.show_tide = display.show_tide;
+    dashboard.show_dedicated_footer = display.show_dedicated_footer;
     dashboard.use_24_hour = display.use_24_hour;
     dashboard.temperature_fahrenheit = display.temperature_fahrenheit;
-    format_coordinates(coordinates, sizeof(coordinates),
-                       forecast ? forecast->latitude : spot->latitude,
-                       forecast ? forecast->longitude : spot->longitude);
-
     if (forecast) {
         char update_date[16] = "";
         if (wind_timezone_from_unix(spot->timezone, forecast->retrieved_at, &local) != ESP_OK) {
@@ -527,6 +498,25 @@ static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast
                             .day_index = day,
                             .local_hour = source->local_hour,
                             .sea_level_mm = source->sea_level_mm,
+                            .available = 1,
+                        };
+                    break;
+                }
+            }
+            for (size_t extremum_index = 0;
+                 extremum_index < runtime->tide.extremum_count &&
+                 dashboard.tide_extremum_count < WIND_RENDERER_MAX_TIDE_EXTREMA;
+                 ++extremum_index) {
+                const wind_tide_extremum_t *source = &runtime->tide.extrema[extremum_index];
+                for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day) {
+                    if (strcmp(source->local_date, forecast->days[day].local_date) != 0) continue;
+                    dashboard.tide_extrema[dashboard.tide_extremum_count++] =
+                        (wind_renderer_tide_extremum_t) {
+                            .day_index = day,
+                            .local_hour = source->local_hour,
+                            .local_minute = source->local_minute,
+                            .sea_level_mm = source->sea_level_mm,
+                            .is_high = source->is_high,
                             .available = 1,
                         };
                     break;
@@ -710,6 +700,7 @@ static wind_display_config_t display_from_installed(const installed_configuratio
     display.show_weather = installed->display.show_weather;
     display.show_temperature = installed->display.show_temperature;
     display.show_tide = installed->display.show_tide;
+    display.show_dedicated_footer = installed->display.show_dedicated_footer;
     display.use_24_hour = installed->display.use_24_hour;
     display.temperature_fahrenheit = installed->display.temperature_fahrenheit;
     return display;

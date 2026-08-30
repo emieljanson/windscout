@@ -24,13 +24,9 @@ typedef struct {
     const uint8_t *bitmap;
 } wind_font_asset_t;
 
-extern const wind_font_asset_t wind_font_berkeley_mono_12;
-extern const wind_font_asset_t wind_font_berkeley_mono_14;
-extern const wind_font_asset_t wind_font_berkeley_mono_32;
 extern const wind_font_asset_t wind_font_berkeley_mono_bold_15;
+extern const wind_font_asset_t wind_font_berkeley_mono_bold_condensed_12;
 extern const wind_font_asset_t wind_font_berkeley_mono_bold_condensed_15;
-extern const wind_font_asset_t wind_font_inter_bold_15;
-extern const wind_font_asset_t wind_font_inter_16;
-extern const wind_font_asset_t wind_font_inter_28;
+extern const wind_font_asset_t wind_font_inter_43;
 
 #endif

@@ -4,6 +4,7 @@ import { SPOTS } from '../src/spots'
 
 function hourlyResponse({ start = Date.UTC(2026, 7, 25, 22) / 1000, count = 120, values } = {}) {
   const time = Array.from({ length: count }, (_, index) => start + index * 3600)
+  const minutelyTime = Array.from({ length: (count - 1) * 4 + 1 }, (_, index) => start + index * 900)
   return {
     timezone: 'Europe/Amsterdam',
     utc_offset_seconds: 7200,
@@ -12,6 +13,12 @@ function hourlyResponse({ start = Date.UTC(2026, 7, 25, 22) / 1000, count = 120,
       time,
       sea_level_height_msl: values ?? time.map((_, index) => Math.sin(index / 6) * 0.8),
     },
+    minutely_15_units: { time: 'unixtime', sea_level_height_msl: 'm' },
+    minutely_15: {
+      time: minutelyTime,
+      sea_level_height_msl: minutelyTime.map((_, index) =>
+        Math.cos((index - 25) * Math.PI / 24) * 0.8),
+    },
   }
 }
 
@@ -19,7 +26,7 @@ describe('tide normalizer', () => {
   it('normalizes a bounded five-local-day hourly sea-level series', () => {
     const tide = normalizeTide(hourlyResponse(), SPOTS[1], { retrievedAt: 1_777_000_000_000 })
     expect(tide).toMatchObject({
-      schemaVersion: 1,
+      schemaVersion: 2,
       spotId: 'brouwersdam',
       timezone: 'Europe/Amsterdam',
       provider: 'OPEN-METEO MARINE',
@@ -32,6 +39,33 @@ describe('tide normalizer', () => {
       localTime: '00:00',
       seaLevelMm: 0,
     })
+    expect(tide.extrema).toContainEqual(expect.objectContaining({
+      localDate: '2026-08-26',
+      localTime: '06:15',
+      type: 'high',
+    }))
+    expect(isNormalizedTide(tide)).toBe(true)
+  })
+
+  it('falls back seamlessly to whole-hour extrema when quarter-hour data is absent', () => {
+    const response = hourlyResponse()
+    delete response.minutely_15_units
+    delete response.minutely_15
+
+    const tide = normalizeTide(response, SPOTS[1], { retrievedAt: 1_777_000_000_000 })
+
+    expect(tide.extrema.length).toBeGreaterThan(0)
+    expect(tide.extrema.every((extremum) => extremum.localTime.endsWith(':00'))).toBe(true)
+    expect(isNormalizedTide(tide)).toBe(true)
+  })
+
+  it('marks flat sea-level data unsupported instead of drawing an unlabeled tide row', () => {
+    const response = hourlyResponse({ values: Array(120).fill(0.1) })
+    response.minutely_15.sea_level_height_msl.fill(0.1)
+
+    const tide = normalizeTide(response, SPOTS[1], { retrievedAt: 1_777_000_000_000 })
+
+    expect(tide).toMatchObject({ capability: 'unsupported', samples: [], extrema: [] })
     expect(isNormalizedTide(tide)).toBe(true)
   })
 
@@ -39,7 +73,7 @@ describe('tide normalizer', () => {
     const tide = normalizeTide(hourlyResponse({ values: Array(120).fill(null) }), SPOTS[1], {
       retrievedAt: 1_777_000_000_000,
     })
-    expect(tide).toMatchObject({ capability: 'unsupported', samples: [] })
+    expect(tide).toMatchObject({ capability: 'unsupported', samples: [], extrema: [] })
     expect(isNormalizedTide(tide)).toBe(true)
   })
 

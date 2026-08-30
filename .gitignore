@@ -5,6 +5,7 @@ firmware/sdkconfig
 firmware/sdkconfig.old
 firmware/main/wind_config.local.h
 .playwright-cli/
+.context/compound-engineering/
 .tmp*/
 *.bin
 web/.env.local

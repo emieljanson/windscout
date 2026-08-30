@@ -284,14 +284,10 @@ add_wind_test(
 
 set(WIND_FONT_SOURCES
   ../main/wind_font.c
-  ../main/fonts/berkeley_mono_12.c
-  ../main/fonts/berkeley_mono_14.c
-  ../main/fonts/berkeley_mono_32.c
   ../main/fonts/berkeley_mono_bold_15.c
+  ../main/fonts/berkeley_mono_bold_condensed_12.c
   ../main/fonts/berkeley_mono_bold_condensed_15.c
-  ../main/fonts/inter_bold_15.c
-  ../main/fonts/inter_16.c
-  ../main/fonts/inter_28.c
+  ../main/fonts/inter_43.c
 )
 
 add_wind_test(wind_font_test test_wind_font.cpp ${WIND_FONT_SOURCES})

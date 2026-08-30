@@ -73,6 +73,25 @@ bool wind_forecast_validate(const wind_forecast_t *forecast)
     return true;
 }
 
+const char *wind_forecast_model_screen_name(const char *model_id)
+{
+    static const struct {
+        const char *id;
+        const char *screen_name;
+    } models[] = {
+        {"best_match", "BEST MATCH"},
+        {"knmi_seamless", "KNMI SEAMLESS"},
+        {"ecmwf_ifs025", "ECMWF IFS"},
+        {"icon_seamless", "DWD ICON"},
+        {"gfs_seamless", "NOAA GFS"},
+    };
+    if (!model_id) return "";
+    for (size_t index = 0; index < sizeof(models) / sizeof(models[0]); ++index) {
+        if (strcmp(model_id, models[index].id) == 0) return models[index].screen_name;
+    }
+    return model_id;
+}
+
 int wind_forecast_round_knots(double knots)
 {
     if (!isfinite(knots) || knots < 0.0 || knots > 32767.0) {

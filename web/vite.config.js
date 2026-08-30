@@ -4,7 +4,7 @@ import { sentryVitePlugin } from '@sentry/vite-plugin'
 
 export default defineConfig(({ mode }) => {
   const sentryUploadEnabled = mode === 'production' && Boolean(
-    process.env.SENTRY_AUTH_TOKEN && process.env.SENTRY_ORG &&
+    process.env.VITE_SENTRY_DSN && process.env.SENTRY_AUTH_TOKEN && process.env.SENTRY_ORG &&
     process.env.SENTRY_PROJECT && process.env.VITE_SENTRY_RELEASE,
   )
 

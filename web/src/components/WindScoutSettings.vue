@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useConfiguratorStore } from '../stores/configurator'
+import { FLOATING_INSPECTOR_VIEWPORT_QUERY } from '../composables/useCompactViewport'
 import { FORECAST_MODELS } from '../forecast/models'
 import { MAX_THRESHOLD, MIN_THRESHOLD } from '../renderer/contract'
 import { normalizeSpotQuery, searchSpots } from '../spots/searchSpots'
@@ -24,6 +25,7 @@ const {
   forecastStatus,
   selectedModelId,
   selectedSpotId,
+  showDedicatedFooter,
   spots,
   showThreshold,
   showWeather,
@@ -82,7 +84,9 @@ function selectSpot(spotId) {
 }
 
 onMounted(() => {
-  if (!props.compact) spotSearch.value?.focus()
+  const hasFloatingInspector = window.matchMedia?.(FLOATING_INSPECTOR_VIEWPORT_QUERY).matches
+    ?? window.innerWidth > 896
+  if (!props.compact && hasFloatingInspector) spotSearch.value?.focus()
 })
 
 function handleSpotDismiss() {
@@ -143,7 +147,7 @@ function clearPillPointerFocus(event) {
       <span class="forecast-status__message">{{ forecastMessage }}</span>
     </div>
 
-    <div v-if="compact" class="mobile-display-pills" role="group" aria-label="Show on WindScout">
+    <div v-if="compact" class="mobile-display-pills" role="group" aria-label="Show on Windscout">
       <button
         class="mobile-display-pill"
         type="button"
@@ -285,6 +289,14 @@ function clearPillPointerFocus(event) {
             :disabled-reason="tideAvailable ? '' : tideMessage"
             name="show-tide"
             @update:model-value="store.setShowTide"
+          />
+        </SettingRow>
+
+        <SettingRow label="Legend">
+          <SettingSwitch
+            :model-value="showDedicatedFooter"
+            name="show-dedicated-footer"
+            @update:model-value="store.setShowDedicatedFooter"
           />
         </SettingRow>
       </div>

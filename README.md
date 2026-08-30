@@ -17,18 +17,22 @@ releases (`v*`) additionally publish the OTA application and browser-installer
 files as a GitHub Release. The bundle is generated from ESP-IDF's
 `flasher_args.json`, contains separate checksummed flash parts, and exposes
 clean-install and preserving-update write sets. Generate and validate it
-locally after an E1002 build with:
+locally with one command. When no version is supplied, this creates a fresh
+`dev-local-…` version and embeds that same value in the device firmware:
 
 ```sh
 cd firmware
-python3 scripts/generate_installer_manifest.py \
-  --build-dir build \
-  --partitions partitions.csv \
-  --output ../web/public/firmware \
-  --version dev-local
+./build.py --board seeedstudio_reterminal_e1002 --step firmware \
+  --installer-output ../web/public/firmware
 ```
 
 Do not publish a preserving update unless the generator confirms that its ranges avoid NVS and storage.
+The local installer refuses to reuse a version when its firmware bytes differ,
+so a stale dashboard can never be installed silently.
+
+Starting the web configurator with `npm run dev` prepares this local installer
+bundle automatically when a firmware build is available. You can also run it
+explicitly with `npm run installer:prepare` from `web/`.
 
 WindScout turns a Seeed Studio reTerminal E1002 into a quiet, battery-efficient
 wind forecast dashboard. The device downloads forecast data itself and renders

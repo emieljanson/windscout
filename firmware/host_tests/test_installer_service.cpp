@@ -17,6 +17,8 @@ struct FakeDevice {
     int wake_releases = 0;
     std::string password;
     bool async_apply = false;
+    bool apply_prepared = false;
+    bool apply_started = false;
     bool clock_ok = true;
     int64_t clock = 0;
 };
@@ -44,6 +46,14 @@ esp_err_t commit(void *context, const installed_configuration_t *, const char *,
 esp_err_t begin_apply(void *context, const installed_configuration_t *, const char *, const char *)
 {
     auto *fake = static_cast<FakeDevice *>(context);
+    fake->apply_prepared = true;
+    return ESP_OK;
+}
+
+esp_err_t start_apply(void *context)
+{
+    auto *fake = static_cast<FakeDevice *>(context);
+    fake->apply_started = true;
     fake->async_apply = true;
     return ESP_OK;
 }
@@ -99,8 +109,10 @@ TEST(InstallerServiceTest, HelloAndStateAreRedacted)
     EXPECT_NE(hello.find(WINDSCOUT_BOARD_ID), std::string::npos);
     EXPECT_EQ(hello.find("password"), std::string::npos);
     EXPECT_NE(hello.find("clock-sync"), std::string::npos);
+    EXPECT_TRUE(service.wake_lock_held);
     const std::string state = request(&service, R"({"command":"get_state"})");
     EXPECT_EQ(state.find("password"), std::string::npos);
+    EXPECT_NE(state.find("\"wifiConfigured\":false"), std::string::npos);
 }
 
 TEST(InstallerServiceTest, BeginSetsClockFromBrowserBeforeHoldingWakeLock)
@@ -163,7 +175,7 @@ TEST(InstallerServiceTest, CommitsOnlyAfterWifiAndRenderSucceed)
     FakeDevice fake;
     auto service = make_service(&fake);
     request(&service, R"({"command":"begin","unixTime":1787932800})");
-    request(&service, R"({"command":"stage_configuration","configuration":{"version":2,"boardId":"seeedstudio_reterminal_e1002","spot":{"id":"edam","name":"Edam","latitude":52.5126,"longitude":5.0486,"timezone":"Europe/Amsterdam"},"forecastModel":"best_match","display":{"showThreshold":false,"threshold":17,"showWeather":true,"showTemperature":false,"showTide":false,"timeFormat":"24-hour","temperatureUnit":"celsius"},"digest":"bde996ae21f5ca31"}})");
+    request(&service, R"({"command":"stage_configuration","configuration":{"version":3,"boardId":"seeedstudio_reterminal_e1002","spot":{"id":"edam","name":"Edam","latitude":52.5126,"longitude":5.0486,"timezone":"Europe/Amsterdam"},"forecastModel":"best_match","display":{"showThreshold":false,"threshold":17,"showWeather":true,"showTemperature":false,"showTide":false,"showDedicatedFooter":true,"timeFormat":"24-hour","temperatureUnit":"celsius"},"digest":"54b62a78425810eb"}})");
     const std::string wifi = request(&service, R"({"command":"test_wifi","ssid":"Home","password":"secret-value"})");
     EXPECT_NE(wifi.find("wifi_ready"), std::string::npos);
     EXPECT_EQ(wifi.find("secret-value"), std::string::npos);
@@ -180,7 +192,7 @@ TEST(InstallerServiceTest, WrongWifiAndRenderFailureRemainRetryable)
     FakeDevice fake;
     auto service = make_service(&fake);
     request(&service, R"({"command":"begin","unixTime":1787932800})");
-    request(&service, R"({"command":"stage_configuration","configuration":{"version":2,"boardId":"seeedstudio_reterminal_e1002","spot":{"id":"edam","name":"Edam","latitude":52.5126,"longitude":5.0486,"timezone":"Europe/Amsterdam"},"forecastModel":"best_match","display":{"showThreshold":false,"threshold":17,"showWeather":true,"showTemperature":false,"showTide":false,"timeFormat":"24-hour","temperatureUnit":"celsius"},"digest":"bde996ae21f5ca31"}})");
+    request(&service, R"({"command":"stage_configuration","configuration":{"version":3,"boardId":"seeedstudio_reterminal_e1002","spot":{"id":"edam","name":"Edam","latitude":52.5126,"longitude":5.0486,"timezone":"Europe/Amsterdam"},"forecastModel":"best_match","display":{"showThreshold":false,"threshold":17,"showWeather":true,"showTemperature":false,"showTide":false,"showDedicatedFooter":true,"timeFormat":"24-hour","temperatureUnit":"celsius"},"digest":"54b62a78425810eb"}})");
 
     fake.wifi_ok = false;
     const std::string rejected = request(&service, R"({"command":"test_wifi","ssid":"Home","password":"wrong"})");
@@ -205,14 +217,21 @@ TEST(InstallerServiceTest, AsyncApplyReturnsBeforeRenderAndReportsProgress)
     FakeDevice fake;
     auto service = make_service(&fake);
     service.dependencies.begin_apply = begin_apply;
+    service.dependencies.start_apply = start_apply;
     service.dependencies.apply_state = apply_state;
     request(&service, R"({"command":"begin","unixTime":1787932800})");
-    request(&service, R"({"command":"stage_configuration","configuration":{"version":2,"boardId":"seeedstudio_reterminal_e1002","spot":{"id":"edam","name":"Edam","latitude":52.5126,"longitude":5.0486,"timezone":"Europe/Amsterdam"},"forecastModel":"best_match","display":{"showThreshold":false,"threshold":17,"showWeather":true,"showTemperature":false,"showTide":false,"timeFormat":"24-hour","temperatureUnit":"celsius"},"digest":"bde996ae21f5ca31"}})");
+    request(&service, R"({"command":"stage_configuration","configuration":{"version":3,"boardId":"seeedstudio_reterminal_e1002","spot":{"id":"edam","name":"Edam","latitude":52.5126,"longitude":5.0486,"timezone":"Europe/Amsterdam"},"forecastModel":"best_match","display":{"showThreshold":false,"threshold":17,"showWeather":true,"showTemperature":false,"showTide":false,"showDedicatedFooter":true,"timeFormat":"24-hour","temperatureUnit":"celsius"},"digest":"54b62a78425810eb"}})");
 
     const std::string applying = request(&service, R"({"command":"apply_configuration"})");
     EXPECT_NE(applying.find("applying"), std::string::npos);
-    EXPECT_TRUE(fake.async_apply);
+    EXPECT_TRUE(fake.apply_prepared);
+    EXPECT_FALSE(fake.apply_started);
+    EXPECT_FALSE(fake.async_apply);
     EXPECT_TRUE(service.wake_lock_held);
+
+    EXPECT_EQ(wind_installer_service_start_pending_apply(&service), ESP_OK);
+    EXPECT_TRUE(fake.apply_started);
+    EXPECT_TRUE(fake.async_apply);
 
     const std::string state = request(&service, R"({"command":"get_state"})");
     EXPECT_NE(state.find("\"apply\":\"applying\""), std::string::npos);
@@ -230,6 +249,23 @@ TEST(InstallerServiceTest, AsyncApplyReturnsBeforeRenderAndReportsProgress)
     fake.async_apply = false;
     wind_installer_service_complete_apply(&service, true);
     EXPECT_FALSE(service.wake_lock_held);
+    EXPECT_TRUE(service.credentials_cleared);
+}
+
+TEST(InstallerServiceTest, AsyncApplyDoesNotStartWhenAcknowledgementWasNotTransmitted)
+{
+    FakeDevice fake;
+    auto service = make_service(&fake);
+    service.dependencies.begin_apply = begin_apply;
+    service.dependencies.start_apply = start_apply;
+    service.dependencies.apply_state = apply_state;
+    request(&service, R"({"command":"begin","unixTime":1787932800})");
+    request(&service, R"({"command":"stage_configuration","configuration":{"version":3,"boardId":"seeedstudio_reterminal_e1002","spot":{"id":"edam","name":"Edam","latitude":52.5126,"longitude":5.0486,"timezone":"Europe/Amsterdam"},"forecastModel":"best_match","display":{"showThreshold":false,"threshold":17,"showWeather":true,"showTemperature":false,"showTide":false,"showDedicatedFooter":true,"timeFormat":"24-hour","temperatureUnit":"celsius"},"digest":"54b62a78425810eb"}})");
+    request(&service, R"({"command":"apply_configuration"})");
+
+    EXPECT_EQ(wind_installer_service_confirm_pending_apply_response(&service, false), ESP_FAIL);
+    EXPECT_FALSE(fake.apply_started);
+    EXPECT_FALSE(service.apply_start_pending);
     EXPECT_TRUE(service.credentials_cleared);
 }
 

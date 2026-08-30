@@ -4,10 +4,9 @@ import { WAKE_BUTTON_COLOR } from './productColors'
 
 export const USB_CABLE_COLOR = WAKE_BUTTON_COLOR
 export const USB_CABLE_DURATION_MS = 1550
-export const USB_CABLE_FADE_IN_MS = 1000
-// Keep the deforming braid fine-grained through the slow final insertion.
-// Coarser sampling was visible as small shape jumps near the socket.
-const CABLE_ANIMATION_STEPS = 360
+export const USB_CABLE_DISTANCE_FADE_START = 0.5
+export const USB_CABLE_DISTANCE_FADE_END = 1.2
+export const USB_CABLE_DEFAULT_START_X = 0.56
 
 const DEVICE_REAL_WIDTH_MM = 176
 const DEVICE_MODEL_WIDTH = 0.175
@@ -15,6 +14,7 @@ const MM_TO_SCENE_UNIT = DEVICE_MODEL_WIDTH / DEVICE_REAL_WIDTH_MM
 const millimeters = (value) => value * MM_TO_SCENE_UNIT
 const FLOOR_Y = -0.0578
 const FLOOR_SURFACE_Y = FLOOR_Y - millimeters(1.45)
+const CABLE_OUTER_RADIUS_MM = 2
 const LOCAL_FORWARD = new THREE.Vector3(0, 0, 1)
 const WORLD_UP = new THREE.Vector3(0, 1, 0)
 const VERTICAL_PORT_ROLL = new THREE.Quaternion().setFromAxisAngle(LOCAL_FORWARD, Math.PI / 2)
@@ -24,32 +24,65 @@ const VERTICAL_PORT_ROLL = new THREE.Quaternion().setFromAxisAngle(LOCAL_FORWARD
 const USB_PORT = new THREE.Vector3(0.0437, -0.0071, -0.00535)
 const CONNECTOR_HOUSING_FRONT = millimeters(12.4)
 const CONNECTOR_INSERTED_ORIGIN_X = USB_PORT.x + CONNECTOR_HOUSING_FRONT
-const CONNECTOR_PATH_POINTS = {
-  compact: [
+const CONNECTOR_PATH_POINTS = [
+    [0.56, USB_PORT.y, USB_PORT.z],
+    [0.48, USB_PORT.y, USB_PORT.z],
+    [0.4, USB_PORT.y, USB_PORT.z],
+    [0.32, USB_PORT.y, USB_PORT.z],
     [0.24, USB_PORT.y, USB_PORT.z],
-    [0.2, USB_PORT.y, USB_PORT.z],
     [0.16, USB_PORT.y, USB_PORT.z],
-    [0.125, USB_PORT.y, USB_PORT.z],
-    [0.095, USB_PORT.y, USB_PORT.z],
-    [0.075, USB_PORT.y, USB_PORT.z],
-    [0.063, USB_PORT.y, USB_PORT.z],
+    [0.09, USB_PORT.y, USB_PORT.z],
     [CONNECTOR_INSERTED_ORIGIN_X, USB_PORT.y, USB_PORT.z],
-  ],
-  wide: [
-    [0.24, USB_PORT.y, USB_PORT.z],
-    [0.2, USB_PORT.y, USB_PORT.z],
-    [0.16, USB_PORT.y, USB_PORT.z],
-    [0.125, USB_PORT.y, USB_PORT.z],
-    [0.095, USB_PORT.y, USB_PORT.z],
-    [0.075, USB_PORT.y, USB_PORT.z],
-    [0.063, USB_PORT.y, USB_PORT.z],
-    [CONNECTOR_INSERTED_ORIGIN_X, USB_PORT.y, USB_PORT.z],
-  ],
+]
+
+export function applyUsbCableDistanceMask(material) {
+  material.transparent = true
+  const startUniform = { value: USB_CABLE_DISTANCE_FADE_START }
+  const endUniform = { value: USB_CABLE_DISTANCE_FADE_END }
+  material.userData.usbCableDistanceMask = {
+    startUniform,
+    endUniform,
+  }
+  material.onBeforeCompile = (shader) => {
+    shader.uniforms.usbCableFadeStart = startUniform
+    shader.uniforms.usbCableFadeEnd = endUniform
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        '#include <common>',
+        '#include <common>\nvarying vec3 vUsbCableWorldPosition;',
+      )
+      .replace(
+        '#include <worldpos_vertex>',
+        '#include <worldpos_vertex>\nvUsbCableWorldPosition = (modelMatrix * vec4(transformed, 1.0)).xyz;',
+      )
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        '#include <common>',
+        '#include <common>\nvarying vec3 vUsbCableWorldPosition;\nuniform float usbCableFadeStart;\nuniform float usbCableFadeEnd;',
+      )
+      .replace(
+        '#include <opaque_fragment>',
+        `float usbCableDistance = length(vUsbCableWorldPosition.xz);
+float usbCableDistanceMask = 1.0 - smoothstep(usbCableFadeStart, usbCableFadeEnd, usbCableDistance);
+if (usbCableDistanceMask <= 0.001) discard;
+diffuseColor.a *= usbCableDistanceMask;
+#include <opaque_fragment>`,
+      )
+  }
+  material.customProgramCacheKey = () => 'usb-cable-distance-mask-v1'
 }
 
-function createConnectorPath(compositionMode) {
+function createConnectorPath(connectorStartX) {
+  const scale = (connectorStartX - CONNECTOR_INSERTED_ORIGIN_X)
+    / (USB_CABLE_DEFAULT_START_X - CONNECTOR_INSERTED_ORIGIN_X)
   return new THREE.CatmullRomCurve3(
-    CONNECTOR_PATH_POINTS[compositionMode].map((point) => new THREE.Vector3(...point)),
+    CONNECTOR_PATH_POINTS.map(([x, y, z], index) => new THREE.Vector3(
+      index === CONNECTOR_PATH_POINTS.length - 1
+        ? x
+        : CONNECTOR_INSERTED_ORIGIN_X + (x - CONNECTOR_INSERTED_ORIGIN_X) * scale,
+      y,
+      z,
+    )),
     false,
     'centripetal',
   )
@@ -107,20 +140,18 @@ export function easeUsbCableProgress(progress) {
   return easeStrongOut(progress)
 }
 
-// The longer opacity ramp prevents the complete cable silhouette from popping
-// into view on very wide canvases while its movement is already underway.
-function easeUsbCableFade(progress) {
-  return easeStrongOut(progress)
-}
-
 function connectorPositionAt(path, progress) {
   const value = THREE.MathUtils.clamp(progress, 0, 1)
   return path.getPointAt(value)
 }
 
-export function cablePoseAt(progress, compositionMode = 'compact') {
+export function cablePoseAt(
+  progress,
+  compositionMode = 'compact',
+  connectorStartX = USB_CABLE_DEFAULT_START_X,
+) {
   const value = THREE.MathUtils.clamp(progress, 0, 1)
-  const connectorPath = createConnectorPath(compositionMode)
+  const connectorPath = createConnectorPath(connectorStartX)
   const connector = connectorPositionAt(connectorPath, value)
   const tangent = connectorPath.getTangentAt(value)
   // Stop the braid inside the final strain-relief section. Ending it at the
@@ -137,9 +168,9 @@ export function cablePoseAt(progress, compositionMode = 'compact') {
     connector,
     tangent,
     cablePoints: [
-      new THREE.Vector3(1.2, FLOOR_Y, floorDepth),
+      new THREE.Vector3(1.6, FLOOR_Y, floorDepth),
+      new THREE.Vector3(1.1, FLOOR_Y, floorDepth),
       new THREE.Vector3(0.75, FLOOR_Y, floorDepth),
-      new THREE.Vector3(0.42, FLOOR_Y, floorDepth),
       new THREE.Vector3(floorApproachX, FLOOR_Y, floorDepth),
       straightSheathLead,
       cableJoin,
@@ -147,15 +178,21 @@ export function cablePoseAt(progress, compositionMode = 'compact') {
   }
 }
 
-function createBraidTexture(size = 256) {
+function createBraidTexture(size = 256, {
+  baseBrightness = 0.865,
+  color = USB_CABLE_COLOR,
+  contrast = 0.075,
+  repeatX = 52,
+  saturation = 1,
+} = {}) {
   const pixels = new Uint8Array(size * size * 4)
   const normalPixels = new Uint8Array(size * size * 4)
   const roughnessPixels = new Uint8Array(size * size * 4)
   const heights = new Float32Array(size * size)
   const channels = [
-    (USB_CABLE_COLOR >> 16) & 0xff,
-    (USB_CABLE_COLOR >> 8) & 0xff,
-    USB_CABLE_COLOR & 0xff,
+    (color >> 16) & 0xff,
+    (color >> 8) & 0xff,
+    color & 0xff,
   ]
 
   const sampleWeave = (x, y) => {
@@ -179,11 +216,12 @@ function createBraidTexture(size = 256) {
       const v = y / size
       const weave = sampleWeave(x, y)
       const colourFibre = Math.sin(Math.PI * 2 * (u * 83 - v * 5)) * 0.006
-      const brightness = 0.865 + weave * 0.075 + colourFibre
+      const brightness = baseBrightness + weave * contrast + colourFibre
       const offset = (y * size + x) * 4
-      pixels[offset] = Math.min(255, Math.round(channels[0] * brightness))
-      pixels[offset + 1] = Math.min(255, Math.round(channels[1] * brightness))
-      pixels[offset + 2] = Math.min(255, Math.round(channels[2] * brightness))
+      const average = (channels[0] + channels[1] + channels[2]) / 3
+      pixels[offset] = Math.min(255, Math.round((average + (channels[0] - average) * saturation) * brightness))
+      pixels[offset + 1] = Math.min(255, Math.round((average + (channels[1] - average) * saturation) * brightness))
+      pixels[offset + 2] = Math.min(255, Math.round((average + (channels[2] - average) * saturation) * brightness))
       pixels[offset + 3] = 255
       heights[y * size + x] = weave
       const roughness = Math.round(250 - weave * 12)
@@ -214,7 +252,7 @@ function createBraidTexture(size = 256) {
   texture.colorSpace = THREE.SRGBColorSpace
   texture.wrapS = THREE.RepeatWrapping
   texture.wrapT = THREE.RepeatWrapping
-  texture.repeat.set(52, 1)
+  texture.repeat.set(repeatX, 1)
   texture.anisotropy = 8
   texture.needsUpdate = true
 
@@ -251,6 +289,30 @@ function createCableFadeTexture(size = 256) {
 
   const texture = new THREE.DataTexture(pixels, size, 1, THREE.RGBAFormat)
   texture.name = 'usb-cable-tail-fade-texture'
+  texture.wrapS = THREE.ClampToEdgeWrapping
+  texture.wrapT = THREE.ClampToEdgeWrapping
+  texture.minFilter = THREE.LinearFilter
+  texture.magFilter = THREE.LinearFilter
+  texture.needsUpdate = true
+  return texture
+}
+
+function createContactShadowFadeTexture(size = 256) {
+  const pixels = new Uint8Array(size * 4)
+  for (let x = 0; x < size; x += 1) {
+    const u = x / (size - 1)
+    const fadeProgress = THREE.MathUtils.clamp(u / 0.72, 0, 1)
+    const smoothFade = fadeProgress * fadeProgress * (3 - 2 * fadeProgress)
+    const opacity = Math.round(smoothFade * 255)
+    const offset = x * 4
+    pixels[offset] = opacity
+    pixels[offset + 1] = opacity
+    pixels[offset + 2] = opacity
+    pixels[offset + 3] = 255
+  }
+
+  const texture = new THREE.DataTexture(pixels, size, 1, THREE.RGBAFormat)
+  texture.name = 'usb-cable-contact-shadow-fade-texture'
   texture.wrapS = THREE.ClampToEdgeWrapping
   texture.wrapT = THREE.ClampToEdgeWrapping
   texture.minFilter = THREE.LinearFilter
@@ -352,11 +414,59 @@ export function cableCurveForPoints(points) {
   return curve
 }
 
-function geometryForCable(points, radius = millimeters(1.45)) {
+function geometryForCable(points, radius = millimeters(CABLE_OUTER_RADIUS_MM)) {
   const curve = cableCurveForPoints(points)
   // Fine longitudinal tessellation keeps tight floor bends round even in a
   // close orbit; the previous 72 segments exposed small direction facets.
   return new THREE.TubeGeometry(curve, 360, radius, 12, false)
+}
+
+function updateTubeGeometry(geometry, curve) {
+  const {
+    tubularSegments,
+    radius,
+    radialSegments,
+    closed,
+  } = geometry.parameters
+  const frames = curve.computeFrenetFrames(tubularSegments, closed)
+  const positions = geometry.attributes.position
+  const normals = geometry.attributes.normal
+  const point = new THREE.Vector3()
+  let vertexIndex = 0
+
+  for (let segment = 0; segment <= tubularSegments; segment += 1) {
+    curve.getPointAt(segment / tubularSegments, point)
+    const frameNormal = frames.normals[segment]
+    const frameBinormal = frames.binormals[segment]
+    for (let side = 0; side <= radialSegments; side += 1) {
+      const angle = side / radialSegments * Math.PI * 2
+      const sin = Math.sin(angle)
+      const cos = -Math.cos(angle)
+      const normalX = cos * frameNormal.x + sin * frameBinormal.x
+      const normalY = cos * frameNormal.y + sin * frameBinormal.y
+      const normalZ = cos * frameNormal.z + sin * frameBinormal.z
+      normals.setXYZ(vertexIndex, normalX, normalY, normalZ)
+      positions.setXYZ(
+        vertexIndex,
+        point.x + radius * normalX,
+        point.y + radius * normalY,
+        point.z + radius * normalZ,
+      )
+      vertexIndex += 1
+    }
+  }
+
+  geometry.parameters.path = curve
+  geometry.tangents = frames.tangents
+  geometry.normals = frames.normals
+  geometry.binormals = frames.binormals
+  positions.needsUpdate = true
+  normals.needsUpdate = true
+  geometry.computeBoundingSphere()
+}
+
+function updateCableGeometry(geometry, points) {
+  updateTubeGeometry(geometry, cableCurveForPoints(points))
 }
 
 function geometryForFloorEffect(points, {
@@ -380,10 +490,41 @@ function geometryForFloorEffect(points, {
   return geometry
 }
 
+function updateFloorEffectGeometry(geometry, points, {
+  pointCount,
+  verticalScale,
+  lift,
+  depthOffset,
+}) {
+  updateTubeGeometry(geometry, cableCurveForPoints(points.slice(0, pointCount)))
+  const positions = geometry.attributes.position
+  for (let index = 0; index < positions.count; index += 1) {
+    positions.setY(
+      index,
+      FLOOR_SURFACE_Y + (positions.getY(index) - FLOOR_Y) * verticalScale + millimeters(lift),
+    )
+    positions.setZ(index, positions.getZ(index) + millimeters(depthOffset))
+  }
+  positions.needsUpdate = true
+  geometry.computeVertexNormals()
+  geometry.computeBoundingSphere()
+}
+
 function geometryForContactShadow(points) {
-  return geometryForFloorEffect(points, {
-    pointCount: 4,
+  // Keep the crisp contact layer under the floor section only. Flattening the
+  // raised bend created a second cable-shaped line beneath the real cable.
+  return geometryForFloorEffect(points.slice(2, 4), {
+    pointCount: 2,
     radius: 1.78,
+    verticalScale: 0.025,
+    lift: 0.05,
+    depthOffset: 0,
+  })
+}
+
+function updateContactShadowGeometry(geometry, points) {
+  updateFloorEffectGeometry(geometry, points.slice(2, 4), {
+    pointCount: 2,
     verticalScale: 0.025,
     lift: 0.05,
     depthOffset: 0,
@@ -405,8 +546,10 @@ function orientConnector(connector, tangent) {
 export function createUsbCable(initialCompositionMode = 'compact') {
   let compositionMode = initialCompositionMode
   let currentProgress = 0
+  let connectorStartX = USB_CABLE_DEFAULT_START_X
   const braidTextures = createBraidTexture()
   const cableFadeTexture = createCableFadeTexture()
+  const contactShadowFadeTexture = createContactShadowFadeTexture()
   const materials = {
     braid: new THREE.MeshPhysicalMaterial({
       name: 'usb-cable-braid',
@@ -465,13 +608,14 @@ export function createUsbCable(initialCompositionMode = 'compact') {
     shadow: new THREE.MeshBasicMaterial({
       name: 'usb-cable-contact-shadow',
       color: 0x35403b,
-      alphaMap: cableFadeTexture,
+      alphaMap: contactShadowFadeTexture,
       transparent: true,
       opacity: 0.085,
       depthWrite: false,
       side: THREE.DoubleSide,
     }),
   }
+  Object.values(materials).forEach(applyUsbCableDistanceMask)
   const materialAppearance = new Map(
     Object.values(materials).map((material) => [material, {
       opacity: material.opacity,
@@ -483,7 +627,7 @@ export function createUsbCable(initialCompositionMode = 'compact') {
   object.name = 'USB_CABLE'
   object.visible = false
 
-  const initialPose = cablePoseAt(0, compositionMode)
+  const initialPose = cablePoseAt(0, compositionMode, connectorStartX)
   const contactShadow = new THREE.Mesh(
     geometryForContactShadow(initialPose.cablePoints),
     materials.shadow,
@@ -505,19 +649,17 @@ export function createUsbCable(initialCompositionMode = 'compact') {
   object.add(connector)
   connector.position.copy(initialPose.connector)
   orientConnector(connector, initialPose.tangent)
-  let cableAnimationStep = 0
+  let cableGeometryProgress = 0
 
   function setProgress(progress, forceGeometry = false) {
     currentProgress = progress
-    const pose = cablePoseAt(progress, compositionMode)
-    const nextCableAnimationStep = Math.round(progress * CABLE_ANIMATION_STEPS)
-    if (forceGeometry || nextCableAnimationStep !== cableAnimationStep) {
-      const cablePose = cablePoseAt(nextCableAnimationStep / CABLE_ANIMATION_STEPS, compositionMode)
-      sheath.geometry.dispose()
-      sheath.geometry = geometryForCable(cablePose.cablePoints)
-      contactShadow.geometry.dispose()
-      contactShadow.geometry = geometryForContactShadow(cablePose.cablePoints)
-      cableAnimationStep = nextCableAnimationStep
+    const pose = cablePoseAt(progress, compositionMode, connectorStartX)
+    // Follow the easing's exact progress. Quantizing this value made the cable
+    // hold a shape for several frames and then jump near the end of an ease-out.
+    if (forceGeometry || progress !== cableGeometryProgress) {
+      updateCableGeometry(sheath.geometry, pose.cablePoints)
+      updateContactShadowGeometry(contactShadow.geometry, pose.cablePoints)
+      cableGeometryProgress = progress
     }
     connector.position.copy(pose.connector)
     orientConnector(connector, pose.tangent)
@@ -527,7 +669,11 @@ export function createUsbCable(initialCompositionMode = 'compact') {
     const value = THREE.MathUtils.clamp(opacity, 0, 1)
     materialAppearance.forEach((appearance, material) => {
       const transparent = appearance.transparent || value < 1
-      material.opacity = appearance.opacity * value
+      // The braid's alpha texture makes it visually disappear sooner than a
+      // solid dark layer at the same numeric opacity. Let the contact shadow
+      // trail the cable opacity quadratically so it never outlives the cable.
+      const fadeValue = material === materials.shadow ? value ** 2 : value
+      material.opacity = appearance.opacity * fadeValue
       if (material.transparent !== transparent) {
         material.transparent = transparent
         material.needsUpdate = true
@@ -539,6 +685,18 @@ export function createUsbCable(initialCompositionMode = 'compact') {
     object,
     setOpacity,
     setProgress,
+    setDistanceFade(start, end) {
+      Object.values(materials).forEach((material) => {
+        const mask = material.userData.usbCableDistanceMask
+        if (!mask) return
+        mask.startUniform.value = start
+        mask.endUniform.value = end
+      })
+    },
+    setTravelStartX(nextStartX) {
+      connectorStartX = nextStartX
+      setProgress(currentProgress, true)
+    },
     setCompositionMode(nextCompositionMode) {
       if (nextCompositionMode === compositionMode) return
       compositionMode = nextCompositionMode
@@ -551,6 +709,7 @@ export function createUsbCable(initialCompositionMode = 'compact') {
       Object.values(materials).forEach((material) => material.dispose())
       Object.values(braidTextures).forEach((texture) => texture.dispose())
       cableFadeTexture.dispose()
+      contactShadowFadeTexture.dispose()
     },
   }
 }
@@ -558,20 +717,17 @@ export function createUsbCable(initialCompositionMode = 'compact') {
 export function createUsbCableAnimation({ cable, reducedMotion, requestRender }) {
   let animationStart
   let startProgress = 0
-  let startOpacity = 0
   let currentProgress = 0
-  let currentOpacity = 0
   let targetVisible = false
+  let duration = USB_CABLE_DURATION_MS
   let motionDuration = 0
-  let opacityDuration = 0
 
   function finishAtTarget() {
     const target = Number(targetVisible)
     animationStart = undefined
     currentProgress = target
-    currentOpacity = target
     cable.setProgress(currentProgress)
-    cable.setOpacity(currentOpacity)
+    cable.setOpacity(target)
     cable.object.visible = targetVisible
   }
 
@@ -586,15 +742,13 @@ export function createUsbCableAnimation({ cable, reducedMotion, requestRender })
     }
 
     startProgress = currentProgress
-    startOpacity = currentOpacity
     const target = Number(visible)
-    motionDuration = Math.abs(target - startProgress) * USB_CABLE_DURATION_MS
-    opacityDuration = Math.abs(target - startOpacity) * USB_CABLE_FADE_IN_MS
-    if (motionDuration === 0 && opacityDuration === 0) finishAtTarget()
+    motionDuration = Math.abs(target - startProgress) * duration
+    if (motionDuration === 0) finishAtTarget()
     else {
       cable.object.visible = true
       cable.setProgress(currentProgress)
-      cable.setOpacity(currentOpacity)
+      cable.setOpacity(1)
       animationStart = timestamp
     }
     requestRender()
@@ -604,23 +758,17 @@ export function createUsbCableAnimation({ cable, reducedMotion, requestRender })
     if (animationStart === undefined || reducedMotion()) return false
     const elapsed = timestamp - animationStart
     const motionProgress = motionDuration === 0 ? 1 : Math.min(1, elapsed / motionDuration)
-    const fadeProgress = opacityDuration === 0 ? 1 : Math.min(1, elapsed / opacityDuration)
     const target = Number(targetVisible)
     currentProgress = THREE.MathUtils.lerp(
       startProgress,
       target,
       easeUsbCableProgress(motionProgress),
     )
-    currentOpacity = THREE.MathUtils.lerp(
-      startOpacity,
-      target,
-      easeUsbCableFade(fadeProgress),
-    )
-    if (motionProgress === 1 && fadeProgress === 1) {
+    if (motionProgress === 1) {
       finishAtTarget()
       return false
     }
-    cable.setOpacity(currentOpacity)
+    cable.setOpacity(1)
     cable.setProgress(currentProgress)
     return true
   }
@@ -631,5 +779,10 @@ export function createUsbCableAnimation({ cable, reducedMotion, requestRender })
     requestRender()
   }
 
-  return { finishForReducedMotion, setVisible, update }
+  return {
+    finishForReducedMotion,
+    setDuration(nextDuration) { duration = Math.max(1, nextDuration) },
+    setVisible,
+    update,
+  }
 }

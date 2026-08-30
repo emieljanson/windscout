@@ -1,5 +1,6 @@
 import { createHash, webcrypto } from 'node:crypto'
 import { describe, expect, it, vi } from 'vitest'
+import { CONFIGURATION_VERSION } from '../../src/config/configuration'
 import { FIRMWARE_BASE_URL, FIRMWARE_DOWNLOAD_TIMEOUT_MS, loadFirmwareParts, loadFirmwareRelease, validateFirmwareManifest, verifyFirmwareBytes } from '../../src/installer/firmwareManifest'
 
 function sha(bytes) { return createHash('sha256').update(bytes).digest('hex') }
@@ -10,7 +11,7 @@ function manifest() {
   const parts = [part('bootloader', 0), part('partition-table', 0x8000), part('boot-selection', 0xf000), part('application', 0x20000)]
   return {
     schemaVersion: 1, version: '2.0.0', boardId: 'seeedstudio_reterminal_e1002', chipFamily: 'ESP32-S3', firmwareLayoutVersion: 1, flashSize: 32 * 1024 * 1024,
-    protocol: { minimum: 1, maximum: 1 }, configuration: { minimum: 2, maximum: 2 }, parts,
+    protocol: { minimum: 1, maximum: 1 }, configuration: { minimum: CONFIGURATION_VERSION, maximum: CONFIGURATION_VERSION }, parts,
     cleanInstall: { eraseFlash: true, parts: parts.map((item) => ({ ...item })) },
     preservingUpdate: { eraseFlash: false, parts: parts.filter((item) => ['boot-selection', 'application'].includes(item.kind)).map((item) => ({ ...item })) },
   }
@@ -85,7 +86,7 @@ describe('firmware manifest', () => {
     }))
     await expect(loadFirmwareRelease({
       baseUrl: 'https://example.test/firmware/', fetchFn: escapingFetch, cryptoApi: webcrypto,
-    })).rejects.toThrow(/leaves the WindScout firmware directory/i)
+    })).rejects.toThrow(/leaves the Windscout firmware directory/i)
   })
 
   it('rejects firmware part URLs outside the immutable release directory', async () => {

@@ -36,6 +36,7 @@ export const useConfiguratorStore = defineStore('configurator', {
       showWeather: displayConfiguration.showWeather,
       showTemperature: displayConfiguration.showTemperature,
       showTide: displayConfiguration.showTide,
+      showDedicatedFooter: displayConfiguration.showDedicatedFooter,
       timeFormat: displayConfiguration.timeFormat,
       temperatureUnit: displayConfiguration.temperatureUnit,
       selectedSpotId: DEFAULT_SPOT_ID,
@@ -116,6 +117,11 @@ export const useConfiguratorStore = defineStore('configurator', {
     setShowTide(value) {
       if (typeof value !== 'boolean' || (value && !this.tideAvailable)) return false
       this.showTide = value
+      return true
+    },
+    setShowDedicatedFooter(value) {
+      if (typeof value !== 'boolean') return false
+      this.showDedicatedFooter = value
       return true
     },
     setTimeFormat(value) {

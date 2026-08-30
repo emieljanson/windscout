@@ -117,6 +117,7 @@ typedef enum { IP_MODE_DHCP = 0, IP_MODE_STATIC = 1 } ip_mode_t;
 #define NVS_WIND_WEATHER_KEY "wind_weather"
 #define NVS_WIND_TEMPERATURE_KEY "wind_temp"
 #define NVS_WIND_TIDE_KEY "wind_tide"
+#define NVS_WIND_FOOTER_KEY "wind_footer"
 #define NVS_WIND_TIME_24_KEY "wind_time24"
 #define NVS_WIND_TEMP_F_KEY "wind_temp_f"
 

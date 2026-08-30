@@ -157,7 +157,7 @@ test('keeps the implicit default empty, then shows and restores a chosen spot', 
   await page.setViewportSize({ width: 1280, height: 900 })
   await page.goto('/')
 
-  await expect(page.getByRole('region', { name: 'WindScout 3D preview' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Windscout 3D preview' })).toBeVisible()
   await expect(forecastStatus(page)).toContainText('Live Best Match forecast for Brouwersdam', { timeout: CONFIGURATOR_READY_TIMEOUT_MS })
   expect(requests).toHaveLength(1)
 
@@ -316,6 +316,9 @@ test('creates and remembers a personal spot only after the explicit map flow', a
 })
 
 test('keeps compact mode focused on direct display options', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'userAgent', { configurable: true, value: 'iPhone' })
+  })
   const requests = await mockForecastApi(page)
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
@@ -324,7 +327,7 @@ test('keeps compact mode focused on direct display options', async ({ page }) =>
   await expect(page.locator('.mobile-settings-sheet')).toHaveCount(0)
   await expect(page.getByRole('combobox', { name: 'Search spot' })).toHaveCount(0)
   await expect(page.getByRole('dialog', { name: 'Add spot' })).toHaveCount(0)
-  const displayOptions = page.getByRole('group', { name: 'Show on WindScout' })
+  const displayOptions = page.getByRole('group', { name: 'Show on Windscout' })
   await expect(displayOptions).toBeVisible()
   await expect(displayOptions.getByRole('button')).toHaveCount(4)
   await displayOptions.getByRole('button', { name: 'Threshold' }).click()
@@ -649,43 +652,77 @@ test('keeps the compact inspector above the viewport edge without widening the p
   await expect(temperaturePill).not.toHaveClass(/is-pointer-focus/)
   await expect(temperaturePill).toHaveCSS('outline-width', '2px')
   await expect(panel).toHaveCSS('border-radius', '24px')
+
+  await page.setViewportSize({ width: 844, height: 390 })
+  await expect(panel).toHaveCSS('position', 'fixed')
+  await expect(page.getByTestId('install-continuation')).toHaveCount(0)
+  await expect(page.getByRole('combobox', { name: 'Search spot' })).toHaveCount(0)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(844)
 })
 
-test('does not introduce a mobile scroll context for the capability dock', async ({ page }) => {
+test('keeps the full installer floating above the model on a narrow desktop', async ({ page }) => {
   await mockForecastApi(page)
   await page.setViewportSize({ width: 844, height: 390 })
   await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/?installerDemo=1')
+  await expect(page.locator('[data-scene-status="ready"]')).toBeVisible({ timeout: CONFIGURATOR_READY_TIMEOUT_MS })
+  await expect(page.getByRole('heading', { name: 'Connect your reTerminal' })).toBeVisible()
+
+  const panel = page.locator('.settings-panel')
+  const stage = page.locator('.product-stage')
+  await expect(page.locator('.settings-panel--compact')).toHaveCount(0)
+  await expect(panel).toHaveCSS('position', 'absolute')
+  const [panelBox, stageBox] = await Promise.all([panel.boundingBox(), stage.boundingBox()])
+  expect(panelBox.y).toBeGreaterThanOrEqual(stageBox.y)
+  expect(panelBox.y + panelBox.height).toBeLessThanOrEqual(stageBox.y + stageBox.height)
+  expect(panelBox.x + panelBox.width).toBeLessThanOrEqual(stageBox.x + stageBox.width)
+  expect(await page.evaluate(() => ({
+    scroll: [window.scrollX, window.scrollY],
+    document: [document.documentElement.scrollWidth, document.documentElement.scrollHeight],
+  }))).toEqual({ scroll: [0, 0], document: [844, 390] })
+})
+
+test('keeps the full settings panel below the model inside one continuous 3D scene', async ({ page }) => {
+  await mockForecastApi(page)
+  await page.setViewportSize({ width: 823, height: 968 })
   await page.goto('/')
   await expect(page.locator('[data-scene-status="ready"]')).toBeVisible({ timeout: CONFIGURATOR_READY_TIMEOUT_MS })
 
-  const panel = page.locator('.settings-panel--compact')
-  await expect(panel).toHaveCSS('position', 'fixed')
-  const sceneBefore = await page.locator('.scene-host').evaluate((element) => element.getBoundingClientRect().toJSON())
-  await panel.hover()
-  await page.mouse.wheel(0, 400)
+  const panel = page.locator('.settings-panel')
+  const stage = page.locator('.product-stage')
+  await expect(page.locator('.settings-panel--compact')).toHaveCount(0)
+  await expect(panel).toHaveCSS('position', 'absolute')
 
-  const scrollContexts = await page.locator('.settings-panel--compact, .settings-panel--compact *').evaluateAll((elements) =>
-    elements.filter((element) => {
-      const style = getComputedStyle(element)
-      return /(auto|scroll)/.test(style.overflowY) && element.scrollHeight > element.clientHeight + 1
-    }).map((element) => element.className))
-  expect(scrollContexts).toEqual([])
-  expect(await page.evaluate(() => [window.scrollX, window.scrollY, document.documentElement.scrollWidth])).toEqual([0, 0, 844])
-  expect(await page.locator('.scene-host').evaluate((element) => element.getBoundingClientRect().toJSON())).toEqual(sceneBefore)
+  const [panelBox, stageBox, sceneBox] = await Promise.all([
+    panel.boundingBox(),
+    stage.boundingBox(),
+    page.locator('.scene-host').boundingBox(),
+  ])
+  expect(sceneBox).toEqual(stageBox)
+  expect(stageBox).toEqual({ x: 0, y: 0, width: 823, height: 968 })
+  expect(panelBox.y).toBeGreaterThan(968 / 2)
+  expect(Math.abs(panelBox.x - (823 - panelBox.x - panelBox.width))).toBeLessThanOrEqual(1)
+  expect(968 - panelBox.y - panelBox.height).toBe(16)
+  expect(await page.evaluate(() => ({
+    horizontal: [document.documentElement.clientWidth, document.documentElement.scrollWidth],
+    vertical: [document.documentElement.clientHeight, document.documentElement.scrollHeight],
+  }))).toEqual({ horizontal: [823, 823], vertical: [968, 968] })
 })
 
 for (const viewport of [
-  { width: 320, height: 700, compact: true },
-  { width: 896, height: 700, compact: true },
-  { width: 897, height: 700, compact: false },
+  { width: 320, height: 700, compact: false, installer: true },
+  { width: 640, height: 700, compact: false, installer: true },
+  { width: 896, height: 700, compact: false, installer: true },
+  { width: 897, height: 700, compact: false, installer: true },
 ]) {
-  test(`uses the intended responsive surface at ${viewport.width}px`, async ({ page }) => {
+  test(`keeps the full desktop surface at ${viewport.width}px`, async ({ page }) => {
     await mockForecastApi(page)
     await page.setViewportSize({ width: viewport.width, height: viewport.height })
     await page.goto('/')
     await expect(page.locator('[data-scene-status="ready"]')).toBeVisible({ timeout: CONFIGURATOR_READY_TIMEOUT_MS })
     await expect(page.locator('.settings-panel--compact')).toHaveCount(viewport.compact ? 1 : 0)
-    await expect(page.getByTestId('install-continuation')).toHaveCount(1)
+    await expect(page.getByTestId('install-continuation')).toHaveCount(viewport.installer ? 1 : 0)
+    await expect(page.getByRole('combobox', { name: 'Search spot' })).toHaveCount(viewport.compact ? 0 : 1)
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(viewport.width)
   })
 }
@@ -715,5 +752,5 @@ test('keeps installation continuation and omits retired controls', async ({ page
   await expect(page.getByText('Time format', { exact: true })).toHaveCount(0)
   await page.getByTestId('install-continuation').click()
   await expect(page.getByRole('heading', { name: 'Connect your reTerminal' })).toBeVisible()
-  await expect(page.getByText(/Connect a reTerminal E1002/)).toBeVisible()
+  await expect(page.getByText(/Connect your reTerminal E1002/)).toBeVisible()
 })

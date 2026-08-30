@@ -9,6 +9,7 @@ import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { toCreasedNormals } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { E1002_MODEL } from '../src/assets/e1002.js'
+import { WAKE_BUTTON_COLOR } from '../src/configurator/productColors.js'
 
 const require = createRequire(import.meta.url)
 const projectRoot = dirname(dirname(fileURLToPath(import.meta.url)))
@@ -33,6 +34,7 @@ const frontPanelMeshes = new Set([18, 19, 20, 21])
 const displayBedMeshes = new Set([25])
 const wakeButtonMeshes = new Set([13, 28, 55])
 const navigationButtonMeshes = new Set([12, 29, 30, 53, 54])
+const rearScrewMeshes = new Set([39, 50, 51, 52])
 
 function hash(content) {
   return createHash('sha256').update(content).digest('hex')
@@ -46,6 +48,7 @@ function roleForMesh(index) {
 }
 
 function materialRoleForMesh(role, index) {
+  if (rearScrewMeshes.has(index)) return 'REAR_SCREWS'
   if (wakeButtonMeshes.has(index)) return 'WAKE_BUTTON'
   if (navigationButtonMeshes.has(index)) return 'NAVIGATION_BUTTONS'
   if (role !== 'BODY') return role
@@ -110,7 +113,7 @@ function materialForMesh(role, index, materials) {
     })
   } else if (materialRole === 'WAKE_BUTTON') {
     material = new THREE.MeshPhysicalMaterial({
-      color: 0x86c942,
+      color: WAKE_BUTTON_COLOR,
       roughness: 0.46,
       metalness: 0,
       ior: 1.48,
@@ -127,6 +130,13 @@ function materialForMesh(role, index, materials) {
       ior: 1.48,
       specularIntensity: 0.5,
       name: 'navigation-button-white',
+    })
+  } else if (materialRole === 'REAR_SCREWS') {
+    material = new THREE.MeshPhysicalMaterial({
+      color: 0xa8adb0,
+      roughness: 0.32,
+      metalness: 1,
+      name: 'rear-fastener-brushed-steel',
     })
   } else if (materialRole === 'STAND') {
     material = new THREE.MeshPhysicalMaterial({

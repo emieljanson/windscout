@@ -78,6 +78,25 @@ describe('installer diagnostics', () => {
     expect(snapshot.entries[0]).not.toHaveProperty('binary')
   })
 
+  it('does not treat ordinary numbers and booleans as secrets', () => {
+    const diagnostics = createInstallerDiagnostics({ now: () => 1000 })
+    diagnostics.registerSensitiveValues({
+      privateName: 'Brouwersdam',
+      configurationVersion: 3,
+      enabled: true,
+    })
+    diagnostics.record({
+      category: 'device',
+      operation: 'version-check',
+      message: 'Brouwersdam uses configuration version 3 and enabled=true',
+    })
+
+    const encoded = JSON.stringify(diagnostics.snapshot())
+    expect(encoded).not.toContain('Brouwersdam')
+    expect(encoded).toContain('version 3')
+    expect(encoded).toContain('enabled=true')
+  })
+
   it('tracks the credential lock separately from the redaction registry', () => {
     const diagnostics = createInstallerDiagnostics({ now: () => 1000 })
     diagnostics.registerSensitiveValues({ setting: 'redact-me' })
@@ -90,6 +109,20 @@ describe('installer diagnostics', () => {
     release()
     expect(diagnostics.credentialsLocked).toBe(false)
     expect(JSON.stringify(diagnostics.snapshot())).not.toContain('redact-me')
+  })
+
+  it('drops free-form text while credentials are live', () => {
+    const diagnostics = createInstallerDiagnostics({ now: () => 1000 })
+    const release = diagnostics.acquireCredentialLock({ ssid: 'Home', password: 'split-secret' })
+
+    diagnostics.record({ category: 'serial', operation: 'uart', status: 'output', message: 'split-' })
+    diagnostics.record({ category: 'serial', operation: 'uart', status: 'output', message: 'secret' })
+    release()
+
+    const snapshot = diagnostics.snapshot()
+    expect(snapshot.entries).toHaveLength(2)
+    expect(snapshot.entries.every((entry) => !('message' in entry))).toBe(true)
+    expect(JSON.stringify(snapshot)).not.toMatch(/split|secret/)
   })
 
   it('destroys all attempt data and cannot be revived', () => {
@@ -106,12 +139,13 @@ describe('installer diagnostics', () => {
 describe('sanitizeDiagnosticText', () => {
   it('redacts authorization, email, IP, MAC, coordinates, and query values', () => {
     const value = sanitizeDiagnosticText(
-      'Authorization: Bearer abc.def email me@example.com at 10.0.0.1 device aa:bb:cc:dd:ee:ff latitude=51.1 longitude=4.2 https://x.test/a?q=secret',
+      'Authorization: Bearer abc.def email me@example.com at 10.0.0.1 or 2001:db8::1 or ::1 device aa:bb:cc:dd:ee:ff latitude=51.1 longitude=4.2 https://x.test/a?q=secret',
       [],
     )
 
-    for (const forbidden of ['abc.def', 'me@example.com', '10.0.0.1', 'aa:bb:cc:dd:ee:ff', '51.1', '4.2', 'q=secret']) {
+    for (const forbidden of ['abc.def', 'me@example.com', '10.0.0.1', '2001:db8::1', '::1', 'aa:bb:cc:dd:ee:ff', '51.1', '4.2', 'q=secret']) {
       expect(value).not.toContain(forbidden)
     }
+    expect(sanitizeDiagnosticText('finished at 12:30')).toContain('12:30')
   })
 })

@@ -486,8 +486,14 @@ wakeup_source_t power_manager_get_wakeup_source(void)
 
 void power_manager_set_installer_active(bool active)
 {
+    if (installer_active == active) return;
     installer_active = active;
-    if (active) power_manager_reset_sleep_timer();
+    if (active) {
+        power_manager_reset_sleep_timer();
+        power_manager_disable_auto_light_sleep();
+    } else {
+        power_manager_enable_auto_light_sleep();
+    }
 }
 
 bool power_manager_is_installer_active(void)

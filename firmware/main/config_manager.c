@@ -269,8 +269,7 @@ esp_err_t config_manager_init(void)
         uint32_t stored_wind_version = 0;
         if (nvs_get_u32(nvs_handle, NVS_WIND_CONFIG_VERSION_KEY,
                         &stored_wind_version) == ESP_OK &&
-            (stored_wind_version == 1u ||
-             stored_wind_version == WIND_DISPLAY_CONFIG_VERSION)) {
+            wind_display_config_stored_version_supported(stored_wind_version)) {
             wind_display_config_t stored;
             wind_display_config_default(&stored);
             nvs_get_u8(nvs_handle, NVS_WIND_DISPLAY_MODE_KEY, &stored.display_mode);
@@ -291,6 +290,11 @@ esp_err_t config_manager_init(void)
                 flag = 0;
                 if (nvs_get_u8(nvs_handle, NVS_WIND_TEMP_F_KEY, &flag) == ESP_OK)
                     stored.temperature_fahrenheit = flag != 0;
+            }
+            if (stored_wind_version >= 3u) {
+                flag = 1;
+                if (nvs_get_u8(nvs_handle, NVS_WIND_FOOTER_KEY, &flag) == ESP_OK)
+                    stored.show_dedicated_footer = flag != 0;
             }
             if (wind_display_config_validate(&stored)) {
                 wind_display_config = stored;
@@ -732,6 +736,9 @@ bool config_manager_set_wind_display_config(const wind_display_config_t *config)
     if (result == ESP_OK)
         result = nvs_set_u8(nvs_handle, NVS_WIND_TIDE_KEY,
                             config->show_tide ? 1 : 0);
+    if (result == ESP_OK)
+        result = nvs_set_u8(nvs_handle, NVS_WIND_FOOTER_KEY,
+                            config->show_dedicated_footer ? 1 : 0);
     if (result == ESP_OK)
         result = nvs_set_u8(nvs_handle, NVS_WIND_TIME_24_KEY,
                             config->use_24_hour ? 1 : 0);

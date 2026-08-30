@@ -37,7 +37,7 @@ export function validateFirmwareManifest(manifest) {
       !manifest.protocol || manifest.protocol.minimum > 1 || manifest.protocol.maximum < 1 ||
       !manifest.configuration || manifest.configuration.minimum > CONFIGURATION_VERSION ||
       manifest.configuration.maximum < CONFIGURATION_VERSION) {
-    fail('This firmware release is not compatible with WindScout.')
+    fail('This firmware release is not compatible with Windscout.')
   }
   if (!Array.isArray(manifest.parts) || manifest.parts.length !== REQUIRED_KINDS.length ||
       new Set(manifest.parts.map((part) => part.kind)).size !== REQUIRED_KINDS.length) {
@@ -149,7 +149,7 @@ export async function loadFirmwareRelease({
     const pointerUrl = new URL('latest.json', root)
     const pointer = await fetchJson(fetchFn, pointerUrl, downloadSignal)
     if (!pointer || typeof pointer.manifest !== 'string' || !SHA256_PATTERN.test(pointer.sha256 ?? '')) fail('The release pointer is invalid.')
-    const manifestUrl = releaseUrl(pointer.manifest, root, 'The release pointer leaves the WindScout firmware directory.')
+    const manifestUrl = releaseUrl(pointer.manifest, root, 'The release pointer leaves the Windscout firmware directory.')
     const response = await fetchFn(manifestUrl, { cache: 'no-store', signal: downloadSignal })
     if (!response.ok) throw new InstallerError(INSTALLER_ERROR_CODES.DOWNLOAD_FAILED, 'The firmware manifest could not be downloaded.')
     const manifestBytes = new Uint8Array(await response.arrayBuffer())
