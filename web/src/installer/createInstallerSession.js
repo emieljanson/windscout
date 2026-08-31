@@ -197,9 +197,21 @@ export function createInstallerSession({
 
   async function probeApp(selectedPort) {
     const candidate = protocolFactory(selectedPort, { diagnostics })
-    let hello
     try {
       await candidate.open()
+    } catch (error) {
+      try { await candidate.close() } catch {}
+      if (error?.name === 'NetworkError') {
+        throw new InstallerError(
+          INSTALLER_ERROR_CODES.DEVICE_NOT_ALLOWED,
+          'This USB device is already in use. Close other Windscout tabs or serial tools, then try again.',
+          { cause: error },
+        )
+      }
+      return null
+    }
+    let hello
+    try {
       hello = await candidate.request('hello')
       if (!validHello(hello)) throw new Error('Incomplete Windscout identity')
     } catch {
@@ -302,7 +314,7 @@ export function createInstallerSession({
         requiredConfigurationVersion: CONFIGURATION_VERSION,
       })
       if (action.action === INSTALL_ACTIONS.BLOCKED) {
-        throw new InstallerError(INSTALLER_ERROR_CODES.INCOMPATIBLE_DEVICE, 'This is not a supported reTerminal E1002.', { recoverable: false })
+        throw new InstallerError(INSTALLER_ERROR_CODES.INCOMPATIBLE_DEVICE, 'This is not a supported reTerminal E1001 or E1002.', { recoverable: false })
       }
       setReleaseDiagnosticContext()
       update({ phase: action.action === INSTALL_ACTIONS.CONFIRM_E1002 ? 'confirm-device' : 'review', action })
@@ -412,7 +424,7 @@ export function createInstallerSession({
         return state
       }
       if ([INSTALL_ACTIONS.INSTALL, INSTALL_ACTIONS.REINSTALL, INSTALL_ACTIONS.UPDATE_FIRMWARE].includes(action.action)) {
-        if (!device.verifiedBoard && !confirmed) throw new InstallerError(INSTALLER_ERROR_CODES.UNCONFIRMED_DEVICE, 'Confirm the reTerminal E1002 before installing.')
+        if (!device.verifiedBoard && !confirmed) throw new InstallerError(INSTALLER_ERROR_CODES.UNCONFIRMED_DEVICE, 'Confirm this is a reTerminal E1001 or E1002 before installing.')
         const mode = action.action === INSTALL_ACTIONS.UPDATE_FIRMWARE ? 'preservingUpdate' : 'cleanInstall'
         update({ phase: 'downloading', progress: 0.05 })
         const bundle = await partsLoader({ ...release, mode, signal: operationController?.signal })
@@ -505,7 +517,7 @@ export function createInstallerSession({
         requiredConfigurationVersion: CONFIGURATION_VERSION,
       })
       if (action.action === INSTALL_ACTIONS.BLOCKED) {
-        throw new InstallerError(INSTALLER_ERROR_CODES.INCOMPATIBLE_DEVICE, 'This is not a supported reTerminal E1002.', { recoverable: false })
+        throw new InstallerError(INSTALLER_ERROR_CODES.INCOMPATIBLE_DEVICE, 'This is not a supported reTerminal E1001 or E1002.', { recoverable: false })
       }
       setReleaseDiagnosticContext()
       confirmed = false

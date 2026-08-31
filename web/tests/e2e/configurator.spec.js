@@ -754,5 +754,5 @@ test('keeps installation continuation and omits retired controls', async ({ page
   await expect(page.getByText('Time format', { exact: true })).toHaveCount(0)
   await page.getByTestId('install-continuation').click()
   await expect(page.getByRole('heading', { name: 'Connect your reTerminal' })).toBeVisible()
-  await expect(page.getByText(/Connect your reTerminal E1002/)).toBeVisible()
+  await expect(page.getByText(/Connect your reTerminal E1001 or E1002/)).toBeVisible()
 })

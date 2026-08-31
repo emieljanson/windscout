@@ -12,7 +12,7 @@ defineEmits(['connect'])
       </template>
       <template v-else>
         <h2 id="installer-title">Connect your reTerminal</h2>
-        <p>Connect your reTerminal E1002 with a USB data cable.</p>
+        <p>Connect your reTerminal E1001 or E1002 with a USB data cable.</p>
       </template>
     </div>
     <div v-if="!unsupportedReason" class="installer-actions">
@@ -22,7 +22,7 @@ defineEmits(['connect'])
         target="_blank"
         rel="noopener noreferrer"
       >
-        Buy one
+        Buy a reTerminal
       </a>
       <button data-autofocus class="installer-primary" type="button" @click="$emit('connect')">
         Continue

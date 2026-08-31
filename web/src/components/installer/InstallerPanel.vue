@@ -41,7 +41,7 @@ watch(
 
 const critical = computed(() => !state.value.safeToDisconnect)
 const progressCopy = computed(() => ({
-  ready: ['Install Windscout', 'Ready to connect a reTerminal E1002.'],
+  ready: ['Install Windscout', 'Ready to connect a reTerminal E1001 or E1002.'],
   'checking-device': ['Checking device', 'Windscout is identifying the device and the safest setup path.'],
   downloading: ['Preparing firmware', 'The verified Windscout release is being prepared before any write starts.'],
   'installing-firmware': ['Writing firmware', 'Keep the USB cable connected until writing is complete.'],
@@ -177,8 +177,8 @@ onBeforeUnmount(() => { toast.dismiss('installer-error'); toast.dismiss('install
 
           <div v-else-if="state.phase === 'confirm-device'" class="installer-step">
             <div class="installer-step__copy">
-              <h2 id="installer-title">Confirm your reTerminal E1002</h2>
-              <p>Windscout found a compatible chip but cannot verify the model. Installing will replace its software and saved setup.</p>
+              <h2 id="installer-title">Confirm your reTerminal</h2>
+              <p>Make sure this is a reTerminal E1001 or E1002. Installing will replace its software and saved setup.</p>
             </div>
             <div class="installer-actions">
               <button data-autofocus class="installer-primary" type="button" @click="session.confirmDevice()">Install Windscout</button>

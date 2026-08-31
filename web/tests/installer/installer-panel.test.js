@@ -77,7 +77,7 @@ describe('installer inspector panel', () => {
       expect(wrapper.text()).not.toContain('Firefox, Chrome, or Edge')
       const buyLink = wrapper.get('.installer-secondary')
       expect(buyLink.element.tagName).toBe('A')
-      expect(buyLink.text()).toBe('Buy one')
+      expect(buyLink.text()).toBe('Buy a reTerminal')
       expect(buyLink.attributes('href')).toBe('https://www.seeedstudio.com/reTerminal-E1002-p-6533.html?sensecap_affiliate=UF4PmgK&referring_service=link')
       expect(buyLink.attributes('target')).toBe('_blank')
       expect(buyLink.attributes('rel')).toBe('noopener noreferrer')
@@ -134,7 +134,8 @@ describe('installer inspector panel', () => {
   it('combines enclosure and install confirmation for an unverified ESP32-S3', async () => {
     const session = fakeSession({ phase: 'confirm-device', progress: 0, safeToDisconnect: true, error: null })
     mountPanel(session)
-    expect(wrapper.text()).toContain('Confirm your reTerminal E1002')
+    expect(wrapper.text()).toContain('Confirm your reTerminal')
+    expect(wrapper.text()).toContain('reTerminal E1001 or E1002')
     expect(wrapper.text()).toContain('replace its software and saved setup')
     expect(wrapper.get('.installer-primary').text()).toBe('Install Windscout')
     expect(wrapper.find('.installer-secondary').exists()).toBe(false)

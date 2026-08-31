@@ -60,6 +60,30 @@ describe('installer session', () => {
     expect(session.getState()).toMatchObject({ phase: 'error', safeToDisconnect: true })
   })
 
+  it('reports an already-open serial port instead of calling the E1002 incompatible', async () => {
+    const portBusy = Object.assign(new Error('Failed to open serial port'), { name: 'NetworkError' })
+    const protocol = { open: vi.fn().mockRejectedValue(portBusy), close: vi.fn() }
+    const esptool = { identify: vi.fn() }
+    const session = createInstallerSession({
+      configuration,
+      requestPort: async () => ({}),
+      releaseLoader: async () => release,
+      protocolFactory: () => protocol,
+      esptool,
+    })
+
+    await session.connect()
+
+    expect(esptool.identify).not.toHaveBeenCalled()
+    expect(session.getState()).toMatchObject({
+      phase: 'error',
+      error: {
+        code: INSTALLER_ERROR_CODES.DEVICE_NOT_ALLOWED,
+        message: 'This USB device is already in use. Close other Windscout tabs or serial tools, then try again.',
+      },
+    })
+  })
+
   it('shows the device selection step while the browser chooser is open', async () => {
     let resolvePort
     const session = createInstallerSession({

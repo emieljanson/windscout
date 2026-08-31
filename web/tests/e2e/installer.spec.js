@@ -103,7 +103,8 @@ test('guides a fake E1002 through confirmation, reconnect, Wi-Fi and completion'
   await expect(stateIcon).toHaveAttribute('data-phase', 'ready')
 
   await page.getByRole('button', { name: 'Continue' }).click()
-  await expect(page.getByRole('heading', { name: 'Confirm your reTerminal E1002' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Confirm your reTerminal' })).toBeVisible()
+  await expect(page.getByText('Make sure this is a reTerminal E1001 or E1002. Installing will replace its software and saved setup.')).toBeVisible()
   const stepTransforms = await page.locator('.installer-stage__view')
     .evaluateAll((views) => views.map((view) => getComputedStyle(view).transform))
   expect(stepTransforms.length).toBeGreaterThan(0)
@@ -153,7 +154,7 @@ test('guides a fake E1002 through confirmation, reconnect, Wi-Fi and completion'
   await password.fill('not-retained')
   await page.getByRole('button', { name: 'Continue' }).click()
 
-  await expect(page.getByRole('heading', { name: 'Done, enjoy' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Ready for the wind' })).toBeVisible()
   await expectCopyAligned()
   await page.getByRole('button', { name: 'Done' }).click()
   await expect(install).toBeFocused()
@@ -169,7 +170,8 @@ test('demo follows only the fresh-device happy flow through Wi-Fi', async ({ pag
   await expect(panel).toHaveCSS('transition-duration', '0.18s')
   const regularHeight = (await panel.boundingBox()).height
   await page.getByRole('button', { name: 'Continue' }).click()
-  await expect(page.getByRole('heading', { name: 'Confirm your reTerminal E1002' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Confirm your reTerminal' })).toBeVisible()
+  await expect(page.getByText('Make sure this is a reTerminal E1001 or E1002. Installing will replace its software and saved setup.')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Cancel' })).toHaveCount(0)
 
   await page.getByRole('button', { name: 'Install Windscout' }).click()
@@ -194,7 +196,7 @@ test('demo follows only the fresh-device happy flow through Wi-Fi', async ({ pag
   await expect(page.getByRole('heading', { name: 'Applying setup' })).toBeVisible()
   await page.waitForTimeout(100)
   expect((await panel.boundingBox()).height).toBeCloseTo(wifiHeight, 0)
-  await expect(page.getByRole('heading', { name: 'Done, enjoy' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Ready for the wind' })).toBeVisible()
   await expect.poll(async () => (await panel.boundingBox()).height).toBeCloseTo(regularHeight, 0)
 })
 
