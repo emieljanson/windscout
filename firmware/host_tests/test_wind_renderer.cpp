@@ -203,17 +203,34 @@ TEST(WindRenderer, UsesTheSameCompositionForACleanUnditheredPreview) {
     }
     EXPECT_TRUE(all_alpha_opaque);
 
-    dashboard.display_mode = WIND_RENDERER_MODE_THRESHOLD;
-    const Frame threshold = RenderPreview(dashboard);
-    bool has_red = false;
-    for (size_t offset = 0; offset < threshold.size(); offset += 4) {
-        if (threshold[offset] == 255 && threshold[offset + 1] == 0 &&
-            threshold[offset + 2] == 0 && threshold[offset + 3] == 255) {
-            has_red = true;
-            break;
+    bool title_has_antialiased_edge = false;
+    for (int y = 20; y <= 70; ++y) {
+        for (int x = 30; x <= 180; ++x) {
+            const size_t offset = static_cast<size_t>(y * WIND_RENDERER_WIDTH + x) * 4;
+            const uint8_t luma = preview[offset];
+            if (luma > 0 && luma < 255 &&
+                preview[offset + 1] == luma && preview[offset + 2] == luma) {
+                title_has_antialiased_edge = true;
+            }
         }
     }
+    EXPECT_TRUE(title_has_antialiased_edge);
+
+    dashboard.display_mode = WIND_RENDERER_MODE_THRESHOLD;
+    const Frame threshold_palette = Render(dashboard);
+    const Frame threshold = RenderPreview(dashboard);
+    bool has_red = false;
+    bool red_geometry_matches = true;
+    for (size_t offset = 0; offset < threshold.size(); offset += 4) {
+        const bool preview_red =
+            threshold[offset] == 255 && threshold[offset + 1] == 0 &&
+            threshold[offset + 2] == 0 && threshold[offset + 3] == 255;
+        const bool palette_red = threshold_palette[offset / 4] == 3;
+        has_red = has_red || preview_red;
+        red_geometry_matches = red_geometry_matches && preview_red == palette_red;
+    }
     EXPECT_TRUE(has_red);
+    EXPECT_TRUE(red_geometry_matches);
 }
 
 TEST(WindRenderer, ExpandsNativePaletteToPhysicalBlackWhiteAndRedRgb) {

@@ -60,6 +60,7 @@ typedef struct {
 typedef struct {
     uint8_t *pixels;
     int clipped;
+    bool antialias_text;
 } canvas_t;
 
 typedef enum {
@@ -310,11 +311,21 @@ static void outline_rect(canvas_t *canvas, int x, int y, int width, int height) 
     vertical_line(canvas, x + width - 1, y, y + height - 1, CANVAS_BLACK);
 }
 
+static void draw_text_color(canvas_t *canvas, int x, int baseline,
+                            wind_font_family_t family, int size, uint8_t gray,
+                            const char *text);
+
 static void draw_text(canvas_t *canvas, int x, int baseline,
                       wind_font_family_t family, int size, const char *text) {
+    draw_text_color(canvas, x, baseline, family, size, CANVAS_BLACK, text);
+}
+
+static void draw_text_mask(canvas_t *canvas, int x, int baseline,
+                           wind_font_family_t family, int size,
+                           const char *text) {
     wind_font_draw(canvas->pixels, WIND_RENDERER_WIDTH, WIND_RENDERER_HEIGHT,
-                   WIND_RENDERER_WIDTH, x, baseline, family, size, CANVAS_BLACK,
-                   safe_text(text));
+                   WIND_RENDERER_WIDTH, x, baseline, family, size,
+                   CANVAS_BLACK, safe_text(text));
 }
 
 static void fade_region_to_white(canvas_t *canvas, int left, int top,
@@ -357,9 +368,16 @@ static int rightmost_ink_pixel(const canvas_t *canvas, int left, int top,
 static void draw_text_color(canvas_t *canvas, int x, int baseline,
                             wind_font_family_t family, int size, uint8_t gray,
                             const char *text) {
-    wind_font_draw(canvas->pixels, WIND_RENDERER_WIDTH, WIND_RENDERER_HEIGHT,
-                   WIND_RENDERER_WIDTH, x, baseline, family, size, gray,
-                   safe_text(text));
+    if (canvas->antialias_text) {
+        wind_font_draw_antialiased(
+            canvas->pixels, WIND_RENDERER_WIDTH, WIND_RENDERER_HEIGHT,
+            WIND_RENDERER_WIDTH, x, baseline, family, size, gray,
+            safe_text(text));
+    } else {
+        wind_font_draw(canvas->pixels, WIND_RENDERER_WIDTH, WIND_RENDERER_HEIGHT,
+                       WIND_RENDERER_WIDTH, x, baseline, family, size, gray,
+                       safe_text(text));
+    }
 }
 
 static void draw_outlined_text_center(canvas_t *canvas, int center_x,
@@ -1061,14 +1079,14 @@ static void draw_output_outlined_text(canvas_t *scratch,
     for (int dy = -2; dy <= 2; ++dy) {
         for (int dx = -2; dx <= 2; ++dx) {
             if ((dx == 0 && dy == 0) || dx * dx + dy * dy > 4) continue;
-            draw_text(scratch, x + dx, baseline + dy, family, size, text);
+            draw_text_mask(scratch, x + dx, baseline + dy, family, size, text);
         }
     }
     apply_mask_to_output(scratch, output, mask_left, mask_top,
                          mask_right, mask_bottom, OUTPUT_WHITE);
 
     memset(scratch->pixels, CANVAS_WHITE, WIND_RENDERER_PALETTE_BYTES);
-    draw_text(scratch, x, baseline, family, size, text);
+    draw_text_mask(scratch, x, baseline, family, size, text);
     apply_mask_to_output(scratch, output, mask_left, mask_top,
                          mask_right, mask_bottom, text_color);
 }
@@ -1449,6 +1467,7 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
     canvas_t canvas = {0};
     canvas.pixels = (uint8_t *)malloc(WIND_RENDERER_PALETTE_BYTES);
     if (!canvas.pixels) return -2;
+    canvas.antialias_text = output_format == OUTPUT_RGBA;
     memset(canvas.pixels, CANVAS_WHITE, WIND_RENDERER_PALETTE_BYTES);
     if (stats) memset(stats, 0, sizeof(*stats));
     const dashboard_layout_t layout = dashboard_layout(dashboard);
