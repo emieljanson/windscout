@@ -1,0 +1,266 @@
+.spot-dialog__overlay {
+  position: fixed;
+  z-index: 2000;
+  inset: 0;
+  background: rgba(18, 23, 21, 0.34);
+  backdrop-filter: blur(4px);
+}
+
+.spot-dialog {
+  position: fixed;
+  z-index: 2001;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: min(47.75rem, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  gap: 1.5rem;
+  align-content: start;
+  padding: 1.5rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  color: #000;
+  background: #fff;
+  border: 0;
+  border-radius: 1rem;
+  box-shadow:
+    0 2px 5px rgba(0, 0, 0, 0.1),
+    0 0 0 0.5px rgba(0, 0, 0, 0.04),
+    0 4px 29px rgba(0, 0, 0, 0.12);
+  transform: translate(-50%, -50%);
+}
+
+.spot-dialog:focus-visible { outline: none; }
+.spot-dialog__header { min-inline-size: 0; }
+.spot-dialog__title,
+.spot-dialog__description,
+.spot-dialog__error,
+.spot-dialog__status { margin: 0; }
+.spot-dialog__title { font-size: 1.25rem; font-weight: 700; line-height: normal; }
+.spot-dialog__description {
+  max-inline-size: 21.5625rem;
+  margin-block-start: 0.25rem;
+  color: #959595;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: normal;
+}
+
+.spot-dialog__close {
+  position: absolute;
+  inset-block-start: 0.75rem;
+  inset-inline-end: 0.75rem;
+  display: grid;
+  inline-size: 2rem;
+  block-size: 2rem;
+  padding: 0;
+  place-items: center;
+  color: #949496;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: color 120ms ease-out, background-color 120ms ease-out, scale 120ms ease-out;
+}
+.spot-dialog__close::before {
+  position: absolute;
+  z-index: 0;
+  inset: 0.125rem;
+  content: '';
+  background: #f7f7f7;
+  border-radius: 50%;
+}
+.spot-dialog__close:hover { color: #000; }
+.spot-dialog__close:hover::before { background: #f1f1f1; }
+.spot-dialog__close:active,
+.spot-dialog__confirm:active { scale: 0.96; }
+.spot-dialog__close svg { position: relative; z-index: 1; inline-size: 1rem; block-size: 1rem; }
+
+.spot-dialog__workspace {
+  position: relative;
+  min-inline-size: 0;
+  overflow: hidden;
+  border-radius: 0.625rem;
+}
+
+.spot-dialog__search {
+  position: absolute;
+  z-index: 3;
+  inset-block-start: 0.5rem;
+  inset-inline-start: 0.5rem;
+  display: grid;
+  inline-size: 12.75rem;
+  min-inline-size: 0;
+  gap: 0.25rem;
+}
+.spot-dialog__search-field {
+  display: flex;
+  block-size: 2.375rem;
+  align-items: center;
+  gap: 0.5rem;
+  padding-inline: 0.625rem 0.5rem;
+  color: #949496;
+  background: #fff;
+  border-radius: 0.625rem;
+  box-shadow:
+    0 2px 2.5px rgba(0, 0, 0, 0.1),
+    0 0 0 0.5px rgba(0, 0, 0, 0.04),
+    0 4px 14.5px rgba(0, 0, 0, 0.12);
+}
+.spot-dialog__search-icon { flex: none; inline-size: 1rem; block-size: 1rem; }
+.spot-dialog__search-input {
+  min-inline-size: 0;
+  inline-size: 100%;
+  padding: 0;
+  color: #000;
+  caret-color: var(--settings-focus, #000);
+  background: transparent;
+  border: 0;
+  outline: 0;
+  font: 500 0.8125rem/normal 'Inter Variable', Inter, system-ui, sans-serif;
+}
+.spot-dialog__search-input::placeholder { color: #949496; opacity: 1; }
+.spot-dialog__search-field:has(.spot-dialog__search-input:focus-visible:not(.is-initial-focus):not(.is-pointer-focus)) {
+  box-shadow: inset 0 0 0 1px var(--settings-focus, #000);
+}
+.spot-dialog__results {
+  min-block-size: 0;
+  max-block-size: 14.75rem;
+  padding: 0.25rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: #fff;
+  border-radius: 0.75rem;
+  box-shadow:
+    0 2px 2.5px rgba(0, 0, 0, 0.1),
+    0 0 0 0.5px rgba(0, 0, 0, 0.04),
+    0 4px 14.5px rgba(0, 0, 0, 0.12);
+  scrollbar-width: thin;
+}
+.spot-dialog__result {
+  display: grid;
+  inline-size: 100%;
+  min-block-size: 2.75rem;
+  padding: 0.5rem 0.625rem;
+  align-content: center;
+  text-align: start;
+  color: #000;
+  background: transparent;
+  border: 0;
+  border-radius: 0.625rem;
+  cursor: pointer;
+}
+.spot-dialog__result:hover,
+.spot-dialog__result.is-active { background: #f7f7f7; }
+.spot-dialog__result:focus-visible {
+  outline: 0;
+  box-shadow: inset 0 0 0 1px var(--settings-focus, #000);
+}
+.spot-dialog__result-name {
+  overflow: hidden;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.spot-dialog__result-description {
+  overflow: hidden;
+  color: #949496;
+  font-size: 0.625rem;
+  font-weight: 400;
+  line-height: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.spot-dialog__status {
+  padding: 0.5rem 0.625rem;
+  color: #949496;
+  font-size: 0.625rem;
+  line-height: 1.35;
+}
+
+.spot-dialog__map-wrap {
+  position: relative;
+  block-size: 18.8125rem;
+  min-inline-size: 0;
+  overflow: hidden;
+  background: #e9ecea;
+  border-radius: 0.625rem;
+}
+.spot-dialog__map,
+.spot-dialog__map.maplibregl-map { position: absolute; inset: 0; }
+.spot-dialog__pin {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 50%;
+  inline-size: 1.3125rem;
+  block-size: 2.125rem;
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+}
+.spot-dialog__pin svg { display: block; inline-size: 100%; block-size: 100%; }
+.spot-dialog__error { color: #a93624; font-size: 0.6875rem; line-height: 1.35; }
+
+.spot-dialog__footer { display: flex; justify-content: flex-end; }
+.spot-dialog__confirm {
+  block-size: 2.375rem;
+  padding-inline: 1.5rem;
+  color: #fff;
+  background: #000;
+  border: 0;
+  border-radius: 0.625rem;
+  font: 500 0.8125rem/1 'Inter Variable', Inter, system-ui, sans-serif;
+  cursor: pointer;
+  transition: background-color 120ms ease-out, scale 120ms ease-out, opacity 120ms ease-out;
+}
+.spot-dialog__confirm:hover:not(:disabled) { background: #202020; }
+.spot-dialog__confirm:disabled { opacity: 0.35; cursor: not-allowed; }
+.spot-dialog__close:focus-visible,
+.spot-dialog__confirm:focus-visible {
+  outline: 0;
+  box-shadow: inset 0 0 0 1px var(--settings-focus, #000);
+}
+
+@media (max-width: 46rem) {
+  .spot-dialog {
+    top: max(0.5rem, env(safe-area-inset-top));
+    bottom: max(0.5rem, env(safe-area-inset-bottom));
+    display: flex;
+    flex-direction: column;
+    width: calc(100% - 1rem);
+    max-height: none;
+    gap: 1rem;
+    padding: 1rem;
+    transform: translateX(-50%);
+  }
+  .spot-dialog__workspace {
+    flex: 1;
+    min-block-size: 14rem;
+  }
+  .spot-dialog__search { inline-size: calc(100% - 1rem); }
+  .spot-dialog__map-wrap { min-block-size: 14rem; block-size: 100%; }
+  .spot-dialog__footer { margin-block-start: auto; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .spot-dialog__overlay[data-state='open'] { animation: spot-overlay-in 140ms ease-out; }
+  .spot-dialog[data-state='open'] { animation: spot-dialog-in 160ms ease-out; }
+  @keyframes spot-overlay-in { from { opacity: 0; } }
+  @keyframes spot-dialog-in { from { opacity: 0; transform: translate(-50%, calc(-50% + 6px)); } }
+}
+
+@media (max-width: 46rem) and (prefers-reduced-motion: no-preference) {
+  .spot-dialog[data-state='open'] { animation-name: spot-dialog-mobile-in; }
+  @keyframes spot-dialog-mobile-in {
+    from { opacity: 0; transform: translateX(-50%) translateY(6px); }
+  }
+}
+
+@media (forced-colors: active) {
+  .spot-dialog,
+  .spot-dialog__close,
+  .spot-dialog__confirm,
+  .spot-dialog__result { border: 1px solid ButtonText; }
+}

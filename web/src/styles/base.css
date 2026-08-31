@@ -1,0 +1,96 @@
+:root {
+  color-scheme: light;
+  font-family: 'Inter Variable', Inter, system-ui, sans-serif;
+  color: #151817;
+  background: #f3f5f7;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --ink: #151817;
+  --muted: #68716e;
+  --mist: #ffffff;
+  --signal: #e74d32;
+  --line: rgba(21, 24, 23, 0.16);
+  --focus: #000000;
+  --studio-background: #f3f5f7;
+  --visual-viewport-bottom: 0px;
+}
+
+* { box-sizing: border-box; }
+
+html { min-width: 320px; background: var(--studio-background); }
+body { min-width: 320px; min-height: 100vh; margin: 0; background: var(--studio-background); }
+button, input, select { font: inherit; }
+
+html.configurator-is-compact,
+html.configurator-is-compact body,
+html.configurator-is-compact #app {
+  inline-size: 100%;
+  block-size: 100vh;
+  block-size: 100lvh;
+  max-inline-size: 100%;
+  overflow: hidden;
+  overflow: clip;
+  overscroll-behavior: none;
+}
+
+html.configurator-is-compact body {
+  position: fixed;
+  inset: 0;
+}
+
+html.configurator-is-compact [data-sonner-toaster] {
+  inset-inline: 1rem !important;
+  inline-size: calc(100% - 2rem) !important;
+  max-inline-size: calc(100% - 2rem) !important;
+}
+
+html.configurator-is-compact [data-sonner-toaster] [data-sonner-toast] {
+  inline-size: 100% !important;
+}
+
+.skip-link {
+  position: fixed;
+  z-index: 10000;
+  top: 0.75rem;
+  left: 0.75rem;
+  padding: 0.65rem 0.8rem;
+  color: white;
+  background: var(--ink);
+  transform: translateY(-160%);
+}
+.skip-link:focus { transform: translateY(0); }
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+[data-sonner-toaster] {
+  font-family: 'Inter Variable', Inter, system-ui, sans-serif;
+}
+
+html.configurator-is-compact [data-sonner-toaster][data-y-position='top'] {
+  top: max(0.75rem, env(safe-area-inset-top)) !important;
+}
+
+[data-sonner-toast] {
+  border: 0 !important;
+  border-radius: 12px !important;
+  color: #151817 !important;
+  background: #ffffff !important;
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 10%),
+    0 10px 32px rgb(0 0 0 / 18%) !important;
+}
+
+[data-sonner-toast] [data-icon] {
+  color: #151817 !important;
+}
+
+[data-sonner-toast] [data-description] {
+  color: #68716e !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+}

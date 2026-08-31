@@ -1,0 +1,47 @@
+{
+  "name": "windscout-configurator",
+  "version": "0.1.0",
+  "private": true,
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "predev": "node scripts/prepare-local-installer.mjs",
+    "dev": "vite",
+    "build": "vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "spots:import": "node scripts/spots/import-sources.mjs",
+    "spots:validate": "node scripts/spots/validate-candidates.mjs",
+    "spots:review": "vite --config vite.spot-review.config.js --host 127.0.0.1",
+    "spots:catalog": "node scripts/spots/build-catalog.mjs",
+    "spots:catalog:check": "node scripts/spots/check-catalog.mjs --check",
+    "renderer:build": "node scripts/build-wind-renderer.mjs",
+    "renderer:check": "node scripts/build-wind-renderer.mjs --check",
+    "model:prepare": "node scripts/prepare-e1002-model.mjs",
+    "installer:prepare": "node scripts/prepare-local-installer.mjs"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.2.8",
+    "@fontsource-variable/jetbrains-mono": "^5.2.8",
+    "@sentry/browser": "10.72.0",
+    "esptool-js": "0.6.1",
+    "maplibre-gl": "^5.24.0",
+    "pinia": "^3.0.3",
+    "reka-ui": "2.10.4",
+    "spark-md5": "3.0.2",
+    "three": "^0.185.0",
+    "vue": "^3.5.21",
+    "vue-sonner": "^2.0.9"
+  },
+  "devDependencies": {
+    "@sentry/vite-plugin": "5.4.0",
+    "@playwright/test": "^1.55.0",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "@vue/test-utils": "^2.4.6",
+    "happy-dom": "^20.11.6",
+    "occt-import-js": "0.0.23",
+    "vite": "^7.1.3",
+    "vitest": "^3.2.4"
+  }
+}

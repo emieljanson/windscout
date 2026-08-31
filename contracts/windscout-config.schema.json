@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://windscout.app/contracts/windscout-config.schema.json",
+  "title": "WindScout E1002 installed configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "boardId", "spot", "forecastModel", "display", "digest"],
+  "properties": {
+    "version": { "const": 2 },
+    "boardId": { "const": "seeedstudio_reterminal_e1002" },
+    "spot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "latitude", "longitude", "timezone"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "latitude": { "type": "number", "minimum": -90, "maximum": 90 },
+        "longitude": { "type": "number", "minimum": -180, "maximum": 180 },
+        "timezone": { "type": "string", "minLength": 3, "maxLength": 63 }
+      }
+    },
+    "forecastModel": { "type": "string", "minLength": 1, "maxLength": 31 },
+    "display": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["showThreshold", "threshold", "showWeather", "showTemperature", "showTide", "timeFormat", "temperatureUnit"],
+      "properties": {
+        "showThreshold": { "type": "boolean" },
+        "threshold": { "type": "integer", "minimum": 0, "maximum": 99 },
+        "showWeather": { "type": "boolean" },
+        "showTemperature": { "type": "boolean" },
+        "showTide": { "type": "boolean" },
+        "timeFormat": { "enum": ["24-hour", "12-hour"] },
+        "temperatureUnit": { "enum": ["celsius", "fahrenheit"] }
+      }
+    },
+    "digest": { "type": "string", "pattern": "^[0-9a-f]{16}$" }
+  }
+}

@@ -1,0 +1,19 @@
+firmware/build*/
+firmware/host_tests/build/
+firmware/host_tests/build-windscout/
+firmware/sdkconfig
+firmware/sdkconfig.old
+firmware/main/wind_config.local.h
+.playwright-cli/
+.context/compound-engineering/
+.tmp*/
+*.bin
+web/.env.local
+node_modules/
+web/public/firmware/*
+!web/public/firmware/.gitkeep
+
+# Local operating-system and interpreter artifacts
+**/.DS_Store
+**/__pycache__/
+*.py[cod]
