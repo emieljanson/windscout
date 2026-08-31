@@ -236,8 +236,9 @@ uint16_t epaper_get_height(void)
     return EPD_HEIGHT;
 }
 
-void epaper_init(const epaper_config_t *cfg)
+esp_err_t epaper_init(const epaper_config_t *cfg)
 {
+    if (!cfg) return ESP_ERR_INVALID_ARG;
     g_cfg = *cfg;
 
     ESP_LOGI(TAG, "Initializing ED2208-NCA (Spectra 6, 13.3\") E-Paper Driver");
@@ -254,17 +255,20 @@ void epaper_init(const epaper_config_t *cfg)
 
     hw_reset();
     send_init_sequence();
+    return ESP_OK;
 }
 
-void epaper_clear(uint8_t *image, uint8_t color)
+esp_err_t epaper_clear(uint8_t *image, uint8_t color)
 {
+    if (!image) return ESP_ERR_INVALID_ARG;
     uint8_t c = color_get(color);
     uint8_t packed = (c << 4) | c;
     memset(image, packed, EPD_BUF_SIZE);
 
     ESP_LOGI(TAG, "Clearing display with color 0x%02x", color);
-    epaper_display(image);
+    esp_err_t result = epaper_display(image);
     ESP_LOGI(TAG, "Clear complete");
+    return result;
 }
 
 esp_err_t epaper_display(uint8_t *image)
@@ -409,7 +413,7 @@ out:
     return result;
 }
 
-void epaper_enter_deepsleep(void)
+esp_err_t epaper_enter_deepsleep(void)
 {
     ESP_LOGI(TAG, "Entering deep sleep");
 
@@ -421,7 +425,7 @@ void epaper_enter_deepsleep(void)
 
     cmd_data(0x07, (uint8_t[]){0xA5}, 1);  // DEEP_SLEEP
     vTaskDelay(pdMS_TO_TICKS(1));
-    wait_busy("deepsleep");
+    esp_err_t result = wait_busy("deepsleep");
 
     if (g_cfg.pin_enable >= 0) {
         // Drive panel-facing GPIOs LOW before cutting VDD so they don't
@@ -456,4 +460,5 @@ void epaper_enter_deepsleep(void)
         esp_pm_lock_release(pm_lock);
     }
 #endif
+    return result;
 }

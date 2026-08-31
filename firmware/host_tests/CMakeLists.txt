@@ -165,6 +165,22 @@ target_include_directories(
 target_link_libraries(epaper_contract_test GTest::gtest_main)
 gtest_discover_tests(epaper_contract_test)
 
+add_executable(
+  epaper_dispatcher_test
+  test_epaper_dispatcher.cpp
+  ../components/epaper/epaper_busy_wait.c
+  ../components/epaper/epaper_dispatcher.c
+)
+target_compile_definitions(epaper_dispatcher_test PRIVATE EPAPER_DISPATCHER_HOST_TEST=1)
+target_include_directories(
+  epaper_dispatcher_test
+  PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/stubs
+  ${CMAKE_CURRENT_SOURCE_DIR}/../components/epaper/include
+)
+target_link_libraries(epaper_dispatcher_test GTest::gtest_main)
+gtest_discover_tests(epaper_dispatcher_test)
+
 function(add_wind_test target test_source)
   add_executable(${target} ${test_source} ${ARGN})
   target_include_directories(${target} PRIVATE
@@ -283,6 +299,8 @@ target_compile_definitions(
     WIND_POWER_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/../main/power_manager.c"
     WIFI_MANAGER_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/../main/wifi_manager.c"
     WIND_CMAKE_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/../main/CMakeLists.txt"
+    WIND_MAIN_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/../main/windscout_main.c"
+    E100X_BOARD_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/../components/board_hal/src/driver_seeedstudio_reterminal_e1002.c"
 )
 
 add_wind_test(

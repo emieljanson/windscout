@@ -132,7 +132,7 @@ set(WINDSCOUT_PRIV_REQUIRES
     joltwallet__littlefs
 )
 
-if(CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1002)
+if(CONFIG_BOARD_CAP_WINDSCOUT)
     set(SOURCES ${WINDSCOUT_SOURCES})
     set(PRIV_REQUIRES ${WINDSCOUT_PRIV_REQUIRES})
     set(EMBED_FILES)
@@ -157,11 +157,11 @@ idf_component_register(
     EMBED_FILES ${EMBED_FILES}
 )
 
-if(CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1002)
+if(CONFIG_BOARD_CAP_WINDSCOUT)
     target_include_directories(${COMPONENT_LIB} PRIVATE "../components/acetimec/src")
 endif()
 
-if(NOT CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1002)
+if(NOT CONFIG_BOARD_CAP_WINDSCOUT)
     # Legacy photo-frame boards retain their generated setup screens.
     target_add_binary_data(${COMPONENT_LIB} "splash_data/splash.epdgz" BINARY)
     target_add_binary_data(${COMPONENT_LIB} "splash_data/setup_complete.epdgz" BINARY)

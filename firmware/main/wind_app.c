@@ -680,7 +680,7 @@ esp_err_t wind_app_configure_runtime(void)
     if (!config_manager_set_timezone_transient(installed.spot.timezone)) {
         return ESP_ERR_INVALID_ARG;
     }
-#if BOARD_HAL_TYPE != BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+#ifndef CONFIG_BOARD_CAP_WINDSCOUT
     // Other photo-frame boards still use the legacy cron-backed power manager.
     static const char *rules[] = {"5 0 *", "0 7 *", "0 11 *", "0 15 *", "0 19 *"};
     config_manager_set_cron_rules(rules, 5);

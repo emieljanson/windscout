@@ -41,6 +41,14 @@
     "url": "https://www.seeedstudio.com/reTerminal-E1002-p-6533.html"
   },
   {
+    "id": "seeedstudio_reterminal_e100x",
+    "label": "Seeed Studio reTerminal E1001/E1002",
+    "display": "7.3\" universal E100x",
+    "resolution": [800, 480],
+    "storage": "SD (SPI) + Internal flash",
+    "url": "https://wiki.seeedstudio.com/reterminal_e10xx_main_page/"
+  },
+  {
     "id": "seeedstudio_reterminal_e1003",
     "label": "Seeed Studio reTerminal E1003",
     "display": "10.3\" 16-level grayscale",

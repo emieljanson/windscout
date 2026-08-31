@@ -37,11 +37,10 @@ TEST(ProductionPowerPolicy, UsbPowerNeverDisablesFutureBatteryWakes)
               std::string::npos);
 }
 
-TEST(ProductionPowerPolicy, E1002BuildContainsOnlyTheWindScoutRuntime)
+TEST(ProductionPowerPolicy, E100xCapabilityBuildContainsOnlyTheWindScoutRuntime)
 {
     const std::string cmake = read_source(WIND_CMAKE_SOURCE);
-    EXPECT_NE(cmake.find("if(CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1002)"),
-              std::string::npos);
+    EXPECT_NE(cmake.find("if(CONFIG_BOARD_CAP_WINDSCOUT)"), std::string::npos);
     EXPECT_NE(cmake.find("windscout_main.c"), std::string::npos);
     EXPECT_NE(cmake.find("windscout_display_manager.c"), std::string::npos);
 
@@ -50,6 +49,22 @@ TEST(ProductionPowerPolicy, E1002BuildContainsOnlyTheWindScoutRuntime)
                                "ota_manager", "wifi_provisioning", "image_processor"}) {
         EXPECT_EQ(main_source.find(legacy), std::string::npos) << legacy;
     }
+}
+
+TEST(ProductionPowerPolicy, RuntimePanelSelectionIsLimitedToTheUniversalTarget)
+{
+    const std::string main_source = read_source(WIND_MAIN_SOURCE);
+    const auto guard = main_source.find("#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E100X");
+    const auto selection = main_source.find("epaper_select_backend(panel_hardware)");
+    ASSERT_NE(guard, std::string::npos);
+    ASSERT_NE(selection, std::string::npos);
+    EXPECT_LT(guard, selection);
+}
+
+TEST(ProductionPowerPolicy, UniversalCarrierSkipsPanelSleepWithoutAnActiveBackend)
+{
+    const std::string board_source = read_source(E100X_BOARD_SOURCE);
+    EXPECT_NE(board_source.find("if (epaper_has_active_backend())"), std::string::npos);
 }
 
 TEST(ProductionPowerPolicy, ScheduledWifiRefreshHasABoundedRadioBudget)

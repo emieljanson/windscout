@@ -25,9 +25,10 @@
 #include "wifi_manager.h"
 #include "wind_app.h"
 
-#if BOARD_HAL_TYPE != BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+#ifndef CONFIG_BOARD_CAP_WINDSCOUT
 #include "ha_integration.h"
 #include "periodic_tasks.h"
+#include "utils.h"
 #endif
 
 // RTC memory to store expected wakeup time (persists across deep sleep)
@@ -42,14 +43,14 @@ static time_t wake_target_boundary = 0;
 static const char *TAG = "power_manager";
 
 static TaskHandle_t sleep_timer_task_handle = NULL;
-#if BOARD_HAL_TYPE != BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+#ifndef CONFIG_BOARD_CAP_WINDSCOUT
 static TaskHandle_t rotation_timer_task_handle = NULL;
 #endif
 static int64_t next_sleep_time = 0;  // Use absolute time for sleep timer
 static uint32_t auto_sleep_timeout_sec = AUTO_SLEEP_TIMEOUT_SEC;
 static volatile bool installer_active;
 static wakeup_source_t wakeup_source = WAKEUP_SOURCE_NONE;
-#if BOARD_HAL_TYPE != BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+#ifndef CONFIG_BOARD_CAP_WINDSCOUT
 static int64_t next_rotation_time = 0;  // Use absolute time for rotation
 #endif
 static uint64_t ext1_wakeup_pin_mask = 0;
@@ -57,7 +58,7 @@ static uint32_t requested_sleep_seconds;
 
 static bool scheduled_wake_enabled(void)
 {
-#if BOARD_HAL_TYPE == BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+#ifdef CONFIG_BOARD_CAP_WINDSCOUT
     // WindScout is a forecast appliance. Its refresh schedule is product
     // behavior, not the legacy photo-frame auto-rotation preference.
     return true;
@@ -66,7 +67,7 @@ static bool scheduled_wake_enabled(void)
 #endif
 }
 
-#if BOARD_HAL_TYPE != BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+#ifndef CONFIG_BOARD_CAP_WINDSCOUT
 static void rotation_timer_task(void *arg)
 {
     while (1) {
@@ -247,7 +248,7 @@ esp_err_t power_manager_init(void)
             // If drift exceeds 30 seconds, force NTP sync
             if (drift > 30 || drift < -30) {
                 ESP_LOGW(TAG, "Time drift exceeds 30s, will force NTP sync");
-#if BOARD_HAL_TYPE != BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+#ifndef CONFIG_BOARD_CAP_WINDSCOUT
                 periodic_tasks_force_run(SNTP_TASK_NAME);
 #endif
             }
@@ -324,7 +325,7 @@ esp_err_t power_manager_init(void)
     } else {
         xTaskCreate(sleep_timer_task, "sleep_timer", 4096, NULL, 5, &sleep_timer_task_handle);
     }
-#if BOARD_HAL_TYPE != BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+#ifndef CONFIG_BOARD_CAP_WINDSCOUT
     xTaskCreate(rotation_timer_task, "rotation_timer", 16384, NULL, 5, &rotation_timer_task_handle);
 #endif
 
@@ -354,7 +355,7 @@ void power_manager_enter_sleep(void)
     // uninitialized network stack, resetting the device into normal-init with no
     // rotation (#105). wifi_manager_is_connected() reads a static bool, so it is
     // safe to call before WiFi init.
-#if BOARD_HAL_TYPE != BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+#ifndef CONFIG_BOARD_CAP_WINDSCOUT
     if (wifi_manager_is_connected()) {
         ha_notify_offline();
     }
@@ -452,7 +453,7 @@ void power_manager_set_auto_sleep_timeout(uint32_t seconds)
 
 void power_manager_reset_rotate_timer(void)
 {
-#if BOARD_HAL_TYPE != BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+#ifndef CONFIG_BOARD_CAP_WINDSCOUT
     int seconds_until_next = get_seconds_until_next_wakeup();
 
     next_rotation_time = esp_timer_get_time() + (seconds_until_next * 1000000LL);

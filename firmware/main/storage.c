@@ -19,7 +19,7 @@
 #include <sys/stat.h>
 
 #include "memfs.h"
-#if BOARD_HAL_TYPE != BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+#ifndef CONFIG_BOARD_CAP_WINDSCOUT
 #include "album_manager.h"
 #endif
 
@@ -163,7 +163,7 @@ esp_err_t storage_format(void)
 
     // Recreate the images directory and default album regardless of backend
     mkdir(IMAGE_DIRECTORY, 0775);
-#if BOARD_HAL_TYPE != BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+#ifndef CONFIG_BOARD_CAP_WINDSCOUT
     album_manager_ensure_default_album();
 #endif
 

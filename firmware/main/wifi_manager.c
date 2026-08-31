@@ -18,7 +18,7 @@
 #include "nvs_flash.h"
 #include "installed_configuration.h"
 #include "storage.h"
-#if BOARD_HAL_TYPE != BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+#ifndef CONFIG_BOARD_CAP_WINDSCOUT
 #include "utils.h"
 #endif
 
@@ -110,7 +110,7 @@ esp_err_t wifi_manager_update_hostname(void)
     // DHCP hostname from the device name (CamelCase, shown in router device
     // lists). The router picks it up at the next DHCP negotiation (reconnect).
     char hostname[64];
-#if BOARD_HAL_TYPE == BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+#ifdef CONFIG_BOARD_CAP_WINDSCOUT
     strncpy(hostname, "windscout", sizeof(hostname));
 #else
     sanitize_dhcp_hostname(config_manager_get_device_name(), hostname, sizeof(hostname));
@@ -133,7 +133,7 @@ esp_err_t wifi_manager_init(void)
 
     // WindScout is configured over USB and only needs a station interface.
     s_sta_netif = esp_netif_create_default_wifi_sta();
-#if BOARD_HAL_TYPE != BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+#ifndef CONFIG_BOARD_CAP_WINDSCOUT
     esp_netif_create_default_wifi_ap();
 #endif
 
@@ -171,7 +171,7 @@ esp_err_t wifi_manager_apply_ip_config(void)
         return ESP_ERR_INVALID_STATE;
     }
 
-#if BOARD_HAL_TYPE == BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+#ifdef CONFIG_BOARD_CAP_WINDSCOUT
     esp_netif_dhcpc_start(s_sta_netif);
     return ESP_OK;
 #else
@@ -205,7 +205,7 @@ esp_err_t wifi_manager_apply_ip_config(void)
 // only DNS source (defaults to the gateway when unset).
 static void apply_dns_override(void)
 {
-#if BOARD_HAL_TYPE == BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+#ifdef CONFIG_BOARD_CAP_WINDSCOUT
     return;
 #else
     const char *dns = config_manager_get_dns_server();
@@ -350,7 +350,7 @@ esp_err_t wifi_manager_get_ip(char *ip_str, size_t len)
 
 esp_err_t wifi_manager_save_credentials(const char *ssid, const char *password)
 {
-#if BOARD_HAL_TYPE == BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+#ifdef CONFIG_BOARD_CAP_WINDSCOUT
     installed_configuration_t active;
     esp_err_t installed_result = installed_configuration_load(&active);
     if (installed_result != ESP_OK) return installed_result;
@@ -391,7 +391,7 @@ esp_err_t wifi_manager_load_credentials(char *ssid, char *password)
                                                  password, WIFI_PASS_MAX_LEN) == ESP_OK) {
         return ESP_OK;
     }
-#if BOARD_HAL_TYPE == BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+#ifdef CONFIG_BOARD_CAP_WINDSCOUT
     return ESP_ERR_NOT_FOUND;
 #else
     nvs_handle_t nvs_handle;

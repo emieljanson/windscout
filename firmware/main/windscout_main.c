@@ -155,6 +155,12 @@ void app_main(void)
         while (true) vTaskDelay(pdMS_TO_TICKS(60000));
     }
 
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E100X
+    const epaper_hardware_t panel_hardware =
+        profile.effective_model == HARDWARE_MODEL_E1001 ? EPAPER_HARDWARE_E1001
+                                                       : EPAPER_HARDWARE_E1002;
+    ESP_ERROR_CHECK(epaper_select_backend(panel_hardware));
+#endif
     ESP_ERROR_CHECK(board_hal_init());
     ESP_ERROR_CHECK(storage_init());
 

@@ -331,8 +331,9 @@ static void it8951_display_area(uint16_t x, uint16_t y, uint16_t w, uint16_t h, 
 
 // ---- epaper.h interface ----
 
-void epaper_init(const epaper_config_t *cfg)
+esp_err_t epaper_init(const epaper_config_t *cfg)
 {
+    if (!cfg) return ESP_ERR_INVALID_ARG;
     s_pin_cs = cfg->pin_cs;
     s_pin_rst = cfg->pin_rst;
     s_pin_busy = cfg->pin_busy;      // HRDY
@@ -370,7 +371,7 @@ void epaper_init(const epaper_config_t *cfg)
     esp_err_t ret = spi_bus_add_device(cfg->spi_host, &dev_cfg, &s_spi);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "spi_bus_add_device failed: %s", esp_err_to_name(ret));
-        return;
+        return ret;
     }
 
 #ifdef CONFIG_PM_ENABLE
@@ -384,18 +385,19 @@ void epaper_init(const epaper_config_t *cfg)
     s_dma_buf = heap_caps_malloc(IT8951_SPI_CHUNK, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
     if (!s_dma_buf) {
         ESP_LOGE(TAG, "failed to alloc %d-byte SPI DMA buffer", IT8951_SPI_CHUNK);
+        return ESP_ERR_NO_MEM;
     }
 
     it8951_reset();
     if (!wait_ready()) {
         ESP_LOGE(TAG, "IT8951 not responding after reset");
-        return;
+        return ESP_ERR_TIMEOUT;
     }
 
     it8951_write_cmd(IT8951_TCON_SYS_RUN);
     if (!it8951_get_dev_info()) {
         ESP_LOGE(TAG, "aborting init: no valid device info");
-        return;
+        return ESP_ERR_INVALID_RESPONSE;
     }
 
     int16_t vcom = it8951_get_vcom();
@@ -411,6 +413,7 @@ void epaper_init(const epaper_config_t *cfg)
     // without it GC16 can refresh blank. s_temp_c starts at a room-temperature
     // default and is refined by epaper_set_temperature() (live SHT40 reading).
     it8951_set_temp(s_temp_c);
+    return ESP_OK;
 }
 
 void epaper_set_temperature(int8_t celsius)
@@ -506,7 +509,7 @@ esp_err_t epaper_display(uint8_t *image)
     return ESP_OK;
 }
 
-void epaper_clear(uint8_t *image, uint8_t color)
+esp_err_t epaper_clear(uint8_t *image, uint8_t color)
 {
     (void) color;
     // Fill the frame buffer with white (GC16 level 15 -> nibble 0xF). The named
@@ -516,10 +519,12 @@ void epaper_clear(uint8_t *image, uint8_t color)
     // and the caller's epaper_display would repaint it.
     if (image) {
         memset(image, 0xFF, (size_t) s_dev.panel_w * s_dev.panel_h / 2);
+        return ESP_OK;
     }
+    return ESP_ERR_INVALID_ARG;
 }
 
-void epaper_enter_deepsleep(void)
+esp_err_t epaper_enter_deepsleep(void)
 {
 #ifdef CONFIG_PM_ENABLE
     if (pm_lock) {
@@ -538,6 +543,7 @@ void epaper_enter_deepsleep(void)
         esp_pm_lock_release(pm_lock);
     }
 #endif
+    return ESP_OK;
 }
 
 uint16_t epaper_get_width(void)

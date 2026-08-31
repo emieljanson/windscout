@@ -7,6 +7,15 @@
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E100X
+#define epaper_get_width ed2208_gca_get_width
+#define epaper_get_height ed2208_gca_get_height
+#define epaper_init ed2208_gca_init
+#define epaper_display ed2208_gca_display
+#define epaper_clear ed2208_gca_clear
+#define epaper_enter_deepsleep ed2208_gca_enter_deepsleep
+#endif
+
 #ifdef CONFIG_PM_ENABLE
 #include "esp_pm.h"
 #endif
@@ -144,23 +153,27 @@ static void send_buffer(uint8_t *data, int len)
     ESP_LOGI(TAG, "Buffer send complete");
 }
 
-static bool is_busy(void)
+static bool is_busy(void *context)
 {
+    (void) context;
     int level = gpio_get_level(g_cfg.pin_busy);
     return level == 0;
 }
 
-static void wait_busy(const char *label)
+static void busy_delay(void *context, uint32_t milliseconds)
 {
-    vTaskDelay(pdMS_TO_TICKS(10));
-    int wait_count = 0;
-    while (is_busy()) {
-        vTaskDelay(pdMS_TO_TICKS(10));
-        if (++wait_count > 4000) {  // 40s timeout
-            ESP_LOGW(TAG, "[%s] BUSY timeout after 40s", label);
-            return;
-        }
+    (void) context;
+    vTaskDelay(pdMS_TO_TICKS(milliseconds));
+}
+
+static esp_err_t wait_busy(const char *label)
+{
+    busy_delay(NULL, 10);
+    esp_err_t result = epaper_wait_busy_bounded(is_busy, busy_delay, NULL, 10, 40000);
+    if (result == ESP_ERR_TIMEOUT) {
+        ESP_LOGW(TAG, "[%s] BUSY timeout after 40s", label);
     }
+    return result;
 }
 
 // --- Hardware setup ---
@@ -257,8 +270,9 @@ static void send_init_sequence(void)
 
 // Full display update cycle:
 // RESET -> INIT -> wait -> DTM -> DATA -> PON -> wait -> DRF -> wait -> POF -> wait -> DSLP
-static void display_update_cycle(uint8_t *image)
+static esp_err_t display_update_cycle(uint8_t *image)
 {
+    esp_err_t result = ESP_OK;
 #ifdef CONFIG_PM_ENABLE
     if (pm_lock) {
         esp_pm_lock_acquire(pm_lock);
@@ -266,33 +280,35 @@ static void display_update_cycle(uint8_t *image)
 #endif
 
     hw_reset();
-    wait_busy("reset");
+    if ((result = wait_busy("reset")) != ESP_OK) goto done;
 
     send_init_sequence();
-    wait_busy("init");
+    if ((result = wait_busy("init")) != ESP_OK) goto done;
 
     send_command(0x04);  // POWER_ON
     vTaskDelay(pdMS_TO_TICKS(10));  // allow BUSY to assert before polling it
-    wait_busy("power_on");
+    if ((result = wait_busy("power_on")) != ESP_OK) goto done;
     send_command(0x10);  // DATA_START_TRANSMISSION
     send_buffer(image, EPD_BUF_SIZE);
-    wait_busy("data");
+    if ((result = wait_busy("data")) != ESP_OK) goto done;
 
     cmd_data(0x12, (uint8_t[]){0x00}, 1);  // DISPLAY_REFRESH
     vTaskDelay(pdMS_TO_TICKS(10));  // ED2208 asserts BUSY asynchronously
-    wait_busy("refresh");
+    if ((result = wait_busy("refresh")) != ESP_OK) goto done;
 
     cmd_data(0x02, (uint8_t[]){0x00}, 1);  // POWER_OFF
     vTaskDelay(pdMS_TO_TICKS(10));
-    wait_busy("power_off");
+    if ((result = wait_busy("power_off")) != ESP_OK) goto done;
 
     cmd_data(0x07, (uint8_t[]){0xA5}, 1);  // DEEP_SLEEP
 
+done:
 #ifdef CONFIG_PM_ENABLE
     if (pm_lock) {
         esp_pm_lock_release(pm_lock);
     }
 #endif
+    return result;
 }
 
 // --- Public API ---
@@ -307,8 +323,9 @@ uint16_t epaper_get_height(void)
     return EPD_HEIGHT;
 }
 
-void epaper_init(const epaper_config_t *cfg)
+esp_err_t epaper_init(const epaper_config_t *cfg)
 {
+    if (!cfg) return ESP_ERR_INVALID_ARG;
     g_cfg = *cfg;
 
     ESP_LOGI(TAG, "Initializing ED2208-GCA (Spectra 6) E-Paper Driver");
@@ -322,16 +339,19 @@ void epaper_init(const epaper_config_t *cfg)
         ESP_LOGE(TAG, "Failed to create PM lock: %s", esp_err_to_name(ret));
     }
 #endif
+    return ESP_OK;
 }
 
-void epaper_clear(uint8_t *image, uint8_t color)
+esp_err_t epaper_clear(uint8_t *image, uint8_t color)
 {
+    if (!image) return ESP_ERR_INVALID_ARG;
     uint8_t packed = (color << 4) | color;
     memset(image, packed, EPD_BUF_SIZE);
 
     ESP_LOGI(TAG, "Clearing display with color 0x%02x", color);
-    display_update_cycle(image);
+    esp_err_t result = display_update_cycle(image);
     ESP_LOGI(TAG, "Clear complete");
+    return result;
 }
 
 esp_err_t epaper_display(uint8_t *image)
@@ -340,12 +360,12 @@ esp_err_t epaper_display(uint8_t *image)
         return ESP_ERR_INVALID_ARG;
     }
     ESP_LOGI(TAG, "Starting display update: %d bytes", EPD_BUF_SIZE);
-    display_update_cycle(image);
+    esp_err_t result = display_update_cycle(image);
     ESP_LOGI(TAG, "Display update complete");
-    return ESP_OK;
+    return result;
 }
 
-void epaper_enter_deepsleep(void)
+esp_err_t epaper_enter_deepsleep(void)
 {
     ESP_LOGI(TAG, "Entering deep sleep");
 
@@ -358,7 +378,8 @@ void epaper_enter_deepsleep(void)
     // display_update_cycle() already sends POF + DSLP after each update,
     // so the display should already be in deep sleep. Send again to be safe.
     cmd_data(0x02, (uint8_t[]){0x00}, 1);  // POWER_OFF
-    wait_busy("deepsleep_power_off");
+    esp_err_t result = wait_busy("deepsleep_power_off");
+    if (result != ESP_OK) goto done;
     cmd_data(0x07, (uint8_t[]){0xA5}, 1);  // DEEP_SLEEP
 
     if (g_cfg.pin_enable >= 0) {
@@ -389,9 +410,24 @@ void epaper_enter_deepsleep(void)
         gpio_deep_sleep_hold_en();
     }
 
+done:
 #ifdef CONFIG_PM_ENABLE
     if (pm_lock) {
         esp_pm_lock_release(pm_lock);
     }
 #endif
+    return result;
 }
+
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E100X
+const epaper_backend_t epaper_backend_ed2208_gca = {
+    .name = "ed2208-gca",
+    .width = EPD_WIDTH,
+    .height = EPD_HEIGHT,
+    .init = ed2208_gca_init,
+    .display = ed2208_gca_display,
+    .clear = ed2208_gca_clear,
+    .set_temperature = NULL,
+    .enter_deepsleep = ed2208_gca_enter_deepsleep,
+};
+#endif

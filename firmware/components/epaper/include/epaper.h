@@ -5,6 +5,8 @@
 
 #include "esp_err.h"
 
+#include "epaper_backend.h"
+
 // Resolution APIs
 uint16_t epaper_get_width(void);
 uint16_t epaper_get_height(void);
@@ -24,7 +26,7 @@ extern "C" {
 #endif
 
 // Configuration Struct
-typedef struct {
+typedef struct epaper_config {
     int spi_host;
     int pin_cs;
     int pin_dc;
@@ -38,7 +40,7 @@ typedef struct {
  * @brief Initialize the E-Paper display
  * @param cfg Configuration structure
  */
-void epaper_init(const epaper_config_t *cfg);
+esp_err_t epaper_init(const epaper_config_t *cfg);
 
 /**
  * @brief Send image buffer to display
@@ -51,7 +53,7 @@ esp_err_t epaper_display(uint8_t *image);
  * @param image Buffer to use for clearing (size must match display)
  * @param color Color to clear with
  */
-void epaper_clear(uint8_t *image, uint8_t color);
+esp_err_t epaper_clear(uint8_t *image, uint8_t color);
 
 /**
  * @brief Set the panel temperature in degrees Celsius.
@@ -67,7 +69,16 @@ void epaper_set_temperature(int8_t celsius);
 /**
  * @brief Enter deep sleep mode
  */
-void epaper_enter_deepsleep(void);
+esp_err_t epaper_enter_deepsleep(void);
+
+/** Select the only panel backend that may be used during this boot. */
+esp_err_t epaper_select_backend(epaper_hardware_t hardware);
+
+/** True only after a concrete backend has been selected. */
+bool epaper_has_active_backend(void);
+
+/** Diagnostic name for the active backend, or "none" while unselected. */
+const char *epaper_active_backend_name(void);
 
 /**
  * @brief Get display width

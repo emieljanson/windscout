@@ -56,7 +56,7 @@
 
 static const char *TAG = "main";
 
-#if BOARD_HAL_TYPE == BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+#ifdef CONFIG_BOARD_CAP_WINDSCOUT
 #define WINDSCOUT_BUZZER_SUPPORTED 1
 #define WINDSCOUT_BUZZER_PIN GPIO_NUM_45
 #else
@@ -709,7 +709,7 @@ void app_main(void)
 
     ESP_ERROR_CHECK(wifi_manager_init());
     ESP_ERROR_CHECK(wifi_provisioning_init());
-#if BOARD_HAL_TYPE == BOARD_TYPE_SEEEDSTUDIO_RETERMINAL_E1002
+#ifdef CONFIG_BOARD_CAP_WINDSCOUT
     ESP_ERROR_CHECK(wind_installer_service_start());
 #endif
 

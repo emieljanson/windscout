@@ -17,7 +17,7 @@
 #include "sdcard.h"
 #endif
 
-static const char *TAG = "board_hal_reterminal_e1002";
+static const char *TAG = BOARD_HAL_NAME;
 
 static i2c_master_bus_handle_t i2c_bus = NULL;
 static i2c_master_bus_handle_t charger_i2c_bus = NULL;
@@ -57,7 +57,7 @@ static void board_hal_battery_adc_init(void)
 
 esp_err_t board_hal_init(void)
 {
-    ESP_LOGI(TAG, "Initializing reTerminal E1002 Board HAL");
+    ESP_LOGI(TAG, "Initializing %s Board HAL", BOARD_HAL_NAME);
 
     // Release any pad holds latched by the previous deep-sleep cycle so we
     // can reconfigure these outputs during init. Matching `gpio_hold_en()`
@@ -103,7 +103,8 @@ esp_err_t board_hal_init(void)
         .pin_cs1 = -1,
         .pin_enable = -1,
     };
-    epaper_init(&ep_cfg);
+    esp_err_t epaper_result = epaper_init(&ep_cfg);
+    if (epaper_result != ESP_OK) return epaper_result;
 
     // --- SD Card ---
 #ifdef CONFIG_HAS_SDCARD
@@ -199,7 +200,7 @@ esp_err_t board_hal_init(void)
 
 esp_err_t board_hal_prepare_for_sleep(void)
 {
-    ESP_LOGI(TAG, "Preparing reTerminal E1002 for sleep");
+    ESP_LOGI(TAG, "Preparing %s for sleep", BOARD_HAL_NAME);
 
     // Put SHT40 sensor to sleep before we tear down the I2C bus
     if (sensor_is_available()) {
@@ -211,7 +212,15 @@ esp_err_t board_hal_prepare_for_sleep(void)
     board_hal_led_set(BOARD_HAL_LED_ACTIVITY, false);
 
     // Put display to deep sleep
-    epaper_enter_deepsleep();
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E100X
+    if (epaper_has_active_backend()) {
+        esp_err_t epaper_result = epaper_enter_deepsleep();
+        if (epaper_result != ESP_OK) return epaper_result;
+    }
+#else
+    esp_err_t epaper_result = epaper_enter_deepsleep();
+    if (epaper_result != ESP_OK) return epaper_result;
+#endif
 
     // Unmount SD card and release the SPI bus before cutting power so the
     // card sees a clean shutdown instead of a VCC yank.
