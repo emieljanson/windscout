@@ -164,7 +164,7 @@ onBeforeUnmount(() => { toast.dismiss('installer-error'); toast.dismiss('install
           <div v-else-if="state.phase === 'choosing-device'" class="installer-step installer-step--choose-device" aria-busy="true">
             <div class="installer-step__copy">
               <h2 id="installer-title">Select your reTerminal</h2>
-              <p>Follow any browser permission steps, then select the connected device. It may appear as USB Serial or a similar USB name.</p>
+              <p>In the browser window, select the connected device. It may appear as USB Serial or a similar USB name.</p>
             </div>
           </div>
 

@@ -113,7 +113,7 @@ for each run.
 
 - Clean E1002 install on current Chrome/macOS
 - Clean E1002 install on current Edge/Windows
-- Clean E1002 install on current Firefox/Linux, including its first-use site permission
+- Clean E1002 install on current Firefox/Linux
 - Configuration-only update with no firmware write
 - Preserving firmware update with Wi-Fi and configuration retained
 - Damaged application repair

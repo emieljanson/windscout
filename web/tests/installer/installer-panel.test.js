@@ -127,7 +127,7 @@ describe('installer inspector panel', () => {
     mountPanel(session)
 
     expect(wrapper.get('h2').text()).toBe('Select your reTerminal')
-    expect(wrapper.get('.installer-step__copy p').text()).toBe('Follow any browser permission steps, then select the connected device. It may appear as USB Serial or a similar USB name.')
+    expect(wrapper.get('.installer-step__copy p').text()).toBe('In the browser window, select the connected device. It may appear as USB Serial or a similar USB name.')
     expect(wrapper.findAll('.installer-step__copy p')).toHaveLength(1)
   })
 

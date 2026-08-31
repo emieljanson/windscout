@@ -16,7 +16,7 @@ The installer is intentionally unavailable on phones. Mobile can preview display
 1. Connect the E1002 directly to the desktop with USB-C.
 2. Open the configurator over HTTPS, choose one spot, and set the display options.
 3. Select **Install**, then **Connect device**.
-4. Follow any browser permission steps, then choose the E1002 in the USB device window. Firefox asks you to add a site permission the first time.
+4. Choose the E1002 in the browser's USB device window.
 5. If WindScout cannot verify the enclosure, compare it with the E1002 illustration and confirm the model. This confirmation is required before a clean flash.
 6. Keep USB connected while firmware is being written.
 7. After the device restarts, reconnect it when asked.
