@@ -5,6 +5,7 @@ export default defineConfig({
   outputDir: './test-results',
   timeout: 60_000,
   fullyParallel: true,
+  workers: process.env.CI ? 1 : undefined,
   reporter: 'list',
   use: {
     baseURL: 'http://127.0.0.1:4173',
