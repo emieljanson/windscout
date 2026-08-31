@@ -149,9 +149,19 @@ jobs:
         working-directory: web
         run: npm ci
 
+      - name: Verify Geoapify configuration
+        env:
+          VITE_GEOAPIFY_API_KEY: ${{ vars.VITE_GEOAPIFY_API_KEY }}
+        run: |
+          test -n "$VITE_GEOAPIFY_API_KEY" || {
+            echo "::error::Set the VITE_GEOAPIFY_API_KEY repository variable before deploying the website."
+            exit 1
+          }
+
       - name: Build website with bundled firmware
         working-directory: web
         env:
+          VITE_GEOAPIFY_API_KEY: ${{ vars.VITE_GEOAPIFY_API_KEY }}
           VITE_SENTRY_DSN: ${{ vars.VITE_SENTRY_DSN }}
           VITE_SENTRY_RELEASE: ${{ github.sha }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
