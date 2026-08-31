@@ -4,7 +4,7 @@ The installer always states whether it is safe to disconnect USB.
 
 ## Device is not listed
 
-1. Use current Chrome or Edge on desktop.
+1. Use current Firefox, Chrome or Edge on desktop. Firefox 151 or newer is required.
 2. Check that the page uses HTTPS or localhost.
 3. Try a known USB data cable and a direct computer port rather than a hub.
 4. Disconnect the E1002, reconnect it, and select **Connect device** again.

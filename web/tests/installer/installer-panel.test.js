@@ -53,9 +53,9 @@ describe('installer inspector panel', () => {
   it('shows an honest supported-browser route before requesting permission', () => {
     const session = fakeSession()
     mountPanel(session)
-    expect(wrapper.get('h2').text()).toBe('Install with Chrome or Edge')
+    expect(wrapper.get('h2').text()).toBe('Use Firefox, Chrome, or Edge')
     expect(wrapper.get('.installer-step').classes()).toContain('installer-step--connect')
-    expect(wrapper.text()).toContain('Open this page in Chrome or Edge on a desktop computer')
+    expect(wrapper.text()).toContain('Update to a current desktop version of Firefox, Chrome, or Edge')
     expect(wrapper.get('[data-testid="installer-state-icon"]').attributes('data-phase')).toBe('error')
     expect(wrapper.get('.installer-layer').attributes('data-phase')).toBe('error')
     expect(wrapper.text()).not.toContain('USB Serial')
@@ -74,7 +74,7 @@ describe('installer inspector panel', () => {
     try {
       const session = fakeSession()
       mountPanel(session)
-      expect(wrapper.text()).not.toContain('Chrome or Edge on a desktop computer')
+      expect(wrapper.text()).not.toContain('Firefox, Chrome, or Edge')
       const buyLink = wrapper.get('.installer-secondary')
       expect(buyLink.element.tagName).toBe('A')
       expect(buyLink.text()).toBe('Buy one')
@@ -127,7 +127,7 @@ describe('installer inspector panel', () => {
     mountPanel(session)
 
     expect(wrapper.get('h2').text()).toBe('Select your reTerminal')
-    expect(wrapper.get('.installer-step__copy p').text()).toBe('In the browser window, select the connected device. It may appear as USB Serial or a similar USB name.')
+    expect(wrapper.get('.installer-step__copy p').text()).toBe('Follow any browser permission steps, then select the connected device. It may appear as USB Serial or a similar USB name.')
     expect(wrapper.findAll('.installer-step__copy p')).toHaveLength(1)
   })
 

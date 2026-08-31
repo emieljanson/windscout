@@ -3,6 +3,15 @@ import { createSerialProtocol, decodeProtocolFrame, encodeProtocolFrame, findGra
 import { INSTALLER_ERROR_CODES } from '../../src/installer/installerErrors'
 
 describe('serial port adapter', () => {
+  it('supports Firefox desktop when Web Serial is available', () => {
+    const requestPort = vi.fn()
+    expect(getSerialSupport({
+      navigatorApi: { serial: { requestPort }, userAgent: 'Mozilla/5.0 (X11; Linux x86_64; rv:153.0) Gecko/20100101 Firefox/153.0' },
+      locationApi: { protocol: 'https:', hostname: 'windscout.nl' },
+    })).toEqual({ supported: true, reason: null })
+    expect(requestPort).not.toHaveBeenCalled()
+  })
+
   it('blocks mobile, insecure and unsupported browsers before permission', () => {
     const requestPort = vi.fn()
     expect(getSerialSupport({ navigatorApi: { serial: { requestPort }, userAgent: 'iPhone' }, locationApi: { protocol: 'https:', hostname: 'windscout.nl' } }).reason).toBe('desktop-required')

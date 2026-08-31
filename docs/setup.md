@@ -6,7 +6,7 @@ WindScout supports one spot per device. Configure the spot and display options i
 
 - A Seeed Studio reTerminal E1002. E1001 and other ESP devices are not supported.
 - A USB-C data cable. A charge-only cable will not work.
-- Current Chrome or Edge on a desktop computer.
+- Current Firefox, Chrome, or Edge on a desktop computer. Firefox 151 or newer is required.
 - A 2.4 GHz Wi-Fi network and its password.
 
 The installer is intentionally unavailable on phones. Mobile can preview display options, but creating spots and installing software stays on desktop.
@@ -16,7 +16,7 @@ The installer is intentionally unavailable on phones. Mobile can preview display
 1. Connect the E1002 directly to the desktop with USB-C.
 2. Open the configurator over HTTPS, choose one spot, and set the display options.
 3. Select **Install**, then **Connect device**.
-4. Choose the E1002 in the browser's USB device window.
+4. Follow any browser permission steps, then choose the E1002 in the USB device window. Firefox asks you to add a site permission the first time.
 5. If WindScout cannot verify the enclosure, compare it with the E1002 illustration and confirm the model. This confirmation is required before a clean flash.
 6. Keep USB connected while firmware is being written.
 7. After the device restarts, reconnect it when asked.

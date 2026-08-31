@@ -22,7 +22,7 @@ export function getSerialSupport({
 export async function requestInstallerPort(navigatorApi = globalThis.navigator) {
   const support = getSerialSupport({ navigatorApi })
   if (!support.supported) {
-    throw new InstallerError(INSTALLER_ERROR_CODES.UNSUPPORTED, 'Open Windscout in Chrome or Edge on a desktop computer.', { recoverable: false })
+    throw new InstallerError(INSTALLER_ERROR_CODES.UNSUPPORTED, 'Open Windscout in a current desktop version of Firefox, Chrome, or Edge.', { recoverable: false })
   }
   try {
     return await navigatorApi.serial.requestPort()

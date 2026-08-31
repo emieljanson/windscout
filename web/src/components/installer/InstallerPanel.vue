@@ -26,7 +26,7 @@ let scanPromise = null
 const support = getSerialSupport()
 const session = props.sessionFactory({ configuration: props.configuration })
 const isDemo = session.isDemo === true
-const unsupportedReason = computed(() => (support.supported || isDemo) ? '' : 'Installation needs Chrome or Edge on a desktop computer.')
+const unsupportedReason = computed(() => (support.supported || isDemo) ? '' : 'Update to a current desktop version of Firefox, Chrome, or Edge to install Windscout over USB.')
 const displayPhase = computed(() => unsupportedReason.value && state.value.phase === 'ready' ? 'error' : state.value.phase)
 const unsubscribe = session.subscribe((next) => { state.value = { ...next } })
 
@@ -164,7 +164,7 @@ onBeforeUnmount(() => { toast.dismiss('installer-error'); toast.dismiss('install
           <div v-else-if="state.phase === 'choosing-device'" class="installer-step installer-step--choose-device" aria-busy="true">
             <div class="installer-step__copy">
               <h2 id="installer-title">Select your reTerminal</h2>
-              <p>In the browser window, select the connected device. It may appear as USB Serial or a similar USB name.</p>
+              <p>Follow any browser permission steps, then select the connected device. It may appear as USB Serial or a similar USB name.</p>
             </div>
           </div>
 

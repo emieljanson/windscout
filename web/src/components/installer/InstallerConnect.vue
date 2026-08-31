@@ -7,8 +7,8 @@ defineEmits(['connect'])
   <div class="installer-step installer-step--connect">
     <div class="installer-step__copy">
       <template v-if="unsupportedReason">
-        <h2 id="installer-title">Install with Chrome or Edge</h2>
-        <p role="status">Open this page in Chrome or Edge on a desktop computer to install Windscout over USB.</p>
+        <h2 id="installer-title">Use Firefox, Chrome, or Edge</h2>
+        <p role="status">{{ unsupportedReason }}</p>
       </template>
       <template v-else>
         <h2 id="installer-title">Connect your reTerminal</h2>
