@@ -268,6 +268,18 @@ bool hardware_profile_can_use_panel(void)
            !s_boot_state.driver_failure_latched;
 }
 
+bool hardware_profile_can_use_panel_for_fixed_model(hardware_model_t fixed_model)
+{
+    if (!s_boot_state_loaded || s_boot_state.safe_boot_override ||
+        s_boot_state.driver_failure_latched) {
+        return false;
+    }
+    if (s_boot_state.effective_model != HARDWARE_MODEL_UNKNOWN) {
+        return s_boot_state.effective_model == fixed_model;
+    }
+    return fixed_model == HARDWARE_MODEL_E1001 || fixed_model == HARDWARE_MODEL_E1002;
+}
+
 static esp_err_t persist_transition(hardware_profile_record_t *record,
                                     hardware_profile_update_result_t *out_result)
 {

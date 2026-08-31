@@ -54,6 +54,7 @@ typedef struct {
 esp_err_t hardware_profile_boot(bool side_buttons_held, hardware_profile_state_t *out_state);
 esp_err_t hardware_profile_get_state(hardware_profile_state_t *out_state);
 bool hardware_profile_can_use_panel(void);
+bool hardware_profile_can_use_panel_for_fixed_model(hardware_model_t fixed_model);
 
 esp_err_t hardware_profile_select(hardware_model_t model, hardware_profile_source_t source,
                                   uint32_t expected_revision,

@@ -24,6 +24,15 @@
 static const char *TAG = "windscout";
 static volatile bool s_time_synchronized;
 
+static bool hardware_profile_allows_panel(void)
+{
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1002
+    return hardware_profile_can_use_panel_for_fixed_model(HARDWARE_MODEL_E1002);
+#else
+    return hardware_profile_can_use_panel();
+#endif
+}
+
 static bool side_button_safe_boot_requested(void)
 {
     const uint64_t side_button_mask = (UINT64_C(1) << BOARD_HAL_ROTATE_KEY) |
@@ -140,7 +149,7 @@ void app_main(void)
     debug_log_init();
     ESP_ERROR_CHECK(wifi_manager_init());
 
-    if (!hardware_profile_can_use_panel()) {
+    if (!hardware_profile_allows_panel()) {
         ESP_ERROR_CHECK(wind_installer_service_start());
         if (profile.safe_boot_override) {
             ESP_LOGW(TAG, "Side-button recovery active; display remains untouched");

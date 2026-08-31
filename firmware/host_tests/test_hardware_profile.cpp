@@ -54,6 +54,22 @@ TEST_F(HardwareProfileTest, MissingOrInvalidRecordsBootUnknownAndCannotUsePanel)
     EXPECT_EQ(state.effective_model, HARDWARE_MODEL_UNKNOWN);
 }
 
+TEST_F(HardwareProfileTest, FixedE1002BuildNeedsNoOwnerModelChoice)
+{
+    boot();
+    EXPECT_TRUE(hardware_profile_can_use_panel_for_fixed_model(HARDWARE_MODEL_E1002));
+    EXPECT_FALSE(hardware_profile_can_use_panel());
+
+    boot(true);
+    EXPECT_FALSE(hardware_profile_can_use_panel_for_fixed_model(HARDWARE_MODEL_E1002));
+
+    hardware_profile_reset_host_storage();
+    boot();
+    select_model(HARDWARE_MODEL_E1001, HARDWARE_PROFILE_SOURCE_OWNER_CONFIRMATION, 0);
+    boot();
+    EXPECT_FALSE(hardware_profile_can_use_panel_for_fixed_model(HARDWARE_MODEL_E1002));
+}
+
 TEST_F(HardwareProfileTest, SelectionActivatesOnlyAfterCommittedReadbackAndReboot)
 {
     auto before = boot();
@@ -225,5 +241,5 @@ TEST_F(HardwareProfileTest, MainLoadsNvsAndProfileBeforeAnyDisplayFacingInitiali
     EXPECT_LT(profile, board);
     EXPECT_LT(profile, display);
     EXPECT_LT(profile, app);
-    EXPECT_NE(text.find("if (!hardware_profile_can_use_panel())"), std::string::npos);
+    EXPECT_NE(text.find("if (!hardware_profile_allows_panel())"), std::string::npos);
 }
