@@ -54,10 +54,27 @@ const createSpotActionLabel = computed(() => {
   return exactMatch ? '' : `Add ${query}`
 })
 
-const modelOptions = computed(() => availableForecastModels.value.map((model) => ({
-  value: model.id,
-  label: model.label,
-})))
+const modelOptions = computed(() => {
+  const bestMatchModels = availableForecastModels.value.filter((model) => model.id === 'best_match')
+  const localModels = availableForecastModels.value.filter((model) => model.availability === 'regional')
+  const globalModels = availableForecastModels.value.filter((model) => (
+    model.availability === 'always' && model.id !== 'best_match'
+  ))
+
+  return [
+    ...bestMatchModels.map((model) => ({ value: model.id, label: model.label })),
+    ...localModels.map((model, index) => ({
+      value: model.id,
+      label: model.label,
+      separatorBefore: index === 0 && bestMatchModels.length > 0,
+    })),
+    ...globalModels.map((model, index) => ({
+      value: model.id,
+      label: model.label,
+      separatorBefore: index === 0 && (bestMatchModels.length > 0 || localModels.length > 0),
+    })),
+  ]
+})
 const temperatureOptions = [
   { value: 'hide', label: 'Hide' },
   { value: 'celsius', label: 'Celsius' },

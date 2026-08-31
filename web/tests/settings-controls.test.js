@@ -180,6 +180,27 @@ describe('WindScout setting controls', () => {
     wrapper.unmount()
   })
 
+  it('renders an option separator across the dropdown', async () => {
+    const wrapper = mount(SettingSelect, {
+      props: {
+        modelValue: 'local',
+        options: [
+          { value: 'local', label: 'Local model' },
+          { value: 'global', label: 'Global model', separatorBefore: true },
+        ],
+      },
+      attachTo: document.body,
+    })
+
+    await wrapper.get('[role="combobox"]').trigger('keydown', { key: 'Enter' })
+
+    const separator = document.body.querySelector('.setting-select__separator')
+    expect(separator).not.toBeNull()
+    expect(separator.classList.contains('setting-select__separator')).toBe(true)
+    expect(separator.nextElementSibling.textContent).toContain('Global model')
+    wrapper.unmount()
+  })
+
   it('keeps combobox search controlled and restores the committed label on dismissal', async () => {
     const wrapper = mount(SettingCombobox, {
       props: {

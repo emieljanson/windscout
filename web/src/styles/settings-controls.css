@@ -359,6 +359,13 @@
   overscroll-behavior: contain;
 }
 
+.setting-select__separator {
+  block-size: 1px;
+  margin-block: 0.25rem;
+  margin-inline: -0.25rem;
+  background: #ededed;
+}
+
 .setting-option {
   position: relative;
   display: flex;

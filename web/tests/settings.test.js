@@ -169,10 +169,30 @@ describe('WindScout settings panel', () => {
     expect(modelSelect.props('options').map((option) => option.label)).toEqual([
       'Best Match', 'ECMWF IFS', 'DWD ICON', 'NOAA GFS',
     ])
+    expect(modelSelect.props('options').map((option) => Boolean(option.separatorBefore))).toEqual([
+      false, true, false, false,
+    ])
     modelSelect.vm.$emit('update:modelValue', 'ncep_gfs_seamless')
     await nextTick()
 
     expect(selectModel).toHaveBeenCalledWith('ncep_gfs_seamless')
+  })
+
+  it('puts Best Match in its own section above local and global models', () => {
+    const store = useConfiguratorStore()
+    store.forecastsByModel.knmi_harmonie = { spotId: store.selectedSpotId }
+    store.forecastsByModel.dmi_harmonie = { spotId: store.selectedSpotId }
+    mountSettings()
+
+    const modelOptions = wrapper.findAllComponents(SettingSelect)[0].props('options')
+    expect(modelOptions.map((option) => option.label)).toEqual([
+      'Best Match',
+      'KNMI HARMONIE', 'DMI HARMONIE',
+      'ECMWF IFS', 'DWD ICON', 'NOAA GFS',
+    ])
+    expect(modelOptions.map((option) => Boolean(option.separatorBefore))).toEqual([
+      false, true, false, true, false, false,
+    ])
   })
 
   it('reveals an exact threshold input and restores its last valid value', async () => {

@@ -8,6 +8,7 @@ import {
   SelectItemText,
   SelectPortal,
   SelectRoot,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
   SelectViewport,
@@ -108,20 +109,24 @@ function updateNativeValue(event) {
         @keydown="pointerFocus = false"
       >
         <SelectViewport class="setting-popup__viewport">
-          <SelectItem
-            v-for="option in props.options"
-            :key="String(option.value)"
-            class="setting-option"
-            :value="option.value"
-            :disabled="option.disabled"
-          >
-            <SelectItemText class="setting-option__text">{{ option.label }}</SelectItemText>
-            <SelectItemIndicator class="setting-option__indicator" aria-hidden="true">
-              <svg viewBox="0 0 16 16" fill="none" focusable="false">
-                <path fill="currentColor" d="M4.2996 7.23968C4.01775 6.93614 3.5432 6.91857 3.23966 7.20042C2.93613 7.48227 2.91856 7.95682 3.20041 8.26035L6.45041 11.7603C6.7612 12.095 7.29647 12.0766 7.58346 11.7212L12.8335 5.22127C13.0937 4.89904 13.0435 4.42683 12.7213 4.16657C12.399 3.9063 11.9268 3.95654 11.6665 4.27877L6.96051 10.1053L4.2996 7.23968Z" />
-              </svg>
-            </SelectItemIndicator>
-          </SelectItem>
+          <template v-for="option in props.options" :key="String(option.value)">
+            <SelectSeparator
+              v-if="option.separatorBefore"
+              class="setting-select__separator"
+            />
+            <SelectItem
+              class="setting-option"
+              :value="option.value"
+              :disabled="option.disabled"
+            >
+              <SelectItemText class="setting-option__text">{{ option.label }}</SelectItemText>
+              <SelectItemIndicator class="setting-option__indicator" aria-hidden="true">
+                <svg viewBox="0 0 16 16" fill="none" focusable="false">
+                  <path fill="currentColor" d="M4.2996 7.23968C4.01775 6.93614 3.5432 6.91857 3.23966 7.20042C2.93613 7.48227 2.91856 7.95682 3.20041 8.26035L6.45041 11.7603C6.7612 12.095 7.29647 12.0766 7.58346 11.7212L12.8335 5.22127C13.0937 4.89904 13.0435 4.42683 12.7213 4.16657C12.399 3.9063 11.9268 3.95654 11.6665 4.27877L6.96051 10.1053L4.2996 7.23968Z" />
+                </svg>
+              </SelectItemIndicator>
+            </SelectItem>
+          </template>
         </SelectViewport>
       </SelectContent>
     </SelectPortal>
