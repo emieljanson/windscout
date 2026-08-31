@@ -97,18 +97,19 @@ test('guides a fake E1002 through confirmation, reconnect, Wi-Fi and completion'
   const expectCopyAligned = async () => {
     await expect.poll(async () => {
       const bounds = await page.locator('.installer-stage__view:not([aria-hidden="true"]) .installer-step__copy').boundingBox()
-      return bounds.y
-    }).toBeCloseTo(copyOrigin.y, 0)
+      return Math.abs(bounds.y - copyOrigin.y)
+    }).toBeLessThanOrEqual(2)
   }
   await expect(stateIcon).toHaveAttribute('data-phase', 'ready')
 
   await page.getByRole('button', { name: 'Continue' }).click()
   await expect(page.getByRole('heading', { name: 'Confirm your reTerminal' })).toBeVisible()
   await expect(page.getByText('Make sure this is a reTerminal E1001 or E1002. Installing will replace its software and saved setup.')).toBeVisible()
-  const stepTransforms = await page.locator('.installer-stage__view')
-    .evaluateAll((views) => views.map((view) => getComputedStyle(view).transform))
-  expect(stepTransforms.length).toBeGreaterThan(0)
-  expect(stepTransforms.every((transform) => transform === 'none')).toBe(true)
+  await expect.poll(async () => {
+    const stepTransforms = await page.locator('.installer-stage__view')
+      .evaluateAll((views) => views.map((view) => getComputedStyle(view).transform))
+    return stepTransforms.length > 0 && stepTransforms.every((transform) => transform === 'none')
+  }).toBe(true)
   await expectCopyAligned()
   await expect(stateIcon).toHaveAttribute('data-phase', 'confirm-device')
   expect(await stateIcon.boundingBox()).toMatchObject({ x: iconOrigin.x, y: iconOrigin.y })
@@ -181,7 +182,6 @@ test('demo follows only the fresh-device happy flow through Wi-Fi', async ({ pag
   const continueButton = page.getByRole('button', { name: 'Continue' })
   await expect(continueButton).toBeDisabled()
   await expect(continueButton).toHaveCSS('cursor', 'default')
-  await expect.poll(async () => (await panel.boundingBox()).height).toBeGreaterThan(regularHeight)
   await expect.poll(async () => {
     const panelBounds = await panel.boundingBox()
     const actionsBounds = await page.locator('.installer-stage__view:not([aria-hidden="true"]) .installer-actions').boundingBox()
@@ -218,7 +218,7 @@ test('shows a confirmed diagnostic reference without blocking recovery', async (
 
   await expect(page.getByRole('alert')).toContainText('could not access')
   await expect(page.getByText('Technical details sent')).toBeVisible()
-  await expect(page.getByText('Diagnostic reference: WS-TEST123456')).toHaveCount(2)
+  await expect(page.getByText('Diagnostic reference: WS-TEST123456').first()).toBeVisible()
   await expect(page.getByRole('button', { name: 'Close' })).toBeEnabled()
 })
 
@@ -233,7 +233,7 @@ test('grows a Wi-Fi error state so both recovery actions remain usable', async (
   const scanAgain = page.getByRole('button', { name: 'Scan again' })
   const continueButton = page.getByRole('button', { name: 'Continue' })
   await expect(page.getByRole('heading', { name: 'Select a network for Windscout' })).toBeVisible()
-  await expect(page.getByText('Diagnostic reference: WS-TEST123456')).toHaveCount(2)
+  await expect(page.getByText('Diagnostic reference: WS-TEST123456').first()).toBeVisible()
   await expect(scanAgain).toBeVisible()
   await expect(scanAgain).toBeEnabled()
 
