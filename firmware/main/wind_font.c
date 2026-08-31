@@ -1,6 +1,7 @@
 #include "wind_font.h"
 
 #include <limits.h>
+#include <stdbool.h>
 #include <string.h>
 
 #include "fonts/wind_font_internal.h"
@@ -96,9 +97,9 @@ wind_text_metrics_t wind_font_measure(wind_font_family_t family, int pixel_size,
     return result;
 }
 
-void wind_font_draw(uint8_t *luma, int width, int height, int stride, int x,
-                    int baseline_y, wind_font_family_t family, int pixel_size,
-                    uint8_t gray, const char *utf8) {
+static void draw_font(uint8_t *luma, int width, int height, int stride, int x,
+                      int baseline_y, wind_font_family_t family, int pixel_size,
+                      uint8_t gray, const char *utf8, bool antialiased) {
     const wind_font_asset_t *asset = find_asset(family, pixel_size);
     const char *cursor = utf8 ? utf8 : "";
     if (!luma || !asset || width <= 0 || height <= 0 || stride < width) return;
@@ -116,12 +117,30 @@ void wind_font_draw(uint8_t *luma, int width, int height, int stride, int x,
                 const uint8_t alpha = asset->bitmap[glyph->bitmap_offset +
                                                     gy * glyph->bitmap_width + gx];
                 uint8_t *destination = &luma[py * stride + px];
-                // Temporary device experiment: turn antialiased glyph coverage
-                // into a strict one-bit mask so the final display pass has no
-                // gray edge pixels to dither.
-                if (alpha >= 128) *destination = gray;
+                if (antialiased) {
+                    *destination = (uint8_t)((gray * alpha +
+                                              *destination * (255u - alpha) + 127u) /
+                                             255u);
+                } else if (alpha >= 128) {
+                    *destination = gray;
+                }
             }
         }
         x += glyph->advance;
     }
+}
+
+void wind_font_draw(uint8_t *luma, int width, int height, int stride, int x,
+                    int baseline_y, wind_font_family_t family, int pixel_size,
+                    uint8_t gray, const char *utf8) {
+    draw_font(luma, width, height, stride, x, baseline_y, family, pixel_size,
+              gray, utf8, false);
+}
+
+void wind_font_draw_antialiased(uint8_t *luma, int width, int height,
+                                int stride, int x, int baseline_y,
+                                wind_font_family_t family, int pixel_size,
+                                uint8_t gray, const char *utf8) {
+    draw_font(luma, width, height, stride, x, baseline_y, family, pixel_size,
+              gray, utf8, true);
 }
