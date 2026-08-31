@@ -8,6 +8,7 @@ firmware/main/wind_config.local.h
 .context/compound-engineering/
 .tmp*/
 *.bin
+!firmware/host_tests/fixtures/e100*-*.bin
 web/.env.local
 node_modules/
 web/public/firmware/*

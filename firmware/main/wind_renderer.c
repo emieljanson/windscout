@@ -64,6 +64,7 @@ typedef struct {
 
 typedef enum {
     OUTPUT_PALETTE,
+    OUTPUT_GRAY4,
     OUTPUT_RGBA,
 } output_format_t;
 
@@ -1022,6 +1023,12 @@ static void set_output_pixel(output_surface_t *output, int index,
                                                             : PALETTE_RED;
         return;
     }
+    if (output->format == OUTPUT_GRAY4) {
+        output->pixels[index] = color == OUTPUT_BLACK
+                                    ? 0
+                                    : color == OUTPUT_WHITE ? 3 : 1;
+        return;
+    }
     const int offset = index * 4;
     output->pixels[offset] = color == OUTPUT_BLACK ? 0 : 255;
     output->pixels[offset + 1] = color == OUTPUT_RED || color == OUTPUT_BLACK
@@ -1439,9 +1446,9 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
                             uint8_t *output_pixels, size_t output_size,
                             output_format_t output_format,
                             wind_renderer_stats_t *stats) {
-    const size_t required_size = output_format == OUTPUT_PALETTE
-                                     ? WIND_RENDERER_PALETTE_BYTES
-                                     : WIND_RENDERER_RGBA_BYTES;
+    const size_t required_size = output_format == OUTPUT_RGBA
+                                     ? WIND_RENDERER_RGBA_BYTES
+                                     : WIND_RENDERER_PALETTE_BYTES;
     if (!dashboard || !output_pixels || output_size < required_size)
         return -1;
     if (!dashboard_valid(dashboard)) return -3;
@@ -1548,6 +1555,11 @@ static int render_dashboard(const wind_renderer_dashboard_t *dashboard,
     int output_result = 0;
     if (output_format == OUTPUT_PALETTE) {
         output_result = dither_once(canvas.pixels, output_pixels);
+    } else if (output_format == OUTPUT_GRAY4) {
+        for (int pixel = 0; pixel < WIND_RENDERER_PALETTE_BYTES; ++pixel) {
+            output_pixels[pixel] =
+                (uint8_t) (((unsigned) canvas.pixels[pixel] * 3u + 127u) / 255u);
+        }
     } else {
         for (int pixel = 0; pixel < WIND_RENDERER_PALETTE_BYTES; ++pixel) {
             const int offset = pixel * 4;
@@ -1591,6 +1603,28 @@ int wind_renderer_render(const wind_renderer_dashboard_t *dashboard,
                          wind_renderer_stats_t *stats) {
     return render_dashboard(dashboard, palette_out, palette_size,
                             OUTPUT_PALETTE, stats);
+}
+
+int wind_renderer_render_for_display(
+    const wind_renderer_dashboard_t *dashboard, wind_renderer_display_t display,
+    uint8_t *logical_out, size_t logical_size, wind_renderer_stats_t *stats) {
+    if (display == WIND_RENDERER_DISPLAY_E1001_GRAY4) {
+        return render_dashboard(dashboard, logical_out, logical_size,
+                                OUTPUT_GRAY4, stats);
+    }
+    if (display == WIND_RENDERER_DISPLAY_E1002_SPECTRA6) {
+        return wind_renderer_render(dashboard, logical_out, logical_size, stats);
+    }
+    return -1;
+}
+
+uint64_t wind_renderer_display_signature(uint64_t base,
+                                         wind_renderer_display_t display) {
+    if (display != WIND_RENDERER_DISPLAY_E1001_GRAY4 &&
+        display != WIND_RENDERER_DISPLAY_E1002_SPECTRA6) {
+        return 0;
+    }
+    return base ^ (UINT64_C(0x9E3779B97F4A7C15) * (uint64_t) display);
 }
 
 int wind_renderer_render_preview_rgba(

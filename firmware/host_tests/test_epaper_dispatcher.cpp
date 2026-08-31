@@ -10,6 +10,7 @@ namespace {
 struct Calls {
     int init;
     int display;
+    int display_logical;
     int clear;
     int sleep;
 };
@@ -26,6 +27,12 @@ esp_err_t fake_init_e1001(const epaper_config_t *)
 esp_err_t fake_display_e1001(uint8_t *)
 {
     ++e1001_calls.display;
+    return ESP_OK;
+}
+
+esp_err_t fake_display_logical_e1001(const uint8_t *, size_t)
+{
+    ++e1001_calls.display_logical;
     return ESP_OK;
 }
 
@@ -53,6 +60,12 @@ esp_err_t fake_display_e1002(uint8_t *)
     return ESP_OK;
 }
 
+esp_err_t fake_display_logical_e1002(const uint8_t *, size_t)
+{
+    ++e1002_calls.display_logical;
+    return ESP_OK;
+}
+
 esp_err_t fake_clear_e1002(uint8_t *, uint8_t)
 {
     ++e1002_calls.clear;
@@ -71,6 +84,7 @@ const epaper_backend_t e1001_backend = {
     .height = 480,
     .init = fake_init_e1001,
     .display = fake_display_e1001,
+    .display_logical = fake_display_logical_e1001,
     .clear = fake_clear_e1001,
     .set_temperature = nullptr,
     .enter_deepsleep = fake_sleep_e1001,
@@ -82,6 +96,7 @@ const epaper_backend_t e1002_backend = {
     .height = 480,
     .init = fake_init_e1002,
     .display = fake_display_e1002,
+    .display_logical = fake_display_logical_e1002,
     .clear = fake_clear_e1002,
     .set_temperature = nullptr,
     .enter_deepsleep = fake_sleep_e1002,
@@ -105,10 +120,15 @@ TEST_F(EpaperDispatcherTest, UnknownRefusesEveryPanelOperationWithoutBackendCall
 
     EXPECT_EQ(epaper_init(&config), ESP_ERR_INVALID_STATE);
     EXPECT_EQ(epaper_display(image), ESP_ERR_INVALID_STATE);
+    EXPECT_EQ(epaper_display_logical(image, sizeof(image)), ESP_ERR_INVALID_STATE);
     EXPECT_EQ(epaper_clear(image, EPD_7IN3E_WHITE), ESP_ERR_INVALID_STATE);
     EXPECT_EQ(epaper_enter_deepsleep(), ESP_ERR_INVALID_STATE);
-    EXPECT_EQ(e1001_calls.init + e1001_calls.display + e1001_calls.clear + e1001_calls.sleep, 0);
-    EXPECT_EQ(e1002_calls.init + e1002_calls.display + e1002_calls.clear + e1002_calls.sleep, 0);
+    EXPECT_EQ(e1001_calls.init + e1001_calls.display + e1001_calls.display_logical +
+                  e1001_calls.clear + e1001_calls.sleep,
+              0);
+    EXPECT_EQ(e1002_calls.init + e1002_calls.display + e1002_calls.display_logical +
+                  e1002_calls.clear + e1002_calls.sleep,
+              0);
 }
 
 TEST_F(EpaperDispatcherTest, E1002DelegatesEachLifecycleOperationExactlyOnce)
@@ -119,14 +139,37 @@ TEST_F(EpaperDispatcherTest, E1002DelegatesEachLifecycleOperationExactlyOnce)
     ASSERT_EQ(epaper_select_backend(EPAPER_HARDWARE_E1002), ESP_OK);
     EXPECT_EQ(epaper_init(&config), ESP_OK);
     EXPECT_EQ(epaper_display(image), ESP_OK);
+    EXPECT_EQ(epaper_display_logical(image, sizeof(image)), ESP_OK);
     EXPECT_EQ(epaper_clear(image, EPD_7IN3E_WHITE), ESP_OK);
     EXPECT_EQ(epaper_enter_deepsleep(), ESP_OK);
 
     EXPECT_EQ(e1002_calls.init, 1);
     EXPECT_EQ(e1002_calls.display, 1);
+    EXPECT_EQ(e1002_calls.display_logical, 1);
     EXPECT_EQ(e1002_calls.clear, 1);
     EXPECT_EQ(e1002_calls.sleep, 1);
-    EXPECT_EQ(e1001_calls.init + e1001_calls.display + e1001_calls.clear + e1001_calls.sleep, 0);
+    EXPECT_EQ(e1001_calls.init + e1001_calls.display + e1001_calls.display_logical +
+                  e1001_calls.clear + e1001_calls.sleep,
+              0);
+}
+
+TEST_F(EpaperDispatcherTest, E1001LogicalFrameNeverFallsThroughToE1002)
+{
+    uint8_t image[1] = {0};
+    epaper_config_t config = {};
+
+    ASSERT_EQ(epaper_select_backend(EPAPER_HARDWARE_E1001), ESP_OK);
+    EXPECT_EQ(epaper_active_hardware(), EPAPER_HARDWARE_E1001);
+    EXPECT_EQ(epaper_init(&config), ESP_OK);
+    EXPECT_EQ(epaper_display_logical(image, sizeof(image)), ESP_OK);
+    EXPECT_EQ(epaper_enter_deepsleep(), ESP_OK);
+    EXPECT_EQ(e1001_calls.init, 1);
+    EXPECT_EQ(e1001_calls.display_logical, 1);
+    EXPECT_EQ(e1001_calls.sleep, 1);
+    EXPECT_EQ(e1002_calls.init + e1002_calls.display +
+                  e1002_calls.display_logical + e1002_calls.clear +
+                  e1002_calls.sleep,
+              0);
 }
 
 TEST_F(EpaperDispatcherTest, SecondSelectionInOneBootIsRejected)

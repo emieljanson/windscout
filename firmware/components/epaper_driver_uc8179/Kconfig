@@ -1,0 +1,6 @@
+config EP_DRIVER_UC8179_GRAY4_EXPERIMENTAL
+    bool "Experimental UC8179 Gray4 external-LUT driver"
+    help
+        E1001 Gray4 transport ported from the pinned Seeed reference. This
+        external-LUT waveform remains experimental until the U7 physical
+        panel matrix accepts refresh quality, sleep/wake, and recovery.

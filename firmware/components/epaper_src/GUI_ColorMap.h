@@ -42,6 +42,18 @@ static inline UBYTE GUI_RGBToSpectra6(uint8_t r, uint8_t g, uint8_t b)
     return 0x0F;  // Default to white for unknown colors
 }
 
+/** Map RGB directly to the public logical Spectra6 codes (0,1,2,3,5,6). */
+static inline UBYTE GUI_RGBToSpectra6Logical(uint8_t r, uint8_t g, uint8_t b)
+{
+    if (r == 0 && g == 0 && b == 0) return 0;
+    if (r == 255 && g == 255 && b == 255) return 1;
+    if (r == 255 && g == 255 && b == 0) return 2;
+    if (r == 255 && g == 0 && b == 0) return 3;
+    if (r == 0 && g == 0 && b == 255) return 5;
+    if (r == 0 && g == 255 && b == 0) return 6;
+    return 1;
+}
+
 /**
  * @brief Map an RGB pixel to a GC16 gray level (0=black..15=white).
  *
@@ -57,6 +69,13 @@ static inline UBYTE GUI_RGBToGray16(uint8_t r, uint8_t g, uint8_t b)
     // Rec.601 integer luma; identity for neutral grays (r == g == b).
     uint32_t y = (299u * r + 587u * g + 114u * b) / 1000u;
     return (UBYTE) ((y * 15u + 127u) / 255u);
+}
+
+/** Map RGB to the nearest of four linear Gray4 levels (0..3). */
+static inline UBYTE GUI_RGBToGray4(uint8_t r, uint8_t g, uint8_t b)
+{
+    uint32_t y = (299u * r + 587u * g + 114u * b) / 1000u;
+    return (UBYTE) ((y * 3u + 127u) / 255u);
 }
 
 #endif

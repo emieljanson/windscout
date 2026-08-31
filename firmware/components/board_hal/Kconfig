@@ -73,6 +73,7 @@ menu "Board Configuration"
             select SENSOR_DRIVER_SHT40
             select RTC_DRIVER_PCF8563
             select EP_DRIVER_ED2208_GCA
+            select EP_DRIVER_UC8179_GRAY4_EXPERIMENTAL
             select BOARD_CAP_WINDSCOUT
             help
                 Shared reTerminal E1001/E1002 carrier. The persisted hardware

@@ -107,6 +107,27 @@ std::string FixturePath(const char *name) {
         .string();
 }
 
+std::string Gray4FixturePath(const char *name) {
+    return (std::filesystem::path(__FILE__).parent_path() / "fixtures" /
+            (std::string("e1001-gray4-") + name + ".bin"))
+        .string();
+}
+
+void ExpectGray4Golden(const char *name, const Frame &actual) {
+    const std::string path = Gray4FixturePath(name);
+    if (std::getenv("WIND_UPDATE_EPAPER_GOLDENS")) {
+        std::ofstream output(path, std::ios::binary | std::ios::trunc);
+        ASSERT_TRUE(output.good()) << path;
+        output.write(reinterpret_cast<const char *>(actual.data()),
+                     static_cast<std::streamsize>(actual.size()));
+        ASSERT_TRUE(output.good()) << path;
+    }
+    std::ifstream input(path, std::ios::binary);
+    ASSERT_TRUE(input.good()) << path;
+    const Frame expected(std::istreambuf_iterator<char>(input), {});
+    EXPECT_EQ(expected, actual);
+}
+
 void WritePbm(const std::string &path, const Frame &frame) {
     std::ofstream output(path, std::ios::binary | std::ios::trunc);
     ASSERT_TRUE(output.good()) << path;
@@ -183,6 +204,48 @@ TEST(WindRenderer, ProducesOneDeterministicMonochromeFrameWithoutClipping) {
     EXPECT_EQ(first[12 * 800 + 12], 0);
     EXPECT_EQ(first[80 * 800 + 400], 0);
     EXPECT_EQ(first[449 * 800 + 787], 0);
+}
+
+TEST(WindRenderer, Gray4UsesFourIntentionalLevelsWithoutDithering) {
+    auto dashboard = Dashboard();
+    dashboard.display_mode = WIND_RENDERER_MODE_THRESHOLD;
+    wind_renderer_stats_t stats{};
+    Frame frame(WIND_RENDERER_PALETTE_BYTES, 0x7f);
+    ASSERT_EQ(wind_renderer_render_for_display(
+                  &dashboard, WIND_RENDERER_DISPLAY_E1001_GRAY4,
+                  frame.data(), frame.size(), &stats),
+              0);
+    EXPECT_EQ(stats.dither_passes, 0);
+    for (uint8_t level = 0; level < 4; ++level) {
+        EXPECT_NE(std::find(frame.begin(), frame.end(), level), frame.end())
+            << "missing Gray4 level " << static_cast<int>(level);
+    }
+    EXPECT_TRUE(std::all_of(frame.begin(), frame.end(),
+                            [](uint8_t value) { return value <= 3; }));
+    ExpectGray4Golden("threshold-17", frame);
+}
+
+TEST(WindRenderer, WarningRemainsDistinctAndRenderSignatureCannotCrossModels) {
+    auto dashboard = Dashboard();
+    dashboard.display_mode = WIND_RENDERER_MODE_THRESHOLD;
+    const Frame e1002 = Render(dashboard);
+    Frame e1001(WIND_RENDERER_PALETTE_BYTES, 0x7f);
+    ASSERT_EQ(wind_renderer_render_for_display(
+                  &dashboard, WIND_RENDERER_DISPLAY_E1001_GRAY4,
+                  e1001.data(), e1001.size(), nullptr),
+              0);
+
+    auto warning = std::find(e1002.begin(), e1002.end(), 3);
+    ASSERT_NE(warning, e1002.end());
+    const size_t warning_index = static_cast<size_t>(warning - e1002.begin());
+    EXPECT_EQ(e1001[warning_index], 1);
+    EXPECT_NE(e1001[warning_index], e1001[0]);
+
+    constexpr uint64_t base = UINT64_C(0x57494E440000000D);
+    EXPECT_NE(wind_renderer_display_signature(
+                  base, WIND_RENDERER_DISPLAY_E1001_GRAY4),
+              wind_renderer_display_signature(
+                  base, WIND_RENDERER_DISPLAY_E1002_SPECTRA6));
 }
 
 TEST(WindRenderer, UsesTheSameCompositionForACleanUnditheredPreview) {

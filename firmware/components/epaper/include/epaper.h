@@ -2,6 +2,7 @@
 #define EPAPER_H
 
 #include <stdint.h>
+#include <stddef.h>
 
 #include "esp_err.h"
 
@@ -48,6 +49,9 @@ esp_err_t epaper_init(const epaper_config_t *cfg);
  */
 esp_err_t epaper_display(uint8_t *image);
 
+/** Encode and display one byte per logical 800x480 pixel. */
+esp_err_t epaper_display_logical(const uint8_t *image, size_t image_size);
+
 /**
  * @brief Clear display with specific color
  * @param image Buffer to use for clearing (size must match display)
@@ -79,6 +83,9 @@ bool epaper_has_active_backend(void);
 
 /** Diagnostic name for the active backend, or "none" while unselected. */
 const char *epaper_active_backend_name(void);
+
+/** Runtime model selected for this boot, or UNKNOWN before selection. */
+epaper_hardware_t epaper_active_hardware(void);
 
 /**
  * @brief Get display width

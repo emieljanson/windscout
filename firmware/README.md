@@ -1,9 +1,9 @@
 # WindScout firmware
 
-WindScout is an 800 x 480 monochrome wind forecast dashboard for the Seeed
-Studio reTerminal E1002. It fetches a five-day KNMI Seamless forecast directly,
-caches the last valid result, renders locally and only refreshes the E-ink panel
-when the final bitmap changed.
+WindScout is an 800 x 480 wind forecast dashboard for the Seeed Studio
+reTerminal E1001 and E1002. It fetches a five-day forecast directly, caches the
+last valid result, renders locally and only refreshes the E-ink panel when the
+final bitmap changed.
 
 ## Dashboard
 
@@ -38,3 +38,10 @@ The E1002 build contains only the WindScout dashboard, USB installer, Wi-Fi
 client, forecast cache and battery/deep-sleep runtime. The upstream photo-frame
 UI, albums, captive portal, Home Assistant and photo OTA runtime are excluded.
 See `UPSTREAM.md` for origin and license details.
+
+## Licensing
+
+The combined WindScout firmware source that includes the UC8179 E1001 driver is
+distributed under GNU GPL v3.0 only. Existing MIT-licensed portions retain their
+MIT notices. See `LICENSING.md` for the exact boundary and third-party assets
+that require separate distribution rights.

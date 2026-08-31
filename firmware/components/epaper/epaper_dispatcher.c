@@ -14,6 +14,7 @@ __attribute__((weak)) const epaper_backend_t *epaper_backend_uc8179_gray4(void)
 static const epaper_backend_t *s_e1001_backend;
 static const epaper_backend_t *s_e1002_backend;
 static const epaper_backend_t *s_active_backend;
+static epaper_hardware_t s_active_hardware;
 static bool s_selection_locked;
 
 static void load_production_backends(void)
@@ -40,6 +41,7 @@ esp_err_t epaper_select_backend(epaper_hardware_t hardware)
     if (!selected) return ESP_ERR_NOT_SUPPORTED;
 
     s_active_backend = selected;
+    s_active_hardware = hardware;
     s_selection_locked = true;
     return ESP_OK;
 }
@@ -52,6 +54,11 @@ bool epaper_has_active_backend(void)
 const char *epaper_active_backend_name(void)
 {
     return s_active_backend ? s_active_backend->name : "none";
+}
+
+epaper_hardware_t epaper_active_hardware(void)
+{
+    return s_active_hardware;
 }
 
 uint16_t epaper_get_width(void)
@@ -74,6 +81,14 @@ esp_err_t epaper_display(uint8_t *image)
 {
     if (!s_active_backend || !s_active_backend->display) return ESP_ERR_INVALID_STATE;
     return s_active_backend->display(image);
+}
+
+esp_err_t epaper_display_logical(const uint8_t *image, size_t image_size)
+{
+    if (!s_active_backend || !s_active_backend->display_logical) {
+        return ESP_ERR_INVALID_STATE;
+    }
+    return s_active_backend->display_logical(image, image_size);
 }
 
 esp_err_t epaper_clear(uint8_t *image, uint8_t color)
@@ -103,6 +118,7 @@ void epaper_dispatcher_reset_for_test(void)
     s_e1001_backend = NULL;
     s_e1002_backend = NULL;
     s_active_backend = NULL;
+    s_active_hardware = EPAPER_HARDWARE_UNKNOWN;
     s_selection_locked = false;
 }
 

@@ -1,9 +1,12 @@
 #include <assert.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "driver/gpio.h"
 #include "driver/spi_master.h"
 #include "epaper.h"
+#include "epaper_frame.h"
+#include "esp_heap_caps.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 
@@ -12,6 +15,7 @@
 #define epaper_get_height ed2208_gca_get_height
 #define epaper_init ed2208_gca_init
 #define epaper_display ed2208_gca_display
+#define epaper_display_logical ed2208_gca_display_logical
 #define epaper_clear ed2208_gca_clear
 #define epaper_enter_deepsleep ed2208_gca_enter_deepsleep
 #endif
@@ -153,6 +157,23 @@ static void send_buffer(uint8_t *data, int len)
     ESP_LOGI(TAG, "Buffer send complete");
 }
 
+static void send_native_buffer(const uint8_t *data, int len)
+{
+    uint8_t buf[DATA_CHUNK_SIZE];
+    while (len > 0) {
+        const int chunk = len > DATA_CHUNK_SIZE ? DATA_CHUNK_SIZE : len;
+        memcpy(buf, data, (size_t) chunk);
+        gpio_set_level(g_cfg.pin_dc, 1);
+        spi_begin();
+        gpio_set_level(g_cfg.pin_cs, 0);
+        spi_write(buf, (size_t) chunk);
+        gpio_set_level(g_cfg.pin_cs, 1);
+        spi_end();
+        data += chunk;
+        len -= chunk;
+    }
+}
+
 static bool is_busy(void *context)
 {
     (void) context;
@@ -270,7 +291,7 @@ static void send_init_sequence(void)
 
 // Full display update cycle:
 // RESET -> INIT -> wait -> DTM -> DATA -> PON -> wait -> DRF -> wait -> POF -> wait -> DSLP
-static esp_err_t display_update_cycle(uint8_t *image)
+static esp_err_t display_update_cycle(uint8_t *image, bool native_transport)
 {
     esp_err_t result = ESP_OK;
 #ifdef CONFIG_PM_ENABLE
@@ -289,7 +310,11 @@ static esp_err_t display_update_cycle(uint8_t *image)
     vTaskDelay(pdMS_TO_TICKS(10));  // allow BUSY to assert before polling it
     if ((result = wait_busy("power_on")) != ESP_OK) goto done;
     send_command(0x10);  // DATA_START_TRANSMISSION
-    send_buffer(image, EPD_BUF_SIZE);
+    if (native_transport) {
+        send_native_buffer(image, EPD_BUF_SIZE);
+    } else {
+        send_buffer(image, EPD_BUF_SIZE);
+    }
     if ((result = wait_busy("data")) != ESP_OK) goto done;
 
     cmd_data(0x12, (uint8_t[]){0x00}, 1);  // DISPLAY_REFRESH
@@ -349,7 +374,7 @@ esp_err_t epaper_clear(uint8_t *image, uint8_t color)
     memset(image, packed, EPD_BUF_SIZE);
 
     ESP_LOGI(TAG, "Clearing display with color 0x%02x", color);
-    esp_err_t result = display_update_cycle(image);
+    esp_err_t result = display_update_cycle(image, false);
     ESP_LOGI(TAG, "Clear complete");
     return result;
 }
@@ -360,8 +385,21 @@ esp_err_t epaper_display(uint8_t *image)
         return ESP_ERR_INVALID_ARG;
     }
     ESP_LOGI(TAG, "Starting display update: %d bytes", EPD_BUF_SIZE);
-    esp_err_t result = display_update_cycle(image);
+    esp_err_t result = display_update_cycle(image, false);
     ESP_LOGI(TAG, "Display update complete");
+    return result;
+}
+
+esp_err_t epaper_display_logical(const uint8_t *image, size_t image_size)
+{
+    if (!image) return ESP_ERR_INVALID_ARG;
+    uint8_t *transport = heap_caps_malloc(EPAPER_E1002_TRANSPORT_BYTES,
+                                          MALLOC_CAP_SPIRAM);
+    if (!transport) return ESP_ERR_NO_MEM;
+    esp_err_t result = epaper_encode_e1002_spectra6(
+        image, image_size, transport, EPAPER_E1002_TRANSPORT_BYTES);
+    if (result == ESP_OK) result = display_update_cycle(transport, true);
+    free(transport);
     return result;
 }
 
@@ -426,6 +464,7 @@ const epaper_backend_t epaper_backend_ed2208_gca = {
     .height = EPD_HEIGHT,
     .init = ed2208_gca_init,
     .display = ed2208_gca_display,
+    .display_logical = ed2208_gca_display_logical,
     .clear = ed2208_gca_clear,
     .set_temperature = NULL,
     .enter_deepsleep = ed2208_gca_enter_deepsleep,

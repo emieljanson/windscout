@@ -236,6 +236,7 @@ esp_err_t wind_app_show_cached(wind_app_t *app, int64_t now, wind_app_outcome_t 
 #include "wind_tide_cache.h"
 
 #include "wind_renderer.h"
+#include "epaper.h"
 
 // Bump this whenever layout, typography, palette encoding, or final bitmap semantics change.
 #define WIND_DASHBOARD_RENDER_SIGNATURE UINT64_C(0x57494E440000000D)
@@ -267,10 +268,22 @@ static bool s_last_render_succeeded;
 
 static esp_err_t wind_app_refresh_unlocked(bool force_refresh);
 
+static wind_renderer_display_t active_renderer_display(void)
+{
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E100X
+    if (epaper_active_hardware() == EPAPER_HARDWARE_E1001) {
+        return WIND_RENDERER_DISPLAY_E1001_GRAY4;
+    }
+#endif
+    return WIND_RENDERER_DISPLAY_E1002_SPECTRA6;
+}
+
 static uint64_t current_render_signature(void)
 {
     const wind_display_config_t config = config_manager_get_wind_display_config();
-    return WIND_DASHBOARD_RENDER_SIGNATURE ^ wind_display_config_signature(&config);
+    return wind_renderer_display_signature(
+        WIND_DASHBOARD_RENDER_SIGNATURE ^ wind_display_config_signature(&config),
+        active_renderer_display());
 }
 
 static void refresh_render_signatures(void)
@@ -526,7 +539,8 @@ static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast
     }
 
     wind_renderer_stats_t stats;
-    int render_result = wind_renderer_render(&dashboard, bitmap, bitmap_size, &stats);
+    int render_result = wind_renderer_render_for_display(
+        &dashboard, active_renderer_display(), bitmap, bitmap_size, &stats);
     if (render_result != 0) {
         ESP_LOGE(TAG, "Dashboard render failed: %d", render_result);
         return ESP_FAIL;
@@ -543,27 +557,16 @@ static esp_err_t display_dashboard(void *context, const uint8_t *bitmap, size_t 
     if (!bitmap || bitmap_size != WIND_RENDERER_PALETTE_BYTES) {
         return ESP_ERR_INVALID_SIZE;
     }
-    const size_t rgb_row_size = (size_t) WIND_RENDERER_WIDTH * 3;
-    uint8_t *rgb_row = (uint8_t *) malloc(rgb_row_size);
-    if (!rgb_row) {
-        return ESP_ERR_NO_MEM;
-    }
     esp_err_t result = display_manager_begin_rgb_stream();
     if (result != ESP_OK) {
-        free(rgb_row);
         return result;
     }
     for (int y = 0; y < WIND_RENDERER_HEIGHT && result == ESP_OK; ++y) {
-        if (wind_renderer_palette_row_to_rgb(
-                bitmap + (size_t) y * WIND_RENDERER_WIDTH,
-                WIND_RENDERER_WIDTH, rgb_row, rgb_row_size) != 0) {
-            result = ESP_ERR_INVALID_RESPONSE;
-            break;
-        }
-        result = display_manager_push_rgb_row(y, rgb_row, WIND_RENDERER_WIDTH);
+        result = display_manager_push_palette_row(
+            y, bitmap + (size_t) y * WIND_RENDERER_WIDTH,
+            WIND_RENDERER_WIDTH);
     }
     esp_err_t end_result = display_manager_end_rgb_stream(result == ESP_OK, NULL);
-    free(rgb_row);
     return result != ESP_OK ? result : end_result;
 }
 

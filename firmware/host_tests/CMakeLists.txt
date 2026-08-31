@@ -181,6 +181,24 @@ target_include_directories(
 target_link_libraries(epaper_dispatcher_test GTest::gtest_main)
 gtest_discover_tests(epaper_dispatcher_test)
 
+add_executable(
+  epaper_encoding_test
+  test_epaper_encoding.cpp
+  ../components/epaper/epaper_frame.c
+)
+target_compile_definitions(
+  epaper_encoding_test
+  PRIVATE WIND_RENDERER_SHARED_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../../shared/renderer-fixtures"
+)
+target_include_directories(
+  epaper_encoding_test
+  PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/stubs
+  ${CMAKE_CURRENT_SOURCE_DIR}/../components/epaper/include
+)
+target_link_libraries(epaper_encoding_test GTest::gtest_main)
+gtest_discover_tests(epaper_encoding_test)
+
 function(add_wind_test target test_source)
   add_executable(${target} ${test_source} ${ARGN})
   target_include_directories(${target} PRIVATE

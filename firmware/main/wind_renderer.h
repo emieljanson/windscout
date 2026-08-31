@@ -43,6 +43,11 @@ typedef enum {
 } wind_renderer_display_mode_t;
 
 typedef enum {
+    WIND_RENDERER_DISPLAY_E1001_GRAY4 = 1,
+    WIND_RENDERER_DISPLAY_E1002_SPECTRA6 = 2,
+} wind_renderer_display_t;
+
+typedef enum {
     WIND_RENDERER_WEATHER_UNAVAILABLE = 0,
     WIND_RENDERER_WEATHER_CLEAR_DAY,
     WIND_RENDERER_WEATHER_CLEAR_NIGHT,
@@ -193,6 +198,15 @@ typedef struct {
 int wind_renderer_render(const wind_renderer_dashboard_t *dashboard,
                          uint8_t *palette_out, size_t palette_size,
                          wind_renderer_stats_t *stats);
+
+/* Render the same composition with model-specific final pixel semantics. */
+int wind_renderer_render_for_display(
+    const wind_renderer_dashboard_t *dashboard, wind_renderer_display_t display,
+    uint8_t *logical_out, size_t logical_size, wind_renderer_stats_t *stats);
+
+/* Mixes the display identity into panel-cache invalidation. */
+uint64_t wind_renderer_display_signature(uint64_t base,
+                                         wind_renderer_display_t display);
 
 /*
  * Renders the same dashboard composition as wind_renderer_render, but keeps

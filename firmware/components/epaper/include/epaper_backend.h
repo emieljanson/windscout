@@ -24,6 +24,7 @@ typedef struct {
     uint16_t height;
     esp_err_t (*init)(const epaper_config_t *config);
     esp_err_t (*display)(uint8_t *image);
+    esp_err_t (*display_logical)(const uint8_t *image, size_t image_size);
     esp_err_t (*clear)(uint8_t *image, uint8_t color);
     void (*set_temperature)(int8_t celsius);
     esp_err_t (*enter_deepsleep)(void);
