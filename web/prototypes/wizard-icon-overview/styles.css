@@ -1,0 +1,208 @@
+@import url('/node_modules/@fontsource-variable/inter/index.css');
+
+:root {
+  font-family: 'Inter Variable', Inter, system-ui, sans-serif;
+  color: #171717;
+  background: #f3f3f1;
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background: #f3f3f1;
+}
+
+button { font: inherit; }
+
+.overview-shell {
+  width: min(1440px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 48px 0 80px;
+}
+
+.overview-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 32px;
+  margin-bottom: 42px;
+}
+
+.overview-header h1 {
+  margin: 0;
+  font-size: clamp(32px, 4vw, 52px);
+  font-weight: 540;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.overview-header p {
+  max-width: 620px;
+  margin: 14px 0 0;
+  color: #77777b;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.overview-header button {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 10px;
+  color: #5f5f63;
+  background: #e5e5e2;
+  cursor: pointer;
+}
+
+.overview-header button:hover { color: #171717; background: #dbdbd7; }
+.overview-header button:focus-visible { outline: 2px solid #171717; outline-offset: 3px; }
+
+.overview-legend,
+.icon-row {
+  display: grid;
+  grid-template-columns: 190px 118px minmax(0, 1fr);
+}
+
+.overview-legend {
+  padding: 0 18px 10px;
+  color: #a0a09e;
+  font-size: 9px;
+  font-weight: 650;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.icon-overview {
+  overflow: hidden;
+  border: 1px solid #dededb;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.icon-row {
+  min-height: 142px;
+  border-bottom: 1px solid #e9e9e6;
+}
+
+.icon-row:last-child { border-bottom: 0; }
+
+.state-name {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  padding: 20px 18px;
+  background: #fafaf8;
+}
+
+.state-name h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 590;
+  letter-spacing: -0.02em;
+}
+
+.state-name p {
+  overflow: hidden;
+  margin: 7px 0 0;
+  color: #99999d;
+  font-size: 9px;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+}
+
+.state-name span {
+  margin-top: 16px;
+  color: #b0b0ae;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.live-preview {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  border-right: 1px solid #e9e9e6;
+  border-left: 1px solid #e9e9e6;
+}
+
+.live-frame {
+  color: #aaa;
+  font-size: 9px;
+  font-weight: 650;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.frame-strip {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 26px;
+  overflow-x: auto;
+  padding: 18px 24px;
+  scrollbar-color: #c9c9c6 transparent;
+  scrollbar-width: thin;
+}
+
+.frame-strip figure {
+  display: grid;
+  flex: 0 0 auto;
+  justify-items: center;
+  gap: 10px;
+  margin: 0;
+}
+
+.frame-strip figcaption {
+  color: #aaa;
+  font-size: 9px;
+  font-weight: 650;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.grid-icon {
+  --cell: 4px;
+  --gap: 2px;
+  display: grid;
+  grid-template-columns: repeat(9, var(--cell));
+  grid-template-rows: repeat(9, var(--cell));
+  gap: var(--gap);
+  inline-size: max-content;
+  block-size: max-content;
+  shape-rendering: crispEdges;
+}
+
+.grid-sample--large .grid-icon {
+  --cell: 6px;
+  --gap: 2px;
+}
+
+.grid-cell {
+  inline-size: var(--cell);
+  block-size: var(--cell);
+  background: #e5e5e2;
+}
+
+.grid-cell.is-active { background: #171717; }
+
+@media (max-width: 760px) {
+  .overview-shell { width: calc(100% - 24px); padding-top: 32px; }
+  .overview-header { align-items: flex-start; flex-direction: column; margin-bottom: 30px; }
+  .overview-legend { display: none; }
+  .icon-row { grid-template-columns: 124px 100px minmax(480px, 1fr); overflow-x: auto; }
+  .state-name { position: sticky; z-index: 2; left: 0; }
+  .live-preview { position: sticky; z-index: 1; left: 124px; background: #fff; }
+  .frame-strip { gap: 22px; padding-inline: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overview-header button { transition: none; }
+}

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light" />
+    <title>WindScout · Wizard icon overview</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <!--
+      THESIS: One inspection sheet shows the exact icon data used by the wizard; it refuses a separate mock implementation.
+      OWN-WORLD: WindScout's quiet neutral surfaces, black 9×9 pixels, pale ghost cells and compact workbench controls.
+      STORY: Compare every live state, then inspect its complete frame sequence without navigating the installer.
+      FIRST VIEWPORT: A compact title and motion control lead directly into the full-width state/frame matrix.
+      FORM: Existing prototype language extended as a diagnostic contact sheet; seed key scoped-icon-overview.
+      FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
+    -->
+    <main class="overview-shell">
+      <header class="overview-header">
+        <div>
+          <h1>Wizard icon overview</h1>
+          <p>Every grid icon currently used in the installer, with its complete animation sequence. Live previews run independently from an open installer tab; use the frame labels for exact comparison.</p>
+        </div>
+        <button id="motion-toggle" type="button">Pause motion</button>
+      </header>
+
+      <div class="overview-legend" aria-hidden="true">
+        <span>State</span>
+        <span>Live</span>
+        <span>Frames</span>
+      </div>
+      <div id="icon-overview" class="icon-overview"></div>
+    </main>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

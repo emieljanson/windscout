@@ -1,0 +1,189 @@
+:root {
+  color-scheme: light;
+  font-family: 'Inter Variable', Inter, -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+  color: #151817;
+  background: #f3f5f7;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* { box-sizing: border-box; }
+
+html,
+body,
+.prototype-shell,
+.scene-stage {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+.prototype-shell,
+.scene-stage { position: relative; }
+
+#scene-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+}
+
+#scene-canvas:active { cursor: grabbing; }
+
+.loading-state {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: rgba(21, 24, 23, 0.42);
+  font-size: 13px;
+  pointer-events: none;
+  transition: opacity 180ms ease-out;
+}
+
+.loading-state[data-hidden] { opacity: 0; }
+
+.variant-note {
+  position: fixed;
+  left: 28px;
+  bottom: 26px;
+  z-index: 10;
+  width: min(290px, calc(100vw - 56px));
+  padding: 15px 17px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 17px;
+  background: rgba(255, 255, 255, 0.68);
+  -webkit-backdrop-filter: blur(18px) saturate(1.35);
+  backdrop-filter: blur(18px) saturate(1.35);
+  box-shadow: 0 12px 32px rgba(49, 57, 53, 0.1), 0 1px 2px rgba(49, 57, 53, 0.06);
+  pointer-events: none;
+}
+
+.variant-note__eyebrow {
+  display: block;
+  margin-bottom: 6px;
+  color: rgba(21, 24, 23, 0.48);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.variant-note strong {
+  display: block;
+  font-size: 18px;
+  font-weight: 620;
+  letter-spacing: -0.025em;
+}
+
+.variant-note p {
+  margin: 6px 0 0;
+  color: rgba(21, 24, 23, 0.58);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.interaction-hint {
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: rgba(21, 24, 23, 0.35);
+  font-size: 11px;
+  font-weight: 560;
+  letter-spacing: 0.035em;
+  pointer-events: none;
+}
+
+.interaction-hint span { font-size: 15px; }
+
+.proto-picker {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(10, 10, 10, 0.82);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  backdrop-filter: blur(12px) saturate(1.4);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    0 8px 24px rgba(0, 0, 0, 0.24),
+    0 2px 6px rgba(0, 0, 0, 0.12);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.proto-picker-highlight {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  will-change: transform;
+}
+
+.proto-picker[data-ready] .proto-picker-highlight {
+  transition:
+    transform 250ms cubic-bezier(0.23, 1, 0.32, 1),
+    width 250ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .proto-picker[data-ready] .proto-picker-highlight { transition: none; }
+}
+
+.proto-picker-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  font: inherit;
+  cursor: pointer;
+  transition: color 150ms ease-out;
+}
+
+.proto-picker-item:hover { color: rgba(255, 255, 255, 0.85); }
+.proto-picker-item:active { transform: scale(0.97); }
+.proto-picker-item:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.4); outline-offset: 2px; }
+.proto-picker-item[data-active] { color: #fff; }
+
+.proto-picker-divider {
+  width: 1px;
+  height: 16px;
+  margin: 0 4px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.proto-picker-replay { padding: 0 10px; font-size: 14px; }
+.proto-picker[data-position="top"] { bottom: auto; top: 24px; }
+
+@media (max-width: 700px) {
+  .variant-note { left: 16px; bottom: 16px; width: calc(100vw - 32px); }
+  .interaction-hint { display: none; }
+  .proto-picker[data-position="top"] { top: 14px; }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .variant-note { background: #fff; backdrop-filter: none; }
+}

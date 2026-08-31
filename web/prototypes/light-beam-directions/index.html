@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light" />
+    <title>WindScout — Cable light directions</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="prototype-shell">
+      <section id="stage" class="scene-stage" aria-label="WindScout cable light prototype">
+        <canvas id="scene-canvas" aria-label="Interactive WindScout 3D scene"></canvas>
+        <div class="loading-state" id="loading-state" role="status">Loading WindScout…</div>
+        <aside class="variant-note" aria-live="polite">
+          <span class="variant-note__eyebrow" id="variant-kicker">Light replaces material</span>
+          <strong id="variant-title">Light Core</strong>
+          <p id="variant-description">The physical cable recedes until only a compact energy core remains.</p>
+        </aside>
+        <p class="interaction-hint"><span aria-hidden="true">↔</span> Drag to inspect</p>
+      </section>
+
+      <nav class="proto-picker" data-position="top" aria-label="Prototype variants">
+        <span class="proto-picker-highlight" aria-hidden="true"></span>
+        <button class="proto-picker-item" data-active aria-current="true">Core</button>
+        <button class="proto-picker-item">Matrix</button>
+        <button class="proto-picker-item">Sheath</button>
+        <span class="proto-picker-divider" aria-hidden="true"></span>
+        <button class="proto-picker-item proto-picker-replay" aria-label="Replay animation (R)">↻</button>
+      </nav>
+    </main>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
