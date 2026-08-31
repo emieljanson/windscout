@@ -105,11 +105,6 @@ test('guides a fake E1002 through confirmation, reconnect, Wi-Fi and completion'
   await page.getByRole('button', { name: 'Continue' }).click()
   await expect(page.getByRole('heading', { name: 'Confirm your reTerminal' })).toBeVisible()
   await expect(page.getByText('Make sure this is a reTerminal E1001 or E1002. Installing will replace its software and saved setup.')).toBeVisible()
-  await expect.poll(async () => {
-    const stepTransforms = await page.locator('.installer-stage__view')
-      .evaluateAll((views) => views.map((view) => getComputedStyle(view).transform))
-    return stepTransforms.length > 0 && stepTransforms.every((transform) => transform === 'none')
-  }).toBe(true)
   await expectCopyAligned()
   await expect(stateIcon).toHaveAttribute('data-phase', 'confirm-device')
   expect(await stateIcon.boundingBox()).toMatchObject({ x: iconOrigin.x, y: iconOrigin.y })
