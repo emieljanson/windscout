@@ -7,10 +7,12 @@
 #include "config_manager.h"
 #include "debug_log.h"
 #include "display_manager.h"
+#include "driver/gpio.h"
 #include "esp_log.h"
 #include "esp_sntp.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "hardware_profile.h"
 #include "nvs_flash.h"
 #include "power_manager.h"
 #include "storage.h"
@@ -21,6 +23,25 @@
 
 static const char *TAG = "windscout";
 static volatile bool s_time_synchronized;
+
+static bool side_button_safe_boot_requested(void)
+{
+    const uint64_t side_button_mask = (UINT64_C(1) << BOARD_HAL_ROTATE_KEY) |
+                                      (UINT64_C(1) << BOARD_HAL_CLEAR_KEY);
+    gpio_hold_dis(BOARD_HAL_ROTATE_KEY);
+    gpio_hold_dis(BOARD_HAL_CLEAR_KEY);
+    const gpio_config_t configuration = {
+        .pin_bit_mask = side_button_mask,
+        .mode = GPIO_MODE_INPUT,
+        .pull_up_en = GPIO_PULLUP_ENABLE,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        .intr_type = GPIO_INTR_DISABLE,
+    };
+    if (gpio_config(&configuration) != ESP_OK) return false;
+    vTaskDelay(pdMS_TO_TICKS(20));
+    return gpio_get_level(BOARD_HAL_ROTATE_KEY) == 0 &&
+           gpio_get_level(BOARD_HAL_CLEAR_KEY) == 0;
+}
 
 static void time_sync_notification(struct timeval *time_value)
 {
@@ -100,18 +121,42 @@ static void dashboard_task(void *argument)
 
 void app_main(void)
 {
-    ESP_ERROR_CHECK(board_hal_init());
-    ESP_ERROR_CHECK(storage_init());
-
     esp_err_t result = nvs_flash_init();
     if (result == ESP_ERR_NVS_NO_FREE_PAGES || result == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         ESP_ERROR_CHECK(nvs_flash_erase());
         result = nvs_flash_init();
     }
     ESP_ERROR_CHECK(result);
+
+    hardware_profile_state_t profile;
+    ESP_ERROR_CHECK(hardware_profile_boot(side_button_safe_boot_requested(), &profile));
+    ESP_LOGI(TAG, "Hardware profile: stored=%s effective=%s source=%s revision=%lu",
+             hardware_model_name(profile.stored_model),
+             hardware_model_name(profile.effective_model),
+             hardware_profile_source_name(profile.source), (unsigned long) profile.revision);
+
     ESP_ERROR_CHECK(config_manager_init());
     ESP_ERROR_CHECK(wind_app_configure_runtime());
     debug_log_init();
+    ESP_ERROR_CHECK(wifi_manager_init());
+
+    if (!hardware_profile_can_use_panel()) {
+        ESP_ERROR_CHECK(wind_installer_service_start());
+        if (profile.safe_boot_override) {
+            ESP_LOGW(TAG, "Side-button recovery active; display remains untouched");
+        } else if (profile.driver_failure_latched) {
+            ESP_LOGW(TAG, "Display recovery required: model=%s stage=%s error=%s",
+                     hardware_model_name(profile.failed_model),
+                     hardware_driver_stage_name(profile.failure_stage),
+                     esp_err_to_name(profile.failure_error));
+        } else {
+            ESP_LOGI(TAG, "Hardware profile required; USB installer is available");
+        }
+        while (true) vTaskDelay(pdMS_TO_TICKS(60000));
+    }
+
+    ESP_ERROR_CHECK(board_hal_init());
+    ESP_ERROR_CHECK(storage_init());
 
     result = board_hal_rtc_init();
     if (result != ESP_OK && result != ESP_ERR_NOT_SUPPORTED) {
@@ -120,7 +165,6 @@ void app_main(void)
     (void) restore_clock_from_rtc();
 
     ESP_ERROR_CHECK(display_manager_init());
-    ESP_ERROR_CHECK(wifi_manager_init());
     ESP_ERROR_CHECK(power_manager_init());
     ESP_ERROR_CHECK(wind_installer_service_start());
 

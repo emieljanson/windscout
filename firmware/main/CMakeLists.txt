@@ -55,6 +55,7 @@ set(WINDSCOUT_SOURCES
     "wifi_manager.c"
     "wind_forecast.c"
     "wind_spots.c"
+    "hardware_profile.c"
     "installed_configuration.c"
     "wind_usb_protocol.c"
     "wind_installer_service.c"

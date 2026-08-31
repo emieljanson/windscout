@@ -220,6 +220,18 @@ add_wind_test(
 )
 
 add_wind_test(
+  hardware_profile_test
+  test_hardware_profile.cpp
+  ../main/hardware_profile.c
+  ../main/installed_configuration.c
+  ../main/wind_display_config.c
+)
+target_compile_definitions(
+  hardware_profile_test
+  PRIVATE WIND_MAIN_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/../main/windscout_main.c"
+)
+
+add_wind_test(
   wind_usb_protocol_test
   test_wind_usb_protocol.cpp
   ../main/wind_usb_protocol.c
