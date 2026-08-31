@@ -13,17 +13,17 @@ export const PRODUCT_LIGHTING = Object.freeze({
   }),
   softbox: Object.freeze({
     color: 0xfffcf4,
-    intensity: 3.15,
+    intensity: 2.9,
     width: 0.46,
     height: 0.28,
     position: [0.3, 0.12, 0.43],
   }),
   accent: Object.freeze({
     color: 0xd9edf0,
-    intensity: 0.75,
-    width: 0.12,
-    height: 0.42,
-    position: [0.34, 0.08, 0.28],
+    intensity: 1.05,
+    width: 0.075,
+    height: 0.48,
+    position: [0.27, 0.06, 0.34],
   }),
   rim: Object.freeze({ color: 0xc9dcde, intensity: 0.28, position: [0.34, 0.08, -0.2] }),
   environment: Object.freeze({

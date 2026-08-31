@@ -154,9 +154,9 @@ export function cablePoseAt(
   const connectorPath = createConnectorPath(connectorStartX)
   const connector = connectorPositionAt(connectorPath, value)
   const tangent = connectorPath.getTangentAt(value)
-  // Stop the braid inside the final strain-relief section. Ending it at the
-  // connector origin made the woven tube visibly poke through the green collar.
-  const cableJoin = connector.clone().addScaledVector(tangent, -millimeters(6.2))
+  // Carry the braid over the narrow strain-relief section and stop it at the
+  // wider collar, without letting the woven tube poke through that transition.
+  const cableJoin = connector.clone().addScaledVector(tangent, -millimeters(3.6))
   const straightSheathLead = connector.clone().addScaledVector(tangent, -millimeters(36.2))
   const floorDepth = USB_PORT.z
   // Give the braided sheath enough run-up to lift as one broad, weighted arc.
@@ -178,11 +178,12 @@ export function cablePoseAt(
   }
 }
 
-function createBraidTexture(size = 256, {
-  baseBrightness = 0.865,
+function createBraidTexture(size = 512, {
+  baseBrightness = 0.84,
   color = USB_CABLE_COLOR,
-  contrast = 0.075,
-  repeatX = 52,
+  contrast = 0.12,
+  repeatX = 180,
+  repeatY = 3,
   saturation = 1,
 } = {}) {
   const pixels = new Uint8Array(size * size * 4)
@@ -198,16 +199,20 @@ function createBraidTexture(size = 256, {
   const sampleWeave = (x, y) => {
     const u = x / size
     const v = y / size
-    const phaseA = Math.cos(Math.PI * 2 * (u * 8 + v * 4))
-    const phaseB = Math.cos(Math.PI * 2 * (u * 8 - v * 4 + 0.5))
-    const strandA = Math.max(0, phaseA) ** 3.8
-    const strandB = Math.max(0, phaseB) ** 3.8
-    const crossing = Math.sin(Math.PI * 2 * u * 16) * Math.sin(Math.PI * 2 * v * 8)
-    const raised = crossing >= 0
-      ? strandA + strandB * 0.24
-      : strandB + strandA * 0.24
-    const fibre = Math.sin(Math.PI * 2 * (u * 112 + v * 7)) * 0.035
-    return THREE.MathUtils.clamp(raised + fibre, 0, 1)
+    const phaseA = Math.cos(Math.PI * 2 * (u * 6 + v * 4))
+    const phaseB = Math.cos(Math.PI * 2 * (u * 6 - v * 4 + 0.5))
+    const strandA = Math.max(0, phaseA) ** 2.8
+    const strandB = Math.max(0, phaseB) ** 2.8
+    const crossing = Math.sin(Math.PI * 2 * u * 12) * Math.sin(Math.PI * 2 * v * 8)
+    const upper = crossing >= 0 ? strandA : strandB
+    const lower = crossing >= 0 ? strandB : strandA
+    const bundle = Math.max(upper, lower * 0.46)
+    const fibre = Math.sin(Math.PI * 2 * (u * 156 + v * 11)) * 0.028 * bundle
+    const groove = 1 - THREE.MathUtils.clamp(Math.max(strandA, strandB) * 1.35, 0, 1)
+    return {
+      groove,
+      height: THREE.MathUtils.clamp(bundle + fibre, 0, 1),
+    }
   }
 
   for (let y = 0; y < size; y += 1) {
@@ -215,16 +220,19 @@ function createBraidTexture(size = 256, {
       const u = x / size
       const v = y / size
       const weave = sampleWeave(x, y)
-      const colourFibre = Math.sin(Math.PI * 2 * (u * 83 - v * 5)) * 0.006
-      const brightness = baseBrightness + weave * contrast + colourFibre
+      const colourFibre = Math.sin(Math.PI * 2 * (u * 137 - v * 9)) * 0.018 * weave.height
+      const brightness = baseBrightness
+        + weave.height * contrast
+        - weave.groove * 0.055
+        + colourFibre
       const offset = (y * size + x) * 4
       const average = (channels[0] + channels[1] + channels[2]) / 3
       pixels[offset] = Math.min(255, Math.round((average + (channels[0] - average) * saturation) * brightness))
       pixels[offset + 1] = Math.min(255, Math.round((average + (channels[1] - average) * saturation) * brightness))
       pixels[offset + 2] = Math.min(255, Math.round((average + (channels[2] - average) * saturation) * brightness))
       pixels[offset + 3] = 255
-      heights[y * size + x] = weave
-      const roughness = Math.round(250 - weave * 12)
+      heights[y * size + x] = weave.height
+      const roughness = Math.round(244 - weave.height * 34 + weave.groove * 7)
       roughnessPixels[offset] = roughness
       roughnessPixels[offset + 1] = roughness
       roughnessPixels[offset + 2] = roughness
@@ -238,7 +246,7 @@ function createBraidTexture(size = 256, {
       const right = heights[y * size + ((x + 1) % size)]
       const down = heights[((y - 1 + size) % size) * size + x]
       const up = heights[((y + 1) % size) * size + x]
-      const normal = new THREE.Vector3((left - right) * 1.65, (down - up) * 1.65, 1).normalize()
+      const normal = new THREE.Vector3((left - right) * 2.35, (down - up) * 2.35, 1).normalize()
       const offset = (y * size + x) * 4
       normalPixels[offset] = Math.round((normal.x * 0.5 + 0.5) * 255)
       normalPixels[offset + 1] = Math.round((normal.y * 0.5 + 0.5) * 255)
@@ -252,8 +260,8 @@ function createBraidTexture(size = 256, {
   texture.colorSpace = THREE.SRGBColorSpace
   texture.wrapS = THREE.RepeatWrapping
   texture.wrapT = THREE.RepeatWrapping
-  texture.repeat.set(repeatX, 1)
-  texture.anisotropy = 8
+  texture.repeat.set(repeatX, repeatY)
+  texture.anisotropy = 16
   texture.needsUpdate = true
 
   const normalTexture = new THREE.DataTexture(normalPixels, size, size, THREE.RGBAFormat)
@@ -272,6 +280,63 @@ function createBraidTexture(size = 256, {
   roughnessTexture.anisotropy = texture.anisotropy
   roughnessTexture.needsUpdate = true
   return { color: texture, normal: normalTexture, roughness: roughnessTexture }
+}
+
+function createMoldGrainTexture(size = 128) {
+  const heights = new Float32Array(size * size)
+  const normalPixels = new Uint8Array(size * size * 4)
+  const roughnessPixels = new Uint8Array(size * size * 4)
+  const hash = (x, y) => {
+    const value = Math.sin(x * 127.1 + y * 311.7) * 43758.5453
+    return value - Math.floor(value)
+  }
+
+  for (let y = 0; y < size; y += 1) {
+    for (let x = 0; x < size; x += 1) {
+      const fine = hash(x, y)
+      const broad = hash(Math.floor(x / 3), Math.floor(y / 3))
+      heights[y * size + x] = fine * 0.62 + broad * 0.38
+    }
+  }
+
+  for (let y = 0; y < size; y += 1) {
+    for (let x = 0; x < size; x += 1) {
+      const sample = (sampleX, sampleY) => heights[
+        ((sampleY + size) % size) * size + ((sampleX + size) % size)
+      ]
+      const normal = new THREE.Vector3(
+        (sample(x - 1, y) - sample(x + 1, y)) * 0.32,
+        (sample(x, y - 1) - sample(x, y + 1)) * 0.32,
+        1,
+      ).normalize()
+      const offset = (y * size + x) * 4
+      normalPixels[offset] = Math.round((normal.x * 0.5 + 0.5) * 255)
+      normalPixels[offset + 1] = Math.round((normal.y * 0.5 + 0.5) * 255)
+      normalPixels[offset + 2] = Math.round((normal.z * 0.5 + 0.5) * 255)
+      normalPixels[offset + 3] = 255
+      const roughness = Math.round(220 + (heights[y * size + x] - 0.5) * 18)
+      roughnessPixels[offset] = roughness
+      roughnessPixels[offset + 1] = roughness
+      roughnessPixels[offset + 2] = roughness
+      roughnessPixels[offset + 3] = 255
+    }
+  }
+
+  const createTexture = (data, name) => {
+    const texture = new THREE.DataTexture(data, size, size, THREE.RGBAFormat)
+    texture.name = name
+    texture.wrapS = THREE.RepeatWrapping
+    texture.wrapT = THREE.RepeatWrapping
+    texture.repeat.set(6, 6)
+    texture.anisotropy = 8
+    texture.needsUpdate = true
+    return texture
+  }
+
+  return {
+    normal: createTexture(normalPixels, 'usb-connector-mold-normal-texture'),
+    roughness: createTexture(roughnessPixels, 'usb-connector-mold-roughness-texture'),
+  }
 }
 
 function createCableFadeTexture(size = 256) {
@@ -327,10 +392,15 @@ function createConnector(materials) {
   // The opacity-controlled contact layer owns every cable shadow so the cable
   // and its grounding appear and disappear as one visual unit.
 
-  const housing = new THREE.Mesh(
-    new RoundedBoxGeometry(millimeters(9.2), millimeters(4.3), millimeters(13), 5, millimeters(0.9)),
-    materials.housing,
+  const housingGeometry = new RoundedBoxGeometry(
+    millimeters(9.2),
+    millimeters(4.3),
+    millimeters(13),
+    8,
+    millimeters(0.96),
   )
+
+  const housing = new THREE.Mesh(housingGeometry, materials.housing)
   housing.name = 'USB_C_CONNECTOR_HOUSING'
   housing.position.z = millimeters(5.9)
 
@@ -357,20 +427,27 @@ function createConnector(materials) {
   tongue.position.z = millimeters(19.34)
 
   connector.add(housing, tip, opening, tongue)
-  const reliefSections = [
-    { front: 2.15, back: 1.8, length: 3.2, z: -2.1 },
-    { front: 1.8, back: 1.5, length: 3.4, z: -5.35 },
-  ]
-  reliefSections.forEach(({ front, back, length, z }, index) => {
-    const relief = new THREE.Mesh(
-      new THREE.CylinderGeometry(millimeters(back), millimeters(front), millimeters(length), 24, 2),
-      materials.relief,
-    )
-    relief.name = `USB_C_STRAIN_RELIEF_${index + 1}`
-    relief.rotation.x = Math.PI / 2
-    relief.position.z = millimeters(z)
-    connector.add(relief)
-  })
+  const reliefProfile = [
+    [1.74, -7.4],
+    [1.76, -6.55],
+    [1.82, -5.8],
+    [1.91, -5.2],
+    [1.86, -4.7],
+    [1.98, -4.15],
+    [2.16, -3.68],
+    [2.14, -3.42],
+    [2.04, -3.08],
+    [2.11, -2.45],
+    [2.15, -1.45],
+    [2.1, -0.58],
+  ].map(([radius, z]) => new THREE.Vector2(millimeters(radius), millimeters(z)))
+  const relief = new THREE.Mesh(
+    new THREE.LatheGeometry(reliefProfile, 48),
+    materials.relief,
+  )
+  relief.name = 'USB_C_STRAIN_RELIEF'
+  relief.rotation.x = Math.PI / 2
+  connector.add(relief)
 
   return connector
 }
@@ -548,6 +625,7 @@ export function createUsbCable(initialCompositionMode = 'compact') {
   let currentProgress = 0
   let connectorStartX = USB_CABLE_DEFAULT_START_X
   const braidTextures = createBraidTexture()
+  const moldTextures = createMoldGrainTexture()
   const cableFadeTexture = createCableFadeTexture()
   const contactShadowFadeTexture = createContactShadowFadeTexture()
   const materials = {
@@ -557,41 +635,51 @@ export function createUsbCable(initialCompositionMode = 'compact') {
       alphaMap: cableFadeTexture,
       transparent: true,
       normalMap: braidTextures.normal,
-      normalScale: new THREE.Vector2(0.46, 0.46),
+      normalScale: new THREE.Vector2(0.52, 0.52),
       roughnessMap: braidTextures.roughness,
-      roughness: 0.96,
+      roughness: 0.9,
       metalness: 0,
       clearcoat: 0,
-      sheen: 0.035,
-      sheenColor: 0x86c942,
-      sheenRoughness: 1,
+      sheen: 0.14,
+      sheenColor: 0xb6e887,
+      sheenRoughness: 0.84,
       anisotropy: 0,
-      envMapIntensity: 0.38,
+      envMapIntensity: 0.52,
     }),
     housing: new THREE.MeshPhysicalMaterial({
       name: 'usb-cable-housing',
-      color: 0x76b63a,
-      roughness: 0.5,
+      color: 0x659b34,
+      roughnessMap: moldTextures.roughness,
+      roughness: 0.44,
       metalness: 0,
-      clearcoat: 0.14,
-      clearcoatRoughness: 0.54,
-      envMapIntensity: 0.9,
+      clearcoat: 0.02,
+      clearcoatRoughness: 0.82,
+      ior: 1.46,
+      specularIntensity: 0.42,
+      normalMap: moldTextures.normal,
+      normalScale: new THREE.Vector2(0.16, 0.16),
+      envMapIntensity: 0.96,
     }),
     relief: new THREE.MeshPhysicalMaterial({
       name: 'usb-cable-relief',
-      color: 0x72b039,
-      roughness: 0.62,
+      color: 0x5d8e31,
+      roughnessMap: moldTextures.roughness,
+      roughness: 0.7,
       metalness: 0,
-      clearcoat: 0.04,
-      clearcoatRoughness: 0.76,
-      envMapIntensity: 0.7,
+      clearcoat: 0,
+      sheen: 0.08,
+      sheenColor: 0x8cc05e,
+      sheenRoughness: 0.96,
+      normalMap: moldTextures.normal,
+      normalScale: new THREE.Vector2(0.18, 0.18),
+      envMapIntensity: 0.62,
     }),
     metal: new THREE.MeshPhysicalMaterial({
       name: 'usb-cable-metal',
       color: 0xc9cdca,
-      roughness: 0.3,
-      metalness: 0.92,
-      envMapIntensity: 1.2,
+      roughness: 0.22,
+      metalness: 1,
+      envMapIntensity: 1.35,
     }),
     tongue: new THREE.MeshStandardMaterial({
       name: 'usb-cable-tongue',
@@ -708,6 +796,7 @@ export function createUsbCable(initialCompositionMode = 'compact') {
       geometries.forEach((geometry) => geometry.dispose())
       Object.values(materials).forEach((material) => material.dispose())
       Object.values(braidTextures).forEach((texture) => texture.dispose())
+      Object.values(moldTextures).forEach((texture) => texture.dispose())
       cableFadeTexture.dispose()
       contactShadowFadeTexture.dispose()
     },
