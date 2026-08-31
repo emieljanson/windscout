@@ -34,6 +34,11 @@ void wind_font_draw(uint8_t *luma, int width, int height, int stride, int x,
                     int baseline_y, wind_font_family_t family, int pixel_size,
                     uint8_t gray, const char *utf8);
 
+void wind_font_draw_antialiased(uint8_t *luma, int width, int height,
+                                int stride, int x, int baseline_y,
+                                wind_font_family_t family, int pixel_size,
+                                uint8_t gray, const char *utf8);
+
 #ifdef __cplusplus
 }
 #endif
