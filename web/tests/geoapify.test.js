@@ -21,6 +21,7 @@ describe('Geoapify place provider', () => {
       city: 'Edam',
       state: 'North Holland',
       country: 'Netherlands',
+      country_code: 'nl',
       formatted: 'Edam, North Holland, Netherlands',
       lat: 52.5126,
       lon: 5.0486,
@@ -38,6 +39,7 @@ describe('Geoapify place provider', () => {
       latitude: 52.5126,
       longitude: 5.0486,
       timezone: 'Europe/Amsterdam',
+      countryCode: 'nl',
     }])
     const url = new URL(fetchImpl.mock.calls[0][0])
     expect(url.searchParams.get('text')).toBe('Edam')
@@ -76,12 +78,13 @@ describe('Geoapify place provider', () => {
     const fetchImpl = vi.fn().mockResolvedValue(response([{
       lat: 52.51,
       lon: 5.05,
+      country_code: 'nl',
       timezone: { name: 'Europe/Amsterdam' },
     }]))
     await expect(reverseGeoapifyLocation({ latitude: 52.51, longitude: 5.05 }, {
       apiKey: 'test-key',
       fetchImpl,
-    })).resolves.toMatchObject({ timezone: 'Europe/Amsterdam' })
+    })).resolves.toMatchObject({ timezone: 'Europe/Amsterdam', countryCode: 'nl' })
     expect(new URL(fetchImpl.mock.calls[0][0]).pathname).toContain('/reverse')
   })
 

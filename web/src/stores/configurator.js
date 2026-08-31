@@ -2,7 +2,9 @@ import { defineStore } from 'pinia'
 import { brouwersdamForecast } from '../fixtures/brouwersdam'
 import { readCachedForecast, writeCachedForecasts } from '../forecast/forecastCache'
 import {
+  ALWAYS_FORECAST_MODEL_IDS,
   DEFAULT_FORECAST_MODEL_ID,
+  forecastModelsForSpot,
   getForecastModel,
 } from '../forecast/models'
 import { fetchOpenMeteoForecasts } from '../forecast/openMeteo'
@@ -76,6 +78,19 @@ export const useConfiguratorStore = defineStore('configurator', {
       state.tide?.capability === 'available',
     effectiveShowTide() {
       return this.showTide && this.tideAvailable
+    },
+    availableForecastModels() {
+      const spot = this.spotById(this.selectedSpotId)
+      if (!spot) return []
+      const candidates = forecastModelsForSpot(spot)
+      const hasCurrentResults = Object.values(this.forecastsByModel)
+        .some((forecast) => forecast?.spotId === spot.id)
+      if (!hasCurrentResults) return candidates
+      const availableIds = new Set([
+        ...ALWAYS_FORECAST_MODEL_IDS,
+        ...Object.keys(this.forecastsByModel),
+      ])
+      return candidates.filter((model) => availableIds.has(model.id))
     },
   },
   actions: {
@@ -241,6 +256,7 @@ export const useConfiguratorStore = defineStore('configurator', {
       try {
         const forecasts = await fetcher(spot, fetchOptions)
         if (requestId !== this.forecastRequestId || this.selectedSpotId !== spot.id) return false
+        if (!forecasts?.[this.selectedModelId]) this.selectedModelId = DEFAULT_FORECAST_MODEL_ID
         const nextForecast = forecasts?.[this.selectedModelId]
         if (!nextForecast || nextForecast.spotId !== spot.id) {
           throw new Error('The selected forecast model is unavailable.')
@@ -290,9 +306,13 @@ export const useConfiguratorStore = defineStore('configurator', {
       }
     },
     async selectSpot(spotId, { tideFetcher, ...options } = {}) {
-      if (!this.spotById(spotId)) return false
+      const spot = this.spotById(spotId)
+      if (!spot) return false
       if (spotId === this.selectedSpotId) return true
       this.selectedSpotId = spotId
+      if (!forecastModelsForSpot(spot).some((model) => model.id === this.selectedModelId)) {
+        this.selectedModelId = DEFAULT_FORECAST_MODEL_ID
+      }
       const forecastResult = this.refreshForecast(options)
       if (this.tideInitialized) {
         void this.refreshTide({
@@ -304,7 +324,7 @@ export const useConfiguratorStore = defineStore('configurator', {
     },
     async selectModel(modelId, { storage, ...refreshOptions } = {}) {
       const model = getForecastModel(modelId)
-      if (!model) return false
+      if (!model || !this.availableForecastModels.some((candidate) => candidate.id === modelId)) return false
       if (modelId === this.selectedModelId) return true
       const requestInFlight = this.forecastRequestInFlight
       this.selectedModelId = modelId

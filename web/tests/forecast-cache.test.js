@@ -38,10 +38,10 @@ describe('forecast cache', () => {
   it('round-trips independent model forecasts for the same spot', () => {
     const storage = memoryStorage()
     expect(writeCachedForecast(forecast(), storage)).toBe(true)
-    expect(writeCachedForecast(forecast('gfs_seamless', 'NOAA GFS'), storage)).toBe(true)
+    expect(writeCachedForecast(forecast('ncep_gfs_seamless', 'NOAA GFS'), storage)).toBe(true)
     expect(readCachedForecast('brouwersdam', 'best_match', storage)).toEqual(forecast())
-    expect(readCachedForecast('brouwersdam', 'gfs_seamless', storage))
-      .toEqual(forecast('gfs_seamless', 'NOAA GFS'))
+    expect(readCachedForecast('brouwersdam', 'ncep_gfs_seamless', storage))
+      .toEqual(forecast('ncep_gfs_seamless', 'NOAA GFS'))
     expect(readCachedForecast('edam', 'best_match', storage)).toBeNull()
   })
 

@@ -45,7 +45,7 @@ describe('forecast normalizer', () => {
       spotName: 'BROUWERSDAM',
       timezone: 'Europe/Amsterdam',
       provider: 'OPEN-METEO',
-      model: 'KNMI SEAMLESS',
+      model: 'BEST MATCH',
       updatedTime: '26 AUG 2PM',
     })
     expect(forecast.days.map((day) => day.day)).toEqual(['TODAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'])
@@ -107,28 +107,57 @@ describe('forecast normalizer', () => {
 
   it('normalizes suffixed model arrays into independently selectable forecasts', () => {
     const response = responseFor()
-    for (const modelId of ['best_match', 'gfs_seamless']) {
+    for (const modelId of ['best_match', 'ncep_gfs_seamless']) {
       for (const field of [
         'wind_speed_10m', 'wind_gusts_10m', 'wind_direction_10m',
         'cloud_cover', 'precipitation', 'is_day',
         'temperature_2m',
       ]) {
         response.hourly[`${field}_${modelId}`] = response.hourly[field].map((value) => (
-          modelId === 'gfs_seamless' && field === 'wind_speed_10m' ? value + 8 : value
+          modelId === 'ncep_gfs_seamless' && field === 'wind_speed_10m' ? value + 8 : value
         ))
         response.hourly_units[`${field}_${modelId}`] = response.hourly_units[field] ?? ''
       }
     }
 
     const forecasts = normalizeForecastModels(response, SPOTS[1], {
-      models: [getForecastModel('best_match'), getForecastModel('gfs_seamless')],
+      models: [getForecastModel('best_match'), getForecastModel('ncep_gfs_seamless')],
       firstDate: '2026-08-26',
       retrievedAt: 1_777_000_000_000,
     })
 
     expect(forecasts.best_match).toMatchObject({ modelId: 'best_match', model: 'BEST MATCH' })
-    expect(forecasts.gfs_seamless).toMatchObject({ modelId: 'gfs_seamless', model: 'NOAA GFS' })
-    expect(forecasts.gfs_seamless.days[0].samples[0].sustainedKt)
+    expect(forecasts.ncep_gfs_seamless)
+      .toMatchObject({ modelId: 'ncep_gfs_seamless', model: 'NOAA GFS' })
+    expect(forecasts.ncep_gfs_seamless.days[0].samples[0].sustainedKt)
       .toBe(forecasts.best_match.days[0].samples[0].sustainedKt + 8)
+  })
+
+  it('uses Best Match after a high-resolution regional model runs out', () => {
+    const response = responseFor()
+    const regionalId = 'knmi_harmonie'
+    const regionalApiId = getForecastModel(regionalId).apiId
+    for (const modelId of ['best_match', regionalApiId]) {
+      for (const field of [
+        'wind_speed_10m', 'wind_gusts_10m', 'wind_direction_10m',
+        'cloud_cover', 'precipitation', 'is_day', 'temperature_2m',
+      ]) {
+        response.hourly[`${field}_${modelId}`] = response.hourly[field].map((value, index) => (
+          modelId === regionalApiId && index >= 15 ? null : value + (modelId === regionalApiId ? 4 : 0)
+        ))
+        response.hourly_units[`${field}_${modelId}`] = response.hourly_units[field] ?? ''
+      }
+    }
+
+    const forecasts = normalizeForecastModels(response, SPOTS[1], {
+      models: [getForecastModel('best_match'), getForecastModel(regionalId)],
+      firstDate: '2026-08-26',
+      retrievedAt: 1_777_000_000_000,
+    })
+
+    expect(forecasts[regionalId].days[0].samples[0].sustainedKt)
+      .toBe(forecasts.best_match.days[0].samples[0].sustainedKt + 4)
+    expect(forecasts[regionalId].days[4].samples[0].sustainedKt)
+      .toBe(forecasts.best_match.days[4].samples[0].sustainedKt)
   })
 })

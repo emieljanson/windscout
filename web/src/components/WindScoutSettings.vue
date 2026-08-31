@@ -3,7 +3,6 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useConfiguratorStore } from '../stores/configurator'
 import { FLOATING_INSPECTOR_VIEWPORT_QUERY } from '../composables/useCompactViewport'
-import { FORECAST_MODELS } from '../forecast/models'
 import { MAX_THRESHOLD, MIN_THRESHOLD } from '../renderer/contract'
 import { normalizeSpotQuery, searchSpots } from '../spots/searchSpots'
 import SpotCreationDialog from './SpotCreationDialog.vue'
@@ -20,6 +19,7 @@ const props = defineProps({
 const store = useConfiguratorStore()
 const {
   effectiveShowTide,
+  availableForecastModels,
   forecastLabel,
   forecastMessage,
   forecastStatus,
@@ -54,10 +54,10 @@ const createSpotActionLabel = computed(() => {
   return exactMatch ? '' : `Add ${query}`
 })
 
-const modelOptions = FORECAST_MODELS.map((model) => ({
+const modelOptions = computed(() => availableForecastModels.value.map((model) => ({
   value: model.id,
   label: model.label,
-}))
+})))
 const temperatureOptions = [
   { value: 'hide', label: 'Hide' },
   { value: 'celsius', label: 'Celsius' },

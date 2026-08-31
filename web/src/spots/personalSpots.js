@@ -28,6 +28,7 @@ function validPersonalSpot(spot) {
     Number.isFinite(spot.latitude) && spot.latitude >= -90 && spot.latitude <= 90 &&
     Number.isFinite(spot.longitude) && spot.longitude >= -180 && spot.longitude <= 180 &&
     typeof spot.timezone === 'string' && validTimezone(spot.timezone) &&
+    (spot.countryCode == null || spot.countryCode === '' || /^[a-z]{2}$/.test(spot.countryCode)) &&
     (spot.providerRef == null || typeof spot.providerRef === 'string')
   )
 }
@@ -37,6 +38,7 @@ export function createPersonalSpot({
   latitude,
   longitude,
   timezone,
+  countryCode = '',
   providerRef = '',
 }) {
   const cleanName = String(name ?? '').trim().replace(/\s+/g, ' ')
@@ -58,6 +60,7 @@ export function createPersonalSpot({
     latitude: Number(lat.toFixed(6)),
     longitude: Number(lon.toFixed(6)),
     timezone,
+    countryCode: String(countryCode ?? '').trim().toLowerCase(),
     providerRef: String(providerRef ?? '').slice(0, 160),
     personal: true,
   }

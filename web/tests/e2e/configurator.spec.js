@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { FORECAST_MODEL_IDS } from '../../src/forecast/models'
+import { FORECAST_MODELS } from '../../src/forecast/models'
 
 const CONFIGURATOR_READY_TIMEOUT_MS = 30_000
 
@@ -18,7 +18,8 @@ function responseFor(latitude) {
   const offset = latitude > 52 ? 4 : 0
   const hourlyUnits = { time: 'iso8601' }
   const hourly = { time: times }
-  FORECAST_MODEL_IDS.forEach((modelId, modelIndex) => {
+  FORECAST_MODELS.forEach((model, modelIndex) => {
+    const modelId = model.apiId
     Object.assign(hourlyUnits, {
       [`wind_speed_10m_${modelId}`]: 'kn',
       [`wind_gusts_10m_${modelId}`]: 'kn',
@@ -94,6 +95,7 @@ async function mockGeoapify(page) {
         city: 'Hindeloopen',
         state: 'Friesland',
         country: 'Netherlands',
+        country_code: 'nl',
         formatted: 'Hindeloopen, Friesland, Netherlands',
         lat: 52.9432,
         lon: 5.4007,
@@ -192,14 +194,14 @@ test('uses model typeahead and restores focus when its popup is dismissed', asyn
   await page.goto('/')
   await expect(forecastStatus(page)).toContainText('Live Best Match forecast for Brouwersdam', { timeout: CONFIGURATOR_READY_TIMEOUT_MS })
 
-  const model = await selectWithKeyboard(page, 'Wind model', 'gfs')
+  const model = await selectWithKeyboard(page, 'Wind model', 'noaa')
   await expect(model).toContainText('GFS')
-  await expect(forecastStatus(page)).toContainText('Live GFS forecast for Brouwersdam')
-  await expect(page.locator('.scene-host')).toHaveAttribute('data-forecast-model', 'gfs_seamless')
+  await expect(forecastStatus(page)).toContainText('Live NOAA GFS forecast for Brouwersdam')
+  await expect(page.locator('.scene-host')).toHaveAttribute('data-forecast-model', 'ncep_gfs_seamless')
   expect(requests).toHaveLength(1)
 
   await page.keyboard.press('Enter')
-  await expect(page.getByRole('option', { name: 'GFS' })).toBeVisible()
+  await expect(page.getByRole('option', { name: 'NOAA GFS' })).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(model).toBeFocused()
 })

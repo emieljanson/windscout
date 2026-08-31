@@ -110,6 +110,30 @@ describe('configurator store', () => {
     expect(store.forecastLabel).toBe('Demo')
   })
 
+  it('offers a partly different regional model list for each location', () => {
+    const store = useConfiguratorStore()
+    store.forecastsByModel = {}
+    expect(store.availableForecastModels.map((model) => model.id)).toEqual([
+      'best_match', 'ecmwf_ifs', 'icon_seamless', 'ncep_gfs_seamless',
+      'knmi_harmonie', 'dmi_harmonie',
+    ])
+
+    store.personalSpots.push({
+      id: 'personal-tokyo',
+      name: 'Tokyo',
+      displayName: 'TOKYO',
+      latitude: 35.6764,
+      longitude: 139.65,
+      timezone: 'Asia/Tokyo',
+      countryCode: 'jp',
+      personal: true,
+    })
+    store.selectedSpotId = 'personal-tokyo'
+    expect(store.availableForecastModels.map((model) => model.id)).toEqual([
+      'best_match', 'ecmwf_ifs', 'icon_seamless', 'ncep_gfs_seamless', 'jma_msm',
+    ])
+  })
+
   it('adds a confirmed personal spot to the selectable catalog and local storage', () => {
     const storage = memoryStorage()
     const store = useConfiguratorStore()
@@ -362,18 +386,18 @@ describe('configurator store', () => {
     const store = useConfiguratorStore()
     const fetcher = vi.fn().mockResolvedValue(forecastSet(
       liveForecast(),
-      liveForecast('brouwersdam', 1_777_000_000_000, 'gfs_seamless'),
+      liveForecast('brouwersdam', 1_777_000_000_000, 'ncep_gfs_seamless'),
     ))
     await store.initializeForecast({ fetcher, storage: memoryStorage() })
     store.publishForecast(store.forecastRevision)
 
-    expect(await store.selectModel('gfs_seamless', { fetcher, storage: memoryStorage() })).toBe(true)
+    expect(await store.selectModel('ncep_gfs_seamless', { fetcher, storage: memoryStorage() })).toBe(true)
     expect(fetcher).toHaveBeenCalledOnce()
-    expect(store.selectedModelId).toBe('gfs_seamless')
-    expect(store.forecast).toMatchObject({ modelId: 'gfs_seamless', model: 'NOAA GFS' })
+    expect(store.selectedModelId).toBe('ncep_gfs_seamless')
+    expect(store.forecast).toMatchObject({ modelId: 'ncep_gfs_seamless', model: 'NOAA GFS' })
     expect(store.forecastStatus).toBe('rendering')
     expect(store.publishForecast(store.forecastRevision)).toBe(true)
-    expect(store.forecastMessage).toBe('Live GFS forecast for Brouwersdam.')
+    expect(store.forecastMessage).toBe('Live NOAA GFS forecast for Brouwersdam.')
   })
 
   it('changes the requested model during initial loading without duplicating the API call', async () => {
@@ -382,7 +406,7 @@ describe('configurator store', () => {
     const fetcher = vi.fn(() => request.promise)
     const loading = store.initializeForecast({ fetcher, storage: memoryStorage() })
 
-    const selecting = store.selectModel('gfs_seamless', {
+    const selecting = store.selectModel('ncep_gfs_seamless', {
       fetcher,
       storage: memoryStorage(),
     })
@@ -391,17 +415,17 @@ describe('configurator store', () => {
 
     request.resolve(forecastSet(
       liveForecast(),
-      liveForecast('brouwersdam', 1_777_000_000_000, 'gfs_seamless'),
+      liveForecast('brouwersdam', 1_777_000_000_000, 'ncep_gfs_seamless'),
     ))
     await expect(selecting).resolves.toBe(true)
     await expect(loading).resolves.toBe(true)
-    expect(store.forecast.modelId).toBe('gfs_seamless')
+    expect(store.forecast.modelId).toBe('ncep_gfs_seamless')
   })
 
   it('keeps a cached model labelled as cached while the live refresh is pending or fails', async () => {
     const storage = memoryStorage()
     const cachedBestFit = liveForecast()
-    const cachedGfs = liveForecast('brouwersdam', 1_777_000_000_000, 'gfs_seamless')
+    const cachedGfs = liveForecast('brouwersdam', 1_777_000_000_000, 'ncep_gfs_seamless')
     const seedStore = useConfiguratorStore()
     await seedStore.initializeForecast({
       fetcher: vi.fn().mockResolvedValue(forecastSet(cachedBestFit, cachedGfs)),
@@ -415,8 +439,8 @@ describe('configurator store', () => {
     const fetcher = vi.fn(() => request.promise)
     const loading = store.initializeForecast({ fetcher, storage })
 
-    await store.selectModel('gfs_seamless', { fetcher, storage })
-    expect(store.forecast.modelId).toBe('gfs_seamless')
+    await store.selectModel('ncep_gfs_seamless', { fetcher, storage })
+    expect(store.forecast.modelId).toBe('ncep_gfs_seamless')
     expect(store.publishForecast(store.forecastRevision)).toBe(true)
     expect(store.forecastSource).toBe('cache')
     expect(store.forecastLabel).toBe('Cached')
@@ -446,15 +470,15 @@ describe('configurator store', () => {
     await store.initializeForecast({ fetcher, storage: memoryStorage() })
     store.publishForecast(store.forecastRevision)
 
-    await expect(store.selectModel('gfs_seamless', {
+    await expect(store.selectModel('ncep_gfs_seamless', {
       fetcher,
       storage: memoryStorage(),
     })).resolves.toBe(false)
 
-    expect(store.selectedModelId).toBe('gfs_seamless')
+    expect(store.selectedModelId).toBe('ncep_gfs_seamless')
     expect(store.forecast.modelId).toBe('best_match')
     expect(store.forecastLabel).toBe('Previous model')
-    expect(store.forecastMessage).toBe('Could not load GFS. Still showing BEST MATCH.')
+    expect(store.forecastMessage).toBe('Could not load NOAA GFS. Still showing BEST MATCH.')
   })
 
   it('does not publish an old pending forecast under a newly selected spot', async () => {
@@ -519,18 +543,18 @@ describe('configurator store', () => {
   it('restores the published model when a selected model bitmap is rejected', async () => {
     const store = useConfiguratorStore()
     const bestFit = liveForecast()
-    const gfs = liveForecast('brouwersdam', 1_777_000_000_000, 'gfs_seamless')
+    const gfs = liveForecast('brouwersdam', 1_777_000_000_000, 'ncep_gfs_seamless')
     await store.initializeForecast({
       fetcher: vi.fn().mockResolvedValue(forecastSet(bestFit, gfs)),
       storage: memoryStorage(),
     })
     store.publishForecast(store.forecastRevision)
-    await store.selectModel('gfs_seamless', { storage: memoryStorage() })
+    await store.selectModel('ncep_gfs_seamless', { storage: memoryStorage() })
 
     expect(store.rejectForecastPublication(store.forecastRevision)).toBe(true)
-    expect(store.selectedModelId).toBe('gfs_seamless')
+    expect(store.selectedModelId).toBe('ncep_gfs_seamless')
     expect(store.forecast.modelId).toBe('best_match')
     expect(store.forecastLabel).toBe('Previous model')
-    expect(store.forecastMessage).toBe('Could not show GFS. Still showing BEST MATCH.')
+    expect(store.forecastMessage).toBe('Could not show NOAA GFS. Still showing BEST MATCH.')
   })
 })

@@ -82,11 +82,15 @@ TEST(WindForecast, ConvertsSourceDirectionToDestinationDirection)
 TEST(WindForecast, FormatsEveryModelIdForTheDashboard)
 {
     EXPECT_STREQ(wind_forecast_model_screen_name("best_match"), "BEST MATCH");
-    EXPECT_STREQ(wind_forecast_model_screen_name("knmi_seamless"), "KNMI SEAMLESS");
-    EXPECT_STREQ(wind_forecast_model_screen_name("ecmwf_ifs025"), "ECMWF IFS");
+    EXPECT_STREQ(wind_forecast_model_screen_name("knmi_harmonie"), "KNMI HARMONIE");
+    EXPECT_STREQ(wind_forecast_model_screen_name("ecmwf_ifs"), "ECMWF IFS");
     EXPECT_STREQ(wind_forecast_model_screen_name("icon_seamless"), "DWD ICON");
-    EXPECT_STREQ(wind_forecast_model_screen_name("gfs_seamless"), "NOAA GFS");
+    EXPECT_STREQ(wind_forecast_model_screen_name("ncep_gfs_seamless"), "NOAA GFS");
+    EXPECT_STREQ(wind_forecast_model_screen_name("jma_msm"), "JMA MSM");
+    EXPECT_STREQ(wind_forecast_model_api_id("knmi_harmonie"),
+                 "knmi_harmonie_arome_netherlands");
     EXPECT_STREQ(wind_forecast_model_screen_name("future_model"), "future_model");
+    EXPECT_EQ(wind_forecast_model_api_id("future_model"), nullptr);
     EXPECT_STREQ(wind_forecast_model_screen_name(nullptr), "");
 }
 

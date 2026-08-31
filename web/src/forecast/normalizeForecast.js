@@ -76,49 +76,68 @@ function weatherState(cloudCover, precipitation, isDay) {
   return 5
 }
 
-function modelField(field, modelId, suffixed) {
-  return suffixed ? `${field}_${modelId}` : field
+function modelField(field, model, suffixed) {
+  return suffixed ? `${field}_${model.apiId}` : field
 }
 
 function roundSymmetric(value) {
   return value < 0 ? -Math.round(-value) : Math.round(value)
 }
 
-function responseFields(modelId, suffixed) {
+function responseFields(model, suffixed) {
   return {
-    wind: modelField('wind_speed_10m', modelId, suffixed),
-    gust: modelField('wind_gusts_10m', modelId, suffixed),
-    direction: modelField('wind_direction_10m', modelId, suffixed),
-    cloud: modelField('cloud_cover', modelId, suffixed),
-    precipitation: modelField('precipitation', modelId, suffixed),
-    isDay: modelField('is_day', modelId, suffixed),
-    temperature: modelField('temperature_2m', modelId, suffixed),
+    wind: modelField('wind_speed_10m', model, suffixed),
+    gust: modelField('wind_gusts_10m', model, suffixed),
+    direction: modelField('wind_direction_10m', model, suffixed),
+    cloud: modelField('cloud_cover', model, suffixed),
+    precipitation: modelField('precipitation', model, suffixed),
+    isDay: modelField('is_day', model, suffixed),
+    temperature: modelField('temperature_2m', model, suffixed),
   }
 }
 
-function validateCoreResponse(response, modelId, suffixed, timezone) {
+function validateModelFields(hourly, units, count, model, suffixed) {
+  const fields = responseFields(model, suffixed)
+  if (units[fields.wind] !== 'kn' || units[fields.gust] !== 'kn' ||
+      units[fields.direction] !== '\u00b0') fail('wind units do not match the renderer contract')
+  if (CORE_WIND_FIELDS.some((field) => {
+    const key = modelField(field, model, suffixed)
+    return !Array.isArray(hourly[key]) || hourly[key].length !== count
+  })) fail('core hourly arrays are missing or misaligned')
+  return fields
+}
+
+function validateCoreResponse(response, model, suffixed, timezone, fallbackModel) {
   if (!response || typeof response !== 'object') fail('response is missing')
   if (response.timezone !== timezone) fail(`timezone must be ${timezone}`)
   const units = response.hourly_units
-  const fields = responseFields(modelId, suffixed)
-  if (!units || units[fields.wind] !== 'kn' || units[fields.gust] !== 'kn' ||
-      units[fields.direction] !== '\u00b0') fail('wind units do not match the renderer contract')
+  if (!units || typeof units !== 'object') fail('hourly units are missing')
   const hourly = response.hourly
   if (!hourly || typeof hourly !== 'object') fail('hourly data is missing')
   const count = Array.isArray(hourly.time) ? hourly.time.length : 0
-  if (!count || CORE_WIND_FIELDS.some((field) => {
-    const key = modelField(field, modelId, suffixed)
-    return !Array.isArray(hourly[key]) || hourly[key].length !== count
-  })) {
-    fail('core hourly arrays are missing or misaligned')
+  if (!count) fail('hourly times are missing')
+  const fields = validateModelFields(hourly, units, count, model, suffixed)
+  const fallbackFields = fallbackModel
+    ? validateModelFields(hourly, units, count, fallbackModel, suffixed)
+    : null
+  return { hourly, units, count, fields, fallbackFields }
+}
+
+function optionalAvailability(hourly, units, count, fields) {
+  return {
+    weather: [fields.cloud, fields.precipitation, fields.isDay]
+      .every((field) => Array.isArray(hourly[field]) && hourly[field].length === count) &&
+      units[fields.cloud] === '%' && units[fields.precipitation] === 'mm',
+    temperature: Array.isArray(hourly[fields.temperature]) &&
+      hourly[fields.temperature].length === count && units[fields.temperature] === '°C',
   }
-  return { hourly, units, count, fields }
 }
 
 export function normalizeForecast(response, spot, {
   retrievedAt = Date.now(),
   firstDate = localDateAt(retrievedAt, spot?.timezone ?? 'Europe/Amsterdam'),
-  model = getForecastModel('knmi_seamless'),
+  model = getForecastModel('best_match'),
+  fallbackModel = null,
   suffixed = false,
 } = {}) {
   if (!spot || !spot.id || !Number.isFinite(spot.latitude) || !Number.isFinite(spot.longitude)) {
@@ -128,41 +147,54 @@ export function normalizeForecast(response, spot, {
   dateParts(firstDate)
   if (!model || !getForecastModel(model.id)) fail('model is invalid')
   const {
-    hourly, units, count, fields,
-  } = validateCoreResponse(response, model.id, suffixed, spot.timezone)
+    hourly, units, count, fields, fallbackFields,
+  } = validateCoreResponse(response, model, suffixed, spot.timezone, fallbackModel)
 
-  const weatherAvailable = [fields.cloud, fields.precipitation, fields.isDay]
-    .every((field) => Array.isArray(hourly[field]) && hourly[field].length === count) &&
-    units[fields.cloud] === '%' && units[fields.precipitation] === 'mm'
-  const temperatureAvailable = Array.isArray(hourly[fields.temperature]) &&
-    hourly[fields.temperature].length === count && units[fields.temperature] === '°C'
+  const availability = optionalAvailability(hourly, units, count, fields)
+  const fallbackAvailability = fallbackFields
+    ? optionalAvailability(hourly, units, count, fallbackFields)
+    : null
   const sampleByLocalTime = new Map()
   let previousTime = ''
+  let primarySampleCount = 0
 
   for (let index = 0; index < count; index += 1) {
     const localTime = hourly.time[index]
     const match = /^(\d{4}-\d{2}-\d{2})T(\d{2}):00$/.exec(localTime)
     if (!match || (previousTime && previousTime >= localTime)) fail('hourly times are invalid or not ascending')
     previousTime = localTime
-    const [wind, gust, sourceDirection] = [
-      hourly[fields.wind][index], hourly[fields.gust][index], hourly[fields.direction][index],
-    ]
-    if (![wind, gust, sourceDirection].every(Number.isFinite) || wind < 0 || gust < 0 ||
-        wind > 32767 || gust > 32767) fail(`invalid wind value at ${localTime}`)
     const hour = Number(match[2])
     if (!REQUIRED_HOURS.includes(hour) || match[1] < firstDate) continue
-    const temperature = temperatureAvailable ? hourly[fields.temperature][index] : null
+    let sampleFields = fields
+    let sampleAvailability = availability
+    let [wind, gust, sourceDirection] = [
+      hourly[fields.wind][index], hourly[fields.gust][index], hourly[fields.direction][index],
+    ]
+    if ([wind, gust, sourceDirection].every(Number.isFinite)) {
+      primarySampleCount += 1
+    } else if (fallbackFields) {
+      sampleFields = fallbackFields
+      sampleAvailability = fallbackAvailability
+      ;[wind, gust, sourceDirection] = [
+        hourly[fallbackFields.wind][index],
+        hourly[fallbackFields.gust][index],
+        hourly[fallbackFields.direction][index],
+      ]
+    }
+    if (![wind, gust, sourceDirection].every(Number.isFinite) || wind < 0 || gust < 0 ||
+        wind > 32767 || gust > 32767) fail(`invalid wind value at ${localTime}`)
+    const temperature = sampleAvailability.temperature ? hourly[sampleFields.temperature][index] : null
     sampleByLocalTime.set(localTime, {
       time: match[2],
       sustainedKt: Math.round(wind),
       gustKt: Math.round(gust),
       destinationDegrees: Math.round(((sourceDirection + 180) % 360 + 360) % 360) % 360,
       available: true,
-      weather: weatherAvailable
+      weather: sampleAvailability.weather
         ? weatherState(
-          hourly[fields.cloud][index],
-          hourly[fields.precipitation][index],
-          hourly[fields.isDay][index],
+          hourly[sampleFields.cloud][index],
+          hourly[sampleFields.precipitation][index],
+          hourly[sampleFields.isDay][index],
         )
         : 0,
       temperatureTenthsC: Number.isFinite(temperature) && temperature >= -3276.8 && temperature <= 3276.7
@@ -172,6 +204,8 @@ export function normalizeForecast(response, spot, {
         temperature >= -3276.8 && temperature <= 3276.7,
     })
   }
+
+  if (fallbackFields && primarySampleCount === 0) fail(`${model.label} is unavailable at this location`)
 
   const days = Array.from({ length: 5 }, (_, dayIndex) => {
     const localDate = addDays(firstDate, dayIndex)
@@ -206,10 +240,21 @@ export function normalizeForecastModels(response, spot, {
   models = FORECAST_MODELS,
   ...options
 } = {}) {
-  return Object.fromEntries(models.map((model) => [
-    model.id,
-    normalizeForecast(response, spot, { ...options, model, suffixed: true }),
-  ]))
+  const forecasts = {}
+  const fallbackModel = models.find((model) => model.id === 'best_match') ?? null
+  for (const model of models) {
+    try {
+      forecasts[model.id] = normalizeForecast(response, spot, {
+        ...options,
+        model,
+        fallbackModel: model.id === fallbackModel?.id ? null : fallbackModel,
+        suffixed: true,
+      })
+    } catch (error) {
+      if (model.availability !== 'regional') throw error
+    }
+  }
+  return forecasts
 }
 
 export function isNormalizedForecast(value) {

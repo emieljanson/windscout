@@ -20,7 +20,7 @@
 #define WIND_TIMEZONE "Europe/Amsterdam"
 #endif
 #ifndef WIND_MODEL
-#define WIND_MODEL "knmi_seamless"
+#define WIND_MODEL "best_match"
 #endif
 #define WIND_FORECAST_CACHE_PATH "/storage/wind-forecast.cache"
 #define WIND_TIDE_CACHE_PATH "/storage/wind-tide.cache"

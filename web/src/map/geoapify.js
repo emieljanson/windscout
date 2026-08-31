@@ -34,6 +34,7 @@ function normalizeResult(result) {
     latitude,
     longitude,
     timezone: result.timezone?.name || '',
+    countryCode: String(result.country_code ?? '').toLowerCase(),
   }
 }
 

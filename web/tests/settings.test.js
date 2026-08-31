@@ -167,12 +167,12 @@ describe('WindScout settings panel', () => {
     expect(wrapper.findAll('.setting-select__trigger')).toHaveLength(2)
 
     expect(modelSelect.props('options').map((option) => option.label)).toEqual([
-      'Best Match', 'KNMI', 'ECMWF', 'ICON', 'GFS',
+      'Best Match', 'ECMWF IFS', 'DWD ICON', 'NOAA GFS',
     ])
-    modelSelect.vm.$emit('update:modelValue', 'gfs_seamless')
+    modelSelect.vm.$emit('update:modelValue', 'ncep_gfs_seamless')
     await nextTick()
 
-    expect(selectModel).toHaveBeenCalledWith('gfs_seamless')
+    expect(selectModel).toHaveBeenCalledWith('ncep_gfs_seamless')
   })
 
   it('reveals an exact threshold input and restores its last valid value', async () => {

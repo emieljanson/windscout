@@ -321,6 +321,7 @@ async function confirmSpot() {
       latitude: confirmedCenter.latitude,
       longitude: confirmedCenter.longitude,
       timezone,
+      countryCode: finalLocation.countryCode,
       providerRef: `geoapify:${confirmedPlace.id}`,
     }
     if (props.saveSpot && !await props.saveSpot(input)) {

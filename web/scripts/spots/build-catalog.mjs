@@ -11,9 +11,9 @@ const dataRoot = path.join(webRoot, 'data/spots')
 const outputPath = path.join(webRoot, 'src/spots/catalog.generated.json')
 const checkOnly = process.argv.includes('--check')
 const existing = [
-  { id: 'edam', name: 'Edam', displayName: 'EDAM', latitude: 52.5126, longitude: 5.0486, timezone: 'Europe/Amsterdam' },
-  { id: 'brouwersdam', name: 'Brouwersdam', displayName: 'BROUWERSDAM', latitude: 51.7506, longitude: 3.8577, timezone: 'Europe/Amsterdam' },
-  { id: 'castricum-aan-zee', name: 'Castricum aan Zee', displayName: 'CASTRICUM AAN ZEE', latitude: 52.555, longitude: 4.609, timezone: 'Europe/Amsterdam' },
+  { id: 'edam', name: 'Edam', displayName: 'EDAM', latitude: 52.5126, longitude: 5.0486, timezone: 'Europe/Amsterdam', countryCode: 'nl' },
+  { id: 'brouwersdam', name: 'Brouwersdam', displayName: 'BROUWERSDAM', latitude: 51.7506, longitude: 3.8577, timezone: 'Europe/Amsterdam', countryCode: 'nl' },
+  { id: 'castricum-aan-zee', name: 'Castricum aan Zee', displayName: 'CASTRICUM AAN ZEE', latitude: 52.555, longitude: 4.609, timezone: 'Europe/Amsterdam', countryCode: 'nl' },
 ]
 
 async function json(filePath, fallback) {
@@ -43,4 +43,3 @@ if (checkOnly) {
   await writeFile(outputPath, output)
 }
 console.log(`Catalog contains ${catalog.length} spots.`)
-

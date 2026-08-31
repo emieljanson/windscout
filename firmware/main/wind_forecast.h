@@ -69,6 +69,7 @@ int wind_forecast_round_knots(double knots);
 uint16_t wind_forecast_destination_degrees(double source_degrees);
 bool wind_forecast_is_overflow(int knots);
 const char *wind_forecast_model_screen_name(const char *model_id);
+const char *wind_forecast_model_api_id(const char *model_id);
 wind_weather_state_t wind_forecast_weather_state(const wind_forecast_sample_t *sample);
 const wind_forecast_sample_t *wind_forecast_sample(const wind_forecast_t *forecast, size_t day,
                                                    size_t sample);

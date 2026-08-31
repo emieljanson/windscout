@@ -4,6 +4,8 @@
 #include <sstream>
 #include <cstring>
 
+#include "cJSON.h"
+
 extern "C" {
 #include "open_meteo_knmi_provider.h"
 #include "wind_timezone.h"
@@ -11,7 +13,7 @@ extern "C" {
 
 static open_meteo_knmi_config_t config()
 {
-    return {"edam", "Edam", 52.5126, 5.0486, "Europe/Amsterdam", "knmi_seamless"};
+    return {"edam", "Edam", 52.5126, 5.0486, "Europe/Amsterdam", "knmi_harmonie"};
 }
 
 static std::string fixture()
@@ -22,6 +24,40 @@ static std::string fixture()
     return contents.str();
 }
 
+static std::string regional_fixture_with_three_days()
+{
+    cJSON *root = cJSON_Parse(fixture().c_str());
+    cJSON *units = cJSON_GetObjectItemCaseSensitive(root, "hourly_units");
+    cJSON *hourly = cJSON_GetObjectItemCaseSensitive(root, "hourly");
+    const char *fields[] = {"wind_speed_10m", "wind_gusts_10m", "wind_direction_10m",
+                            "cloud_cover", "precipitation", "is_day", "temperature_2m"};
+    for (const char *field : fields) {
+        cJSON *source_array = cJSON_GetObjectItemCaseSensitive(hourly, field);
+        cJSON *source_unit = cJSON_GetObjectItemCaseSensitive(units, field);
+        if (!source_array || !source_unit) {
+            cJSON_Delete(root);
+            return {};
+        }
+        cJSON *regional_array = cJSON_Duplicate(source_array, true);
+        for (int index = 15; index < cJSON_GetArraySize(regional_array); ++index) {
+            cJSON_ReplaceItemInArray(regional_array, index, cJSON_CreateNull());
+        }
+        std::string regional_name = std::string(field) + "_knmi_harmonie_arome_netherlands";
+        std::string fallback_name = std::string(field) + "_best_match";
+        cJSON_AddItemToObject(hourly, regional_name.c_str(), regional_array);
+        cJSON_AddItemToObject(hourly, fallback_name.c_str(), cJSON_Duplicate(source_array, true));
+        cJSON_AddItemToObject(units, regional_name.c_str(), cJSON_Duplicate(source_unit, true));
+        cJSON_AddItemToObject(units, fallback_name.c_str(), cJSON_Duplicate(source_unit, true));
+        cJSON_DeleteItemFromObject(hourly, field);
+        cJSON_DeleteItemFromObject(units, field);
+    }
+    char *printed = cJSON_PrintUnformatted(root);
+    std::string result = printed;
+    cJSON_free(printed);
+    cJSON_Delete(root);
+    return result;
+}
+
 TEST(WindProvider, ParsesCompleteLocalFiveDayForecast)
 {
     auto config = ::config();
@@ -30,7 +66,7 @@ TEST(WindProvider, ParsesCompleteLocalFiveDayForecast)
     ASSERT_EQ(open_meteo_knmi_parse_json(&config, json.data(), json.size(), 1787544000,
                                          "2026-08-24", &forecast),
               ESP_OK);
-    EXPECT_STREQ(forecast.model, "knmi_seamless");
+    EXPECT_STREQ(forecast.model, "knmi_harmonie");
     EXPECT_STREQ(forecast.days[4].local_date, "2026-08-28");
     EXPECT_EQ(forecast.days[0].samples[0].wind_knots, 10);
     EXPECT_EQ(forecast.days[0].samples[1].wind_knots, 12);
@@ -57,6 +93,19 @@ TEST(WindProvider, KeepsTemperatureIndependentWhenOneValueIsNull)
                                          "2026-08-24", &forecast), ESP_OK);
     EXPECT_FALSE(forecast.days[0].samples[0].temperature_available);
     EXPECT_TRUE(forecast.days[0].samples[1].temperature_available);
+}
+
+TEST(WindProvider, FillsTheFiveDaysWithBestMatchAfterARegionalModelEnds)
+{
+    auto config = ::config();
+    auto json = regional_fixture_with_three_days();
+    wind_forecast_t forecast;
+    ASSERT_EQ(open_meteo_knmi_parse_json(&config, json.data(), json.size(), 1787544000,
+                                         "2026-08-24", &forecast), ESP_OK);
+    EXPECT_EQ(forecast.days[2].samples[4].wind_knots, 24);
+    EXPECT_EQ(forecast.days[3].samples[0].wind_knots, 25);
+    EXPECT_EQ(forecast.days[4].samples[4].wind_knots, 44);
+    EXPECT_STREQ(forecast.model, "knmi_harmonie");
 }
 
 TEST(WindProvider, RejectsTimezoneUnitsAndArrayLengthMismatch)
@@ -109,7 +158,10 @@ TEST(WindProvider, AcceptsEveryConfiguratorModelAndSpotTimezone)
 {
     auto config = ::config();
     const char *models[] = {
-        "best_match", "knmi_seamless", "ecmwf_ifs025", "icon_seamless", "gfs_seamless",
+        "best_match", "ecmwf_ifs", "icon_seamless", "ncep_gfs_seamless",
+        "knmi_harmonie", "dmi_harmonie", "met_nordic", "meteofrance_arome", "ukmo_ukv",
+        "meteoswiss_icon", "geosphere_arome", "italiameteo_icon", "chmi_aladin", "noaa_hrrr",
+        "canada_hrdps", "jma_msm", "kma_ldps",
     };
     config.timezone = "America/New_York";
     for (const char *model : models) {

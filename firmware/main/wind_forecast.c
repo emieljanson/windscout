@@ -73,23 +73,52 @@ bool wind_forecast_validate(const wind_forecast_t *forecast)
     return true;
 }
 
+static const struct {
+    const char *id;
+    const char *api_id;
+    const char *screen_name;
+} FORECAST_MODELS[] = {
+    {"best_match", "best_match", "BEST MATCH"},
+    {"ecmwf_ifs", "ecmwf_ifs", "ECMWF IFS"},
+    {"icon_seamless", "icon_seamless", "DWD ICON"},
+    {"ncep_gfs_seamless", "ncep_gfs_seamless", "NOAA GFS"},
+    {"knmi_harmonie", "knmi_harmonie_arome_netherlands", "KNMI HARMONIE"},
+    {"dmi_harmonie", "dmi_harmonie_arome_europe", "DMI HARMONIE"},
+    {"met_nordic", "metno_nordic", "MET NORDIC"},
+    {"meteofrance_arome", "meteofrance_arome_france_hd", "MÉTÉO-FRANCE AROME"},
+    {"ukmo_ukv", "ukmo_uk_deterministic_2km", "UK MET OFFICE UKV"},
+    {"meteoswiss_icon", "meteoswiss_icon_ch1", "METEOSWISS ICON"},
+    {"geosphere_arome", "geosphere_arome_austria", "GEOSPHERE AROME"},
+    {"italiameteo_icon", "italia_meteo_arpae_icon_2i", "ITALIAMETEO ICON"},
+    {"chmi_aladin", "chmi_aladin_cz_1km", "CHMI ALADIN"},
+    {"noaa_hrrr", "ncep_hrrr_conus", "NOAA HRRR"},
+    {"canada_hrdps", "cmc_gem_hrdps", "ENVIRONMENT CANADA HRDPS"},
+    {"jma_msm", "jma_msm", "JMA MSM"},
+    {"kma_ldps", "kma_ldps", "KMA LDPS"},
+    /* Keep accepting configurations installed by older WindScout versions. */
+    {"knmi_seamless", "knmi_seamless", "KNMI SEAMLESS"},
+    {"ecmwf_ifs025", "ecmwf_ifs025", "ECMWF IFS"},
+    {"gfs_seamless", "gfs_seamless", "NOAA GFS"},
+};
+
 const char *wind_forecast_model_screen_name(const char *model_id)
 {
-    static const struct {
-        const char *id;
-        const char *screen_name;
-    } models[] = {
-        {"best_match", "BEST MATCH"},
-        {"knmi_seamless", "KNMI SEAMLESS"},
-        {"ecmwf_ifs025", "ECMWF IFS"},
-        {"icon_seamless", "DWD ICON"},
-        {"gfs_seamless", "NOAA GFS"},
-    };
     if (!model_id) return "";
-    for (size_t index = 0; index < sizeof(models) / sizeof(models[0]); ++index) {
-        if (strcmp(model_id, models[index].id) == 0) return models[index].screen_name;
+    for (size_t index = 0; index < sizeof(FORECAST_MODELS) / sizeof(FORECAST_MODELS[0]); ++index) {
+        if (strcmp(model_id, FORECAST_MODELS[index].id) == 0) {
+            return FORECAST_MODELS[index].screen_name;
+        }
     }
     return model_id;
+}
+
+const char *wind_forecast_model_api_id(const char *model_id)
+{
+    if (!model_id) return NULL;
+    for (size_t index = 0; index < sizeof(FORECAST_MODELS) / sizeof(FORECAST_MODELS[0]); ++index) {
+        if (strcmp(model_id, FORECAST_MODELS[index].id) == 0) return FORECAST_MODELS[index].api_id;
+    }
+    return NULL;
 }
 
 int wind_forecast_round_knots(double knots)

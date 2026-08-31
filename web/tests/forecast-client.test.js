@@ -1,16 +1,21 @@
 import { describe, expect, it, vi } from 'vitest'
 import { buildForecastUrl, fetchOpenMeteoForecasts } from '../src/forecast/openMeteo'
-import { FORECAST_MODEL_IDS, getForecastModel } from '../src/forecast/models'
+import {
+  ALWAYS_FORECAST_MODEL_IDS,
+  forecastModelsForSpot,
+  getForecastModel,
+} from '../src/forecast/models'
 import { SPOTS } from '../src/spots'
 
-function minimalResponse(modelIds = FORECAST_MODEL_IDS) {
+function minimalResponse(models = forecastModelsForSpot(SPOTS[1])) {
   const times = []
   for (let day = 26; day <= 30; day += 1) {
     for (const hour of [8, 11, 14, 17, 20]) times.push(`2026-08-${day}T${String(hour).padStart(2, '0')}:00`)
   }
   const hourlyUnits = { time: 'iso8601' }
   const hourly = { time: times }
-  modelIds.forEach((modelId, modelIndex) => {
+  models.forEach((model, modelIndex) => {
+    const modelId = model.apiId
     Object.assign(hourlyUnits, {
       [`wind_speed_10m_${modelId}`]: 'kn',
       [`wind_gusts_10m_${modelId}`]: 'kn',
@@ -38,12 +43,48 @@ function minimalResponse(modelIds = FORECAST_MODEL_IDS) {
 }
 
 describe('Open-Meteo forecast client', () => {
+  it('always offers worldwide models and adds regional candidates per location', () => {
+    expect(ALWAYS_FORECAST_MODEL_IDS).toEqual([
+      'best_match', 'ecmwf_ifs', 'icon_seamless', 'ncep_gfs_seamless',
+    ])
+    expect(forecastModelsForSpot({
+      countryCode: 'nl', latitude: 52.5, longitude: 5,
+    }).map((model) => model.id)).toEqual([
+      ...ALWAYS_FORECAST_MODEL_IDS, 'knmi_harmonie', 'dmi_harmonie',
+    ])
+    expect(forecastModelsForSpot({
+      countryCode: 'jp', latitude: 35.7, longitude: 139.7,
+    }).map((model) => model.id)).toEqual([...ALWAYS_FORECAST_MODEL_IDS, 'jma_msm'])
+  })
+
+  it('limits HRRR to the contiguous United States', () => {
+    expect(forecastModelsForSpot({
+      countryCode: 'us', latitude: 37.8, longitude: -122.4,
+    }).map((model) => model.id)).toContain('noaa_hrrr')
+    expect(forecastModelsForSpot({
+      countryCode: 'us', latitude: 21.3, longitude: -157.8,
+    }).map((model) => model.id)).not.toContain('noaa_hrrr')
+  })
+
+  it('uses stable internal IDs and the exact selector labels', () => {
+    expect(getForecastModel('knmi_harmonie')).toMatchObject({
+      apiId: 'knmi_harmonie_arome_netherlands',
+      label: 'KNMI HARMONIE',
+      screenLabel: 'KNMI HARMONIE',
+    })
+    expect(getForecastModel('ecmwf_ifs')).toMatchObject({
+      label: 'ECMWF IFS', screenLabel: 'ECMWF IFS',
+    })
+  })
+
   it('requests Best Match plus every curated comparison model in one call', () => {
     const url = new URL(buildForecastUrl(SPOTS[1]))
     expect(url.origin + url.pathname).toBe('https://api.open-meteo.com/v1/forecast')
     expect(url.searchParams.get('latitude')).toBe('51.750600')
     expect(url.searchParams.get('longitude')).toBe('3.857700')
-    expect(url.searchParams.get('models')).toBe(FORECAST_MODEL_IDS.join(','))
+    expect(url.searchParams.get('models')).toBe(
+      forecastModelsForSpot(SPOTS[1]).map((model) => model.apiId).join(','),
+    )
     expect(url.searchParams.get('wind_speed_unit')).toBe('kn')
     expect(url.searchParams.get('timezone')).toBe('Europe/Amsterdam')
     expect(url.searchParams.get('forecast_days')).toBe('5')
@@ -70,12 +111,15 @@ describe('Open-Meteo forecast client', () => {
       firstDate: '2026-08-26',
     })
     expect(fetchImpl).toHaveBeenCalledOnce()
-    expect(Object.keys(forecasts)).toEqual(FORECAST_MODEL_IDS)
+    expect(Object.keys(forecasts)).toEqual(
+      forecastModelsForSpot(SPOTS[1]).map((model) => model.id),
+    )
     expect(forecasts.best_match).toMatchObject({
       spotId: 'brouwersdam', modelId: 'best_match', model: 'BEST MATCH',
     })
-    expect(forecasts.gfs_seamless.model).toBe(getForecastModel('gfs_seamless').screenLabel)
-    expect(forecasts.gfs_seamless.days[0].samples[0].sustainedKt)
+    expect(forecasts.ncep_gfs_seamless.model)
+      .toBe(getForecastModel('ncep_gfs_seamless').screenLabel)
+    expect(forecasts.ncep_gfs_seamless.days[0].samples[0].sustainedKt)
       .toBeGreaterThan(forecasts.best_match.days[0].samples[0].sustainedKt)
   })
 

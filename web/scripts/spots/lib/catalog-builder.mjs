@@ -10,7 +10,7 @@ function validTimezone(timezone) {
   }
 }
 
-function runtimeSpot({ id, name, latitude, longitude, timezone }) {
+function runtimeSpot({ id, name, latitude, longitude, timezone, countryCode }) {
   const cleanName = String(name ?? '').trim().replace(/\s+/g, ' ')
   const displayName = cleanName.toLocaleUpperCase()
   const lat = Number(latitude)
@@ -22,6 +22,10 @@ function runtimeSpot({ id, name, latitude, longitude, timezone }) {
     throw new Error(`Spot ${id} does not fit the renderer text contract.`)
   }
   if (!validTimezone(timezone)) throw new Error(`Spot ${id} has an invalid timezone.`)
+  const country = String(countryCode ?? '').trim().toLowerCase()
+  if (country && !/^[a-z]{2}$/.test(country)) {
+    throw new Error(`Spot ${id} has an invalid country code.`)
+  }
   return Object.freeze({
     id: String(id),
     name: cleanName,
@@ -29,6 +33,7 @@ function runtimeSpot({ id, name, latitude, longitude, timezone }) {
     latitude: Number(lat.toFixed(6)),
     longitude: Number(lon.toFixed(6)),
     timezone,
+    countryCode: country,
   })
 }
 
@@ -49,6 +54,7 @@ export function buildRuntimeCatalog({ existing, candidates, validationResults, d
         latitude: candidate.latitude,
         longitude: candidate.longitude,
         timezone: validation.timezone,
+        countryCode: validation.countryCode,
       }))
       continue
     }
@@ -61,6 +67,7 @@ export function buildRuntimeCatalog({ existing, candidates, validationResults, d
       latitude: decision.latitude,
       longitude: decision.longitude,
       timezone: decision.timezone || validation.timezone,
+      countryCode: validation.countryCode,
     }))
   }
   const catalog = [

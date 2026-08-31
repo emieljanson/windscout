@@ -1,17 +1,20 @@
-import { FORECAST_MODEL_IDS, FORECAST_MODELS } from './models'
+import { forecastModelsForSpot, getForecastModel } from './models'
 import { normalizeForecastModels } from './normalizeForecast'
 
 export const OPEN_METEO_ENDPOINT = 'https://api.open-meteo.com/v1/forecast'
 export const OPEN_METEO_TIMEOUT_MS = 10_000
 
-export function buildForecastUrl(spot, modelIds = FORECAST_MODEL_IDS) {
+export function buildForecastUrl(spot, models = forecastModelsForSpot(spot)) {
+  const resolvedModels = models.map((model) => (
+    typeof model === 'string' ? getForecastModel(model) : model
+  )).filter(Boolean)
   const parameters = new URLSearchParams({
     latitude: Number(spot.latitude).toFixed(6),
     longitude: Number(spot.longitude).toFixed(6),
     hourly: 'wind_speed_10m,wind_gusts_10m,wind_direction_10m,cloud_cover,precipitation,is_day,temperature_2m',
     wind_speed_unit: 'kn',
     timezone: spot.timezone,
-    models: modelIds.join(','),
+    models: resolvedModels.map((model) => model.apiId).join(','),
     forecast_days: '5',
   })
   return `${OPEN_METEO_ENDPOINT}?${parameters}`
@@ -31,14 +34,15 @@ export async function fetchOpenMeteoForecasts(spot, {
     controller.abort()
   }, timeoutMs)
   try {
-    const response = await fetchImpl(buildForecastUrl(spot), {
+    const models = forecastModelsForSpot(spot)
+    const response = await fetchImpl(buildForecastUrl(spot, models), {
       signal: controller.signal,
       headers: { Accept: 'application/json' },
     })
     if (!response?.ok) throw new Error(`Forecast request failed (HTTP ${response?.status ?? 'error'}).`)
     const retrievedAt = now()
     return normalizeForecastModels(await response.json(), spot, {
-      models: FORECAST_MODELS,
+      models,
       retrievedAt,
       firstDate,
     })

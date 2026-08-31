@@ -5,9 +5,9 @@ import { verifyReleaseSources } from '../scripts/spots/lib/release-gates.mjs'
 import { searchSpots } from '../src/spots/searchSpots'
 
 const existing = [
-  { id: 'edam', name: 'Edam', displayName: 'EDAM', latitude: 52.5126, longitude: 5.0486, timezone: 'Europe/Amsterdam' },
-  { id: 'brouwersdam', name: 'Brouwersdam', displayName: 'BROUWERSDAM', latitude: 51.7506, longitude: 3.8577, timezone: 'Europe/Amsterdam' },
-  { id: 'castricum-aan-zee', name: 'Castricum aan Zee', displayName: 'CASTRICUM AAN ZEE', latitude: 52.555, longitude: 4.609, timezone: 'Europe/Amsterdam' },
+  { id: 'edam', name: 'Edam', displayName: 'EDAM', latitude: 52.5126, longitude: 5.0486, timezone: 'Europe/Amsterdam', countryCode: 'nl' },
+  { id: 'brouwersdam', name: 'Brouwersdam', displayName: 'BROUWERSDAM', latitude: 51.7506, longitude: 3.8577, timezone: 'Europe/Amsterdam', countryCode: 'nl' },
+  { id: 'castricum-aan-zee', name: 'Castricum aan Zee', displayName: 'CASTRICUM AAN ZEE', latitude: 52.555, longitude: 4.609, timezone: 'Europe/Amsterdam', countryCode: 'nl' },
 ]
 const candidate = {
   id: 'osm:node/99', name: 'Chałupy', latitude: 54.76, longitude: 18.49,
@@ -15,7 +15,7 @@ const candidate = {
 }
 const accepted = {
   candidateId: candidate.id, outcome: 'accepted', timezone: 'Europe/Warsaw',
-  evidenceFingerprint: 'current',
+  countryCode: 'pl', evidenceFingerprint: 'current',
 }
 
 describe('runtime spot catalog', () => {
@@ -45,7 +45,7 @@ describe('runtime spot catalog', () => {
 
     expect(catalog.slice(0, 3).map((spot) => spot.id)).toEqual(['edam', 'brouwersdam', 'castricum-aan-zee'])
     expect(catalog).toEqual(expect.arrayContaining([
-      expect.objectContaining({ name: 'Chałupy', timezone: 'Europe/Warsaw' }),
+      expect.objectContaining({ name: 'Chałupy', timezone: 'Europe/Warsaw', countryCode: 'pl' }),
       expect.objectContaining({ id: 'reviewed-spot', name: 'Reviewed Corrected' }),
     ]))
     expect(catalog.some((spot) => spot.name === 'Rights hold')).toBe(false)

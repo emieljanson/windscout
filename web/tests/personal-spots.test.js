@@ -21,6 +21,7 @@ describe('personal spots', () => {
       latitude: 52.50673,
       longitude: 5.07729,
       timezone: 'Europe/Amsterdam',
+      countryCode: 'nl',
       providerRef: 'geoapify:edam-id',
     })).toEqual({
       id: 'personal-edam-harbour-8hfw1-b0onl',
@@ -29,6 +30,7 @@ describe('personal spots', () => {
       latitude: 52.50673,
       longitude: 5.07729,
       timezone: 'Europe/Amsterdam',
+      countryCode: 'nl',
       providerRef: 'geoapify:edam-id',
       personal: true,
     })
