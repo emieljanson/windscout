@@ -239,6 +239,13 @@ export function createInstallerSession({
     }
   }
 
+  async function retryChooserAfterStaleRememberedPort(expectedAttempt) {
+    rememberedInstallerPorts.delete(navigatorApi.serial)
+    await releaseConnections({ clearDevice: true })
+    if (!isCurrent(expectedAttempt)) return state
+    return connect()
+  }
+
   async function inspectApp(candidate) {
     try {
       await candidate.open()
@@ -319,6 +326,7 @@ export function createInstallerSession({
       ? rememberedInstallerPorts.get(navigatorApi.serial)
       : null
     let selectedPort = rememberedPort ? await findRememberedPort(rememberedPort) : null
+    const usingRememberedPort = Boolean(rememberedPort && selectedPort === rememberedPort)
     if (!isCurrent(currentAttempt)) return state
     if (!selectedPort) {
       update({ phase: 'choosing-device', error: null, diagnosticStatus: 'idle', diagnosticReference: null })
@@ -346,9 +354,13 @@ export function createInstallerSession({
         probeApp(port),
       ])
       const appProbe = probeResult.status === 'fulfilled' ? probeResult.value : null
-      if (releaseResult.status === 'rejected' || probeResult.status === 'rejected') {
+      if (releaseResult.status === 'rejected') {
         try { await appProbe?.protocol.close() } catch {}
-        throw releaseResult.status === 'rejected' ? releaseResult.reason : probeResult.reason
+        throw releaseResult.reason
+      }
+      if (probeResult.status === 'rejected') {
+        if (usingRememberedPort) return retryChooserAfterStaleRememberedPort(currentAttempt)
+        throw probeResult.reason
       }
       const loadedRelease = releaseResult.value
       if (currentAttempt !== attempt) {
@@ -359,7 +371,13 @@ export function createInstallerSession({
       protocol = appProbe?.protocol ?? null
       device = appProbe?.device ?? null
       if (!device) {
-        const identity = await esptool.identify(port)
+        let identity
+        try {
+          identity = await esptool.identify(port)
+        } catch (error) {
+          if (usingRememberedPort) return retryChooserAfterStaleRememberedPort(currentAttempt)
+          throw error
+        }
         if (currentAttempt !== attempt) {
           try { await identity.transport?.disconnect() } catch {}
           return state
@@ -626,6 +644,7 @@ export function createInstallerSession({
       if (!isCurrent(expectedAttempt)) return state
       const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.CONNECTION_LOST, 'Windscout did not reconnect automatically.')
       update({ phase: 'reconnect', error: installerError, safeToDisconnect: true })
+      reportFailure(installerError, 'reconnect')
       return state
     }
   }

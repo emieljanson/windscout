@@ -251,6 +251,43 @@ describe('installer session', () => {
     expect(secondSession.getState().phase).toBe('ready')
   })
 
+  it('falls back to the chooser when a remembered granted port is stale', async () => {
+    const stalePort = { id: 'stale-port' }
+    const freshPort = { id: 'fresh-port' }
+    const serial = { getPorts: vi.fn(async () => [stalePort]) }
+    const navigatorApi = { serial }
+    const firstSession = createInstallerSession({
+      configuration,
+      navigatorApi,
+      requestPort: async () => stalePort,
+      releaseLoader: async () => release,
+      protocolFactory: () => appProtocol(),
+    })
+    await firstSession.connect()
+    await firstSession.cancel()
+
+    const staleProtocol = {
+      open: vi.fn().mockRejectedValue(new Error('stale port')),
+      close: vi.fn(),
+    }
+    const requestPort = vi.fn(async () => freshPort)
+    const secondSession = createInstallerSession({
+      configuration,
+      navigatorApi,
+      requestPort,
+      releaseLoader: async () => release,
+      protocolFactory: vi.fn()
+        .mockReturnValueOnce(staleProtocol)
+        .mockReturnValueOnce(appProtocol()),
+      esptool: { identify: vi.fn().mockRejectedValue(new Error('device disconnected')) },
+    })
+
+    await secondSession.connect()
+
+    expect(requestPort).toHaveBeenCalledOnce()
+    expect(secondSession.getState().phase).toBe('complete')
+  })
+
   it('does not remember an unverified ESP32-S3 as a supported reTerminal', async () => {
     const selectedPort = { id: 'unverified-port' }
     const serial = { getPorts: vi.fn(async () => [selectedPort]) }
@@ -897,6 +934,7 @@ describe('installer session', () => {
   it('offers manual reconnection when granted-port discovery stalls', async () => {
     const oldProtocol = appProtocol({ firmwareVersion: '1.0.0' })
     const initialPort = { id: 'initial-port' }
+    const reporter = { report: vi.fn().mockResolvedValue({ status: 'failed' }) }
     const session = createInstallerSession({
       configuration,
       navigatorApi: { serial: { getPorts: vi.fn(() => new Promise(() => {})) } },
@@ -909,6 +947,7 @@ describe('installer session', () => {
         flash: vi.fn(),
       },
       portDiscoveryTimeoutMs: 0,
+      reporter,
     })
 
     await session.connect()
@@ -918,6 +957,7 @@ describe('installer session', () => {
       safeToDisconnect: true,
       error: { code: INSTALLER_ERROR_CODES.CONNECTION_LOST },
     })
+    expect(reporter.report).toHaveBeenCalledOnce()
   })
 
   it('closes an in-progress automatic reconnect probe when cancelled', async () => {

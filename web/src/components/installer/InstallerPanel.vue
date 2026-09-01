@@ -179,7 +179,7 @@ onBeforeUnmount(() => { toast.dismiss('installer-error'); toast.dismiss('install
           <div v-else-if="state.phase === 'reconnect'" class="installer-step">
             <div class="installer-step__copy">
               <h2 id="installer-title">Select your reTerminal again</h2>
-              <p>Windscout could not reconnect automatically. Keep the cable connected and select it again to finish setup.</p>
+              <p>Windscout could not reconnect. Keep the cable connected and select it again to finish setup.</p>
             </div>
             <div class="installer-actions">
               <p v-if="state.error" class="installer-message is-error">{{ state.error.message }}</p>

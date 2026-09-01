@@ -117,7 +117,8 @@ describe('installer inspector panel', () => {
     mountPanel(session)
 
     expect(wrapper.get('h2').text()).toBe('Select your reTerminal again')
-    expect(wrapper.text()).toContain('could not reconnect automatically')
+    expect(wrapper.text()).toContain('could not reconnect')
+    expect(wrapper.text()).not.toContain('could not reconnect automatically')
     expect(wrapper.text()).toContain('Keep the cable connected')
     expect(wrapper.get('.installer-primary').text()).toBe('Choose USB device')
     expect(wrapper.text()).not.toContain('Reconnect device')
