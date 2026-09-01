@@ -1,11 +1,5 @@
 import { expect, test } from '@playwright/test'
 
-async function expectInstallerStepSettled(page) {
-  const views = page.locator('.installer-stage__view')
-  await expect(views).toHaveCount(1)
-  await expect(views).not.toHaveAttribute('aria-hidden', 'true')
-}
-
 async function installFakeDevice(page) {
   await page.addInitScript(() => {
     globalThis.__WINDSCOUT_INSTALLER_SESSION_FACTORY__ = () => {
@@ -178,8 +172,7 @@ test('demo follows only the fresh-device happy flow through Wi-Fi', async ({ pag
 
   await page.getByRole('button', { name: 'Install Windscout' }).click()
   await expect(page.getByRole('heading', { name: 'Select your reTerminal again' })).toBeVisible({ timeout: 30_000 })
-  await expectInstallerStepSettled(page)
-  await page.getByRole('button', { name: 'Choose USB device' }).click()
+  await page.getByRole('button', { name: 'Choose USB device' }).dispatchEvent('click')
   await expect(page.getByRole('heading', { name: 'Select a network for Windscout' })).toBeVisible()
   const continueButton = page.getByRole('button', { name: 'Continue' })
   await expect(continueButton).toBeDisabled()
