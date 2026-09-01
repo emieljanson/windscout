@@ -239,7 +239,7 @@ esp_err_t wind_app_show_cached(wind_app_t *app, int64_t now, wind_app_outcome_t 
 #include "epaper.h"
 
 // Bump this whenever layout, typography, palette encoding, or final bitmap semantics change.
-#define WIND_DASHBOARD_RENDER_SIGNATURE UINT64_C(0x57494E440000000E)
+#define WIND_DASHBOARD_RENDER_SIGNATURE UINT64_C(0x57494E440000000F)
 
 static const char *TAG = "wind_app";
 typedef struct {
