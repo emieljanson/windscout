@@ -730,6 +730,17 @@ TEST(WindRenderer, MakesBatteryRedBelowTenPercentOnly) {
     EXPECT_EQ(CountColor(ten, 746, 457, 771, 470, 3), 0);
 }
 
+TEST(WindRenderer, ShowsNinetyNinePercentAsVisuallyFull) {
+    auto dashboard = Dashboard();
+    dashboard.battery_percent = 99;
+    const Frame nearly_full = Render(dashboard);
+
+    dashboard.battery_percent = 100;
+    const Frame full = Render(dashboard);
+
+    EXPECT_EQ(nearly_full, full);
+}
+
 TEST(WindRenderer, KeepsStatusRightAlignedWhenFadingLongTitle) {
     auto dashboard = Dashboard();
     wind_renderer_stats_t normal_stats{};

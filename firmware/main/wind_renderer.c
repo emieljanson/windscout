@@ -989,7 +989,11 @@ static void draw_battery(canvas_t *canvas, int right, int center_y,
     outline_rect(canvas, x, y, body_width, body_height);
     fill_rect(canvas, right - 1, center_y - 2, 2, 5, CANVAS_BLACK);
     if (percent >= 0) {
-        const int fill = clamp_int(percent, 0, 100) * (body_width - 4) / 100;
+        const int interior_width = body_width - 4;
+        const int clamped_percent = clamp_int(percent, 0, 100);
+        const int fill = clamped_percent >= 99
+                             ? interior_width
+                             : clamped_percent * interior_width / 100;
         fill_rect(canvas, x + 2, y + 2, fill, body_height - 4, CANVAS_BLACK);
     }
 }
