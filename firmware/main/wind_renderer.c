@@ -434,9 +434,11 @@ static void fill_triangle(canvas_t *canvas,
 static void draw_arrow(canvas_t *canvas, int center_x, int center_y,
                        int destination_degrees) {
     /* Exact Figma navigation-arrow silhouette, node 371:2786.
-       The four points are the tip, left tail, concave notch, and right tail. */
+       The four points are the tip, left tail, concave notch, and right tail.
+       Shift its filled-area centroid onto the rotation origin so the asymmetric
+       silhouette remains optically centered at every direction. */
     static const float source[4][2] = {
-        {0.0f, -7.5f}, {-6.5f, 6.5f}, {0.0f, 3.2f}, {6.5f, 6.5f},
+        {0.0f, -8.25f}, {-6.5f, 5.75f}, {0.0f, 2.45f}, {6.5f, 5.75f},
     };
     int degrees = destination_degrees % 360;
     if (degrees < 0) degrees += 360;

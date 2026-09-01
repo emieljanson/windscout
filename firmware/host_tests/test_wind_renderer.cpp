@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iterator>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -85,6 +86,23 @@ int CountColor(const Frame &frame, int left, int top, int right, int bottom,
         for (int x = left; x <= right; ++x)
             count += frame[y * WIND_RENDERER_WIDTH + x] == color;
     return count;
+}
+
+std::pair<double, double> BlackCentroid(const Frame &frame, int left, int top,
+                                        int right, int bottom) {
+    double x_total = 0;
+    double y_total = 0;
+    int count = 0;
+    for (int y = top; y <= bottom; ++y) {
+        for (int x = left; x <= right; ++x) {
+            if (frame[y * WIND_RENDERER_WIDTH + x] != 0) continue;
+            x_total += x;
+            y_total += y;
+            ++count;
+        }
+    }
+    EXPECT_GT(count, 0);
+    return {x_total / count, y_total / count};
 }
 
 struct FooterDiff {
@@ -360,6 +378,29 @@ TEST(WindRenderer, PlacesFiveTimeSlotsAcrossEachDayOnOneBaseline) {
             EXPECT_NE(centers[sample - 1], centers[sample]);
             EXPECT_EQ(baselines[sample - 1], baselines[sample]);
         }
+    }
+}
+
+TEST(WindRenderer, KeepsDirectionIconOpticallyCenteredAtEveryAngle) {
+    auto dashboard = Dashboard();
+    for (auto &day : dashboard.days)
+        for (auto &sample : day.samples) sample.available = 0;
+
+    constexpr int center_x = 38;
+    constexpr int center_y = 133;
+    auto &sample = dashboard.days[0].samples[0];
+    sample.available = 1;
+    sample.sustained_kt = 0;
+    sample.gust_kt = 0;
+
+    for (int degrees = 0; degrees < 360; degrees += 45) {
+        sample.destination_degrees = degrees;
+        const Frame frame = Render(dashboard);
+        const auto [centroid_x, centroid_y] =
+            BlackCentroid(frame, center_x - 9, center_y - 9,
+                          center_x + 9, center_y + 9);
+        EXPECT_NEAR(centroid_x, center_x, 0.5) << degrees << " degrees";
+        EXPECT_NEAR(centroid_y, center_y, 0.5) << degrees << " degrees";
     }
 }
 
