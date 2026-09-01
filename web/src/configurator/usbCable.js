@@ -196,7 +196,7 @@ function createBraidTexture(size = 512, {
     color & 0xff,
   ]
 
-  const sampleWeave = (x, y) => {
+  const sampleWeave = (x, y, sample) => {
     const u = x / size
     const v = y / size
     const phaseA = Math.cos(Math.PI * 2 * (u * 6 + v * 4))
@@ -209,17 +209,17 @@ function createBraidTexture(size = 512, {
     const bundle = Math.max(upper, lower * 0.46)
     const fibre = Math.sin(Math.PI * 2 * (u * 156 + v * 11)) * 0.028 * bundle
     const groove = 1 - THREE.MathUtils.clamp(Math.max(strandA, strandB) * 1.35, 0, 1)
-    return {
-      groove,
-      height: THREE.MathUtils.clamp(bundle + fibre, 0, 1),
-    }
+    sample.groove = groove
+    sample.height = THREE.MathUtils.clamp(bundle + fibre, 0, 1)
   }
 
+  const normal = new THREE.Vector3()
+  const weave = { groove: 0, height: 0 }
   for (let y = 0; y < size; y += 1) {
     for (let x = 0; x < size; x += 1) {
       const u = x / size
       const v = y / size
-      const weave = sampleWeave(x, y)
+      sampleWeave(x, y, weave)
       const colourFibre = Math.sin(Math.PI * 2 * (u * 137 - v * 9)) * 0.018 * weave.height
       const brightness = baseBrightness
         + weave.height * contrast
@@ -246,7 +246,7 @@ function createBraidTexture(size = 512, {
       const right = heights[y * size + ((x + 1) % size)]
       const down = heights[((y - 1 + size) % size) * size + x]
       const up = heights[((y + 1) % size) * size + x]
-      const normal = new THREE.Vector3((left - right) * 2.35, (down - up) * 2.35, 1).normalize()
+      normal.set((left - right) * 2.35, (down - up) * 2.35, 1).normalize()
       const offset = (y * size + x) * 4
       normalPixels[offset] = Math.round((normal.x * 0.5 + 0.5) * 255)
       normalPixels[offset + 1] = Math.round((normal.y * 0.5 + 0.5) * 255)
@@ -299,12 +299,13 @@ function createMoldGrainTexture(size = 128) {
     }
   }
 
+  const sample = (sampleX, sampleY) => heights[
+    ((sampleY + size) % size) * size + ((sampleX + size) % size)
+  ]
+  const normal = new THREE.Vector3()
   for (let y = 0; y < size; y += 1) {
     for (let x = 0; x < size; x += 1) {
-      const sample = (sampleX, sampleY) => heights[
-        ((sampleY + size) % size) * size + ((sampleX + size) % size)
-      ]
-      const normal = new THREE.Vector3(
+      normal.set(
         (sample(x - 1, y) - sample(x + 1, y)) * 0.32,
         (sample(x, y - 1) - sample(x, y + 1)) * 0.32,
         1,
