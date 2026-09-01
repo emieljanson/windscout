@@ -119,7 +119,6 @@ const ICONS = {
   'choosing-device': animated(selectFrames),
   'checking-device': animated(selectFrames),
   'confirm-device': still(confirmedDevice),
-  review: still(confirmedDevice),
   downloading: animated(firmwareFrames),
   'installing-firmware': animated(firmwareFrames),
   reconnecting: animated(connectFrames),

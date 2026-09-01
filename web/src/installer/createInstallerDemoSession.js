@@ -4,6 +4,7 @@ const DEMO_NETWORKS = [
 ]
 
 export const INSTALLER_DEMO_FIRMWARE_DURATION_MS = 3000
+export const INSTALLER_DEMO_RECONNECTING_DURATION_MS = 800
 const DEMO_PROGRESS_TICK_MS = 100
 const DEMO_CONFIGURING_DURATION_MS = 2000
 const DEMO_VERIFYING_DURATION_MS = 2000
@@ -47,7 +48,9 @@ export function createInstallerDemoSession({
       duration: INSTALLER_DEMO_FIRMWARE_DURATION_MS,
       expectedAttempt: currentAttempt,
     })) return state
-    update({ phase: 'reconnect', progress: 0.8, safeToDisconnect: true })
+    update({ phase: 'reconnecting', progress: 0.8, safeToDisconnect: true })
+    if (!await pause(INSTALLER_DEMO_RECONNECTING_DURATION_MS, currentAttempt)) return state
+    update({ phase: 'wifi', progress: 0.82, safeToDisconnect: true })
     return state
   }
 
@@ -68,7 +71,6 @@ export function createInstallerDemoSession({
       return state
     },
     confirmDevice: installFreshDevice,
-    run: installFreshDevice,
     async reconnect() {
       update({ phase: 'wifi', progress: 0.82, safeToDisconnect: true, error: null })
       return state

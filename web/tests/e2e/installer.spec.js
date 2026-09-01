@@ -14,9 +14,11 @@ async function installFakeDevice(page) {
           // Keep the transient writing phase observable even when the full E2E
           // suite runs under load. The real installer remains in this phase for
           // the duration of the flash operation.
-          setTimeout(() => update({ phase: 'reconnect', progress: 0.78, safeToDisconnect: true }), 5000)
+          setTimeout(() => {
+            update({ phase: 'reconnecting', progress: 0.78, safeToDisconnect: true })
+            setTimeout(() => update({ phase: 'wifi', progress: 0.8, safeToDisconnect: true }), 800)
+          }, 5000)
         },
-        async run() { update({ phase: 'reconnect', progress: 0.78, safeToDisconnect: true }) },
         async reconnect() { update({ phase: 'wifi', progress: 0.8, safeToDisconnect: true }) },
         async scanNetworks() { return [{ ssid: 'Windscout Test Network With A Very Long Name', rssi: -40, secured: true }] },
         async submitWifi() { update({ phase: 'complete', progress: 1, safeToDisconnect: true }) },
@@ -116,9 +118,8 @@ test('guides a fake E1002 through confirmation, reconnect, Wi-Fi and completion'
 
   // Seven parallel 3D scenes can heavily delay browser timers in CI even
   // though the demo's configured firmware duration remains three seconds.
-  await expect(page.getByRole('heading', { name: 'Select your reTerminal again' })).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByRole('heading', { name: 'Finding Windscout' })).toBeVisible({ timeout: 30_000 })
   await expectCopyAligned()
-  await page.getByRole('button', { name: 'Choose USB device' }).click()
   await expect(page.getByRole('heading', { name: 'Select a network for Windscout' })).toBeVisible()
   await expectCopyAligned()
   await expect(page.locator('.installer-field').first()).toHaveCSS('font-size', '13px')
@@ -178,8 +179,7 @@ test('demo follows only the fresh-device happy flow through Wi-Fi', async ({ pag
   await expect(page.getByRole('button', { name: 'Cancel' })).toHaveCount(0)
 
   await page.getByRole('button', { name: 'Install Windscout' }).click()
-  await expect(page.getByRole('heading', { name: 'Select your reTerminal again' })).toBeVisible({ timeout: 30_000 })
-  await page.getByRole('button', { name: 'Choose USB device' }).click()
+  await expect(page.getByRole('heading', { name: 'Finding Windscout' })).toBeVisible({ timeout: 30_000 })
   await expect(page.getByRole('heading', { name: 'Select a network for Windscout' })).toBeVisible()
   const continueButton = page.getByRole('button', { name: 'Continue' })
   await expect(continueButton).toBeDisabled()

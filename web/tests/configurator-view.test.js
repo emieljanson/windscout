@@ -101,7 +101,9 @@ describe('configurator experience', () => {
       expect(wrapper.get('[data-testid="3d-scene"]').attributes('data-usb-focused')).toBe('false')
       expect(wrapper.get('[data-testid="3d-scene"]').attributes('firmware-transfer-active')).toBeUndefined()
       await wrapper.get('[aria-label="Back to configurator"]').trigger('click')
-      expect(wrapper.get('[data-testid="3d-scene"]').attributes('data-cable-visible')).toBe('false')
+      await vi.waitFor(() => {
+        expect(wrapper.get('[data-testid="3d-scene"]').attributes('data-cable-visible')).toBe('false')
+      })
       wrapper.unmount()
     } finally {
       if (originalSerialDescriptor) Object.defineProperty(window.navigator, 'serial', originalSerialDescriptor)
