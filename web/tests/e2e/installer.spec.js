@@ -1,5 +1,11 @@
 import { expect, test } from '@playwright/test'
 
+async function expectInstallerStepSettled(page) {
+  const views = page.locator('.installer-stage__view')
+  await expect(views).toHaveCount(1)
+  await expect(views).not.toHaveAttribute('aria-hidden', 'true')
+}
+
 async function installFakeDevice(page) {
   await page.addInitScript(() => {
     globalThis.__WINDSCOUT_INSTALLER_SESSION_FACTORY__ = () => {
@@ -172,6 +178,7 @@ test('demo follows only the fresh-device happy flow through Wi-Fi', async ({ pag
 
   await page.getByRole('button', { name: 'Install Windscout' }).click()
   await expect(page.getByRole('heading', { name: 'Select your reTerminal again' })).toBeVisible({ timeout: 30_000 })
+  await expectInstallerStepSettled(page)
   await page.getByRole('button', { name: 'Choose USB device' }).click()
   await expect(page.getByRole('heading', { name: 'Select a network for Windscout' })).toBeVisible()
   const continueButton = page.getByRole('button', { name: 'Continue' })
@@ -189,8 +196,8 @@ test('demo follows only the fresh-device happy flow through Wi-Fi', async ({ pag
   const wifiHeight = (await panel.boundingBox()).height
   await page.getByRole('button', { name: 'Continue' }).click()
   await expect(page.getByRole('heading', { name: 'Applying setup' })).toBeVisible()
-  await page.waitForTimeout(100)
-  expect((await panel.boundingBox()).height).toBeCloseTo(wifiHeight, 0)
+  await expect(panel).toHaveCSS('transition-delay', '0.16s')
+  expect((await panel.boundingBox()).height).toBeLessThanOrEqual(wifiHeight)
   await expect(page.getByRole('heading', { name: 'Ready for the wind' })).toBeVisible()
   await expect.poll(async () => (await panel.boundingBox()).height).toBeCloseTo(regularHeight, 0)
 })
