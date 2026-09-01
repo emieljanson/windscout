@@ -22,6 +22,7 @@ import {
   applyHeroPose,
   calculateSceneComposition,
   configureOrbitControls,
+  createHeroEntranceAnimation,
   createUsbCameraAnimation,
   isWebGLAvailable,
 } from '../configurator/sceneController'
@@ -95,6 +96,8 @@ let accent
 let rimLight
 let usbCable
 let usbCableAnimation
+let heroEntranceAnimation
+let heroEntranceActive = false
 let usbCameraAnimation
 let reduceMotionQuery
 
@@ -147,6 +150,8 @@ function resize() {
   camera.aspect = width / height
   camera.zoom = composition.zoom
   if ((status.value === 'loading' || compositionMode !== nextCompositionMode) && controls && !props.focusUsbConnection) {
+    heroEntranceAnimation?.finish()
+    heroEntranceActive = false
     applyHeroPose(camera, controls, width / height, nextCompositionMode === 'compact')
   }
   compositionMode = nextCompositionMode
@@ -177,7 +182,12 @@ function scheduleViewportResize() {
 
 function renderFrame(timestamp) {
   animationFrame = undefined
-  const cameraAnimating = usbCameraAnimation?.update(timestamp) ?? false
+  const heroEntranceAnimating = heroEntranceActive
+    ? (heroEntranceAnimation?.update(timestamp) ?? false)
+    : false
+  heroEntranceActive = heroEntranceAnimating
+  const usbCameraAnimating = usbCameraAnimation?.update(timestamp) ?? false
+  const cameraAnimating = heroEntranceAnimating || usbCameraAnimating
   const changed = cameraAnimating ? false : (controls?.update() ?? false)
   const cableAnimating = usbCableAnimation?.update(timestamp) ?? false
   if (composer) composer.render()
@@ -217,6 +227,10 @@ function updateUsbCableVisibility(visible) {
 }
 
 function updateSceneFocus() {
+  if (props.focusUsbConnection) {
+    heroEntranceAnimation?.finish()
+    heroEntranceActive = false
+  }
   usbCameraAnimation?.setUsbView(props.focusUsbConnection)
 }
 
@@ -253,6 +267,8 @@ function setCableLabCamera(view) {
 function handleReducedMotionChange(event) {
   if (!event.matches) return
   usbCableAnimation?.finishForReducedMotion()
+  heroEntranceAnimation?.finishForReducedMotion()
+  heroEntranceActive = false
   usbCameraAnimation?.finishForReducedMotion()
 }
 
@@ -403,8 +419,15 @@ async function initialize() {
     controls = new OrbitControls(camera, renderer.domElement)
     configureOrbitControls(controls)
     controls.addEventListener('change', requestRender)
-    resetView()
+    settingsPanel = host.value.closest('.configurator-layout')?.querySelector('.settings-panel')
+    resize()
     usbCameraAnimation = createUsbCameraAnimation({
+      camera,
+      controls,
+      reducedMotion: () => reduceMotionQuery.matches,
+      requestRender,
+    })
+    heroEntranceAnimation = createHeroEntranceAnimation({
       camera,
       controls,
       reducedMotion: () => reduceMotionQuery.matches,
@@ -516,7 +539,6 @@ async function initialize() {
     updateUsbCableVisibility(props.showUsbCable)
     requestRender()
 
-    settingsPanel = host.value.closest('.configurator-layout')?.querySelector('.settings-panel')
     resizeObserver = new ResizeObserver(resize)
     resizeObserver.observe(host.value)
     if (settingsPanel) resizeObserver.observe(settingsPanel)
@@ -525,6 +547,9 @@ async function initialize() {
     resize()
     stopLoadingStatus()
     status.value = 'ready'
+    if (!props.focusUsbConnection && !usbCameraAnimation.isAnimating()) {
+      heroEntranceActive = heroEntranceAnimation.start()
+    }
     emit('ready')
     requestRender()
   } catch (error) {

@@ -247,6 +247,36 @@ test('loads the local CAD model into the constrained 3D scene', async ({ page })
   await expect(page.getByTestId('install-continuation')).toBeVisible()
 })
 
+test('sizes the 3D canvas sharply while the CAD model is still loading', async ({ page }) => {
+  await mockForecastApi(page)
+  await page.setViewportSize({ width: 1200, height: 900 })
+
+  let releaseModel
+  const modelBlocked = new Promise((resolve) => { releaseModel = resolve })
+  await page.route('**/devices/e1002/e1002.glb', async (route) => {
+    await modelBlocked
+    await route.continue()
+  })
+
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  const canvas = page.locator('canvas')
+  await expect(canvas).toBeVisible()
+  await expect(page.locator('.scene-host')).toHaveAttribute('data-scene-status', 'loading')
+
+  const dimensions = await canvas.evaluate((element) => ({
+    width: element.width,
+    height: element.height,
+    clientWidth: element.clientWidth,
+    clientHeight: element.clientHeight,
+    pixelRatio: Math.min(window.devicePixelRatio, 2),
+  }))
+  expect(dimensions.width).toBe(dimensions.clientWidth * dimensions.pixelRatio)
+  expect(dimensions.height).toBe(dimensions.clientHeight * dimensions.pixelRatio)
+
+  releaseModel()
+  await expect(page.locator('[data-scene-status="ready"]')).toBeVisible({ timeout: CONFIGURATOR_READY_TIMEOUT_MS })
+})
+
 test('switches the live preview to another supported spot without a page reload', async ({ page }) => {
   const requests = await mockForecastApi(page)
   await page.setViewportSize({ width: 1200, height: 900 })

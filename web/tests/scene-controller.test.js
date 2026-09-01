@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
   HERO_CAMERA,
+  HERO_ENTRANCE_DURATION_MS,
   NARROW_CAMERA,
   ORBIT_LIMITS,
   USB_CAMERA,
@@ -8,8 +9,10 @@ import {
   applyHeroPose,
   calculateSceneComposition,
   configureOrbitControls,
+  createHeroEntranceAnimation,
   createUsbCameraAnimation,
   easeCameraMovement,
+  springCameraMovement,
 } from '../src/configurator/sceneController'
 
 function vector(values) {
@@ -149,7 +152,9 @@ describe('scene controller', () => {
       requestRender,
     })
 
+    expect(animation.isAnimating()).toBe(false)
     animation.setUsbView(true)
+    expect(animation.isAnimating()).toBe(true)
     animation.update(100)
     animation.update(500)
     const interruptedPosition = camera.position.toArray()
@@ -169,6 +174,7 @@ describe('scene controller', () => {
     animation.update(500)
     animation.update(2_000)
 
+    expect(animation.isAnimating()).toBe(false)
     expect(camera.position.toArray()).toEqual(HERO_CAMERA.position)
     expect(controls.target.toArray()).toEqual(HERO_CAMERA.target)
     expect(controls.enabled).toBe(true)
@@ -181,6 +187,118 @@ describe('scene controller', () => {
     expect(easeCameraMovement(0.25)).toBeGreaterThan(0.5)
     expect(easeCameraMovement(0.5)).toBeGreaterThan(0.8)
     expect(easeCameraMovement(1)).toBe(1)
+  })
+
+  it('uses a critically damped spring that settles without bounce', () => {
+    expect(springCameraMovement(0)).toBe(0)
+
+    const samples = [0, 250, 600, 1_000, 1_400, 1_800].map(springCameraMovement)
+    expect(samples.every((value, index) => index === 0 || value > samples[index - 1])).toBe(true)
+    expect(samples.every((value) => value >= 0 && value < 1)).toBe(true)
+    expect(samples.at(-1)).toBeGreaterThan(0.998)
+  })
+
+  it('enters with a small orbit before settling into the hero camera', () => {
+    const camera = {
+      position: vector(HERO_CAMERA.position),
+      lookAt: vi.fn(),
+    }
+    const controls = {
+      enabled: true,
+      target: vector(HERO_CAMERA.target),
+      update: vi.fn(),
+    }
+    const requestRender = vi.fn()
+    const animation = createHeroEntranceAnimation({
+      camera,
+      controls,
+      reducedMotion: () => false,
+      requestRender,
+    })
+
+    expect(animation.start()).toBe(true)
+    const entrancePosition = camera.position.toArray()
+
+    expect(HERO_ENTRANCE_DURATION_MS).toBe(1800)
+    expect(entrancePosition).not.toEqual(HERO_CAMERA.position)
+    expect(Math.hypot(...entrancePosition)).toBeGreaterThan(Math.hypot(...HERO_CAMERA.position))
+    expect(entrancePosition[1]).toBeGreaterThan(HERO_CAMERA.position[1])
+    expect(controls.enabled).toBe(false)
+
+    animation.update(100)
+    animation.update(1_900)
+
+    expect(camera.position.toArray()).toEqual(HERO_CAMERA.position)
+    expect(controls.target.toArray()).toEqual(HERO_CAMERA.target)
+    expect(controls.enabled).toBe(true)
+    expect(requestRender).toHaveBeenCalled()
+
+    camera.position.set(0.2, 0.1, 0.3)
+    animation.finish()
+    expect(camera.position.toArray()).toEqual([0.2, 0.1, 0.3])
+  })
+
+  it('settles safely when the entrance is interrupted', () => {
+    const camera = { position: vector(HERO_CAMERA.position), lookAt: vi.fn() }
+    const controls = { enabled: true, target: vector(HERO_CAMERA.target), update: vi.fn() }
+    const requestRender = vi.fn()
+    const animation = createHeroEntranceAnimation({
+      camera,
+      controls,
+      reducedMotion: () => false,
+      requestRender,
+    })
+
+    animation.start()
+    animation.update(100)
+    animation.update(500)
+    animation.finish()
+
+    expect(camera.position.toArray()).toEqual(HERO_CAMERA.position)
+    expect(controls.target.toArray()).toEqual(HERO_CAMERA.target)
+    expect(controls.enabled).toBe(true)
+    expect(animation.update(600)).toBe(false)
+  })
+
+  it('settles and redraws when reduced motion is enabled mid-entrance', () => {
+    const camera = { position: vector(HERO_CAMERA.position), lookAt: vi.fn() }
+    const controls = { enabled: true, target: vector(HERO_CAMERA.target), update: vi.fn() }
+    const requestRender = vi.fn()
+    const animation = createHeroEntranceAnimation({
+      camera,
+      controls,
+      reducedMotion: () => false,
+      requestRender,
+    })
+
+    animation.start()
+    animation.update(100)
+    animation.update(500)
+    requestRender.mockClear()
+    animation.finishForReducedMotion()
+
+    expect(camera.position.toArray()).toEqual(HERO_CAMERA.position)
+    expect(controls.target.toArray()).toEqual(HERO_CAMERA.target)
+    expect(controls.enabled).toBe(true)
+    expect(requestRender).toHaveBeenCalledOnce()
+    expect(animation.update(600)).toBe(false)
+  })
+
+  it('keeps the hero camera still when reduced motion is requested', () => {
+    const camera = { position: vector(HERO_CAMERA.position), lookAt: vi.fn() }
+    const controls = { enabled: true, target: vector(HERO_CAMERA.target), update: vi.fn() }
+    const animation = createHeroEntranceAnimation({
+      camera,
+      controls,
+      reducedMotion: () => true,
+      requestRender: vi.fn(),
+    })
+
+    expect(animation.start()).toBe(false)
+
+    expect(camera.position.toArray()).toEqual(HERO_CAMERA.position)
+    expect(controls.enabled).toBe(true)
+    expect(animation.update(100)).toBe(false)
   })
 
   it('uses an immediate position change when reduced motion is requested', () => {

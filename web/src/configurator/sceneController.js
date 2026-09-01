@@ -23,6 +23,12 @@ export const CABLE_CAMERA = Object.freeze({
 })
 
 export const USB_CAMERA_DURATION_MS = 1500
+export const HERO_ENTRANCE_DURATION_MS = 1800
+
+const HERO_ENTRANCE_AZIMUTH_OFFSET = (Math.PI / 180) * 10
+const HERO_ENTRANCE_POLAR_OFFSET = (Math.PI / 180) * 5
+const HERO_ENTRANCE_DISTANCE_SCALE = 1.06
+const HERO_ENTRANCE_RESPONSE = 5
 
 const CAMERA_VIEWS = Object.freeze({
   cable: CABLE_CAMERA,
@@ -135,6 +141,14 @@ export function easeCameraMovement(progress) {
   return cubicBezierCoordinate(time, 1, 1)
 }
 
+// A critically damped response starts at rest and settles without ever
+// crossing the final camera position.
+export function springCameraMovement(elapsedMs) {
+  const elapsedSeconds = Math.max(elapsedMs, 0) / 1000
+  return 1 - (1 + HERO_ENTRANCE_RESPONSE * elapsedSeconds)
+    * Math.exp(-HERO_ENTRANCE_RESPONSE * elapsedSeconds)
+}
+
 function poseDistance(from, to) {
   return Math.max(
     Math.hypot(...from.position.map((value, index) => value - to.position[index])),
@@ -173,6 +187,77 @@ function applyOrbitInterpolation(camera, controls, from, to, startOrbit, targetO
     targetZ + horizontalRadius * Math.cos(azimuth),
   )
   camera.lookAt(targetX, targetY, targetZ)
+}
+
+export function createHeroEntranceAnimation({
+  camera,
+  controls,
+  reducedMotion,
+  requestRender,
+}) {
+  let targetPose
+  let startOrbit
+  let targetOrbit
+  let animationStart
+  let animating = false
+
+  function finish() {
+    if (!animating) return
+    applyPose(camera, controls, targetPose)
+    animating = false
+    animationStart = undefined
+    controls.enabled = true
+    controls.update()
+  }
+
+  function start() {
+    targetPose = capturePose(camera, controls)
+    targetOrbit = orbitForPose(targetPose)
+    startOrbit = {
+      ...targetOrbit,
+      azimuth: targetOrbit.azimuth - HERO_ENTRANCE_AZIMUTH_OFFSET,
+      polar: targetOrbit.polar - HERO_ENTRANCE_POLAR_OFFSET,
+      radius: targetOrbit.radius * HERO_ENTRANCE_DISTANCE_SCALE,
+    }
+    if (reducedMotion()) {
+      requestRender()
+      return false
+    }
+    applyOrbitInterpolation(camera, controls, targetPose, targetPose, startOrbit, targetOrbit, 0)
+    animationStart = undefined
+    animating = true
+    controls.enabled = false
+    requestRender()
+    return true
+  }
+
+  function update(timestamp) {
+    if (!animating) return false
+    if (animationStart === undefined) animationStart = timestamp
+    const elapsed = timestamp - animationStart
+    applyOrbitInterpolation(
+      camera,
+      controls,
+      targetPose,
+      targetPose,
+      startOrbit,
+      targetOrbit,
+      springCameraMovement(elapsed),
+    )
+    if (elapsed >= HERO_ENTRANCE_DURATION_MS) {
+      finish()
+      return false
+    }
+    return true
+  }
+
+  function finishForReducedMotion() {
+    if (!animating) return
+    finish()
+    requestRender()
+  }
+
+  return { finish, finishForReducedMotion, start, update }
 }
 
 export function createUsbCameraAnimation({
@@ -263,7 +348,13 @@ export function createUsbCameraAnimation({
     requestRender()
   }
 
-  return { finishForReducedMotion, setCableView, setUsbView, update }
+  return {
+    finishForReducedMotion,
+    isAnimating: () => animating,
+    setCableView,
+    setUsbView,
+    update,
+  }
 }
 
 export function isWebGLAvailable() {
