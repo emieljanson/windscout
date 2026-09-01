@@ -18,7 +18,7 @@ function fakeSession(initial = { phase: 'ready', progress: 0, safeToDisconnect: 
   let listener
   const session = {
     subscribe: vi.fn((next) => { listener = next; next(initial); return () => {} }),
-    connect: vi.fn(), confirmDevice: vi.fn(), run: vi.fn(), reconnect: vi.fn(),
+    connect: vi.fn(), confirmDevice: vi.fn(), reconnect: vi.fn(),
     scanNetworks: vi.fn().mockResolvedValue([]), submitWifi: vi.fn(), cancel: vi.fn(),
     emit(next) { listener(next) },
   }
@@ -44,8 +44,8 @@ describe('installer inspector panel', () => {
     expect(icon.findAll('.installer-state-icon__cell')).toHaveLength(81)
     expect(icon.element.closest('.installer-stage')).toBeNull()
 
-    session.emit({ phase: 'review', progress: 0, safeToDisconnect: true, error: null, action: { action: 'install' } })
-    await vi.waitFor(() => expect(wrapper.get('[data-testid="installer-state-icon"]').attributes('data-phase')).toBe('review'))
+    session.emit({ phase: 'downloading', progress: 0, safeToDisconnect: true, error: null, action: { action: 'install' } })
+    await vi.waitFor(() => expect(wrapper.get('[data-testid="installer-state-icon"]').attributes('data-phase')).toBe('downloading'))
 
     expect(wrapper.get('[data-testid="installer-state-icon"]').element).toBe(element)
   })
@@ -112,12 +112,14 @@ describe('installer inspector panel', () => {
     expect(wrapper.get('[data-testid="installer-state-icon"]').attributes('data-phase')).toBe('checking-device')
   })
 
-  it('frames reconnecting as selecting the reTerminal again', () => {
+  it('offers manual USB selection only after automatic reconnect falls back', () => {
     const session = fakeSession({ phase: 'reconnect', progress: 0.78, safeToDisconnect: true, error: null })
     mountPanel(session)
 
     expect(wrapper.get('h2').text()).toBe('Select your reTerminal again')
-    expect(wrapper.text()).toContain('Keep the USB cable connected')
+    expect(wrapper.text()).toContain('could not reconnect')
+    expect(wrapper.text()).not.toContain('could not reconnect automatically')
+    expect(wrapper.text()).toContain('Keep the cable connected')
     expect(wrapper.get('.installer-primary').text()).toBe('Choose USB device')
     expect(wrapper.text()).not.toContain('Reconnect device')
   })
@@ -144,19 +146,19 @@ describe('installer inspector panel', () => {
     expect(session.confirmDevice).toHaveBeenCalledOnce()
   })
 
-  it('uses the persistent back control instead of a duplicate cancel action', () => {
+  it('does not show a redundant review action while known-device work starts', () => {
     const session = fakeSession({
-      phase: 'review',
-      progress: 0,
+      phase: 'downloading',
+      progress: 0.05,
       safeToDisconnect: true,
       error: null,
-      action: { action: 'install' },
+      action: { action: 'update-firmware' },
     })
     mountPanel(session)
 
     expect(wrapper.get('.installer-back').exists()).toBe(true)
-    expect(wrapper.find('.installer-secondary').exists()).toBe(false)
-    expect(wrapper.get('.installer-primary').text()).toBe('Install Windscout')
+    expect(wrapper.get('h2').text()).toBe('Preparing firmware')
+    expect(wrapper.find('.installer-primary').exists()).toBe(false)
   })
 
   it('reuses the inspector select for scanned Wi-Fi networks', async () => {
@@ -318,6 +320,7 @@ describe('installer inspector panel', () => {
     const safe = fakeSession()
     mountPanel(safe)
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await Promise.resolve()
     expect(wrapper.emitted('close')).toHaveLength(1)
     wrapper.unmount()
 

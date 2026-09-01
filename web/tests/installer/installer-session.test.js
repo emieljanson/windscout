@@ -15,6 +15,7 @@ function appProtocol(state = {}) {
         status: 'ok', boardId: release.manifest.boardId, chipFamily: 'ESP32-S3',
         firmwareVersion: state.firmwareVersion ?? '2.0.0', protocolVersion: 1,
         configurationVersion: state.configurationVersion ?? CONFIGURATION_VERSION,
+        firmwareLayoutVersion: state.firmwareLayoutVersion,
         capabilities: ['state', 'wifi', 'configuration', 'render-verification', 'clock-sync'],
       }
       if (command === 'get_state') return { configurationDigest: activeDigest, wifi: state.wifiHealthy === false ? 'disconnected' : 'connected', render: 'valid' }
@@ -118,7 +119,6 @@ describe('installer session', () => {
     const session = createInstallerSession({ configuration, requestPort: async () => ({}), releaseLoader: async () => release, protocolFactory: () => protocol })
     await session.connect()
     expect(session.getState().action.action).toBe('up-to-date')
-    await session.run()
     expect(session.getState().phase).toBe('complete')
     expect(protocol.request).not.toHaveBeenCalledWith('stage_configuration', expect.anything())
   })
@@ -150,7 +150,6 @@ describe('installer session', () => {
     })
 
     await session.connect()
-    await session.run()
 
     expect(waitFor).toHaveBeenCalledTimes(2)
     expect(session.getState()).toMatchObject({ phase: 'complete', progress: 1 })
@@ -161,13 +160,164 @@ describe('installer session', () => {
     const protocol = appProtocol({ digest: 'old' })
     const partsLoader = vi.fn()
     const session = createInstallerSession({ configuration, requestPort: async () => ({}), releaseLoader: async () => release, partsLoader, protocolFactory: () => protocol })
-    await session.connect(); await session.run()
+    await session.connect()
     expect(partsLoader).not.toHaveBeenCalled()
     expect(protocol.request).toHaveBeenCalledWith('stage_configuration', { configuration })
     expect(session.getState().phase).toBe('complete')
   })
 
-  it('recognizes configuration version 2 and selects a preserving firmware update', async () => {
+  it('reuses a recognized granted device when the installer is opened again in the same tab', async () => {
+    const selectedPort = { id: 'recognized-port' }
+    const serial = { getPorts: vi.fn(async () => [selectedPort]) }
+    const navigatorApi = { serial }
+    const firstRequestPort = vi.fn(async () => selectedPort)
+    const firstSession = createInstallerSession({
+      configuration,
+      navigatorApi,
+      requestPort: firstRequestPort,
+      releaseLoader: async () => release,
+      protocolFactory: () => appProtocol(),
+    })
+
+    await firstSession.connect()
+    await firstSession.cancel()
+
+    const secondRequestPort = vi.fn(async () => selectedPort)
+    const secondSession = createInstallerSession({
+      configuration,
+      navigatorApi,
+      requestPort: secondRequestPort,
+      releaseLoader: async () => release,
+      protocolFactory: () => appProtocol(),
+    })
+
+    await secondSession.connect()
+
+    expect(firstRequestPort).toHaveBeenCalledOnce()
+    expect(serial.getPorts).toHaveBeenCalledOnce()
+    expect(secondRequestPort).not.toHaveBeenCalled()
+    expect(secondSession.getState().phase).toBe('complete')
+  })
+
+  it('does not open the chooser after cancelling a pending remembered-device lookup', async () => {
+    const selectedPort = { id: 'recognized-port' }
+    let finishLookup
+    const serial = { getPorts: vi.fn() }
+    const navigatorApi = { serial }
+    const firstSession = createInstallerSession({
+      configuration,
+      navigatorApi,
+      requestPort: async () => selectedPort,
+      releaseLoader: async () => release,
+      protocolFactory: () => appProtocol(),
+    })
+    await firstSession.connect()
+    await firstSession.cancel()
+
+    serial.getPorts.mockImplementation(() => new Promise((resolve) => { finishLookup = resolve }))
+    const requestPort = vi.fn(async () => null)
+    const secondSession = createInstallerSession({ configuration, navigatorApi, requestPort })
+    const connecting = secondSession.connect()
+    await vi.waitFor(() => expect(finishLookup).toBeTypeOf('function'))
+
+    await secondSession.cancel()
+    finishLookup([])
+    await connecting
+
+    expect(requestPort).not.toHaveBeenCalled()
+    expect(secondSession.getState().phase).toBe('ready')
+  })
+
+  it('falls back to the chooser when the remembered device permission is no longer granted', async () => {
+    const selectedPort = { id: 'recognized-port' }
+    const serial = { getPorts: vi.fn(async () => []) }
+    const navigatorApi = { serial }
+    const firstSession = createInstallerSession({
+      configuration,
+      navigatorApi,
+      requestPort: async () => selectedPort,
+      releaseLoader: async () => release,
+      protocolFactory: () => appProtocol(),
+    })
+    await firstSession.connect()
+    await firstSession.cancel()
+
+    const secondRequestPort = vi.fn(async () => null)
+    const secondSession = createInstallerSession({ configuration, navigatorApi, requestPort: secondRequestPort })
+    await secondSession.connect()
+
+    expect(serial.getPorts).toHaveBeenCalledOnce()
+    expect(secondRequestPort).toHaveBeenCalledOnce()
+    expect(secondSession.getState().phase).toBe('ready')
+  })
+
+  it('falls back to the chooser when a remembered granted port is stale', async () => {
+    const stalePort = { id: 'stale-port' }
+    const freshPort = { id: 'fresh-port' }
+    const serial = { getPorts: vi.fn(async () => [stalePort]) }
+    const navigatorApi = { serial }
+    const firstSession = createInstallerSession({
+      configuration,
+      navigatorApi,
+      requestPort: async () => stalePort,
+      releaseLoader: async () => release,
+      protocolFactory: () => appProtocol(),
+    })
+    await firstSession.connect()
+    await firstSession.cancel()
+
+    const staleProtocol = {
+      open: vi.fn().mockRejectedValue(new Error('stale port')),
+      close: vi.fn(),
+    }
+    const requestPort = vi.fn(async () => freshPort)
+    const secondSession = createInstallerSession({
+      configuration,
+      navigatorApi,
+      requestPort,
+      releaseLoader: async () => release,
+      protocolFactory: vi.fn()
+        .mockReturnValueOnce(staleProtocol)
+        .mockReturnValueOnce(appProtocol()),
+      esptool: { identify: vi.fn().mockRejectedValue(new Error('device disconnected')) },
+    })
+
+    await secondSession.connect()
+
+    expect(requestPort).toHaveBeenCalledOnce()
+    expect(secondSession.getState().phase).toBe('complete')
+  })
+
+  it('does not remember an unverified ESP32-S3 as a supported reTerminal', async () => {
+    const selectedPort = { id: 'unverified-port' }
+    const serial = { getPorts: vi.fn(async () => [selectedPort]) }
+    const navigatorApi = { serial }
+    const bootloaderProtocol = { open: vi.fn().mockRejectedValue(new Error('no app')), close: vi.fn() }
+    const esptool = {
+      identify: vi.fn(async () => ({ chipFamily: 'ESP32-S3', loader: {}, transport: { disconnect: vi.fn() } })),
+      flash: vi.fn(),
+    }
+    const firstSession = createInstallerSession({
+      configuration,
+      navigatorApi,
+      requestPort: async () => selectedPort,
+      releaseLoader: async () => release,
+      protocolFactory: () => bootloaderProtocol,
+      esptool,
+    })
+    await firstSession.connect()
+    await firstSession.cancel()
+
+    const secondRequestPort = vi.fn(async () => null)
+    const secondSession = createInstallerSession({ configuration, navigatorApi, requestPort: secondRequestPort })
+    await secondSession.connect()
+
+    expect(serial.getPorts).not.toHaveBeenCalled()
+    expect(secondRequestPort).toHaveBeenCalledOnce()
+    expect(secondSession.getState().phase).toBe('ready')
+  })
+
+  it('starts a preserving firmware update without a second confirmation', async () => {
     const protocol = appProtocol({ configurationVersion: 2 })
     const partsLoader = vi.fn(async () => ({ eraseFlash: false, parts: [{ size: 1 }] }))
     const esptool = {
@@ -185,13 +335,34 @@ describe('installer session', () => {
 
     await session.connect()
 
-    expect(session.getState()).toMatchObject({
-      phase: 'review',
-      action: { action: 'update-firmware', reason: 'configuration-version-outdated' },
+    expect(session.getState().action).toEqual({
+      action: 'update-firmware', reason: 'configuration-version-outdated',
     })
-    await session.run()
-
     expect(partsLoader).toHaveBeenCalledWith(expect.objectContaining({ mode: 'preservingUpdate' }))
+    expect(esptool.flash).toHaveBeenCalledOnce()
+    expect(session.getState().phase).toBe('reconnect')
+  })
+
+  it('repairs a recognized Windscout without a redundant confirmation', async () => {
+    const protocol = appProtocol({ firmwareLayoutVersion: 2 })
+    const partsLoader = vi.fn(async () => ({ eraseFlash: true, parts: [] }))
+    const esptool = {
+      identify: vi.fn(async () => ({ chipFamily: 'ESP32-S3', loader: {}, transport: {} })),
+      flash: vi.fn(),
+    }
+    const session = createInstallerSession({
+      configuration,
+      requestPort: async () => ({}),
+      releaseLoader: async () => release,
+      partsLoader,
+      protocolFactory: () => protocol,
+      esptool,
+    })
+
+    await session.connect()
+
+    expect(session.getState().action).toEqual({ action: 'reinstall', reason: 'flash-layout-changed' })
+    expect(partsLoader).toHaveBeenCalledWith(expect.objectContaining({ mode: 'cleanInstall' }))
     expect(esptool.flash).toHaveBeenCalledOnce()
     expect(session.getState().phase).toBe('reconnect')
   })
@@ -207,7 +378,6 @@ describe('installer session', () => {
     })
 
     await session.connect()
-    await session.run()
 
     expect(protocol.request).toHaveBeenCalledWith('begin', { unixTime: 1787932800 })
     const beginOrder = protocol.request.mock.invocationCallOrder[
@@ -234,7 +404,6 @@ describe('installer session', () => {
     })
 
     await session.connect()
-    await session.run()
 
     expect(session.getState()).toMatchObject({ phase: 'error' })
     expect(protocol.request).not.toHaveBeenCalledWith('stage_configuration', expect.anything())
@@ -251,7 +420,6 @@ describe('installer session', () => {
     })
 
     await session.connect()
-    await session.run()
 
     expect(session.getState()).toMatchObject({ phase: 'error' })
     expect(protocol.request).not.toHaveBeenCalledWith('begin', expect.anything())
@@ -293,7 +461,6 @@ describe('installer session', () => {
     })
 
     await session.connect()
-    await session.run()
 
     expect(waitFor).toHaveBeenCalledTimes(3)
     expect(protocol.request).toHaveBeenCalledWith('apply_configuration', undefined, 120_000)
@@ -320,7 +487,6 @@ describe('installer session', () => {
     })
 
     await session.connect()
-    await session.run()
     await session.submitWifi({ ssid: 'Home', password: 'secret' })
 
     expect(sentCredentials).toEqual([{ ssid: 'Home', password: 'secret' }])
@@ -350,7 +516,6 @@ describe('installer session', () => {
     })
 
     await session.connect()
-    await session.run()
     await session.submitWifi({ ssid: 'Home', password: 'secret' })
     await vi.waitFor(() => expect(reporter.report).toHaveBeenCalledOnce())
 
@@ -393,7 +558,6 @@ describe('installer session', () => {
     })
 
     await session.connect()
-    await session.run()
     await expect(session.submitWifi({ ssid: 'Home', password: 'secret' })).resolves.toMatchObject({ phase: 'wifi' })
     await vi.waitFor(() => expect(reporter.report).toHaveBeenCalledOnce())
   })
@@ -423,7 +587,6 @@ describe('installer session', () => {
     })
 
     await session.connect()
-    await session.run()
     await session.submitWifi({ ssid: 'Home', password: 'wrong' })
     await vi.waitFor(() => expect(session.getState().diagnosticStatus).toBe('sending'))
     await session.submitWifi({ ssid: 'Home', password: 'right' })
@@ -451,7 +614,6 @@ describe('installer session', () => {
     })
 
     await session.connect()
-    await session.run()
     await expect(session.scanNetworks()).rejects.toMatchObject({ code: INSTALLER_ERROR_CODES.WIFI_FAILED })
     await vi.waitFor(() => expect(reporter.report).toHaveBeenCalledOnce())
 
@@ -483,7 +645,6 @@ describe('installer session', () => {
     })
 
     await session.connect()
-    await session.run()
     const scanning = session.scanNetworks()
     await session.submitWifi({ ssid: 'Home', password: 'secret' })
     expect(session.getState().phase).toBe('complete')
@@ -517,7 +678,6 @@ describe('installer session', () => {
     })
 
     await session.connect()
-    await session.run()
     await session.submitWifi({ ssid: 'Home', password: 'secret' })
     expect(session.getState().phase).toBe('reconnect')
 
@@ -568,7 +728,6 @@ describe('installer session', () => {
     })
 
     await session.connect()
-    await session.run()
     await session.submitWifi({ ssid: 'Home', password: 'secret' })
     expect(session.getState().phase).toBe('reconnect')
 
@@ -661,8 +820,7 @@ describe('installer session', () => {
       protocolFactory: () => protocol,
     })
 
-    await session.connect()
-    const running = session.run()
+    const running = session.connect()
     await vi.waitFor(() => expect(finishStaging).toBeTypeOf('function'))
     await session.cancel()
     finishStaging({ status: 'configuration_staged' })
@@ -687,8 +845,7 @@ describe('installer session', () => {
       esptool,
     })
 
-    await session.connect()
-    const running = session.run()
+    const running = session.connect()
     await vi.waitFor(() => expect(session.getState().phase).toBe('installing-firmware'))
 
     await session.cancel()
@@ -709,11 +866,10 @@ describe('installer session', () => {
     await session.cancel()
     await session.connect()
     expect(session.getState().phase).toBe('confirm-device')
-    await session.run()
     expect(esptool.flash).not.toHaveBeenCalled()
   })
 
-  it('closes app mode before a firmware update and reuses a granted port after restart', async () => {
+  it('waits for Chrome to expose and automatically reuse the granted port after restart', async () => {
     const oldProtocol = appProtocol({ firmwareVersion: '1.0.0' })
     const restartedProtocol = appProtocol()
     const protocolFactory = vi.fn()
@@ -723,25 +879,149 @@ describe('installer session', () => {
       identify: vi.fn(async () => ({ chipFamily: 'ESP32-S3', loader: {}, transport: {} })),
       flash: vi.fn(),
     }
-    const requestPort = vi.fn(async () => ({ id: 'initial-port' }))
-    requestPort.mockResolvedValueOnce({ id: 'initial-port' }).mockResolvedValueOnce({ id: 'restarted-port' })
+    const initialPort = { id: 'initial-port' }
+    const requestPort = vi.fn(async () => initialPort)
+    const getPorts = vi.fn()
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([initialPort])
+    const navigatorApi = { serial: { getPorts } }
+    const waitFor = vi.fn().mockResolvedValue(undefined)
     const session = createInstallerSession({
       configuration,
+      navigatorApi,
       requestPort,
       releaseLoader: async () => release,
       partsLoader: async () => ({ eraseFlash: false, parts: [] }),
       protocolFactory,
       esptool,
+      waitFor,
     })
 
     await session.connect()
     expect(session.getState().action.action).toBe('update-firmware')
-    await session.run()
     expect(oldProtocol.close).toHaveBeenCalledBefore(esptool.identify)
-    expect(session.getState().phase).toBe('reconnect')
-    await session.reconnect()
-    expect(requestPort).toHaveBeenCalledTimes(2)
+    expect(getPorts).toHaveBeenCalledTimes(2)
+    expect(waitFor).toHaveBeenCalledWith(500)
+    expect(requestPort).toHaveBeenCalledOnce()
     expect(session.getState().phase).toBe('complete')
+  })
+
+  it('offers manual reconnection when Chrome never exposes the granted port again', async () => {
+    const oldProtocol = appProtocol({ firmwareVersion: '1.0.0' })
+    const initialPort = { id: 'initial-port' }
+    const getPorts = vi.fn(async () => [])
+    const waitFor = vi.fn().mockResolvedValue(undefined)
+    const session = createInstallerSession({
+      configuration,
+      navigatorApi: { serial: { getPorts } },
+      requestPort: async () => initialPort,
+      releaseLoader: async () => release,
+      partsLoader: async () => ({ eraseFlash: false, parts: [] }),
+      protocolFactory: () => oldProtocol,
+      esptool: {
+        identify: vi.fn(async () => ({ chipFamily: 'ESP32-S3', loader: {}, transport: {} })),
+        flash: vi.fn(),
+      },
+      waitFor,
+    })
+
+    await session.connect()
+
+    expect(getPorts).toHaveBeenCalledTimes(20)
+    expect(session.getState()).toMatchObject({ phase: 'reconnect', safeToDisconnect: true })
+  })
+
+  it('offers manual reconnection when granted-port discovery stalls', async () => {
+    const oldProtocol = appProtocol({ firmwareVersion: '1.0.0' })
+    const initialPort = { id: 'initial-port' }
+    const reporter = { report: vi.fn().mockResolvedValue({ status: 'failed' }) }
+    const session = createInstallerSession({
+      configuration,
+      navigatorApi: { serial: { getPorts: vi.fn(() => new Promise(() => {})) } },
+      requestPort: async () => initialPort,
+      releaseLoader: async () => release,
+      partsLoader: async () => ({ eraseFlash: false, parts: [] }),
+      protocolFactory: () => oldProtocol,
+      esptool: {
+        identify: vi.fn(async () => ({ chipFamily: 'ESP32-S3', loader: {}, transport: {} })),
+        flash: vi.fn(),
+      },
+      portDiscoveryTimeoutMs: 0,
+      reporter,
+    })
+
+    await session.connect()
+
+    expect(session.getState()).toMatchObject({
+      phase: 'reconnect',
+      safeToDisconnect: true,
+      error: { code: INSTALLER_ERROR_CODES.CONNECTION_LOST },
+    })
+    expect(reporter.report).toHaveBeenCalledOnce()
+  })
+
+  it('closes an in-progress automatic reconnect probe when cancelled', async () => {
+    let finishHello
+    const oldProtocol = appProtocol({ firmwareVersion: '1.0.0' })
+    const restartedProtocol = {
+      open: vi.fn(),
+      close: vi.fn(),
+      request: vi.fn((command) => command === 'hello'
+        ? new Promise((resolve) => { finishHello = resolve })
+        : Promise.resolve({})),
+    }
+    const protocolFactory = vi.fn()
+      .mockReturnValueOnce(oldProtocol)
+      .mockReturnValueOnce(restartedProtocol)
+    const initialPort = { id: 'initial-port' }
+    const session = createInstallerSession({
+      configuration,
+      navigatorApi: { serial: { getPorts: vi.fn(async () => [initialPort]) } },
+      requestPort: async () => initialPort,
+      releaseLoader: async () => release,
+      partsLoader: async () => ({ eraseFlash: false, parts: [] }),
+      protocolFactory,
+      esptool: {
+        identify: vi.fn(async () => ({ chipFamily: 'ESP32-S3', loader: {}, transport: {} })),
+        flash: vi.fn(),
+      },
+    })
+
+    const connecting = session.connect()
+    await vi.waitFor(() => expect(finishHello).toBeTypeOf('function'))
+
+    await session.cancel()
+
+    expect(restartedProtocol.close).toHaveBeenCalled()
+    expect(session.getState().phase).toBe('ready')
+    finishHello({})
+    await connecting
+    expect(session.getState().phase).toBe('ready')
+  })
+
+  it('makes concurrent cancellations wait for the same USB teardown', async () => {
+    let finishClose
+    const protocol = appProtocol()
+    protocol.close.mockImplementation(() => new Promise((resolve) => { finishClose = resolve }))
+    const session = createInstallerSession({
+      configuration,
+      requestPort: async () => ({}),
+      releaseLoader: async () => release,
+      protocolFactory: () => protocol,
+    })
+    await session.connect()
+
+    let secondCancellationFinished = false
+    const firstCancellation = session.cancel()
+    const secondCancellation = session.cancel().then(() => { secondCancellationFinished = true })
+    await vi.waitFor(() => expect(finishClose).toBeTypeOf('function'))
+
+    expect(secondCancellationFinished).toBe(false)
+    finishClose()
+    await Promise.all([firstCancellation, secondCancellation])
+
+    expect(protocol.close).toHaveBeenCalledOnce()
+    expect(session.getState().phase).toBe('ready')
   })
 
   it('waits for a freshly written device to boot instead of starting the firmware install again', async () => {

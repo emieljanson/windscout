@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { createInstallerDemoSession, INSTALLER_DEMO_FIRMWARE_DURATION_MS } from '../../src/installer/createInstallerDemoSession'
+import {
+  createInstallerDemoSession,
+  INSTALLER_DEMO_FIRMWARE_DURATION_MS,
+  INSTALLER_DEMO_RECONNECTING_DURATION_MS,
+} from '../../src/installer/createInstallerDemoSession'
 
 describe('installer demo session', () => {
   const immediateClock = () => {
@@ -24,9 +28,7 @@ describe('installer demo session', () => {
 
     await session.confirmDevice()
     const distinctInstallPhases = phases.filter((phase, index) => phase !== phases[index - 1])
-    expect(distinctInstallPhases.slice(-3)).toEqual(['downloading', 'installing-firmware', 'reconnect'])
-
-    await session.reconnect()
+    expect(distinctInstallPhases.slice(-4)).toEqual(['downloading', 'installing-firmware', 'reconnecting', 'wifi'])
     expect(phases.at(-1)).toBe('wifi')
     await expect(session.scanNetworks()).resolves.toContainEqual(expect.objectContaining({ ssid: 'Windscout Studio' }))
     await expect(session.scanNetworks()).resolves.toContainEqual(expect.objectContaining({
@@ -58,7 +60,7 @@ describe('installer demo session', () => {
 
     expect(INSTALLER_DEMO_FIRMWARE_DURATION_MS).toBe(3000)
     expect(waits.reduce((total, duration) => total + duration, 0))
-      .toBeCloseTo(650 + INSTALLER_DEMO_FIRMWARE_DURATION_MS)
+      .toBe(650 + INSTALLER_DEMO_FIRMWARE_DURATION_MS + INSTALLER_DEMO_RECONNECTING_DURATION_MS)
     expect(firmwareProgress.length).toBeGreaterThan(20)
     expect(firmwareProgress.at(0)).toBeCloseTo(0.18)
     expect(firmwareProgress.at(-1)).toBeCloseTo(0.78)

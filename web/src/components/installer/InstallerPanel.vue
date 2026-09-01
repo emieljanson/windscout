@@ -50,15 +50,6 @@ const progressCopy = computed(() => ({
   verifying: ['Checking the forecast', 'Windscout is confirming Wi-Fi, configuration and the first rendered forecast.'],
 }[state.value.phase] ?? ['Working…', 'Windscout is continuing setup.']))
 
-const review = computed(() => {
-  const action = state.value.action?.action
-  if (action === 'up-to-date') return { title: 'Windscout is up to date', body: 'Firmware and setup already match this configuration.', button: 'Done' }
-  if (action === 'update-configuration') return { title: 'Update this setup', body: 'Only the selected spot and display options will change. Firmware will not be rewritten.', button: 'Update Windscout' }
-  if (action === 'update-firmware') return { title: 'Update Windscout', body: 'Firmware will be updated while saved Wi-Fi and setup data stay in place.', button: 'Update Windscout' }
-  if (action === 'reinstall') return { title: 'Repair Windscout', body: 'The firmware appears incomplete. A clean reinstall will replace its current setup.', button: 'Reinstall Windscout' }
-  return { title: 'Install Windscout', body: 'A clean install will replace software and saved setup on this device.', button: 'Install Windscout' }
-})
-
 async function focusStep() {
   await nextTick()
   const target = activeView.value?.querySelector('[data-autofocus]') ??
@@ -124,15 +115,15 @@ async function submitWifi(credentials) {
   wifiBusy.value = false
 }
 
-function close() {
+async function close() {
   if (critical.value) return
-  void session.cancel()
+  await session.cancel()
   emit('close')
 }
 
 function handleKeydown(event) {
   root.value?.querySelector('.is-initial-focus')?.classList.remove('is-initial-focus')
-  if (event.key === 'Escape' && !critical.value) close()
+  if (event.key === 'Escape' && !critical.value) void close()
 }
 
 onMounted(() => { document.addEventListener('keydown', handleKeydown); void focusStep() })
@@ -185,20 +176,10 @@ onBeforeUnmount(() => { toast.dismiss('installer-error'); toast.dismiss('install
             </div>
           </div>
 
-          <div v-else-if="state.phase === 'review'" class="installer-step">
-            <div class="installer-step__copy">
-              <h2 id="installer-title">{{ review.title }}</h2>
-              <p>{{ review.body }}</p>
-            </div>
-            <div class="installer-actions">
-              <button data-autofocus class="installer-primary" type="button" @click="session.run()">{{ review.button }}</button>
-            </div>
-          </div>
-
           <div v-else-if="state.phase === 'reconnect'" class="installer-step">
             <div class="installer-step__copy">
               <h2 id="installer-title">Select your reTerminal again</h2>
-              <p>Keep the USB cable connected. Select your reTerminal again in the browser window to finish setup.</p>
+              <p>Windscout could not reconnect. Keep the cable connected and select it again to finish setup.</p>
             </div>
             <div class="installer-actions">
               <p v-if="state.error" class="installer-message is-error">{{ state.error.message }}</p>

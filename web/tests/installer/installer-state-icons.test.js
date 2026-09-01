@@ -31,7 +31,6 @@ const phases = [
   'choosing-device',
   'checking-device',
   'confirm-device',
-  'review',
   'downloading',
   'installing-firmware',
   'reconnecting',

@@ -5,7 +5,7 @@ import { asInstallerError, InstallerError, INSTALLER_ERROR_CODES } from './insta
 import { createEsptoolAdapter } from './esptoolAdapter'
 import { createInstallerDiagnostics } from './installerDiagnostics'
 import { installerSentryReporter, isInstallerDiagnosticReference } from './sentryReporter'
-import { createSerialProtocol, requestInstallerPort } from './serialPortAdapter'
+import { createSerialProtocol, findGrantedInstallerPort, requestInstallerPort } from './serialPortAdapter'
 
 const INITIAL_STATE = Object.freeze({
   phase: 'ready', progress: 0, safeToDisconnect: true, error: null, action: null,
@@ -20,11 +20,15 @@ const WIFI_TEST_REQUEST_TIMEOUT_MS = 105000
 // during that work even though the apply task is still healthy, so keep this
 // individual request alive for the same generous production window.
 const APPLY_STATUS_REQUEST_TIMEOUT_MS = 120000
-const POST_FLASH_BOOT_ATTEMPTS = 20
-const POST_FLASH_BOOT_RETRY_MS = 500
+const PORT_DISCOVERY_TIMEOUT_MS = 2000
+const POST_FLASH_PORT_DISCOVERY_ATTEMPTS = 20
+const POST_FLASH_PORT_DISCOVERY_RETRY_MS = 500
+const POST_FLASH_APP_BOOT_ATTEMPTS = 20
+const POST_FLASH_APP_BOOT_RETRY_MS = 500
 const SAVED_WIFI_CONNECT_ATTEMPTS = 12
 const SAVED_WIFI_CONNECT_RETRY_MS = 500
 const MIN_UPGRADEABLE_CONFIGURATION_VERSION = 2
+const rememberedInstallerPorts = new WeakMap()
 let diagnosticSessionSequence = 0
 
 function validHello(hello) {
@@ -47,6 +51,7 @@ export function createInstallerSession({
   esptool = createEsptoolAdapter({ diagnostics }),
   requestPort = () => requestInstallerPort(navigatorApi),
   waitFor = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
+  portDiscoveryTimeoutMs = PORT_DISCOVERY_TIMEOUT_MS,
   now = () => Date.now(),
 } = {}) {
   let state = { ...INITIAL_STATE }
@@ -61,9 +66,11 @@ export function createInstallerSession({
   let failureOccurrence = 0
   let latestDiagnosticOccurrence = null
   let awaitingWrittenFirmware = false
+  let cancellationPromise = null
   const diagnosticSession = ++diagnosticSessionSequence
   const pendingFailures = []
   const listeners = new Set()
+  const probingProtocols = new Set()
 
   try {
     diagnostics.registerSensitiveValues?.([
@@ -183,11 +190,14 @@ export function createInstallerSession({
   async function releaseConnections({ clearDevice = false } = {}) {
     const activeProtocol = protocol
     const bootloaderTransport = device?.bootloader?.transport
+    const activeProbes = [...probingProtocols]
     protocol = null
+    probingProtocols.clear()
     if (clearDevice) device = null
     await Promise.allSettled([
       activeProtocol?.close(),
       bootloaderTransport?.disconnect?.(),
+      ...activeProbes.map((candidate) => candidate.close()),
     ].filter(Boolean))
   }
 
@@ -195,8 +205,48 @@ export function createInstallerSession({
     return expectedAttempt === attempt
   }
 
-  async function probeApp(selectedPort) {
-    const candidate = protocolFactory(selectedPort, { diagnostics })
+  function rememberVerifiedPort(selectedPort = port) {
+    if (device?.verifiedBoard && selectedPort && navigatorApi?.serial) {
+      rememberedInstallerPorts.set(navigatorApi.serial, selectedPort)
+    }
+  }
+
+  async function findGrantedPort(options) {
+    let timeoutId
+    const timeout = new Promise((_, reject) => {
+      timeoutId = setTimeout(() => reject(new InstallerError(
+        INSTALLER_ERROR_CODES.CONNECTION_LOST,
+        'Windscout could not check previously granted USB devices.',
+      )), portDiscoveryTimeoutMs)
+    })
+    try {
+      return await Promise.race([findGrantedInstallerPort(options), timeout])
+    } finally {
+      clearTimeout(timeoutId)
+    }
+  }
+
+  async function findRememberedPort(rememberedPort) {
+    if (!navigatorApi?.serial?.getPorts) return null
+    try {
+      return await findGrantedPort({
+        navigatorApi,
+        signal: operationController?.signal,
+        classify: (candidate) => candidate === rememberedPort,
+      })
+    } catch {
+      return null
+    }
+  }
+
+  async function retryChooserAfterStaleRememberedPort(expectedAttempt) {
+    rememberedInstallerPorts.delete(navigatorApi.serial)
+    await releaseConnections({ clearDevice: true })
+    if (!isCurrent(expectedAttempt)) return state
+    return connect()
+  }
+
+  async function inspectApp(candidate) {
     try {
       await candidate.open()
     } catch (error) {
@@ -256,22 +306,39 @@ export function createInstallerSession({
     }
   }
 
+  async function probeApp(selectedPort) {
+    const candidate = protocolFactory(selectedPort, { diagnostics })
+    probingProtocols.add(candidate)
+    try {
+      return await inspectApp(candidate)
+    } finally {
+      probingProtocols.delete(candidate)
+    }
+  }
+
   async function connect() {
     const currentAttempt = ++attempt
     confirmed = false
     awaitingWrittenFirmware = false
     operationController?.abort()
     operationController = new AbortController()
-    update({ phase: 'choosing-device', error: null, diagnosticStatus: 'idle', diagnosticReference: null })
-    let selectedPort
-    try {
-      selectedPort = await requestPort()
-    } catch (error) {
-      if (currentAttempt !== attempt) return state
-      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.DEVICE_NOT_ALLOWED, 'Windscout could not access the selected USB device.')
-      update({ phase: 'error', error: installerError, safeToDisconnect: true })
-      reportFailure(installerError, 'choosing-device')
-      return state
+    const rememberedPort = navigatorApi?.serial
+      ? rememberedInstallerPorts.get(navigatorApi.serial)
+      : null
+    let selectedPort = rememberedPort ? await findRememberedPort(rememberedPort) : null
+    const usingRememberedPort = Boolean(rememberedPort && selectedPort === rememberedPort)
+    if (!isCurrent(currentAttempt)) return state
+    if (!selectedPort) {
+      update({ phase: 'choosing-device', error: null, diagnosticStatus: 'idle', diagnosticReference: null })
+      try {
+        selectedPort = await requestPort()
+      } catch (error) {
+        if (currentAttempt !== attempt) return state
+        const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.DEVICE_NOT_ALLOWED, 'Windscout could not access the selected USB device.')
+        update({ phase: 'error', error: installerError, safeToDisconnect: true })
+        reportFailure(installerError, 'choosing-device')
+        return state
+      }
     }
     if (currentAttempt !== attempt) return state
     if (!selectedPort) {
@@ -287,9 +354,13 @@ export function createInstallerSession({
         probeApp(port),
       ])
       const appProbe = probeResult.status === 'fulfilled' ? probeResult.value : null
-      if (releaseResult.status === 'rejected' || probeResult.status === 'rejected') {
+      if (releaseResult.status === 'rejected') {
         try { await appProbe?.protocol.close() } catch {}
-        throw releaseResult.status === 'rejected' ? releaseResult.reason : probeResult.reason
+        throw releaseResult.reason
+      }
+      if (probeResult.status === 'rejected') {
+        if (usingRememberedPort) return retryChooserAfterStaleRememberedPort(currentAttempt)
+        throw probeResult.reason
       }
       const loadedRelease = releaseResult.value
       if (currentAttempt !== attempt) {
@@ -300,7 +371,13 @@ export function createInstallerSession({
       protocol = appProbe?.protocol ?? null
       device = appProbe?.device ?? null
       if (!device) {
-        const identity = await esptool.identify(port)
+        let identity
+        try {
+          identity = await esptool.identify(port)
+        } catch (error) {
+          if (usingRememberedPort) return retryChooserAfterStaleRememberedPort(currentAttempt)
+          throw error
+        }
         if (currentAttempt !== attempt) {
           try { await identity.transport?.disconnect() } catch {}
           return state
@@ -316,8 +393,13 @@ export function createInstallerSession({
       if (action.action === INSTALL_ACTIONS.BLOCKED) {
         throw new InstallerError(INSTALLER_ERROR_CODES.INCOMPATIBLE_DEVICE, 'This is not a supported reTerminal E1001 or E1002.', { recoverable: false })
       }
+      rememberVerifiedPort(selectedPort)
       setReleaseDiagnosticContext()
-      update({ phase: action.action === INSTALL_ACTIONS.CONFIRM_E1002 ? 'confirm-device' : 'review', action })
+      if (action.action === INSTALL_ACTIONS.CONFIRM_E1002) {
+        update({ phase: 'confirm-device', action })
+      } else {
+        return await executeAction()
+      }
     } catch (error) {
       if (currentAttempt !== attempt) return state
       await releaseConnections({ clearDevice: true })
@@ -332,7 +414,6 @@ export function createInstallerSession({
     if (state.phase !== 'confirm-device') return state
     confirmed = true
     action = { action: INSTALL_ACTIONS.INSTALL, reason: 'confirmed-e1002' }
-    update({ action })
     return executeAction()
   }
 
@@ -358,7 +439,7 @@ export function createInstallerSession({
 
   async function configure(credentials, expectedAttempt = attempt) {
     if (!protocol) throw new InstallerError(INSTALLER_ERROR_CODES.CONNECTION_LOST, 'Select your reTerminal again to finish setup.')
-    update({ phase: 'configuring', progress: 0.82, safeToDisconnect: true })
+    update({ phase: 'configuring', progress: 0.82, safeToDisconnect: true, action })
     const unixTime = Math.floor(now() / 1000)
     if (!Number.isSafeInteger(unixTime)) {
       throw new InstallerError(INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'Windscout could not read this computer’s time.')
@@ -420,13 +501,13 @@ export function createInstallerSession({
     const currentAttempt = attempt
     try {
       if (action.action === INSTALL_ACTIONS.UP_TO_DATE) {
-        completeAttempt()
+        completeAttempt({ action })
         return state
       }
       if ([INSTALL_ACTIONS.INSTALL, INSTALL_ACTIONS.REINSTALL, INSTALL_ACTIONS.UPDATE_FIRMWARE].includes(action.action)) {
         if (!device.verifiedBoard && !confirmed) throw new InstallerError(INSTALLER_ERROR_CODES.UNCONFIRMED_DEVICE, 'Confirm this is a reTerminal E1001 or E1002 before installing.')
         const mode = action.action === INSTALL_ACTIONS.UPDATE_FIRMWARE ? 'preservingUpdate' : 'cleanInstall'
-        update({ phase: 'downloading', progress: 0.05 })
+        update({ phase: 'downloading', progress: 0.05, action })
         const bundle = await partsLoader({ ...release, mode, signal: operationController?.signal })
         if (currentAttempt !== attempt) return state
         update({ phase: 'installing-firmware', progress: 0.15, safeToDisconnect: false })
@@ -448,11 +529,11 @@ export function createInstallerSession({
         })
         awaitingWrittenFirmware = true
         protocol = null
-        update({ phase: 'reconnect', progress: 0.78, safeToDisconnect: true })
+        await reconnectGrantedPort(currentAttempt)
         return state
       }
       if (!device.wifiHealthy) {
-        update({ phase: 'wifi', progress: 0.8, safeToDisconnect: true })
+        update({ phase: 'wifi', progress: 0.8, safeToDisconnect: true, action })
         return state
       }
       if (!await configure(undefined, currentAttempt)) return state
@@ -470,17 +551,12 @@ export function createInstallerSession({
     return state
   }
 
-  async function run() {
-    if (state.phase !== 'review') return state
-    return executeAction()
-  }
-
   async function attachReconnectedPort(reconnectedPort, expectedAttempt = attempt) {
     port = reconnectedPort
     let appProbe = await probeApp(port)
     if (!appProbe && awaitingWrittenFirmware) {
-      for (let bootAttempt = 1; bootAttempt < POST_FLASH_BOOT_ATTEMPTS && !appProbe; bootAttempt += 1) {
-        await waitFor(POST_FLASH_BOOT_RETRY_MS)
+      for (let bootAttempt = 1; bootAttempt < POST_FLASH_APP_BOOT_ATTEMPTS && !appProbe; bootAttempt += 1) {
+        await waitFor(POST_FLASH_APP_BOOT_RETRY_MS)
         if (expectedAttempt !== attempt) return state
         appProbe = await probeApp(port)
       }
@@ -526,6 +602,7 @@ export function createInstallerSession({
     }
     protocol = appProbe.protocol
     device = appProbe.device
+    rememberVerifiedPort(reconnectedPort)
     if (device.configurationDigest === configuration.digest && device.wifiHealthy) {
       if (!await verifyCurrentConfiguration(expectedAttempt, device)) return state
       completeAttempt()
@@ -535,6 +612,41 @@ export function createInstallerSession({
       completeAttempt()
     }
     return state
+  }
+
+  async function reconnectGrantedPort(expectedAttempt = attempt) {
+    const previouslySelectedPort = port
+    update({ phase: 'reconnecting', progress: 0.78, error: null, safeToDisconnect: true })
+    if (!navigatorApi?.serial?.getPorts) {
+      update({ phase: 'reconnect', safeToDisconnect: true })
+      return state
+    }
+    try {
+      let grantedPort = null
+      for (let searchAttempt = 0; searchAttempt < POST_FLASH_PORT_DISCOVERY_ATTEMPTS && !grantedPort; searchAttempt += 1) {
+        grantedPort = await findGrantedPort({
+          navigatorApi,
+          signal: operationController?.signal,
+          classify: (candidate) => candidate === previouslySelectedPort,
+        })
+        if (!isCurrent(expectedAttempt)) return state
+        if (!grantedPort && searchAttempt < POST_FLASH_PORT_DISCOVERY_ATTEMPTS - 1) {
+          await waitFor(POST_FLASH_PORT_DISCOVERY_RETRY_MS)
+          if (!isCurrent(expectedAttempt)) return state
+        }
+      }
+      if (!grantedPort) {
+        update({ phase: 'reconnect', safeToDisconnect: true })
+        return state
+      }
+      return await attachReconnectedPort(grantedPort, expectedAttempt)
+    } catch (error) {
+      if (!isCurrent(expectedAttempt)) return state
+      const installerError = asInstallerError(error, INSTALLER_ERROR_CODES.CONNECTION_LOST, 'Windscout did not reconnect automatically.')
+      update({ phase: 'reconnect', error: installerError, safeToDisconnect: true })
+      reportFailure(installerError, 'reconnect')
+      return state
+    }
   }
 
   async function reconnect() {
@@ -592,7 +704,7 @@ export function createInstallerSession({
     return state
   }
 
-  async function cancel() {
+  async function performCancellation() {
     if (!state.safeToDisconnect) return state
     attempt += 1
     confirmed = false
@@ -608,12 +720,21 @@ export function createInstallerSession({
     return state
   }
 
+  async function cancel() {
+    if (cancellationPromise) return cancellationPromise
+    cancellationPromise = performCancellation()
+    try {
+      return await cancellationPromise
+    } finally {
+      cancellationPromise = null
+    }
+  }
+
   return {
     getState: () => state,
     subscribe(listener) { listeners.add(listener); listener(state); return () => listeners.delete(listener) },
     connect,
     confirmDevice,
-    run,
     scanNetworks,
     submitWifi,
     attachReconnectedPort,

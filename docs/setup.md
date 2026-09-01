@@ -19,7 +19,7 @@ The installer is intentionally unavailable on phones. Mobile can preview display
 4. Choose the E1002 in the browser's USB device window.
 5. If WindScout cannot verify the enclosure, compare it with the E1002 illustration and confirm the model. This confirmation is required before a clean flash.
 6. Keep USB connected while firmware is being written.
-7. After the device restarts, reconnect it when asked.
+7. After the device restarts, the installer reconnects automatically. Choose it again only if automatic reconnect cannot find it.
 8. Choose Wi-Fi and enter the password. The browser sends it directly to the connected device and does not save it.
 
 Success is shown only after the device confirms the configuration digest, Wi-Fi connection, and a rendered forecast.
