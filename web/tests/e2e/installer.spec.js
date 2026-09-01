@@ -158,6 +158,13 @@ test('guides a fake E1002 through confirmation, reconnect, Wi-Fi and completion'
 })
 
 test('demo follows only the fresh-device happy flow through Wi-Fi', async ({ page }) => {
+  await page.addInitScript(() => {
+    const getContext = HTMLCanvasElement.prototype.getContext
+    HTMLCanvasElement.prototype.getContext = function getInstallerDemoContext(type, ...args) {
+      if (type === 'webgl' || type === 'webgl2') return null
+      return getContext.call(this, type, ...args)
+    }
+  })
   await page.setViewportSize({ width: 1280, height: 720 })
   await page.goto('/?installerDemo=1')
 
@@ -172,7 +179,7 @@ test('demo follows only the fresh-device happy flow through Wi-Fi', async ({ pag
 
   await page.getByRole('button', { name: 'Install Windscout' }).click()
   await expect(page.getByRole('heading', { name: 'Select your reTerminal again' })).toBeVisible({ timeout: 30_000 })
-  await page.getByRole('button', { name: 'Choose USB device' }).dispatchEvent('click')
+  await page.getByRole('button', { name: 'Choose USB device' }).click()
   await expect(page.getByRole('heading', { name: 'Select a network for Windscout' })).toBeVisible()
   const continueButton = page.getByRole('button', { name: 'Continue' })
   await expect(continueButton).toBeDisabled()
