@@ -438,10 +438,10 @@ function createPerspectiveSurface(stage) {
   return grid
 }
 
-function createPhysicalShadowLayer(stage) {
+function createPhysicalShadowLayer(stage, opacity = 0.28) {
   const material = new THREE.ShadowMaterial({
     color: 0x4d524f,
-    opacity: 0.28,
+    opacity,
     transparent: true,
     depthWrite: false,
     toneMapped: false,
@@ -455,14 +455,14 @@ function createPhysicalShadowLayer(stage) {
   return shadowLayer
 }
 
-function createContactOcclusion(stage) {
+function createContactOcclusion(stage, opacityScale = 1) {
   const material = new THREE.ShaderMaterial({
     name: 'contact-occlusion',
     transparent: true,
     depthWrite: false,
     toneMapped: false,
     uniforms: {
-      contactOpacity: { value: stage.contactOpacity },
+      contactOpacity: { value: stage.contactOpacity * opacityScale },
       contactPower: { value: stage.contactPower },
     },
     vertexShader: `
@@ -670,8 +670,8 @@ async function initialize() {
     })
     if (cableLabEnabled) applyCableLabSettings()
     scene.add(
-      createPhysicalShadowLayer(deviceStage),
-      createContactOcclusion(deviceStage),
+      createPhysicalShadowLayer(deviceStage, props.captureMode ? 0.14 : 0.28),
+      createContactOcclusion(deviceStage, props.captureMode ? 0.5 : 1),
       model,
       usbCable.object,
     )

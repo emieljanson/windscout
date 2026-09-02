@@ -21,18 +21,48 @@ struct FakeDevice {
     bool apply_started = false;
     bool clock_ok = true;
     int64_t clock = 0;
+    hardware_profile_state_t profile = {};
+    esp_err_t profile_update_result = ESP_OK;
+    int wifi_tests = 0;
+    int renders = 0;
+    int apply_prepares = 0;
+    int scans = 0;
 };
+
+esp_err_t get_hardware_profile(void *context, hardware_profile_state_t *state)
+{
+    *state = static_cast<FakeDevice *>(context)->profile;
+    return ESP_OK;
+}
+
+esp_err_t select_hardware_profile(void *context, hardware_model_t model,
+                                  uint32_t expected_revision,
+                                  hardware_profile_update_result_t *result)
+{
+    auto *fake = static_cast<FakeDevice *>(context);
+    if (expected_revision != fake->profile.revision) return ESP_ERR_INVALID_STATE;
+    if (fake->profile_update_result != ESP_OK) return fake->profile_update_result;
+    fake->profile.stored_model = model;
+    fake->profile.source = HARDWARE_PROFILE_SOURCE_OWNER_CONFIRMATION;
+    fake->profile.revision++;
+    result->committed_revision = fake->profile.revision;
+    result->reboot_required = true;
+    return ESP_OK;
+}
 
 esp_err_t test_wifi(void *context, const char *, const char *password)
 {
     auto *fake = static_cast<FakeDevice *>(context);
+    fake->wifi_tests++;
     fake->password = password;
     return fake->wifi_ok ? ESP_OK : ESP_FAIL;
 }
 
 esp_err_t render(void *context, const installed_configuration_t *)
 {
-    return static_cast<FakeDevice *>(context)->render_ok ? ESP_OK : ESP_FAIL;
+    auto *fake = static_cast<FakeDevice *>(context);
+    fake->renders++;
+    return fake->render_ok ? ESP_OK : ESP_FAIL;
 }
 
 esp_err_t commit(void *context, const installed_configuration_t *, const char *, const char *)
@@ -46,8 +76,16 @@ esp_err_t commit(void *context, const installed_configuration_t *, const char *,
 esp_err_t begin_apply(void *context, const installed_configuration_t *, const char *, const char *)
 {
     auto *fake = static_cast<FakeDevice *>(context);
+    fake->apply_prepares++;
     fake->apply_prepared = true;
     return ESP_OK;
+}
+
+esp_err_t scan_wifi(void *context, char *response, size_t response_size)
+{
+    auto *fake = static_cast<FakeDevice *>(context);
+    fake->scans++;
+    return snprintf(response, response_size, R"({"networks":[]})") >= 0 ? ESP_OK : ESP_FAIL;
 }
 
 esp_err_t start_apply(void *context)
@@ -113,6 +151,131 @@ TEST(InstallerServiceTest, HelloAndStateAreRedacted)
     const std::string state = request(&service, R"({"command":"get_state"})");
     EXPECT_EQ(state.find("password"), std::string::npos);
     EXPECT_NE(state.find("\"wifiConfigured\":false"), std::string::npos);
+}
+
+TEST(InstallerServiceTest, UniversalFirmwarePublishesAndPersistsHardwareProfile)
+{
+    FakeDevice fake;
+    fake.profile.revision = 4;
+    auto service = make_service(&fake);
+    service.dependencies.get_hardware_profile = get_hardware_profile;
+    service.dependencies.select_hardware_profile = select_hardware_profile;
+
+    const std::string hello = request(&service, R"({"command":"hello"})");
+    EXPECT_NE(hello.find("hardware-profile"), std::string::npos);
+    EXPECT_NE(hello.find("\"hardwareModel\":\"unknown\""), std::string::npos);
+    EXPECT_NE(hello.find("\"hardwareProfileRevision\":4"), std::string::npos);
+
+    const std::string selected = request(
+        &service,
+        R"({"command":"set_hardware_profile","hardwareModel":"e1001","expectedRevision":4})");
+    EXPECT_NE(selected.find("reboot_required"), std::string::npos);
+    EXPECT_NE(selected.find("\"hardwareProfileRevision\":5"), std::string::npos);
+    EXPECT_EQ(fake.profile.stored_model, HARDWARE_MODEL_E1001);
+
+    const std::string stale = request(
+        &service,
+        R"({"command":"set_hardware_profile","hardwareModel":"e1002","expectedRevision":4})");
+    EXPECT_NE(stale.find("hardware_profile_conflict"), std::string::npos);
+
+    fake.profile_update_result = ESP_FAIL;
+    const std::string failed = request(
+        &service,
+        R"({"command":"set_hardware_profile","hardwareModel":"e1001","expectedRevision":5})");
+    EXPECT_NE(failed.find("hardware_profile_save_failed"), std::string::npos);
+
+    const std::string out_of_range = request(
+        &service,
+        R"({"command":"set_hardware_profile","hardwareModel":"e1001","expectedRevision":4294967296})");
+    EXPECT_NE(out_of_range.find("hardware_profile_rejected"), std::string::npos);
+}
+
+TEST(InstallerServiceTest, UnknownAndRecoveryProfilesBlockSetupMutations)
+{
+    const hardware_profile_state_t blocked_profiles[] = {
+        {
+            .stored_model = HARDWARE_MODEL_UNKNOWN,
+            .effective_model = HARDWARE_MODEL_UNKNOWN,
+            .revision = 1,
+        },
+        {
+            .stored_model = HARDWARE_MODEL_E1001,
+            .effective_model = HARDWARE_MODEL_UNKNOWN,
+            .revision = 2,
+            .safe_boot_override = true,
+        },
+        {
+            .stored_model = HARDWARE_MODEL_E1002,
+            .effective_model = HARDWARE_MODEL_UNKNOWN,
+            .revision = 3,
+            .driver_failure_latched = true,
+        },
+    };
+
+    for (const auto &profile : blocked_profiles) {
+        FakeDevice fake;
+        fake.profile = profile;
+        auto service = make_service(&fake);
+        service.dependencies.get_hardware_profile = get_hardware_profile;
+        service.dependencies.scan_wifi = scan_wifi;
+
+        EXPECT_NE(request(&service, R"({"command":"scan_networks"})")
+                      .find("hardware_profile_required"), std::string::npos);
+        EXPECT_NE(request(&service, R"({"command":"stage_configuration"})")
+                      .find("hardware_profile_required"), std::string::npos);
+        EXPECT_NE(request(&service, R"({"command":"test_wifi","ssid":"Home","password":"secret"})")
+                      .find("hardware_profile_required"), std::string::npos);
+        service.candidate_staged = true;
+        EXPECT_NE(request(&service, R"({"command":"apply_configuration"})")
+                      .find("hardware_profile_required"), std::string::npos);
+
+        EXPECT_EQ(fake.scans, 0);
+        EXPECT_EQ(fake.wifi_tests, 0);
+        EXPECT_EQ(fake.renders, 0);
+        EXPECT_EQ(fake.apply_prepares, 0);
+        EXPECT_EQ(fake.commits, 0);
+        EXPECT_TRUE(service.candidate_staged);
+        EXPECT_EQ(service.candidate.version, 0u);
+    }
+}
+
+TEST(InstallerServiceTest, RecoveryHelloReportsStoredModelWithoutClaimingItIsActive)
+{
+    const hardware_profile_state_t recovery_profiles[] = {
+        {
+            .stored_model = HARDWARE_MODEL_E1001,
+            .effective_model = HARDWARE_MODEL_UNKNOWN,
+            .revision = 7,
+            .safe_boot_override = true,
+        },
+        {
+            .stored_model = HARDWARE_MODEL_E1002,
+            .effective_model = HARDWARE_MODEL_UNKNOWN,
+            .revision = 8,
+            .driver_failure_latched = true,
+        },
+    };
+
+    for (const auto &profile : recovery_profiles) {
+        FakeDevice fake;
+        fake.profile = profile;
+        auto service = make_service(&fake);
+        service.dependencies.get_hardware_profile = get_hardware_profile;
+
+        const std::string hello = request(&service, R"({"command":"hello"})");
+        EXPECT_NE(hello.find("\"hardwareModel\":\"unknown\""), std::string::npos);
+        const char *stored_model = profile.stored_model == HARDWARE_MODEL_E1001
+                                       ? "e1001" : "e1002";
+        EXPECT_NE(hello.find(std::string("\"storedHardwareModel\":\"") +
+                             stored_model + "\""),
+                  std::string::npos);
+        EXPECT_NE(hello.find(std::string("\"safeBootOverride\":") +
+                             (profile.safe_boot_override ? "true" : "false")),
+                  std::string::npos);
+        EXPECT_NE(hello.find(std::string("\"driverFailureLatched\":") +
+                             (profile.driver_failure_latched ? "true" : "false")),
+                  std::string::npos);
+    }
 }
 
 TEST(InstallerServiceTest, BeginSetsClockFromBrowserBeforeHoldingWakeLock)

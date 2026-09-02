@@ -5,6 +5,7 @@ import { createInstallerSession } from '../../installer/createInstallerSession'
 import { isInstallerDiagnosticReference } from '../../installer/sentryReporter'
 import { getSerialSupport } from '../../installer/serialPortAdapter'
 import { BOARD_IDS } from '../../config/configuration'
+import ReTerminalHelpDialog from '../ReTerminalHelpDialog.vue'
 import InstallerComplete from './InstallerComplete.vue'
 import InstallerConnect from './InstallerConnect.vue'
 import InstallerDiagnosticStatus from './InstallerDiagnosticStatus.vue'
@@ -23,20 +24,18 @@ const state = ref({ phase: 'ready', progress: 0, safeToDisconnect: true, error: 
 const networks = ref([])
 const wifiBusy = ref(false)
 const scanBusy = ref(false)
+const reTerminalHelpOpen = ref(false)
 let scanPromise = null
 const support = getSerialSupport()
-const session = props.sessionFactory({ configuration: props.configuration })
+const session = props.sessionFactory({
+  configuration: props.configuration,
+})
 const isDemo = session.isDemo === true
 const deviceLabel = computed(() => ({
   [BOARD_IDS.E1001]: 'reTerminal E1001',
   [BOARD_IDS.E1002]: 'reTerminal E1002',
   [BOARD_IDS.E1003]: 'reTerminal E1003',
-})[props.configuration.boardId ?? BOARD_IDS.E1002] ?? 'supported reTerminal')
-const purchaseUrl = computed(() => ({
-  [BOARD_IDS.E1001]: 'https://www.seeedstudio.com/reTerminal-E1001-p-6534.html?sensecap_affiliate=UF4PmgK&referring_service=link',
-  [BOARD_IDS.E1002]: 'https://www.seeedstudio.com/reTerminal-E1002-p-6533.html?sensecap_affiliate=UF4PmgK&referring_service=link',
-  [BOARD_IDS.E1003]: 'https://www.seeedstudio.com/reTerminal-E1003-p-6731.html?sensecap_affiliate=UF4PmgK&referring_service=link',
-})[props.configuration.boardId ?? BOARD_IDS.E1002] ?? 'https://wiki.seeedstudio.com/reterminal_e10xx_main_page/')
+})[props.configuration.boardId || BOARD_IDS.E1002] ?? 'supported reTerminal')
 const unsupportedReason = computed(() => (support.supported || isDemo) ? '' : 'Update to a current desktop version of Firefox, Chrome, or Edge to install Windscout over USB.')
 const displayPhase = computed(() => unsupportedReason.value && state.value.phase === 'ready' ? 'error' : state.value.phase)
 const unsubscribe = session.subscribe((next) => { state.value = { ...next } })
@@ -134,6 +133,7 @@ async function close() {
 
 function handleKeydown(event) {
   root.value?.querySelector('.is-initial-focus')?.classList.remove('is-initial-focus')
+  if (event.key === 'Escape' && reTerminalHelpOpen.value) return
   if (event.key === 'Escape' && !critical.value) void close()
 }
 
@@ -164,8 +164,8 @@ onBeforeUnmount(() => { toast.dismiss('installer-error'); toast.dismiss('install
           <InstallerConnect
             v-if="state.phase === 'ready'"
             :device-label="deviceLabel"
-            :purchase-url="purchaseUrl"
             :unsupported-reason="unsupportedReason"
+            @buy="reTerminalHelpOpen = true"
             @connect="connect"
           />
 
@@ -224,5 +224,7 @@ onBeforeUnmount(() => { toast.dismiss('installer-error'); toast.dismiss('install
         </div>
       </Transition>
     </div>
+
+    <ReTerminalHelpDialog v-model:open="reTerminalHelpOpen" />
   </section>
 </template>

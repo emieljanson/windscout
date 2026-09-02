@@ -17,7 +17,7 @@ try {
 } catch (error) {
   const message = `[installer] ${error.message}`
   if (/^No complete local/.test(error.message)) {
-    console.warn(`${message} Real-device installation is unavailable until the E1002 firmware has been built.`)
+    console.warn(`${message} Real-device installation is unavailable until the E1001/E1002 firmware has been built.`)
     process.exit(0)
   }
   console.error(message)
@@ -40,7 +40,7 @@ if (localBundle.reuseExisting) {
     sha256: createHash('sha256').update(localBundle.manifestBytes).digest('hex'),
   }
   writeFileSync(path.join(outputDir, 'latest.json'), `${JSON.stringify(pointer, null, 2)}\n`)
-  console.log(`[installer] Verified local E1002 firmware ${version} is already ready.`)
+  console.log(`[installer] Verified local E1001/E1002 firmware ${version} is already ready.`)
   process.exit(0)
 }
 const python = process.env.PYTHON || 'python3'
@@ -58,4 +58,4 @@ if (result.error) {
 }
 
 if (result.status !== 0) process.exit(result.status ?? 1)
-console.log(`[installer] Local E1002 firmware ${version} is ready.`)
+console.log(`[installer] Local E1001/E1002 firmware ${version} is ready.`)

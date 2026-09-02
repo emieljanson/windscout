@@ -41,13 +41,15 @@ describe('install continuation', () => {
     expect(wrapper.findComponent({ name: 'InstallerPanel' }).exists()).toBe(true)
   })
 
-  it('keeps E1001 available for preview without offering an incompatible installer', () => {
+  it('opens the installer for E1001', async () => {
     wrapper = mount(InstallContinuation, {
       props: { configuration: { boardId: BOARD_IDS.E1001, digest: 'wanted' } },
       global: { stubs: { InstallerPanel: true } },
     })
 
-    expect(wrapper.get('button').attributes('disabled')).toBeDefined()
-    expect(wrapper.get('button').text()).toBe('Preview only')
+    expect(wrapper.get('button').attributes('disabled')).toBeUndefined()
+    expect(wrapper.get('button').text()).toBe('Install')
+    await wrapper.get('button').trigger('click')
+    expect(wrapper.findComponent({ name: 'InstallerPanel' }).exists()).toBe(true)
   })
 })

@@ -1,6 +1,7 @@
 #include "wind_installer_service.h"
 
 #include <inttypes.h>
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -201,15 +202,101 @@ static esp_err_t write_response(char *response, size_t response_size, const char
     return written >= 0 && (size_t) written < response_size ? ESP_OK : ESP_ERR_INVALID_SIZE;
 }
 
-static esp_err_t handle_hello(char *response, size_t response_size)
+static const char *hardware_model_json_name(hardware_model_t model)
 {
-    int written = snprintf(
+    if (model == HARDWARE_MODEL_E1001) return "e1001";
+    if (model == HARDWARE_MODEL_E1002) return "e1002";
+    return "unknown";
+}
+
+static esp_err_t handle_hello(wind_installer_service_t *service, char *response,
+                              size_t response_size)
+{
+    hardware_profile_state_t profile = {0};
+    const bool has_hardware_profile = service->dependencies.get_hardware_profile &&
+        service->dependencies.get_hardware_profile(service->dependencies.context, &profile) == ESP_OK;
+    const char *hardware_model = hardware_model_json_name(profile.effective_model);
+    const char *stored_hardware_model = hardware_model_json_name(profile.stored_model);
+    const int written = has_hardware_profile
+        ? snprintf(
+              response, response_size,
+              "{\"status\":\"ok\",\"boardId\":\"%s\",\"firmwareVersion\":\"%s\","
+              "\"protocolVersion\":1,\"firmwareLayoutVersion\":1,"
+              "\"configurationVersion\":%u,\"capabilities\":[\"state\",\"wifi\","
+              "\"configuration\",\"render-verification\",\"clock-sync\","
+              "\"hardware-profile\"],\"hardwareModel\":\"%s\","
+              "\"storedHardwareModel\":\"%s\",\"hardwareProfileRevision\":%" PRIu32 ","
+              "\"safeBootOverride\":%s,\"driverFailureLatched\":%s}",
+              WINDSCOUT_BOARD_ID, FIRMWARE_VERSION, INSTALLED_CONFIGURATION_VERSION,
+              hardware_model, stored_hardware_model, profile.revision,
+              profile.safe_boot_override ? "true" : "false",
+              profile.driver_failure_latched ? "true" : "false")
+        : snprintf(
+              response, response_size,
+              "{\"status\":\"ok\",\"boardId\":\"%s\",\"firmwareVersion\":\"%s\","
+              "\"protocolVersion\":1,\"firmwareLayoutVersion\":1,"
+              "\"configurationVersion\":%u,\"capabilities\":[\"state\",\"wifi\","
+              "\"configuration\",\"render-verification\",\"clock-sync\"]}",
+              WINDSCOUT_BOARD_ID, FIRMWARE_VERSION, INSTALLED_CONFIGURATION_VERSION);
+    return written >= 0 && (size_t) written < response_size ? ESP_OK : ESP_ERR_INVALID_SIZE;
+}
+
+static bool hardware_profile_allows_setup(wind_installer_service_t *service)
+{
+    if (!service->dependencies.get_hardware_profile) return true;
+    hardware_profile_state_t profile = {0};
+    if (service->dependencies.get_hardware_profile(service->dependencies.context, &profile) !=
+        ESP_OK) return false;
+    return (profile.effective_model == HARDWARE_MODEL_E1001 ||
+            profile.effective_model == HARDWARE_MODEL_E1002) &&
+           !profile.safe_boot_override && !profile.driver_failure_latched;
+}
+
+static bool command_requires_hardware_profile(const char *command)
+{
+    return strcmp(command, "scan_networks") == 0 ||
+           strcmp(command, "stage_configuration") == 0 ||
+           strcmp(command, "test_wifi") == 0 ||
+           strcmp(command, "apply_configuration") == 0;
+}
+
+static esp_err_t handle_set_hardware_profile(wind_installer_service_t *service,
+                                             const cJSON *request, char *response,
+                                             size_t response_size)
+{
+    if (!service->dependencies.select_hardware_profile) {
+        return write_response(response, response_size, "hardware_profile_unsupported", NULL);
+    }
+    static const char *const keys[] = {
+        "command", "hardwareModel", "expectedRevision",
+    };
+    const cJSON *model = cJSON_GetObjectItemCaseSensitive(request, "hardwareModel");
+    const cJSON *revision = cJSON_GetObjectItemCaseSensitive(request, "expectedRevision");
+    if (!object_has_only_keys(request, keys, 3) || !cJSON_IsString(model) ||
+        !cJSON_IsNumber(revision) || !isfinite(revision->valuedouble) ||
+        revision->valuedouble < 0 || revision->valuedouble > UINT32_MAX ||
+        revision->valuedouble != (double) (uint32_t) revision->valuedouble) {
+        return write_response(response, response_size, "hardware_profile_rejected", NULL);
+    }
+    hardware_model_t selected = HARDWARE_MODEL_UNKNOWN;
+    if (strcmp(model->valuestring, "e1001") == 0) selected = HARDWARE_MODEL_E1001;
+    else if (strcmp(model->valuestring, "e1002") == 0) selected = HARDWARE_MODEL_E1002;
+    else return write_response(response, response_size, "hardware_profile_rejected", NULL);
+
+    hardware_profile_update_result_t update = {0};
+    const esp_err_t result = service->dependencies.select_hardware_profile(
+        service->dependencies.context, selected, (uint32_t) revision->valuedouble, &update);
+    if (result == ESP_ERR_INVALID_STATE) {
+        return write_response(response, response_size, "hardware_profile_conflict", NULL);
+    }
+    if (result != ESP_OK) {
+        return write_response(response, response_size, "hardware_profile_save_failed", NULL);
+    }
+    const int written = snprintf(
         response, response_size,
-        "{\"status\":\"ok\",\"boardId\":\"%s\",\"firmwareVersion\":\"%s\",\"protocolVersion\":1,"
-        "\"firmwareLayoutVersion\":1,\"configurationVersion\":%u,"
-        "\"capabilities\":[\"state\",\"wifi\","
-        "\"configuration\",\"render-verification\",\"clock-sync\"]}",
-        WINDSCOUT_BOARD_ID, FIRMWARE_VERSION, INSTALLED_CONFIGURATION_VERSION);
+        "{\"status\":\"%s\",\"hardwareProfileRevision\":%" PRIu32 "}",
+        update.reboot_required ? "reboot_required" : "hardware_profile_saved",
+        update.committed_revision);
     return written >= 0 && (size_t) written < response_size ? ESP_OK : ESP_ERR_INVALID_SIZE;
 }
 
@@ -277,6 +364,9 @@ esp_err_t wind_installer_service_handle_json(wind_installer_service_t *service,
     esp_err_t result = ESP_OK;
     if (!cJSON_IsString(command)) {
         result = ESP_ERR_INVALID_ARG;
+    } else if (command_requires_hardware_profile(command->valuestring) &&
+               !hardware_profile_allows_setup(service)) {
+        result = write_response(response, response_size, "hardware_profile_required", NULL);
     } else if (apply_in_progress(service) && strcmp(command->valuestring, "hello") != 0 &&
                strcmp(command->valuestring, "get_state") != 0) {
         // The render/commit transaction owns the staged configuration and
@@ -289,9 +379,11 @@ esp_err_t wind_installer_service_handle_json(wind_installer_service_t *service,
         // handshake, not only after `begin`, so a user can pause on the review
         // or Wi-Fi screen without losing the next command.
         set_wake_lock(service, true);
-        result = handle_hello(response, response_size);
+        result = handle_hello(service, response, response_size);
     } else if (strcmp(command->valuestring, "get_state") == 0) {
         result = handle_state(service, response, response_size);
+    } else if (strcmp(command->valuestring, "set_hardware_profile") == 0) {
+        result = handle_set_hardware_profile(service, request, response, response_size);
     } else if (strcmp(command->valuestring, "scan_networks") == 0) {
         result = service->dependencies.scan_wifi
                      ? service->dependencies.scan_wifi(service->dependencies.context, response,
@@ -674,6 +766,24 @@ static esp_err_t physical_set_clock(void *context, int64_t unix_seconds)
                                physical_write_system_clock);
 }
 
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E100X
+static esp_err_t physical_get_hardware_profile(void *context,
+                                               hardware_profile_state_t *state)
+{
+    (void) context;
+    return hardware_profile_get_state(state);
+}
+
+static esp_err_t physical_select_hardware_profile(
+    void *context, hardware_model_t model, uint32_t expected_revision,
+    hardware_profile_update_result_t *result)
+{
+    (void) context;
+    return hardware_profile_select(model, HARDWARE_PROFILE_SOURCE_OWNER_CONFIRMATION,
+                                   expected_revision, result);
+}
+#endif
+
 static esp_err_t physical_scan_wifi(void *context, char *response, size_t response_size)
 {
     (void) context;
@@ -805,6 +915,10 @@ esp_err_t wind_installer_service_start(void)
         .wifi_connected = physical_wifi_connected,
         .render_succeeded = physical_render_succeeded,
         .set_clock = physical_set_clock,
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E100X
+        .get_hardware_profile = physical_get_hardware_profile,
+        .select_hardware_profile = physical_select_hardware_profile,
+#endif
     };
     wind_installer_service_init(&s_physical_installer.service, &dependencies);
     s_physical_installer.last_activity_us = esp_timer_get_time();

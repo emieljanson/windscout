@@ -56,13 +56,20 @@ try {
       let minY = source.height
       let maxX = -1
       let maxY = -1
+      let solidMinX = source.width
+      let solidMaxX = -1
       for (let y = 0; y < source.height; y += 1) {
         for (let x = 0; x < source.width; x += 1) {
-          if (pixels[(y * source.width + x) * 4 + 3] < 2) continue
+          const alpha = pixels[(y * source.width + x) * 4 + 3]
+          if (alpha < 2) continue
           minX = Math.min(minX, x)
           minY = Math.min(minY, y)
           maxX = Math.max(maxX, x)
           maxY = Math.max(maxY, y)
+          if (alpha >= 96) {
+            solidMinX = Math.min(solidMinX, x)
+            solidMaxX = Math.max(solidMaxX, x)
+          }
         }
       }
       if (maxX < minX || maxY < minY) throw new Error('The device render is fully transparent')
@@ -71,9 +78,17 @@ try {
       }
 
       const padding = 24
-      const left = Math.max(0, minX - padding)
+      const contentWidth = maxX - minX + 1
+      const outputWidth = Math.min(source.width, contentWidth + padding * 2)
+      const deviceCenterX = solidMaxX >= solidMinX
+        ? (solidMinX + solidMaxX + 1) / 2
+        : (minX + maxX + 1) / 2
+      const left = Math.max(0, Math.min(
+        source.width - outputWidth,
+        Math.round(deviceCenterX - outputWidth / 2),
+      ))
       const top = Math.max(0, minY - padding)
-      const right = Math.min(source.width, maxX + padding + 1)
+      const right = left + outputWidth
       const bottom = Math.min(source.height, maxY + padding + 1)
       const output = document.createElement('canvas')
       output.width = right - left

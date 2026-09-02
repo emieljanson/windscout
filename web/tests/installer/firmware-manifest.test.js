@@ -1,7 +1,15 @@
 import { createHash, webcrypto } from 'node:crypto'
 import { describe, expect, it, vi } from 'vitest'
 import { BOARD_IDS, CONFIGURATION_VERSION } from '../../src/config/configuration'
-import { FIRMWARE_BASE_URL, FIRMWARE_DOWNLOAD_TIMEOUT_MS, loadFirmwareParts, loadFirmwareRelease, validateFirmwareManifest, verifyFirmwareBytes } from '../../src/installer/firmwareManifest'
+import {
+  FIRMWARE_BASE_URL,
+  FIRMWARE_DOWNLOAD_TIMEOUT_MS,
+  installerReleaseBoardId,
+  loadFirmwareParts,
+  loadFirmwareRelease,
+  validateFirmwareManifest,
+  verifyFirmwareBytes,
+} from '../../src/installer/firmwareManifest'
 
 function sha(bytes) { return createHash('sha256').update(bytes).digest('hex') }
 function part(kind, offset, bytes = new Uint8Array([1, 2, 3])) {
@@ -24,6 +32,46 @@ describe('firmware manifest', () => {
 
   it('accepts the exact E1002 release contract', () => {
     expect(validateFirmwareManifest(manifest()).version).toBe('2.0.0')
+  })
+
+  it('uses the shared E1002 release identity for E1001', () => {
+    expect(installerReleaseBoardId(BOARD_IDS.E1001)).toBe(BOARD_IDS.E1002)
+  })
+
+  it('loads the shared E1002 firmware write set for E1001', async () => {
+    const source = manifest()
+    const manifestBytes = new TextEncoder().encode(JSON.stringify(source))
+    const pointer = {
+      version: source.version,
+      manifest: `${source.version}/installer-manifest.json`,
+      sha256: sha(manifestBytes),
+    }
+    const fetchFn = vi.fn(async (url) => {
+      if (String(url).endsWith('latest.json')) return { ok: true, json: async () => pointer }
+      if (String(url).endsWith('installer-manifest.json')) {
+        return { ok: true, arrayBuffer: async () => manifestBytes.buffer }
+      }
+      return { ok: true, arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer }
+    })
+
+    const release = await loadFirmwareRelease({
+      baseUrl: 'https://example.test/firmware/',
+      boardId: BOARD_IDS.E1001,
+      fetchFn,
+      cryptoApi: webcrypto,
+    })
+    const bundle = await loadFirmwareParts({
+      ...release,
+      mode: 'preservingUpdate',
+      boardId: BOARD_IDS.E1001,
+      fetchFn,
+      cryptoApi: webcrypto,
+    })
+
+    expect(fetchFn.mock.calls[0][0]).toEqual(new URL('https://example.test/firmware/latest.json'))
+    expect(release.manifest.boardId).toBe(BOARD_IDS.E1002)
+    expect(bundle.eraseFlash).toBe(false)
+    expect(bundle.parts.map((item) => item.kind)).toEqual(['boot-selection', 'application'])
   })
 
   it('rejects incompatible identity, overlapping ranges and unsafe update plans', () => {

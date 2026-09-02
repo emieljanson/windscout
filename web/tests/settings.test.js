@@ -148,7 +148,7 @@ describe('WindScout settings panel', () => {
     expect(dialog?.getAttribute('aria-labelledby')).toBeTruthy()
     expect(dialog?.textContent).toContain('Windscout for reTerminal')
     expect(dialog?.textContent).toContain('Windscout only uses colour for the threshold line')
-    expect(dialog?.textContent).toContain('direct installation currently supports E1002 and E1003')
+    expect(dialog?.textContent).toContain('Direct installation supports E1001, E1002 and E1003')
     expect(dialog?.textContent).toContain('E1001')
     expect(dialog?.textContent).toContain('7.3″ six-colour — E1002')
     expect(dialog?.textContent).toContain('10.3″ monochrome — E1003')
@@ -162,11 +162,15 @@ describe('WindScout settings panel', () => {
       '/devices/previews/e1003.png',
     ])
     expect(deviceImages.every((image) => image.getAttribute('alt') === '')).toBe(true)
-    expect(buyLinks.map((link) => link.textContent.trim())).toEqual(['Buy', 'Buy', 'Buy'])
+    expect(buyLinks.map((link) => link.textContent.trim().replace(/\s+/g, ' '))).toEqual([
+      'Buy ~$70',
+      'Buy ~$107',
+      'Buy ~$160',
+    ])
     expect(buyLinks.map((link) => link.getAttribute('aria-label'))).toEqual([
-      'Buy reTerminal E1001',
-      'Buy reTerminal E1002',
-      'Buy reTerminal E1003',
+      'Buy reTerminal E1001, approximately $70',
+      'Buy reTerminal E1002, approximately $107',
+      'Buy reTerminal E1003, approximately $160',
     ])
     expect(buyLinks.every((link) => link.href.includes('sensecap_affiliate=UF4PmgK'))).toBe(true)
     expect(buyLinks.every((link) => link.rel === 'sponsored noopener noreferrer')).toBe(true)

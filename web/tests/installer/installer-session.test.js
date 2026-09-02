@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
-import { BOARD_IDS, CONFIGURATION_VERSION } from '../../src/config/configuration'
+import {
+  BOARD_IDS,
+  CONFIGURATION_VERSION,
+  createInstalledConfiguration,
+} from '../../src/config/configuration'
 import { createInstallerSession } from '../../src/installer/createInstallerSession'
 import { createInstallerDiagnostics } from '../../src/installer/installerDiagnostics'
 import { InstallerError, INSTALLER_ERROR_CODES } from '../../src/installer/installerErrors'
@@ -7,20 +11,47 @@ import { InstallerError, INSTALLER_ERROR_CODES } from '../../src/installer/insta
 const configuration = { digest: 'wanted' }
 const release = { manifest: { version: '2.0.0', boardId: 'seeedstudio_reterminal_e1002', chipFamily: 'ESP32-S3', firmwareLayoutVersion: 1 }, manifestUrl: new URL('https://example.test/manifest.json') }
 
+function e1001Configuration() {
+  return createInstalledConfiguration({
+    boardId: BOARD_IDS.E1001,
+    spot: {
+      id: 'edam', name: 'Edam', latitude: 52.5126, longitude: 5.0486,
+      timezone: 'Europe/Amsterdam',
+    },
+    modelId: 'best_match',
+    display: {
+      showThreshold: false, threshold: 17, showWeather: true,
+      showTemperature: false, showTide: false, showDedicatedFooter: true,
+      timeFormat: '24-hour', temperatureUnit: 'celsius',
+    },
+  })
+}
+
 function appProtocol(state = {}) {
   let activeDigest = state.digest ?? 'wanted'
+  let stagedDigest = 'wanted'
   return {
-    open: vi.fn(), close: vi.fn(), request: vi.fn(async (command) => {
+    open: vi.fn(), close: vi.fn(), request: vi.fn(async (command, values) => {
       if (command === 'hello') return {
         status: 'ok', boardId: state.boardId ?? release.manifest.boardId, chipFamily: 'ESP32-S3',
         firmwareVersion: state.firmwareVersion ?? '2.0.0', protocolVersion: 1,
         configurationVersion: state.configurationVersion ?? CONFIGURATION_VERSION,
         firmwareLayoutVersion: state.firmwareLayoutVersion,
-        capabilities: ['state', 'wifi', 'configuration', 'render-verification', 'clock-sync'],
+        capabilities: [
+          'state', 'wifi', 'configuration', 'render-verification', 'clock-sync',
+          ...(state.hardwareModel ? ['hardware-profile'] : []),
+        ],
+        ...(state.hardwareModel ? {
+          hardwareModel: state.hardwareModel,
+          hardwareProfileRevision: state.hardwareProfileRevision ?? 0,
+        } : {}),
       }
       if (command === 'get_state') return { configurationDigest: activeDigest, wifi: state.wifiHealthy === false ? 'disconnected' : 'connected', render: 'valid' }
-      if (command === 'stage_configuration') return { status: 'configuration_staged' }
-      if (command === 'apply_configuration') { activeDigest = 'wanted'; return { status: 'complete' } }
+      if (command === 'stage_configuration') {
+        stagedDigest = values?.configuration?.digest ?? 'wanted'
+        return { status: 'configuration_staged' }
+      }
+      if (command === 'apply_configuration') { activeDigest = stagedDigest; return { status: 'complete' } }
       return { ok: true }
     }),
   }
@@ -140,6 +171,37 @@ describe('installer session', () => {
 
     expect(releaseLoader).toHaveBeenCalledWith(expect.objectContaining({ boardId: BOARD_IDS.E1003 }))
     expect(session.getState()).toMatchObject({ phase: 'complete', action: { action: 'up-to-date' } })
+  })
+
+  it('keeps E1001 hardware identity outside the E1001/E1002 configuration payload', async () => {
+    const selectedConfiguration = e1001Configuration()
+    const protocol = appProtocol({ hardwareModel: 'e1001', digest: 'old' })
+    const session = createInstallerSession({
+      configuration: selectedConfiguration,
+      requestPort: async () => ({}),
+      releaseLoader: async () => release,
+      protocolFactory: () => protocol,
+    })
+
+    await session.connect()
+
+    const staged = protocol.request.mock.calls.find(([command]) => command === 'stage_configuration')[1]
+    expect(staged.configuration.boardId).toBe(BOARD_IDS.E1002)
+    expect(staged.configuration.digest).not.toBe(selectedConfiguration.digest)
+    expect(session.getState().phase).toBe('complete')
+  })
+
+  it('asks for confirmation when universal E1002 firmware has no saved hardware profile', async () => {
+    const session = createInstallerSession({
+      configuration: { ...configuration, boardId: BOARD_IDS.E1002 },
+      requestPort: async () => ({}),
+      releaseLoader: async () => release,
+      protocolFactory: () => appProtocol({ hardwareModel: 'unknown' }),
+    })
+
+    await session.connect()
+
+    expect(session.getState().phase).toBe('confirm-device')
   })
 
   it('blocks an E1002 when the E1003 installer route is selected', async () => {
@@ -826,6 +888,99 @@ describe('installer session', () => {
     expect(esptool.flash).toHaveBeenCalledOnce()
     expect(session.getState().phase).toBe('reconnect')
     expect(phases).not.toContain('review')
+  })
+
+  it('installs E1001 with the shared release and saves its display profile after flashing', async () => {
+    const bootloaderProtocol = { open: vi.fn().mockRejectedValue(new Error('no app')), close: vi.fn() }
+    const unknownProtocol = appProtocol({ hardwareModel: 'unknown' })
+    const unknownRequest = unknownProtocol.request.getMockImplementation()
+    unknownProtocol.request.mockImplementation(async (command, values, timeout) => {
+      if (command === 'set_hardware_profile') return { status: 'reboot_required', hardwareProfileRevision: 1 }
+      return unknownRequest(command, values, timeout)
+    })
+    const installedProtocol = appProtocol({ hardwareModel: 'e1001', hardwareProfileRevision: 1 })
+    const protocolFactory = vi.fn()
+      .mockReturnValueOnce(bootloaderProtocol)
+      .mockReturnValueOnce(unknownProtocol)
+      .mockReturnValueOnce(installedProtocol)
+    const esptool = {
+      identify: vi.fn(async () => ({ chipFamily: 'ESP32-S3', loader: {}, transport: {} })),
+      flash: vi.fn(),
+    }
+    const releaseLoader = vi.fn(async () => release)
+    const requestPort = vi.fn()
+      .mockResolvedValueOnce({ id: 'initial-port' })
+      .mockResolvedValueOnce({ id: 'profile-port' })
+      .mockResolvedValueOnce({ id: 'installed-port' })
+    const session = createInstallerSession({
+      configuration: e1001Configuration(),
+      requestPort,
+      releaseLoader,
+      partsLoader: async () => ({ eraseFlash: true, parts: [] }),
+      protocolFactory,
+      esptool,
+      waitFor: vi.fn().mockResolvedValue(undefined),
+    })
+
+    await session.connect()
+    await session.confirmDevice()
+    await session.reconnect()
+    await session.reconnect()
+
+    expect(releaseLoader).toHaveBeenCalledWith(expect.objectContaining({ boardId: BOARD_IDS.E1001 }))
+    expect(unknownProtocol.request).toHaveBeenCalledWith('set_hardware_profile', {
+      hardwareModel: 'e1001', expectedRevision: 0,
+    })
+    expect(session.getState().phase).toBe('complete')
+  })
+
+  it.each([
+    ['E1001', e1001Configuration(), 'hardware_profile_conflict'],
+    ['E1002', { ...configuration, boardId: BOARD_IDS.E1002 }, 'hardware_profile_save_failed'],
+  ])('stops post-flash %s setup when saving its display profile returns %s', async (
+    _model,
+    selectedConfiguration,
+    profileStatus,
+  ) => {
+    const bootloaderProtocol = { open: vi.fn().mockRejectedValue(new Error('no app')), close: vi.fn() }
+    const rejectedProtocol = appProtocol({ hardwareModel: 'unknown' })
+    const rejectedRequest = rejectedProtocol.request.getMockImplementation()
+    rejectedProtocol.request.mockImplementation(async (command, values, timeout) => {
+      if (command === 'set_hardware_profile') return { status: profileStatus }
+      return rejectedRequest(command, values, timeout)
+    })
+    const session = createInstallerSession({
+      configuration: selectedConfiguration,
+      requestPort: vi.fn()
+        .mockResolvedValueOnce({ id: 'initial-port' })
+        .mockResolvedValueOnce({ id: 'profile-port' }),
+      releaseLoader: async () => release,
+      partsLoader: async () => ({ eraseFlash: true, parts: [] }),
+      protocolFactory: vi.fn()
+        .mockReturnValueOnce(bootloaderProtocol)
+        .mockReturnValueOnce(rejectedProtocol),
+      esptool: {
+        identify: vi.fn(async () => ({ chipFamily: 'ESP32-S3', loader: {}, transport: {} })),
+        flash: vi.fn(),
+      },
+    })
+
+    await session.connect()
+    await session.confirmDevice()
+    await session.reconnect()
+
+    expect(session.getState()).toMatchObject({
+      phase: 'reconnect',
+      safeToDisconnect: true,
+      error: {
+        code: INSTALLER_ERROR_CODES.INVALID_RESPONSE,
+        message: 'Windscout could not save the selected screen model.',
+      },
+    })
+    const commands = rejectedProtocol.request.mock.calls.map(([command]) => command)
+    expect(commands).not.toContain('begin')
+    expect(commands).not.toContain('stage_configuration')
+    expect(commands).not.toContain('apply_configuration')
   })
 
   it('ignores stale chooser responses after cancellation', async () => {

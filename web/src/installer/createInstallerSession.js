@@ -1,6 +1,16 @@
 import { resolveInstallAction, INSTALL_ACTIONS } from './actionResolver'
-import { CHIP_FAMILY, loadFirmwareParts, loadFirmwareRelease } from './firmwareManifest'
-import { BOARD_ID, CONFIGURATION_VERSION } from '../config/configuration'
+import {
+  CHIP_FAMILY,
+  installerReleaseBoardId,
+  loadFirmwareParts,
+  loadFirmwareRelease,
+} from './firmwareManifest'
+import {
+  BOARD_ID,
+  BOARD_IDS,
+  CONFIGURATION_VERSION,
+  installedConfigurationDigest,
+} from '../config/configuration'
 import { asInstallerError, InstallerError, INSTALLER_ERROR_CODES } from './installerErrors'
 import { createEsptoolAdapter } from './esptoolAdapter'
 import { createInstallerDiagnostics } from './installerDiagnostics'
@@ -71,7 +81,16 @@ export function createInstallerSession({
   const pendingFailures = []
   const listeners = new Set()
   const probingProtocols = new Set()
-  const expectedBoardId = configuration?.boardId ?? BOARD_ID
+  const expectedHardwareModel = configuration?.boardId || BOARD_ID
+  const releaseBoardId = installerReleaseBoardId(expectedHardwareModel)
+  const installationConfiguration = expectedHardwareModel === BOARD_IDS.E1001 &&
+      configuration?.version === CONFIGURATION_VERSION
+    ? (() => {
+        const compatible = { ...configuration, boardId: BOARD_IDS.E1002 }
+        compatible.digest = installedConfigurationDigest(compatible)
+        return compatible
+      })()
+    : configuration
 
   try {
     diagnostics.registerSensitiveValues?.([
@@ -80,8 +99,8 @@ export function createInstallerSession({
       configuration?.spot?.timezone,
     ])
     diagnostics.setContext?.({
-      boardId: expectedBoardId,
-      selectedBoardId: expectedBoardId,
+      boardId: releaseBoardId,
+      selectedBoardId: expectedHardwareModel,
       chipFamily: CHIP_FAMILY,
     })
   } catch {}
@@ -118,7 +137,7 @@ export function createInstallerSession({
         boardId: device?.boardId ?? release?.manifest?.boardId,
         chipFamily: device?.chipFamily ?? release?.manifest?.chipFamily,
         layoutVersion: device?.firmwareLayoutVersion ?? release?.manifest?.firmwareLayoutVersion,
-        selectedBoardId: expectedBoardId,
+        selectedBoardId: expectedHardwareModel,
         detectedBoardId: device?.boardId ?? 'unknown',
         detectedFirmwareVersion: device?.firmwareVersion ?? 'unknown',
         releaseBoardId: release?.manifest?.boardId ?? 'unknown',
@@ -304,8 +323,13 @@ export function createInstallerSession({
         protocol: candidate,
         device: {
           kind: 'windscout',
-          verifiedBoard: hello.boardId === expectedBoardId,
+          verifiedBoard: (hello.capabilities.includes('hardware-profile')
+            ? ({ e1001: BOARD_IDS.E1001, e1002: BOARD_IDS.E1002 }[hello.hardwareModel])
+            : hello.boardId) === expectedHardwareModel,
           boardId: hello.boardId,
+          hardwareModel: hello.hardwareModel,
+          hardwareProfileRevision: hello.hardwareProfileRevision,
+          capabilities: hello.capabilities,
           chipFamily: hello.chipFamily ?? CHIP_FAMILY,
           firmwareVersion: hello.firmwareVersion,
           configurationVersion: hello.configurationVersion,
@@ -370,7 +394,7 @@ export function createInstallerSession({
     try {
       await releaseConnections({ clearDevice: true })
       const [releaseResult, probeResult] = await Promise.allSettled([
-        releaseLoader({ boardId: expectedBoardId, signal: operationController.signal }),
+        releaseLoader({ boardId: expectedHardwareModel, signal: operationController.signal }),
         probeApp(port),
       ])
       const appProbe = probeResult.status === 'fulfilled' ? probeResult.value : null
@@ -407,7 +431,7 @@ export function createInstallerSession({
       action = resolveInstallAction({
         device,
         release: release.manifest,
-        configurationDigest: configuration.digest,
+        configurationDigest: installationConfiguration.digest,
         requiredConfigurationVersion: CONFIGURATION_VERSION,
       })
       setReleaseDiagnosticContext()
@@ -469,7 +493,9 @@ export function createInstallerSession({
       throw new InstallerError(INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'Windscout could not set its clock from this computer.')
     }
     if (!isCurrent(expectedAttempt)) return false
-    const staged = await protocol.request('stage_configuration', { configuration })
+    const staged = await protocol.request('stage_configuration', {
+      configuration: installationConfiguration,
+    })
     if (!isCurrent(expectedAttempt)) return false
     if (staged.status !== 'configuration_staged') throw new InstallerError(INSTALLER_ERROR_CODES.INVALID_RESPONSE, 'Windscout rejected this configuration.')
     if (credentials) {
@@ -495,7 +521,7 @@ export function createInstallerSession({
       }
       const applyComplete = status.apply === 'complete' ||
         (applied.status === 'complete' && [undefined, 'idle'].includes(status.apply))
-      if (applyComplete && status.configurationDigest === configuration.digest &&
+      if (applyComplete && status.configurationDigest === installationConfiguration.digest &&
           status.wifi === 'connected' && status.render === 'valid') return true
     }
     throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'Windscout could not verify the new setup.')
@@ -503,7 +529,7 @@ export function createInstallerSession({
 
   async function verifyCurrentConfiguration(expectedAttempt, initialDevice) {
     update({ phase: 'verifying', progress: 0.92, safeToDisconnect: true })
-    if (initialDevice.configurationDigest === configuration.digest &&
+    if (initialDevice.configurationDigest === installationConfiguration.digest &&
         initialDevice.wifiHealthy && initialDevice.renderValid) return true
     for (let poll = 0; poll < 60; poll += 1) {
       await waitFor(1000)
@@ -514,7 +540,7 @@ export function createInstallerSession({
         recordVerificationFailure(status)
         throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'Windscout could not apply the new setup.')
       }
-      if (status.configurationDigest === configuration.digest &&
+      if (status.configurationDigest === installationConfiguration.digest &&
           status.wifi === 'connected' && status.render === 'valid') return true
     }
     throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'Windscout could not verify the current setup.')
@@ -533,7 +559,7 @@ export function createInstallerSession({
         update({ phase: 'downloading', progress: 0.05, action })
         const bundle = await partsLoader({
           ...release,
-          boardId: expectedBoardId,
+          boardId: expectedHardwareModel,
           mode,
           signal: operationController?.signal,
         })
@@ -610,7 +636,7 @@ export function createInstallerSession({
         firmwareVersion: null, bootloader: identity,
       }
       release ??= await releaseLoader({
-        boardId: expectedBoardId,
+        boardId: expectedHardwareModel,
         signal: operationController?.signal,
       })
       if (expectedAttempt !== attempt) {
@@ -620,7 +646,7 @@ export function createInstallerSession({
       action = resolveInstallAction({
         device,
         release: release.manifest,
-        configurationDigest: configuration.digest,
+        configurationDigest: installationConfiguration.digest,
         requiredConfigurationVersion: CONFIGURATION_VERSION,
       })
       setReleaseDiagnosticContext()
@@ -633,8 +659,29 @@ export function createInstallerSession({
     }
     protocol = appProbe.protocol
     device = appProbe.device
+    if (awaitingWrittenFirmware &&
+        [BOARD_IDS.E1001, BOARD_IDS.E1002].includes(expectedHardwareModel) &&
+        device.capabilities?.includes('hardware-profile') &&
+        device.hardwareModel === 'unknown') {
+      const selected = await protocol.request('set_hardware_profile', {
+        hardwareModel: expectedHardwareModel === BOARD_IDS.E1001 ? 'e1001' : 'e1002',
+        expectedRevision: device.hardwareProfileRevision ?? 0,
+      })
+      if (!['reboot_required', 'hardware_profile_saved'].includes(selected.status)) {
+        throw new InstallerError(
+          INSTALLER_ERROR_CODES.INVALID_RESPONSE,
+          'Windscout could not save the selected screen model.',
+        )
+      }
+      if (selected.status === 'reboot_required') {
+        await protocol.close()
+        protocol = null
+        await waitFor(POST_FLASH_APP_BOOT_RETRY_MS)
+        return reconnectGrantedPort(expectedAttempt)
+      }
+    }
     rememberVerifiedPort(reconnectedPort)
-    if (device.configurationDigest === configuration.digest && device.wifiHealthy) {
+    if (device.configurationDigest === installationConfiguration.digest && device.wifiHealthy) {
       if (!await verifyCurrentConfiguration(expectedAttempt, device)) return state
       completeAttempt()
     } else if (!device.wifiHealthy) update({ phase: 'wifi', progress: 0.8, safeToDisconnect: true })

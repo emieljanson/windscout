@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import InstallerPanel from '../../src/components/installer/InstallerPanel.vue'
+import ReTerminalHelpDialog from '../../src/components/ReTerminalHelpDialog.vue'
 import SettingSelect from '../../src/components/settings/SettingSelect.vue'
 import { BOARD_IDS } from '../../src/config/configuration'
 
@@ -36,14 +37,24 @@ function mountPanel(session, configuration = { digest: 'wanted' }) {
 }
 
 describe('installer inspector panel', () => {
-  it('links the E1003 connection step to the selected device', () => {
+  it('opens the reTerminal chooser from the E1003 connection step', async () => {
     const session = fakeSession()
     session.isDemo = true
     mountPanel(session, { digest: 'wanted', boardId: BOARD_IDS.E1003 })
 
-    expect(wrapper.get('.installer-secondary').attributes('href'))
-      .toContain('reTerminal-E1003-p-6731.html')
     expect(wrapper.text()).toContain('Connect your reTerminal E1003')
+    expect(wrapper.get('.installer-secondary').attributes('aria-haspopup')).toBe('dialog')
+    await wrapper.get('.installer-secondary').trigger('click')
+
+    expect(wrapper.findComponent(ReTerminalHelpDialog).props('open')).toBe(true)
+    const dialog = document.body.querySelector('[role="dialog"]')
+    expect(dialog?.textContent).toContain('7.5″ monochrome — E1001')
+    expect(dialog?.textContent).toContain('7.3″ six-colour — E1002')
+    expect(dialog?.textContent).toContain('10.3″ monochrome — E1003')
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await wrapper.vm.$nextTick()
+    expect(wrapper.emitted('close')).toBeUndefined()
   })
 
   it('keeps one icon grid mounted while step content changes around it', async () => {
@@ -87,13 +98,12 @@ describe('installer inspector panel', () => {
       const session = fakeSession()
       mountPanel(session)
       expect(wrapper.text()).not.toContain('Firefox, Chrome, or Edge')
-      const buyLink = wrapper.get('.installer-secondary')
-      expect(buyLink.element.tagName).toBe('A')
-      expect(buyLink.text()).toBe('Buy a reTerminal')
-      expect(buyLink.attributes('href')).toBe('https://www.seeedstudio.com/reTerminal-E1002-p-6533.html?sensecap_affiliate=UF4PmgK&referring_service=link')
-      expect(buyLink.attributes('target')).toBe('_blank')
-      expect(buyLink.attributes('rel')).toBe('noopener noreferrer')
-      expect(buyLink.element.nextElementSibling).toBe(wrapper.get('.installer-primary').element)
+      const buyButton = wrapper.get('.installer-secondary')
+      expect(buyButton.element.tagName).toBe('BUTTON')
+      expect(buyButton.text()).toBe('Buy a reTerminal')
+      expect(buyButton.element.nextElementSibling).toBe(wrapper.get('.installer-primary').element)
+      await buyButton.trigger('click')
+      expect(wrapper.findComponent(ReTerminalHelpDialog).props('open')).toBe(true)
       expect(wrapper.get('.installer-primary').text()).toBe('Continue')
       await wrapper.get('.installer-primary').trigger('click')
       expect(session.connect).toHaveBeenCalledOnce()

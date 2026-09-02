@@ -11,6 +11,7 @@ Every frame starts with the eight-byte magic `WINDSC01`, followed by little-endi
 | Family | Request | Result |
 | --- | --- | --- |
 | Identity | `hello` | Board ID, firmware and flash-layout versions, protocol/config ranges, capabilities |
+| Hardware | `set_hardware_profile` with `hardwareModel` and `expectedRevision` | Persists the selected E1001/E1002 profile and reports its new revision |
 | State | `get_state` | Configuration digest, Wi-Fi health, last render status, and asynchronous apply status; never credentials |
 | Session | `begin` with browser `unixTime` | Sets the system clock and battery-backed RTC before configuration or network work |
 | Wi-Fi | `scan_networks` | Deduplicated SSIDs with signal/security metadata |
@@ -22,6 +23,25 @@ Every frame starts with the eight-byte magic `WINDSC01`, followed by little-endi
 Each request receives one result or typed error with the same request ID. The browser times out an idle request after 15 seconds and network testing after 45 seconds. Forecast/render work runs asynchronously; the browser polls state once per second for at most three minutes. A reconnect starts a new session and request-ID space.
 
 `unixTime` is a required integer Unix timestamp in seconds, captured from the owner's browser immediately before `begin`. Firmware with the required `clock-sync` capability accepts dates from 2025 through 2099 and returns `clock_rejected` without starting the session when it cannot persist that time. The absolute clock comes from the browser; local display and wake times come from the installed spot's IANA timezone.
+
+## Hardware profile capability
+
+Universal E100x firmware advertises `hardware-profile` in `hello`. Its hello result adds:
+
+- `hardwareModel`: the model whose display driver is active in this boot: `e1001`, `e1002`, or `unknown`.
+- `storedHardwareModel`: the persisted `e1001` or `e1002` selection, or `unknown` before selection, even when recovery has disabled a stored driver for the current boot.
+- `hardwareProfileRevision`: the current unsigned profile revision used for optimistic concurrency.
+- `safeBootOverride` and `driverFailureLatched`: recovery flags. When either is true, `hardwareModel` is `unknown` and display-affecting setup remains blocked.
+
+To select a profile, send `{"command":"set_hardware_profile","hardwareModel":"e1001","expectedRevision":4}` (or `e1002`) using the revision from `hello`. A successful new selection returns `reboot_required` and the committed `hardwareProfileRevision`; the browser must reconnect after reboot and confirm the selected model is active. An idempotent selection may return `hardware_profile_saved` with the current revision.
+
+The command and setup guard use these typed errors:
+
+- `hardware_profile_unsupported`: this firmware does not provide profile selection.
+- `hardware_profile_rejected`: the request has unknown fields, an invalid model, or an invalid revision.
+- `hardware_profile_conflict`: the expected revision is stale or the requested transition is not allowed.
+- `hardware_profile_save_failed`: persistence failed.
+- `hardware_profile_required`: `scan_networks`, `stage_configuration`, `test_wifi`, or `apply_configuration` was requested without an active E1001/E1002 profile, including safe-boot and driver-failure recovery boots. No setup mutation is performed.
 
 ## Redaction and compatibility
 

@@ -21,18 +21,21 @@ const devices = Object.freeze([
     model: 'E1001',
     image: publicAssetUrl('devices/previews/e1001.png'),
     display: '7.5″ monochrome',
+    price: '~$70',
     buyUrl: 'https://www.seeedstudio.com/reTerminal-E1001-p-6534.html?sensecap_affiliate=UF4PmgK&referring_service=link',
   }),
   Object.freeze({
     model: 'E1002',
     image: publicAssetUrl('devices/previews/e1002.png'),
     display: '7.3″ six-colour',
+    price: '~$107',
     buyUrl: 'https://www.seeedstudio.com/reTerminal-E1002-p-6533.html?sensecap_affiliate=UF4PmgK&referring_service=link',
   }),
   Object.freeze({
     model: 'E1003',
     image: publicAssetUrl('devices/previews/e1003.png'),
     display: '10.3″ monochrome',
+    price: '~$160',
     buyUrl: 'https://www.seeedstudio.com/reTerminal-E1003-p-6731.html?sensecap_affiliate=UF4PmgK&referring_service=link',
   }),
 ])
@@ -46,7 +49,7 @@ const devices = Object.freeze([
         <header>
           <DialogTitle class="reterminal-help__title">Windscout for reTerminal</DialogTitle>
           <DialogDescription class="reterminal-help__description">
-            Choose your reTerminal by screen size and colour. Windscout only uses colour for the threshold line. E1001 preview is available; direct installation currently supports E1002 and E1003.
+            Choose your reTerminal by screen size and colour. Windscout only uses colour for the threshold line. Direct installation supports E1001, E1002 and E1003.
           </DialogDescription>
         </header>
 
@@ -59,11 +62,11 @@ const devices = Object.freeze([
             <a
               class="reterminal-help__buy"
               :href="device.buyUrl"
-              :aria-label="`Buy reTerminal ${device.model}`"
+              :aria-label="`Buy reTerminal ${device.model}, approximately ${device.price.replace('~', '')}`"
               target="_blank"
               rel="sponsored noopener noreferrer"
             >
-              Buy
+              Buy {{ device.price }}
             </a>
           </li>
         </ul>
