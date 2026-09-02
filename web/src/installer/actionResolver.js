@@ -17,6 +17,9 @@ export function resolveInstallAction({
   if (!device || device.kind === 'unknown') {
     return { action: INSTALL_ACTIONS.BLOCKED, reason: 'device-not-recognized' }
   }
+  if (device.hardwareModelMismatch) {
+    return { action: INSTALL_ACTIONS.BLOCKED, reason: 'different-windscout-model' }
+  }
   if (device.boardId && device.boardId !== release.boardId) {
     return { action: INSTALL_ACTIONS.BLOCKED, reason: 'different-windscout-model' }
   }

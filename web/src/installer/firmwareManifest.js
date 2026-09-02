@@ -8,6 +8,10 @@ const SHA256_PATTERN = /^[a-f0-9]{64}$/
 const REQUIRED_KINDS = ['bootloader', 'partition-table', 'boot-selection', 'application']
 export const FIRMWARE_BASE_URL = import.meta.env.VITE_FIRMWARE_BASE_URL || './firmware/'
 
+export function installerReleaseBoardId(boardId) {
+  return boardId === BOARD_IDS.E1001 ? BOARD_IDS.E1002 : boardId
+}
+
 function fail(message) {
   throw new InstallerError(INSTALLER_ERROR_CODES.INVALID_MANIFEST, message)
 }
@@ -146,8 +150,9 @@ export async function loadFirmwareRelease({
   signal,
 } = {}) {
   return withDownloadTimeout(async (downloadSignal) => {
+    const releaseBoardId = installerReleaseBoardId(boardId)
     const root = new URL(baseUrl, globalThis.location?.href ?? 'https://windscout.invalid/')
-    const pointerPath = boardId === BOARD_IDS.E1003 ? 'e1003/latest.json' : 'latest.json'
+    const pointerPath = releaseBoardId === BOARD_IDS.E1003 ? 'e1003/latest.json' : 'latest.json'
     const pointerUrl = new URL(pointerPath, root)
     const pointer = await fetchJson(fetchFn, pointerUrl, downloadSignal)
     if (!pointer || typeof pointer.manifest !== 'string' || !SHA256_PATTERN.test(pointer.sha256 ?? '')) fail('The release pointer is invalid.')
@@ -160,7 +165,7 @@ export async function loadFirmwareRelease({
     if (manifestDigest !== pointer.sha256) fail('The firmware manifest failed verification.')
     let manifest
     try {
-      manifest = validateFirmwareManifest(JSON.parse(new TextDecoder().decode(manifestBytes)), boardId)
+      manifest = validateFirmwareManifest(JSON.parse(new TextDecoder().decode(manifestBytes)), releaseBoardId)
     } catch (error) {
       if (error instanceof InstallerError) throw error
       fail('The firmware manifest is not valid JSON.')
@@ -172,7 +177,7 @@ export async function loadFirmwareRelease({
 
 export async function loadFirmwareParts({ manifest, manifestUrl, mode, boardId = BOARD_ID, fetchFn = globalThis.fetch, cryptoApi = globalThis.crypto, signal }) {
   return withDownloadTimeout(async (downloadSignal) => {
-    validateFirmwareManifest(manifest, boardId)
+    validateFirmwareManifest(manifest, installerReleaseBoardId(boardId))
     const writeSet = manifest[mode]
     if (!writeSet) fail('Unknown firmware write mode.')
     const parts = await Promise.all(writeSet.parts.map(async (part) => {

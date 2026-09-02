@@ -33,10 +33,14 @@ function newestMtime(entry) {
 function readCandidate(buildDir) {
   const flasherArgsPath = path.join(buildDir, 'flasher_args.json')
   const projectDescriptionPath = path.join(buildDir, 'project_description.json')
-  if (!existsSync(flasherArgsPath) || !existsSync(projectDescriptionPath)) return null
+  const sdkconfigPath = path.join(buildDir, 'config', 'sdkconfig.json')
+  if (!existsSync(flasherArgsPath) || !existsSync(projectDescriptionPath) ||
+      !existsSync(sdkconfigPath)) return null
 
   const flasherArgs = JSON.parse(readFileSync(flasherArgsPath, 'utf8'))
   const projectDescription = JSON.parse(readFileSync(projectDescriptionPath, 'utf8'))
+  const sdkconfig = JSON.parse(readFileSync(sdkconfigPath, 'utf8'))
+  if (sdkconfig.BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E100X !== true) return null
   const flashFiles = Object.entries(flasherArgs.flash_files ?? {})
     .sort(([left], [right]) => Number.parseInt(left, 16) - Number.parseInt(right, 16))
   const files = flashFiles.map(([, relativeFile]) => path.join(buildDir, relativeFile))
@@ -69,13 +73,13 @@ export function selectLocalFirmwareBuild(repositoryDir) {
     .sort((left, right) => right.builtAt - left.builtAt)
 
   if (!candidates.length) {
-    throw new Error('No complete local E1002 firmware build was found.')
+    throw new Error('No complete local E1001/E1002 firmware build was found.')
   }
 
   const selected = candidates[0]
   const newestSource = Math.max(...SOURCE_ENTRIES.map((entry) => newestMtime(path.join(firmwareDir, entry))))
   if (newestSource > selected.builtAt) {
-    throw new Error('The local firmware build is older than the firmware source. Rebuild the E1002 firmware before starting the installer.')
+    throw new Error('The local firmware build is older than the firmware source. Rebuild the universal E1001/E1002 firmware before starting the installer.')
   }
   return selected
 }

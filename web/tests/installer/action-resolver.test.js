@@ -44,6 +44,7 @@ describe('installer action resolver', () => {
 
   it('blocks known different boards and chips', () => {
     expect(resolveInstallAction({ device: { ...current, boardId: 'seeedstudio_reterminal_e1001' }, release, configurationDigest: 'wanted' }).action).toBe(INSTALL_ACTIONS.BLOCKED)
+    expect(resolveInstallAction({ device: { ...current, hardwareModelMismatch: true }, release, configurationDigest: 'wanted' })).toEqual({ action: INSTALL_ACTIONS.BLOCKED, reason: 'different-windscout-model' })
     expect(resolveInstallAction({ device: { kind: 'rom', chipFamily: 'ESP32-C3' }, release, configurationDigest: 'wanted' }).action).toBe(INSTALL_ACTIONS.BLOCKED)
   })
 })

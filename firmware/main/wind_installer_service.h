@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include "esp_err.h"
+#include "hardware_profile.h"
 #include "installed_configuration.h"
 
 #ifdef __cplusplus
@@ -32,6 +33,11 @@ typedef esp_err_t (*wind_installer_scan_wifi_fn)(void *context, char *response,
                                                  size_t response_size);
 typedef bool (*wind_installer_state_fn)(void *context);
 typedef esp_err_t (*wind_installer_set_clock_fn)(void *context, int64_t unix_seconds);
+typedef esp_err_t (*wind_installer_get_hardware_profile_fn)(
+    void *context, hardware_profile_state_t *state);
+typedef esp_err_t (*wind_installer_select_hardware_profile_fn)(
+    void *context, hardware_model_t model, uint32_t expected_revision,
+    hardware_profile_update_result_t *result);
 
 typedef struct {
     void *context;
@@ -47,6 +53,8 @@ typedef struct {
     wind_installer_state_fn wifi_connected;
     wind_installer_state_fn render_succeeded;
     wind_installer_set_clock_fn set_clock;
+    wind_installer_get_hardware_profile_fn get_hardware_profile;
+    wind_installer_select_hardware_profile_fn select_hardware_profile;
 } wind_installer_dependencies_t;
 
 typedef struct {

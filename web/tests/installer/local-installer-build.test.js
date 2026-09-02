@@ -16,10 +16,14 @@ function fixture() {
   return { root, firmware }
 }
 
-function build(firmware, directory, version, timestamp, { auxiliaryTimestamp = timestamp } = {}) {
+function build(firmware, directory, version, timestamp, {
+  auxiliaryTimestamp = timestamp,
+  universal = true,
+} = {}) {
   const buildDirectory = path.join(firmware, directory)
   mkdirSync(path.join(buildDirectory, 'bootloader'), { recursive: true })
   mkdirSync(path.join(buildDirectory, 'partition_table'), { recursive: true })
+  mkdirSync(path.join(buildDirectory, 'config'), { recursive: true })
   writeFileSync(path.join(buildDirectory, 'windscout.bin'), version)
   writeFileSync(path.join(buildDirectory, 'bootloader', 'bootloader.bin'), 'unchanged bootloader')
   writeFileSync(path.join(buildDirectory, 'partition_table', 'partition-table.bin'), 'partition table')
@@ -36,9 +40,12 @@ function build(firmware, directory, version, timestamp, { auxiliaryTimestamp = t
     project_version: version,
     app_bin: 'windscout.bin',
   }))
+  writeFileSync(path.join(buildDirectory, 'config', 'sdkconfig.json'), JSON.stringify({
+    BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E100X: universal,
+  }))
   for (const file of [
     'windscout.bin', 'partition_table/partition-table.bin', 'ota_data_initial.bin',
-    'flasher_args.json', 'project_description.json',
+    'flasher_args.json', 'project_description.json', 'config/sdkconfig.json',
   ]) {
     utimesSync(path.join(buildDirectory, file), timestamp, timestamp)
   }
@@ -85,6 +92,23 @@ describe('local installer firmware build', () => {
       buildDir: current,
       version: 'dev-current',
     })
+  })
+
+  it('ignores a model-specific build that cannot install E1001', () => {
+    const { root, firmware } = fixture()
+    const sourceTime = new Date('2026-08-30T10:00:00Z')
+    utimesSync(path.join(firmware, 'main', 'windscout_main.c'), sourceTime, sourceTime)
+    const universal = build(
+      firmware,
+      'build-local',
+      'universal-dev',
+      new Date('2026-08-30T11:00:00Z'),
+    )
+    build(firmware, 'build', 'e1003-only', new Date('2026-08-30T12:00:00Z'), {
+      universal: false,
+    })
+
+    expect(selectLocalFirmwareBuild(root)).toMatchObject({ buildDir: universal })
   })
 
   it('refuses a different build with the same embedded firmware version', () => {

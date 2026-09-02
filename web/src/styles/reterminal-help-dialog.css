@@ -112,7 +112,7 @@
   inline-size: 100%;
   block-size: 8.75rem;
   object-fit: contain;
-  object-position: 53% center;
+  object-position: center;
   overflow: visible;
 }
 .reterminal-help__device-copy { min-inline-size: 0; text-align: center; }
@@ -189,7 +189,6 @@
   .reterminal-help__device-image {
     inline-size: 9.5rem;
     block-size: 6.25rem;
-    object-position: 54% center;
   }
   .reterminal-help__device-copy { text-align: start; }
   .reterminal-help__buy { grid-column: 3; min-block-size: 2.5rem; align-self: center; }

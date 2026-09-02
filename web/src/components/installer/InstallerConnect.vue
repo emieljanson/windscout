@@ -1,13 +1,9 @@
 <script setup>
 defineProps({
   deviceLabel: { type: String, default: 'reTerminal E1001 or E1002' },
-  purchaseUrl: {
-    type: String,
-    default: 'https://www.seeedstudio.com/reTerminal-E1002-p-6533.html?sensecap_affiliate=UF4PmgK&referring_service=link',
-  },
   unsupportedReason: { type: String, default: '' },
 })
-defineEmits(['connect'])
+defineEmits(['buy', 'connect'])
 </script>
 
 <template>
@@ -23,14 +19,14 @@ defineEmits(['connect'])
       </template>
     </div>
     <div v-if="!unsupportedReason" class="installer-actions">
-      <a
+      <button
         class="installer-secondary"
-        :href="purchaseUrl"
-        target="_blank"
-        rel="noopener noreferrer"
+        type="button"
+        aria-haspopup="dialog"
+        @click="$emit('buy')"
       >
         Buy a reTerminal
-      </a>
+      </button>
       <button data-autofocus class="installer-primary" type="button" @click="$emit('connect')">
         Continue
       </button>
