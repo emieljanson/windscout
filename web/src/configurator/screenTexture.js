@@ -1,12 +1,29 @@
 import * as THREE from 'three'
 import { brouwersdamForecast } from '../fixtures/brouwersdam'
 import {
-  RENDERER_HEIGHT,
-  RENDERER_RGBA_BYTES,
-  RENDERER_WIDTH,
   loadSharedRenderer,
 } from '../renderer/sharedRenderer'
-import { DISPLAY_MODES, RENDERER_CONTRACT_VERSION } from '../renderer/contract'
+import { DISPLAY_MODES, RENDERER_CONTRACT_VERSION, RENDERER_DISPLAYS } from '../renderer/contract'
+import { BOARD_IDS } from '../config/configuration'
+
+const BOARD_RENDERER_DISPLAYS = Object.freeze({
+  [BOARD_IDS.E1001]: RENDERER_DISPLAYS.E1001_GRAY4,
+  [BOARD_IDS.E1002]: RENDERER_DISPLAYS.E1002_SPECTRA6,
+  [BOARD_IDS.E1003]: RENDERER_DISPLAYS.E1003_GC16,
+})
+
+function grayscaleThresholdPreview(rgba, boardId, config) {
+  if (!config?.showThreshold || boardId === BOARD_IDS.E1002) return rgba
+  const preview = rgba.slice()
+  for (let offset = 0; offset < preview.length; offset += 4) {
+    if (preview[offset] === 255 && preview[offset + 1] === 0 && preview[offset + 2] === 0) {
+      preview[offset] = 0
+      preview[offset + 1] = 0
+      preview[offset + 2] = 0
+    }
+  }
+  return preview
+}
 
 function formatSampleTime(time, timeFormat) {
   if (timeFormat !== '12-hour') return time
@@ -119,6 +136,7 @@ export function createRendererInput(forecast, config) {
 export async function createScreenTexture({
   forecast = brouwersdamForecast,
   config,
+  boardId = BOARD_IDS.E1002,
   rendererLoader = loadSharedRenderer,
 } = {}) {
   const renderer = await rendererLoader()
@@ -129,16 +147,18 @@ export async function createScreenTexture({
 
   function renderFrame(nextForecast, nextConfig) {
     const input = createRendererInput(nextForecast, nextConfig)
-    const rgba = renderer.renderPreview(input)
-    if (!(rgba instanceof Uint8Array) || rgba.byteLength !== RENDERER_RGBA_BYTES) {
-      throw new Error('The canonical renderer must return one complete 800 × 480 RGBA preview')
+    const frame = renderer.renderPreviewForDisplay(input, BOARD_RENDERER_DISPLAYS[boardId])
+    const { data, width, height } = frame
+    const rgba = grayscaleThresholdPreview(data, boardId, nextConfig)
+    if (!(rgba instanceof Uint8Array) || rgba.byteLength !== width * height * 4) {
+      throw new Error('The canonical renderer must return one complete 800 × 480 RGBA preview or its model-specific equivalent')
     }
 
     if (!texture) {
       texture = new THREE.DataTexture(
         rgba,
-        RENDERER_WIDTH,
-        RENDERER_HEIGHT,
+        width,
+        height,
         THREE.RGBAFormat,
         THREE.UnsignedByteType,
       )

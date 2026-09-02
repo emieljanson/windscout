@@ -85,6 +85,7 @@ menu "Board Configuration"
             select SENSOR_DRIVER_SHT40
             select RTC_DRIVER_PCF8563
             select EP_DRIVER_IT8951
+            select BOARD_CAP_WINDSCOUT
             help
                 Driver for Seeed reTerminal E1003 with 10.3" grayscale display
                 (1872x1404, 16-level / GC16) driven by an IT8951 T-CON over SPI.

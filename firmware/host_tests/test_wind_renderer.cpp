@@ -1,3 +1,5 @@
+#include <gtest/gtest.h>
+
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -7,9 +9,8 @@
 #include <fstream>
 #include <iterator>
 #include <string>
+#include <utility>
 #include <vector>
-
-#include <gtest/gtest.h>
 
 extern "C" {
 #include "wind_renderer.h"
@@ -46,7 +47,8 @@ wind_renderer_dashboard_t Dashboard(wind_renderer_state_t state = WIND_RENDERER_
             slot.gust_kt = slot.sustained_kt + 5;
             slot.destination_degrees = day * 55 + sample * 27;
             slot.available = 1;
-            slot.weather = static_cast<wind_renderer_weather_t>(1 + (day * 5 + sample) % 8);
+            slot.weather =
+                static_cast<wind_renderer_weather_t>(1 + (day * 5 + sample) % 8);
             slot.temperature_tenths_c = 120 + day * 5 + sample;
             slot.temperature_available = 1;
         }
@@ -64,8 +66,8 @@ Frame Render(const wind_renderer_dashboard_t &dashboard,
 Frame RenderPreview(const wind_renderer_dashboard_t &dashboard,
                     wind_renderer_stats_t *stats = nullptr) {
     Frame frame(WIND_RENDERER_RGBA_BYTES, 0x7f);
-    EXPECT_EQ(wind_renderer_render_preview_rgba(
-                  &dashboard, frame.data(), frame.size(), stats),
+    EXPECT_EQ(wind_renderer_render_preview_rgba(&dashboard, frame.data(), frame.size(),
+                                                stats),
               0);
     return frame;
 }
@@ -85,6 +87,23 @@ int CountColor(const Frame &frame, int left, int top, int right, int bottom,
         for (int x = left; x <= right; ++x)
             count += frame[y * WIND_RENDERER_WIDTH + x] == color;
     return count;
+}
+
+std::pair<double, double> BlackCentroid(const Frame &frame, int left, int top,
+                                        int right, int bottom) {
+    double x_total = 0;
+    double y_total = 0;
+    int count = 0;
+    for (int y = top; y <= bottom; ++y) {
+        for (int x = left; x <= right; ++x) {
+            if (frame[y * WIND_RENDERER_WIDTH + x] != 0) continue;
+            x_total += x;
+            y_total += y;
+            ++count;
+        }
+    }
+    EXPECT_GT(count, 0);
+    return {x_total / count, y_total / count};
 }
 
 struct FooterDiff {
@@ -187,7 +206,7 @@ void ExpectGolden(const char *name, const wind_renderer_dashboard_t &dashboard) 
     EXPECT_EQ(expected, actual);
 }
 
-}  // namespace
+} // namespace
 
 TEST(WindRenderer, ProducesOneDeterministicMonochromeFrameWithoutClipping) {
     const auto dashboard = Dashboard();
@@ -211,9 +230,9 @@ TEST(WindRenderer, Gray4UsesFourIntentionalLevelsWithoutDithering) {
     dashboard.display_mode = WIND_RENDERER_MODE_THRESHOLD;
     wind_renderer_stats_t stats{};
     Frame frame(WIND_RENDERER_PALETTE_BYTES, 0x7f);
-    ASSERT_EQ(wind_renderer_render_for_display(
-                  &dashboard, WIND_RENDERER_DISPLAY_E1001_GRAY4,
-                  frame.data(), frame.size(), &stats),
+    ASSERT_EQ(wind_renderer_render_for_display(&dashboard,
+                                               WIND_RENDERER_DISPLAY_E1001_GRAY4,
+                                               frame.data(), frame.size(), &stats),
               0);
     EXPECT_EQ(stats.dither_passes, 0);
     for (uint8_t level = 0; level < 4; ++level) {
@@ -230,9 +249,9 @@ TEST(WindRenderer, WarningRemainsDistinctAndRenderSignatureCannotCrossModels) {
     dashboard.display_mode = WIND_RENDERER_MODE_THRESHOLD;
     const Frame e1002 = Render(dashboard);
     Frame e1001(WIND_RENDERER_PALETTE_BYTES, 0x7f);
-    ASSERT_EQ(wind_renderer_render_for_display(
-                  &dashboard, WIND_RENDERER_DISPLAY_E1001_GRAY4,
-                  e1001.data(), e1001.size(), nullptr),
+    ASSERT_EQ(wind_renderer_render_for_display(&dashboard,
+                                               WIND_RENDERER_DISPLAY_E1001_GRAY4,
+                                               e1001.data(), e1001.size(), nullptr),
               0);
 
     auto warning = std::find(e1002.begin(), e1002.end(), 3);
@@ -242,10 +261,56 @@ TEST(WindRenderer, WarningRemainsDistinctAndRenderSignatureCannotCrossModels) {
     EXPECT_NE(e1001[warning_index], e1001[0]);
 
     constexpr uint64_t base = UINT64_C(0x57494E440000000D);
-    EXPECT_NE(wind_renderer_display_signature(
-                  base, WIND_RENDERER_DISPLAY_E1001_GRAY4),
-              wind_renderer_display_signature(
-                  base, WIND_RENDERER_DISPLAY_E1002_SPECTRA6));
+    EXPECT_NE(
+        wind_renderer_display_signature(base, WIND_RENDERER_DISPLAY_E1001_GRAY4),
+        wind_renderer_display_signature(base, WIND_RENDERER_DISPLAY_E1002_SPECTRA6));
+}
+
+TEST(WindRenderer, RendersE1003WithSixteenLevelGrayscale) {
+    auto dashboard = Dashboard();
+    dashboard.display_mode = WIND_RENDERER_MODE_THRESHOLD;
+    wind_renderer_stats_t stats{};
+    Frame frame(WIND_RENDERER_E1003_COMPOSITION_BYTES, 0x7f);
+
+    ASSERT_EQ(wind_renderer_render_for_display(&dashboard,
+                                               WIND_RENDERER_DISPLAY_E1003_GC16,
+                                               frame.data(), frame.size(), &stats),
+              0);
+    EXPECT_EQ(stats.dither_passes, 0);
+    EXPECT_TRUE(std::all_of(frame.begin(), frame.end(),
+                            [](uint8_t value) { return value <= 15; }));
+    EXPECT_NE(std::find_if(frame.begin(), frame.end(),
+                           [](uint8_t value) { return value > 3 && value < 15; }),
+              frame.end());
+}
+
+TEST(WindRenderer, ProjectsNativeFourByThreeE1003Composition) {
+    int width = 0;
+    int height = 0;
+    ASSERT_EQ(wind_renderer_display_dimensions(WIND_RENDERER_DISPLAY_E1003_GC16, &width,
+                                               &height),
+              0);
+    EXPECT_EQ(width, WIND_RENDERER_E1003_WIDTH);
+    EXPECT_EQ(height, WIND_RENDERER_E1003_HEIGHT);
+
+    Frame source(WIND_RENDERER_E1003_COMPOSITION_BYTES, 15);
+    std::fill(source.begin(), source.begin() + WIND_RENDERER_WIDTH, 0);
+    source[(WIND_RENDERER_E1003_COMPOSITION_HEIGHT - 1) * WIND_RENDERER_WIDTH] = 4;
+    std::vector<uint8_t> row(static_cast<size_t>(width), 0x7f);
+
+    ASSERT_EQ(wind_renderer_project_display_row(WIND_RENDERER_DISPLAY_E1003_GC16,
+                                                source.data(), source.size(), 0,
+                                                row.data(), row.size()),
+              0);
+    EXPECT_TRUE(
+        std::all_of(row.begin(), row.end(), [](uint8_t value) { return value == 0; }));
+
+    ASSERT_EQ(wind_renderer_project_display_row(
+                  WIND_RENDERER_DISPLAY_E1003_GC16, source.data(), source.size(),
+                  WIND_RENDERER_E1003_HEIGHT - 1, row.data(), row.size()),
+              0);
+    EXPECT_EQ(row.front(), 4);
+    EXPECT_EQ(row.back(), 15);
 }
 
 TEST(WindRenderer, UsesTheSameCompositionForACleanUnditheredPreview) {
@@ -271,8 +336,8 @@ TEST(WindRenderer, UsesTheSameCompositionForACleanUnditheredPreview) {
         for (int x = 30; x <= 180; ++x) {
             const size_t offset = static_cast<size_t>(y * WIND_RENDERER_WIDTH + x) * 4;
             const uint8_t luma = preview[offset];
-            if (luma > 0 && luma < 255 &&
-                preview[offset + 1] == luma && preview[offset + 2] == luma) {
+            if (luma > 0 && luma < 255 && preview[offset + 1] == luma &&
+                preview[offset + 2] == luma) {
                 title_has_antialiased_edge = true;
             }
         }
@@ -299,8 +364,8 @@ TEST(WindRenderer, UsesTheSameCompositionForACleanUnditheredPreview) {
 TEST(WindRenderer, ExpandsNativePaletteToPhysicalBlackWhiteAndRedRgb) {
     const uint8_t palette[] = {0, 1, 3, 0};
     std::array<uint8_t, 12> rgb{};
-    ASSERT_EQ(wind_renderer_palette_row_to_rgb(
-                  palette, std::size(palette), rgb.data(), rgb.size()),
+    ASSERT_EQ(wind_renderer_palette_row_to_rgb(palette, std::size(palette), rgb.data(),
+                                               rgb.size()),
               0);
     const std::array<uint8_t, 12> expected = {
         0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 0,
@@ -308,8 +373,8 @@ TEST(WindRenderer, ExpandsNativePaletteToPhysicalBlackWhiteAndRedRgb) {
     EXPECT_EQ(rgb, expected);
 
     const uint8_t invalid[] = {2};
-    EXPECT_NE(wind_renderer_palette_row_to_rgb(
-                  invalid, std::size(invalid), rgb.data(), rgb.size()),
+    EXPECT_NE(wind_renderer_palette_row_to_rgb(invalid, std::size(invalid), rgb.data(),
+                                               rgb.size()),
               0);
 }
 
@@ -360,6 +425,29 @@ TEST(WindRenderer, PlacesFiveTimeSlotsAcrossEachDayOnOneBaseline) {
             EXPECT_NE(centers[sample - 1], centers[sample]);
             EXPECT_EQ(baselines[sample - 1], baselines[sample]);
         }
+    }
+}
+
+TEST(WindRenderer, KeepsDirectionIconOpticallyCenteredAtEveryAngle) {
+    auto dashboard = Dashboard();
+    for (auto &day : dashboard.days)
+        for (auto &sample : day.samples)
+            sample.available = 0;
+
+    constexpr int center_x = 38;
+    constexpr int center_y = 133;
+    auto &sample = dashboard.days[0].samples[0];
+    sample.available = 1;
+    sample.sustained_kt = 0;
+    sample.gust_kt = 0;
+
+    for (int degrees = 0; degrees < 360; degrees += 45) {
+        sample.destination_degrees = degrees;
+        const Frame frame = Render(dashboard);
+        const auto [centroid_x, centroid_y] = BlackCentroid(
+            frame, center_x - 9, center_y - 9, center_x + 9, center_y + 9);
+        EXPECT_NEAR(centroid_x, center_x, 0.5) << degrees << " degrees";
+        EXPECT_NEAR(centroid_y, center_y, 0.5) << degrees << " degrees";
     }
 }
 
@@ -454,15 +542,15 @@ TEST(WindRenderer, UsesTheConfiguredThresholdAcrossItsSupportedRange) {
     const Frame maximum = Render(dashboard);
 
     const auto threshold_y = [](int knots) { return 406 - knots * 247 / 40; };
-    EXPECT_GT(CountColor(minimum, 36, threshold_y(WIND_RENDERER_MIN_THRESHOLD_KT),
-                         762, threshold_y(WIND_RENDERER_MIN_THRESHOLD_KT), 3),
+    EXPECT_GT(CountColor(minimum, 36, threshold_y(WIND_RENDERER_MIN_THRESHOLD_KT), 762,
+                         threshold_y(WIND_RENDERER_MIN_THRESHOLD_KT), 3),
               0);
     EXPECT_GT(CountColor(default_threshold, 36,
                          threshold_y(WIND_RENDERER_DEFAULT_THRESHOLD_KT), 762,
                          threshold_y(WIND_RENDERER_DEFAULT_THRESHOLD_KT), 3),
               0);
-    EXPECT_GT(CountColor(maximum, 36, threshold_y(WIND_RENDERER_MAX_THRESHOLD_KT),
-                         762, threshold_y(WIND_RENDERER_MAX_THRESHOLD_KT), 3),
+    EXPECT_GT(CountColor(maximum, 36, threshold_y(WIND_RENDERER_MAX_THRESHOLD_KT), 762,
+                         threshold_y(WIND_RENDERER_MAX_THRESHOLD_KT), 3),
               0);
     EXPECT_NE(minimum, default_threshold);
     EXPECT_NE(default_threshold, maximum);
@@ -499,23 +587,22 @@ TEST(WindRenderer, ConvertsVersionedBoundedInputToTheCanonicalDashboard) {
     EXPECT_EQ(input.version, WIND_RENDERER_CONTRACT_VERSION);
     EXPECT_EQ(input.threshold_kt, WIND_RENDERER_DEFAULT_THRESHOLD_KT);
 
-    EXPECT_EQ(wind_renderer_input_v2_set_metadata(
-                  &input, "Brouwersdam", "KNMI", "11:05"),
-              0);
-    EXPECT_EQ(wind_renderer_input_v2_set_status(
-                  &input, WIND_RENDERER_FRESH, 0, 1, 74,
-                  WIND_RENDERER_MODE_THRESHOLD, 23),
+    EXPECT_EQ(
+        wind_renderer_input_v2_set_metadata(&input, "Brouwersdam", "KNMI", "11:05"), 0);
+    EXPECT_EQ(wind_renderer_input_v2_set_status(&input, WIND_RENDERER_FRESH, 0, 1, 74,
+                                                WIND_RENDERER_MODE_THRESHOLD, 23),
               0);
     EXPECT_EQ(wind_renderer_input_v2_set_display_rows(&input, 1, 1, 1, 1), 0);
     EXPECT_EQ(wind_renderer_input_v2_set_preferences(&input, 1, 1, 1), 0);
     EXPECT_EQ(wind_renderer_input_v2_set_day(&input, 0, "TODAY", "24 AUG"), 0);
-    EXPECT_EQ(wind_renderer_input_v2_set_sample(
-                  &input, 0, 0, "08", 18, 24, 245, 1,
-                  WIND_RENDERER_WEATHER_CLEAR_DAY, -24, 1),
+    EXPECT_EQ(wind_renderer_input_v2_set_sample(&input, 0, 0, "08", 18, 24, 245, 1,
+                                                WIND_RENDERER_WEATHER_CLEAR_DAY, -24,
+                                                1),
               0);
     EXPECT_EQ(wind_renderer_input_v2_set_tide_sample(&input, 0, 0, 8, -350, 1), 0);
     EXPECT_EQ(wind_renderer_input_v2_set_tide_sample(&input, 1, 0, 9, -300, 1), 0);
-    EXPECT_EQ(wind_renderer_input_v2_set_tide_extremum(&input, 0, 0, 8, 15, -350, 0, 1), 0);
+    EXPECT_EQ(wind_renderer_input_v2_set_tide_extremum(&input, 0, 0, 8, 15, -350, 0, 1),
+              0);
 
     wind_renderer_dashboard_t dashboard{};
     EXPECT_EQ(wind_renderer_input_v2_to_dashboard(&input, &dashboard), 0);
@@ -530,16 +617,15 @@ TEST(WindRenderer, ConvertsVersionedBoundedInputToTheCanonicalDashboard) {
     EXPECT_EQ(dashboard.tide_extrema[0].local_minute, 15);
 
     const std::string oversized(WIND_RENDERER_SPOT_NAME_CAPACITY, 'W');
-    EXPECT_NE(wind_renderer_input_v2_set_metadata(
-                  &input, oversized.c_str(), "KNMI", "11:05"),
+    EXPECT_NE(
+        wind_renderer_input_v2_set_metadata(&input, oversized.c_str(), "KNMI", "11:05"),
+        0);
+    EXPECT_NE(wind_renderer_input_v2_set_status(&input, WIND_RENDERER_FRESH, 0, 1, 74,
+                                                WIND_RENDERER_MODE_COUNT, 23),
               0);
-    EXPECT_NE(wind_renderer_input_v2_set_status(
-                  &input, WIND_RENDERER_FRESH, 0, 1, 74,
-                  WIND_RENDERER_MODE_COUNT, 23),
-              0);
-    EXPECT_NE(wind_renderer_input_v2_set_sample(
-                  &input, 0, 0, "", 18, 24, 245, 1,
-                  WIND_RENDERER_WEATHER_CLEAR_DAY, 120, 1),
+    EXPECT_NE(wind_renderer_input_v2_set_sample(&input, 0, 0, "", 18, 24, 245, 1,
+                                                WIND_RENDERER_WEATHER_CLEAR_DAY, 120,
+                                                1),
               0);
 
     input.version = WIND_RENDERER_CONTRACT_VERSION + 1;
@@ -547,21 +633,20 @@ TEST(WindRenderer, ConvertsVersionedBoundedInputToTheCanonicalDashboard) {
 }
 
 TEST(WindRenderer, MatchesEveryFullPaletteCrossRuntimeFixture) {
-    for (std::size_t fixture_index = 0;
-         fixture_index < WIND_RENDERER_FIXTURE_COUNT; ++fixture_index) {
+    for (std::size_t fixture_index = 0; fixture_index < WIND_RENDERER_FIXTURE_COUNT;
+         ++fixture_index) {
         wind_renderer_input_v2_t input{};
         ASSERT_EQ(wind_renderer_fixture_build(fixture_index, &input), 0);
         Frame actual(WIND_RENDERER_PALETTE_BYTES);
-        ASSERT_EQ(wind_renderer_input_v2_render(
-                      &input, actual.data(), actual.size(), nullptr),
+        ASSERT_EQ(wind_renderer_input_v2_render(&input, actual.data(), actual.size(),
+                                                nullptr),
                   0);
         const char *name = wind_renderer_fixture_name(fixture_index);
         ASSERT_NE(name, nullptr);
         const Frame expected = ReadPaletteFixture(name);
         EXPECT_EQ(actual, expected) << name;
         if (input.display_mode == WIND_RENDERER_MODE_THRESHOLD) {
-            EXPECT_GT(std::count(actual.begin(), actual.end(),
-                                 static_cast<uint8_t>(3)),
+            EXPECT_GT(std::count(actual.begin(), actual.end(), static_cast<uint8_t>(3)),
                       0)
                 << name;
         }
@@ -579,12 +664,12 @@ TEST(WindRenderer, AllocatesEveryOptionalRowCombinationAndKeepsWindFlexible) {
         const Frame frame = Render(dashboard, &stats);
         EXPECT_EQ(stats.clipped_primitives, 0) << mask;
         const int conditions_height =
-            dashboard.show_weather && dashboard.show_temperature
-                ? 54
-                : dashboard.show_weather || dashboard.show_temperature ? 35 : 0;
+            dashboard.show_weather && dashboard.show_temperature   ? 54
+            : dashboard.show_weather || dashboard.show_temperature ? 35
+                                                                   : 0;
         EXPECT_EQ(stats.wind_baseline,
-                  441 - conditions_height -
-                      (dashboard.show_tide ? 60 : 0)) << mask;
+                  441 - conditions_height - (dashboard.show_tide ? 60 : 0))
+            << mask;
         EXPECT_EQ(frame[(stats.wind_baseline - 1) * 800 + 38], 0) << mask;
     }
 }
@@ -597,18 +682,22 @@ TEST(WindRenderer, DrawsTemperatureAndTideWithoutMovingEnabledRowsWhenDataIsMiss
     dashboard.tide_sample_count = 120;
     for (int index = 0; index < 120; ++index) {
         dashboard.tide_samples[index] = {
-            index / 24, index % 24,
-            static_cast<int>(std::sin(index / 6.0) * 800), 1,
+            index / 24,
+            index % 24,
+            static_cast<int>(std::sin(index / 6.0) * 800),
+            1,
         };
     }
     wind_renderer_stats_t populated_stats{};
     const Frame populated = Render(dashboard, &populated_stats);
     EXPECT_GT(CountBlack(populated, 13, populated_stats.temperature_row_top + 1, 786,
-                         populated_stats.tide_row_top - 1), 0);
+                         populated_stats.tide_row_top - 1),
+              0);
     EXPECT_GT(CountBlack(populated, 13, populated_stats.tide_row_top + 1, 786, 466), 0);
 
     for (auto &day : dashboard.days)
-        for (auto &sample : day.samples) sample.temperature_available = 0;
+        for (auto &sample : day.samples)
+            sample.temperature_available = 0;
     dashboard.tide_available = 0;
     wind_renderer_stats_t missing_stats{};
     (void)Render(dashboard, &missing_stats);
@@ -672,8 +761,10 @@ TEST(WindRenderer, AppliesClockAndTemperaturePreferencesInTheSharedComposition) 
     dashboard.tide_sample_count = 120;
     for (int index = 0; index < 120; ++index) {
         dashboard.tide_samples[index] = {
-            index / 24, index % 24,
-            static_cast<int>(std::sin(index / 6.0) * 800), 1,
+            index / 24,
+            index % 24,
+            static_cast<int>(std::sin(index / 6.0) * 800),
+            1,
         };
     }
 
@@ -694,7 +785,10 @@ TEST(WindRenderer, PlacesExplicitQuarterHourTideExtremaBetweenHourPoints) {
     dashboard.tide_sample_count = 24;
     for (int hour = 0; hour < 24; ++hour) {
         dashboard.tide_samples[hour] = {
-            0, hour, static_cast<int>(std::sin(hour / 6.0) * 800), 1,
+            0,
+            hour,
+            static_cast<int>(std::sin(hour / 6.0) * 800),
+            1,
         };
     }
     dashboard.tide_extremum_count = 1;
@@ -712,7 +806,9 @@ TEST(WindRenderer, KeepsStraightStructuralPixelsAtFullLumaInCleanPreview) {
     dashboard.show_temperature = 1;
     dashboard.show_tide = 1;
     const Frame preview = RenderPreview(dashboard);
-    const auto channel = [&preview](int x, int y) { return preview[(y * 800 + x) * 4]; };
+    const auto channel = [&preview](int x, int y) {
+        return preview[(y * 800 + x) * 4];
+    };
     for (int x = 12; x <= 787; ++x) {
         EXPECT_TRUE(channel(x, 12) == 0 || channel(x, 12) == 255);
         EXPECT_TRUE(channel(x, 449) == 0 || channel(x, 449) == 255);
@@ -763,8 +859,7 @@ TEST(WindRenderer, UppercasesTheSpotNameInTheSharedComposition) {
 
 TEST(WindRenderer, FadesLongTitleIntoDitherWithoutTouchingStatus) {
     auto dashboard = Dashboard();
-    dashboard.spot_name =
-        "Noord-Holland Windmeetpost Met Een Uitzonderlijk Lange Naam";
+    dashboard.spot_name = "Noord-Holland Windmeetpost Met Een Uitzonderlijk Lange Naam";
 
     const Frame preview = RenderPreview(dashboard);
     int intermediate_luma = 0;
@@ -793,8 +888,7 @@ TEST(WindRenderer, EndsFadeAtLastVisibleGlyphInsteadOfTextAdvanceBox) {
         int rightmost = -1;
         for (int y = 20; y <= 70; ++y)
             for (int x = title_left; x <= 565; ++x)
-                if (preview[(y * WIND_RENDERER_WIDTH + x) * 4] < 255 &&
-                    x > rightmost)
+                if (preview[(y * WIND_RENDERER_WIDTH + x) * 4] < 255 && x > rightmost)
                     rightmost = x;
         return rightmost;
     };
@@ -842,7 +936,9 @@ TEST(WindRenderer, CoversAgedStaleUnavailableAndBatteryWarnings) {
     }
 }
 
-TEST(WindRendererGolden, Normal) { ExpectGolden("normal", Dashboard()); }
+TEST(WindRendererGolden, Normal) {
+    ExpectGolden("normal", Dashboard());
+}
 
 TEST(WindRendererGolden, HighWind) {
     auto dashboard = Dashboard();

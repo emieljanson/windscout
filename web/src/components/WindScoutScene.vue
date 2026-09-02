@@ -14,16 +14,20 @@ import {
   createEpaperBacking,
   createMatteScreenFinish,
   createScreenRecessShadow,
+  addDeviceRearMarkings,
   enhanceE1002Surface,
   fitScreenUnderBezel,
 } from '../configurator/deviceSurface'
-import { hideE1002Stand, loadE1002Model } from '../configurator/modelLoader'
+import { hideDeviceStand, loadDeviceModel } from '../configurator/modelLoader'
+import { BOARD_IDS } from '../config/configuration'
 import {
   applyHeroPose,
   calculateSceneComposition,
   configureOrbitControls,
   createHeroEntranceAnimation,
   createUsbCameraAnimation,
+  deviceStageForBoard,
+  usbCameraForBoard,
   isWebGLAvailable,
 } from '../configurator/sceneController'
 import { createResourceLifetime } from '../configurator/sceneLifetime'
@@ -32,6 +36,7 @@ import { createProductStudioEnvironment } from '../configurator/studioEnvironmen
 import { configureAmbientOcclusion } from '../configurator/ambientOcclusion'
 import { PRODUCT_LIGHTING } from '../configurator/productLighting'
 import { scheduleSceneLoadingLabel } from '../configurator/sceneLoadingState'
+import { markingGroupForSourceMesh } from '../configurator/markingDebug'
 import {
   cablePoseAt,
   createUsbCable,
@@ -39,12 +44,45 @@ import {
 } from '../configurator/usbCable'
 
 const props = defineProps({
+  boardId: { type: String, default: BOARD_IDS.E1002 },
+  captureMode: { type: Boolean, default: false },
   focusUsbConnection: { type: Boolean, default: false },
   showUsbCable: { type: Boolean, default: false },
 })
 const emit = defineEmits(['ready', 'error'])
 const cableLabEnabled = import.meta.env.DEV
   && new URLSearchParams(window.location.search).has('cableLab')
+const markingsLabEnabled = import.meta.env.DEV
+  && new URLSearchParams(window.location.search).has('debugMarkings')
+const markingGroupLabels = Object.freeze({
+  TOP_CONTROLS: 'Top buttons',
+  MICRO_SD: 'SD card',
+  POWER_SWITCH: 'OFF / ON',
+  STATUS_CIRCLE: 'Round icon',
+  LIGHTNING_BOLT: 'Lightning bolt',
+  USB_C: 'USB icon',
+  EXPANSION_PORT: 'Right connector',
+})
+const markingInitialOffsets = Object.freeze({
+  TOP_CONTROLS: Object.freeze({ x: 0, y: 0 }),
+  MICRO_SD: Object.freeze({ x: 0, y: 0 }),
+  POWER_SWITCH: Object.freeze({ x: 0, y: 0 }),
+  STATUS_CIRCLE: Object.freeze({ x: 0, y: 0 }),
+  LIGHTNING_BOLT: Object.freeze({ x: 0, y: 0 }),
+  USB_C: Object.freeze({ x: 0, y: 0 }),
+  EXPANSION_PORT: Object.freeze({ x: 0, y: 0 }),
+})
+const markingOffsets = reactive(Object.fromEntries(
+  Object.keys(markingGroupLabels).map((group) => [group, { ...markingInitialOffsets[group] }]),
+))
+const markingCopyStatus = ref('')
+const markingsLabOpen = ref(true)
+const markingValuesJson = computed(() => JSON.stringify(Object.fromEntries(
+  Object.entries(markingOffsets).map(([group, offset]) => [
+    group,
+    { xMm: Number(offset.x.toFixed(1)), yMm: Number(offset.y.toFixed(1)) },
+  ]),
+), null, 2))
 const cableLab = reactive({
   distance: 0.9,
   gridHorizonEnd: 3.2,
@@ -117,6 +155,8 @@ function currentDisplayConfig() {
 let model
 let environmentMap
 let disposeSurface
+let disposeRearMarkings
+let markingBasePositions = new Map()
 const lifetime = createResourceLifetime()
 
 function disposeObject(object) {
@@ -143,12 +183,13 @@ function resize() {
       ? 'side'
       : 'stacked'
   const composition = calculateSceneComposition({ width, height, settingsTop, panelPlacement })
+  const deviceStage = deviceStageForBoard(props.boardId)
   const nextCompositionMode = panelPlacement === 'side' ? 'wide' : 'compact'
   usbCable?.setCompositionMode(nextCompositionMode)
   renderer.setSize(width, height, false)
   composer?.setSize(width, height)
   camera.aspect = width / height
-  camera.zoom = composition.zoom
+  camera.zoom = composition.zoom * deviceStage.heroZoom * (props.captureMode ? 1.35 : 1)
   if ((status.value === 'loading' || compositionMode !== nextCompositionMode) && controls && !props.focusUsbConnection) {
     heroEntranceAnimation?.finish()
     heroEntranceActive = false
@@ -222,6 +263,73 @@ function resetView() {
   }
 }
 
+function captureMarkingPositions() {
+  markingBasePositions = new Map()
+  if (!markingsLabEnabled || props.boardId !== BOARD_IDS.E1002) return
+  model?.traverse((object) => {
+    if (object.userData?.role === 'MARKINGS' && object.userData.markingGroup) {
+      const group = markingGroupForSourceMesh(
+        object.userData.sourceMesh,
+        object.userData.markingGroup,
+      )
+      if (markingOffsets[group]) {
+        markingBasePositions.set(object, { basePosition: object.position.clone(), group })
+      }
+    }
+  })
+}
+
+function applyMarkingOffsets() {
+  for (const [object, { basePosition, group }] of markingBasePositions) {
+    const offset = markingOffsets[group]
+    object.position.set(
+      basePosition.x + (offset?.x ?? 0) / 1000,
+      basePosition.y + (offset?.y ?? 0) / 1000,
+      basePosition.z,
+    )
+  }
+  requestRender()
+}
+
+function showMarkingsRearView() {
+  if (!camera || !controls) return
+  heroEntranceAnimation?.finish()
+  heroEntranceActive = false
+  camera.position.set(0, 0.015, -0.42)
+  controls.target.set(0, 0, 0)
+  controls.update()
+  requestRender()
+}
+
+function resetMarkingOffsets() {
+  for (const [group, offset] of Object.entries(markingOffsets)) {
+    offset.x = markingInitialOffsets[group].x
+    offset.y = markingInitialOffsets[group].y
+  }
+  markingCopyStatus.value = ''
+}
+
+async function copyMarkingOffsets() {
+  let textarea
+  try {
+    if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(markingValuesJson.value)
+    else {
+      textarea = document.createElement('textarea')
+      textarea.value = markingValuesJson.value
+      textarea.style.position = 'fixed'
+      textarea.style.opacity = '0'
+      document.body.append(textarea)
+      textarea.select()
+      if (!document.execCommand('copy')) throw new Error('Copy unavailable')
+    }
+    markingCopyStatus.value = 'Copied'
+  } catch {
+    markingCopyStatus.value = 'Select JSON below'
+  } finally {
+    textarea?.remove()
+  }
+}
+
 function updateUsbCableVisibility(visible) {
   usbCableAnimation?.setVisible(visible)
 }
@@ -236,7 +344,7 @@ function updateSceneFocus() {
 
 function applyCableLabSettings() {
   if (!cableLabEnabled) return
-  const connectedX = cablePoseAt(1).connector.x
+  const connectedX = cablePoseAt(1, compositionMode, undefined, props.boardId).connector.x
   const hazeEnd = Math.max(cableLab.hazeStart + 0.02, cableLab.hazeEnd)
   usbCable?.setTravelStartX(connectedX + cableLab.distance)
   usbCable?.setDistanceFade(cableLab.hazeStart, hazeEnd)
@@ -272,7 +380,7 @@ function handleReducedMotionChange(event) {
   usbCameraAnimation?.finishForReducedMotion()
 }
 
-function createPerspectiveSurface() {
+function createPerspectiveSurface(stage) {
   const gridMaterial = new THREE.ShaderMaterial({
     name: 'perspective-line-surface',
     transparent: true,
@@ -325,12 +433,12 @@ function createPerspectiveSurface() {
   const grid = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), gridMaterial)
   grid.name = 'SURFACE_GRID'
   grid.rotation.x = -Math.PI / 2
-  grid.position.y = -0.06035
+  grid.position.y = stage.surfaceY
   grid.renderOrder = -1
   return grid
 }
 
-function createPhysicalShadowLayer() {
+function createPhysicalShadowLayer(stage) {
   const material = new THREE.ShadowMaterial({
     color: 0x4d524f,
     opacity: 0.28,
@@ -341,18 +449,22 @@ function createPhysicalShadowLayer() {
   const shadowLayer = new THREE.Mesh(new THREE.PlaneGeometry(0.72, 0.52), material)
   shadowLayer.name = 'PHYSICAL_SHADOW_LAYER'
   shadowLayer.rotation.x = -Math.PI / 2
-  shadowLayer.position.y = -0.0604
+  shadowLayer.position.y = stage.shadowY
   shadowLayer.receiveShadow = true
   shadowLayer.renderOrder = 0
   return shadowLayer
 }
 
-function createContactOcclusion() {
+function createContactOcclusion(stage) {
   const material = new THREE.ShaderMaterial({
     name: 'contact-occlusion',
     transparent: true,
     depthWrite: false,
     toneMapped: false,
+    uniforms: {
+      contactOpacity: { value: stage.contactOpacity },
+      contactPower: { value: stage.contactPower },
+    },
     vertexShader: `
       varying vec2 vUv;
       void main() {
@@ -362,23 +474,28 @@ function createContactOcclusion() {
     `,
     fragmentShader: `
       varying vec2 vUv;
+      uniform float contactOpacity;
+      uniform float contactPower;
       void main() {
         float ends = 1.0 - smoothstep(0.462, 0.5, abs(vUv.x - 0.5));
         float frontTail = smoothstep(0.0, 0.5, vUv.y);
         float backTail = 1.0 - smoothstep(0.5, 1.0, vUv.y);
         float contact = vUv.y < 0.5 ? frontTail : backTail;
-        contact = pow(max(contact, 0.0), 2.35);
-        gl_FragColor = vec4(vec3(0.075, 0.082, 0.078), ends * contact * 0.58);
+        contact = pow(max(contact, 0.0), contactPower);
+        gl_FragColor = vec4(vec3(0.075, 0.082, 0.078), ends * contact * contactOpacity);
       }
     `,
   })
-  const contact = new THREE.Mesh(new THREE.PlaneGeometry(0.183, 0.026), material)
+  const contact = new THREE.Mesh(
+    new THREE.PlaneGeometry(stage.contactWidth, stage.contactDepth),
+    material,
+  )
   contact.name = 'CONTACT_OCCLUSION'
   contact.rotation.x = -Math.PI / 2
   // BODY_03 touches the surface across x ±87.5 mm and z 0…4 mm. Keep the
   // shader's end fade outside that footprint so the shadow reaches beneath
   // both rounded corners instead of disappearing just before them.
-  contact.position.set(0, -0.06012, 0.004)
+  contact.position.set(0, stage.contactY, stage.contactZ)
   contact.renderOrder = 1
   return contact
 }
@@ -395,15 +512,21 @@ async function initialize() {
   try {
     const lighting = PRODUCT_LIGHTING
     scene = new THREE.Scene()
-    scene.background = new THREE.Color(lighting.background)
+    scene.background = props.captureMode ? null : new THREE.Color(lighting.background)
     camera = new THREE.PerspectiveCamera(29, 1, 0.01, 10)
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' })
+    renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      powerPreference: 'high-performance',
+      preserveDrawingBuffer: props.captureMode,
+    })
+    if (props.captureMode) renderer.setClearColor(0x000000, 0)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     renderer.outputColorSpace = THREE.SRGBColorSpace
     renderer.toneMapping = THREE.NeutralToneMapping
     renderer.toneMappingExposure = 1.0
     renderer.shadowMap.enabled = true
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap
+    renderer.shadowMap.type = THREE.PCFShadowMap
     renderer.domElement.setAttribute('aria-hidden', 'true')
     host.value.append(renderer.domElement)
 
@@ -426,6 +549,7 @@ async function initialize() {
       controls,
       reducedMotion: () => reduceMotionQuery.matches,
       requestRender,
+      usbPose: usbCameraForBoard(props.boardId),
     })
     heroEntranceAnimation = createHeroEntranceAnimation({
       camera,
@@ -482,13 +606,17 @@ async function initialize() {
     rimLight.position.set(...lighting.rim.position)
     scene.add(rimLight)
 
-    scene.add(createPerspectiveSurface())
+    const deviceStage = deviceStageForBoard(props.boardId)
+    if (!props.captureMode) scene.add(createPerspectiveSurface(deviceStage))
 
-    const loadedModel = await loadE1002Model()
+    const loadedModel = await loadDeviceModel(props.boardId)
     if (!lifetime.adopt(loadedModel, disposeObject)) return
     model = loadedModel
-    hideE1002Stand(model)
+    hideDeviceStand(model, props.boardId)
     disposeSurface = enhanceE1002Surface(model, renderer)
+    disposeRearMarkings = addDeviceRearMarkings(model, props.boardId, requestRender)
+    captureMarkingPositions()
+    applyMarkingOffsets()
     model.traverse((child) => {
       if (child.isMesh) {
         child.castShadow = child.name !== 'SCREEN'
@@ -498,7 +626,11 @@ async function initialize() {
     const initialConfig = currentDisplayConfig()
     const initialForecast = forecast.value
     const initialForecastRevision = forecastRevision.value
-    const loadedScreenSource = await createScreenTexture({ forecast: initialForecast, config: initialConfig })
+    const loadedScreenSource = await createScreenTexture({
+      forecast: initialForecast,
+      config: initialConfig,
+      boardId: props.boardId,
+    })
     if (!lifetime.adopt(loadedScreenSource, (source) => source.dispose())) return
     screenSource = loadedScreenSource
     if (showThreshold.value !== initialConfig.showThreshold || threshold.value !== initialConfig.threshold ||
@@ -519,8 +651,10 @@ async function initialize() {
     // The CAD display opening is centred 0.85 mm below the imported screen
     // plane. Centre it, then let the full 800×480 surface run underneath the
     // bezel so its rounded inner corners physically clip the display.
-    screen.position.y -= 0.00085
-    fitScreenUnderBezel(screen)
+    if ([BOARD_IDS.E1001, BOARD_IDS.E1002].includes(props.boardId)) {
+      screen.position.y -= 0.00085
+      fitScreenUnderBezel(screen)
+    }
     screen.material.dispose()
     screen.material = createEpaperMaterial(screenSource.texture)
     const screenBacking = createEpaperBacking(screen)
@@ -528,14 +662,19 @@ async function initialize() {
     createMatteScreenFinish(screenBacking)
     const initialCompositionMode = host.value.clientWidth <= 56 * 16 ? 'compact' : 'wide'
     compositionMode = initialCompositionMode
-    usbCable = createUsbCable(initialCompositionMode)
+    usbCable = createUsbCable(initialCompositionMode, props.boardId)
     usbCableAnimation = createUsbCableAnimation({
       cable: usbCable,
       reducedMotion: () => reduceMotionQuery.matches,
       requestRender,
     })
     if (cableLabEnabled) applyCableLabSettings()
-    scene.add(createPhysicalShadowLayer(), createContactOcclusion(), model, usbCable.object)
+    scene.add(
+      createPhysicalShadowLayer(deviceStage),
+      createContactOcclusion(deviceStage),
+      model,
+      usbCable.object,
+    )
     updateUsbCableVisibility(props.showUsbCable)
     requestRender()
 
@@ -597,6 +736,7 @@ watch(forecastRevision, () => {
 watch(() => props.focusUsbConnection, updateSceneFocus)
 watch(() => props.showUsbCable, updateUsbCableVisibility)
 watch(cableLab, applyCableLabSettings)
+watch(markingOffsets, applyMarkingOffsets, { deep: true })
 
 onMounted(() => {
   reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -616,6 +756,7 @@ onBeforeUnmount(() => {
   controls?.dispose()
   screenSource?.dispose()
   disposeSurface?.()
+  disposeRearMarkings?.()
   environmentMap?.dispose()
   gtaoPass?.dispose()
   smaaPass?.dispose()
@@ -682,6 +823,55 @@ onBeforeUnmount(() => {
         <button type="button" @click="setCableLabCamera('cable')">Cable detail</button>
         <button type="button" @click="setCableLabCamera('hero')">Hero view</button>
       </div>
+    </aside>
+    <button
+      v-if="markingsLabEnabled && boardId === BOARD_IDS.E1002 && !markingsLabOpen"
+      type="button"
+      class="markings-lab-launch"
+      @pointerdown.stop
+      @click="markingsLabOpen = true"
+    >
+      Markings
+    </button>
+    <aside
+      v-if="markingsLabEnabled && boardId === BOARD_IDS.E1002 && markingsLabOpen"
+      class="markings-lab"
+      aria-label="E1002 marking position controls"
+      @pointerdown.stop
+    >
+      <header>
+        <strong>E1002 markings</strong>
+        <button type="button" @click="markingsLabOpen = false">Hide</button>
+      </header>
+
+      <section v-for="(label, group) in markingGroupLabels" :key="group">
+        <strong>{{ label }}</strong>
+        <label>
+          <span>X</span>
+          <input v-model.number="markingOffsets[group].x" type="range" min="-60" max="60" step="0.1">
+          <input v-model.number="markingOffsets[group].x" type="number" min="-60" max="60" step="0.1">
+        </label>
+        <label>
+          <span>Y</span>
+          <input v-model.number="markingOffsets[group].y" type="range" min="-60" max="60" step="0.1">
+          <input v-model.number="markingOffsets[group].y" type="number" min="-60" max="60" step="0.1">
+        </label>
+      </section>
+
+      <div class="markings-lab__actions">
+        <button type="button" @click="showMarkingsRearView">Rear view</button>
+        <button type="button" @click="resetMarkingOffsets">Reset</button>
+        <button type="button" class="markings-lab__copy" @click="copyMarkingOffsets">
+          {{ markingCopyStatus || 'Copy values' }}
+        </button>
+      </div>
+      <textarea
+        class="markings-lab__values"
+        :value="markingValuesJson"
+        readonly
+        aria-label="Marking offsets as JSON"
+        @focus="$event.target.select()"
+      />
     </aside>
   </div>
 </template>
@@ -755,4 +945,100 @@ onBeforeUnmount(() => {
   cursor: pointer;
 }
 .cable-lab button:active { transform: translateY(1px); }
+.markings-lab {
+  position: absolute;
+  z-index: 12;
+  inset: 0.75rem auto auto 0.75rem;
+  width: min(18rem, calc(100% - 1.5rem));
+  max-height: calc(100% - 1.5rem);
+  overflow: auto;
+  padding: 0.8rem;
+  border-radius: 0.9rem;
+  background: rgb(247 248 247 / 92%);
+  box-shadow: 0 1rem 3rem rgb(20 24 22 / 18%), inset 0 0 0 1px rgb(0 0 0 / 8%);
+  color: #202420;
+  cursor: default;
+  backdrop-filter: blur(18px);
+}
+.markings-lab header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-block-end: 0.55rem;
+}
+.markings-lab header strong { font-size: 0.78rem; }
+.markings-lab header button {
+  min-height: 1.65rem;
+  padding-inline: 0.65rem;
+  color: #5d635d;
+}
+.markings-lab section {
+  padding-block: 0.5rem;
+  border-block-start: 1px solid rgb(0 0 0 / 8%);
+}
+.markings-lab section > strong { display: block; margin-block-end: 0.35rem; font-size: 0.68rem; }
+.markings-lab label {
+  display: grid;
+  grid-template-columns: 0.8rem 1fr 3.6rem;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 1.8rem;
+  font: 600 0.64rem/1 'JetBrains Mono Variable', monospace;
+}
+.markings-lab input[type='range'] { width: 100%; accent-color: #70ad32; }
+.markings-lab input[type='number'] {
+  width: 100%;
+  min-height: 1.65rem;
+  padding-inline: 0.35rem;
+  border: 1px solid rgb(0 0 0 / 12%);
+  border-radius: 0.4rem;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  text-align: right;
+}
+.markings-lab__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; margin-block-start: 0.45rem; }
+.markings-lab button {
+  min-height: 2rem;
+  border: 0;
+  border-radius: 0.55rem;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 10%);
+  color: inherit;
+  font: 600 0.68rem/1 Inter, sans-serif;
+  cursor: pointer;
+}
+.markings-lab button:active { scale: 0.96; }
+.markings-lab__copy { grid-column: 1 / -1; background: #171a17 !important; color: #fff !important; }
+.markings-lab__values {
+  width: 100%;
+  height: 3.25rem;
+  margin-block-start: 0.45rem;
+  padding: 0.45rem;
+  resize: vertical;
+  border: 1px solid rgb(0 0 0 / 10%);
+  border-radius: 0.5rem;
+  background: rgb(255 255 255 / 75%);
+  color: #505650;
+  font: 500 0.58rem/1.35 'JetBrains Mono Variable', monospace;
+}
+.markings-lab-launch {
+  position: absolute;
+  z-index: 12;
+  inset: 0.75rem auto auto 0.75rem;
+  min-height: 2.25rem;
+  padding-inline: 0.85rem;
+  border: 0;
+  border-radius: 0.65rem;
+  background: #171a17;
+  box-shadow: 0 0.75rem 2rem rgb(20 24 22 / 20%);
+  color: #fff;
+  font: 650 0.72rem/1 Inter, sans-serif;
+  cursor: pointer;
+}
+.markings-lab-launch:active { scale: 0.96; }
+@media (max-width: 40rem) {
+  .markings-lab { max-height: 48%; }
+}
 </style>

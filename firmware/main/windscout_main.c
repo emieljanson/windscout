@@ -28,6 +28,8 @@ static bool hardware_profile_allows_panel(void)
 {
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1002
     return hardware_profile_can_use_panel_for_fixed_model(HARDWARE_MODEL_E1002);
+#elif defined(CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003)
+    return hardware_profile_can_use_panel_for_fixed_model(HARDWARE_MODEL_E1003);
 #else
     return hardware_profile_can_use_panel();
 #endif

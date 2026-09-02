@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { CONFIGURATION_VERSION } from '../../src/config/configuration'
+import { BOARD_IDS, CONFIGURATION_VERSION } from '../../src/config/configuration'
 import { createInstallerSession } from '../../src/installer/createInstallerSession'
 import { createInstallerDiagnostics } from '../../src/installer/installerDiagnostics'
 import { InstallerError, INSTALLER_ERROR_CODES } from '../../src/installer/installerErrors'
@@ -12,7 +12,7 @@ function appProtocol(state = {}) {
   return {
     open: vi.fn(), close: vi.fn(), request: vi.fn(async (command) => {
       if (command === 'hello') return {
-        status: 'ok', boardId: release.manifest.boardId, chipFamily: 'ESP32-S3',
+        status: 'ok', boardId: state.boardId ?? release.manifest.boardId, chipFamily: 'ESP32-S3',
         firmwareVersion: state.firmwareVersion ?? '2.0.0', protocolVersion: 1,
         configurationVersion: state.configurationVersion ?? CONFIGURATION_VERSION,
         firmwareLayoutVersion: state.firmwareLayoutVersion,
@@ -121,6 +121,45 @@ describe('installer session', () => {
     expect(session.getState().action.action).toBe('up-to-date')
     expect(session.getState().phase).toBe('complete')
     expect(protocol.request).not.toHaveBeenCalledWith('stage_configuration', expect.anything())
+  })
+
+  it('selects the E1003 release and accepts a matching installed device', async () => {
+    const e1003Release = {
+      ...release,
+      manifest: { ...release.manifest, boardId: BOARD_IDS.E1003 },
+    }
+    const releaseLoader = vi.fn(async () => e1003Release)
+    const session = createInstallerSession({
+      configuration: { ...configuration, boardId: BOARD_IDS.E1003 },
+      requestPort: async () => ({}),
+      releaseLoader,
+      protocolFactory: () => appProtocol({ boardId: BOARD_IDS.E1003 }),
+    })
+
+    await session.connect()
+
+    expect(releaseLoader).toHaveBeenCalledWith(expect.objectContaining({ boardId: BOARD_IDS.E1003 }))
+    expect(session.getState()).toMatchObject({ phase: 'complete', action: { action: 'up-to-date' } })
+  })
+
+  it('blocks an E1002 when the E1003 installer route is selected', async () => {
+    const e1003Release = {
+      ...release,
+      manifest: { ...release.manifest, boardId: BOARD_IDS.E1003 },
+    }
+    const session = createInstallerSession({
+      configuration: { ...configuration, boardId: BOARD_IDS.E1003 },
+      requestPort: async () => ({}),
+      releaseLoader: async () => e1003Release,
+      protocolFactory: () => appProtocol({ boardId: BOARD_IDS.E1002 }),
+    })
+
+    await session.connect()
+
+    expect(session.getState()).toMatchObject({
+      phase: 'error',
+      error: { code: INSTALLER_ERROR_CODES.INCOMPATIBLE_DEVICE },
+    })
   })
 
   it('waits for saved Wi-Fi to reconnect after the serial open reset', async () => {

@@ -9,6 +9,7 @@ import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { toCreasedNormals } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { E1002_MODEL } from '../src/assets/e1002.js'
+import { E1003_MODEL } from '../src/assets/e1003.js'
 import { WAKE_BUTTON_COLOR } from '../src/configurator/productColors.js'
 
 const require = createRequire(import.meta.url)
@@ -35,6 +36,46 @@ const displayBedMeshes = new Set([25])
 const wakeButtonMeshes = new Set([13, 28, 55])
 const navigationButtonMeshes = new Set([12, 29, 30, 53, 54])
 const rearScrewMeshes = new Set([39, 50, 51, 52])
+const e1003MarkingGroups = Object.freeze({
+  TOP_CONTROLS: Object.freeze({
+    meshes: new Set([241, 243, 244, 245]),
+    // Green-button centres provide the common datum; all glyph spacing stays
+    // exactly as drawn in the E1003 production CAD.
+    translationMm: Object.freeze([-27.754, 29.85, 2.62]),
+    anchorSourceMesh: 28,
+  }),
+  MICRO_SD: Object.freeze({
+    meshes: new Set(Array.from({ length: 6 }, (_, offset) => 246 + offset)),
+    translationMm: Object.freeze([-28.163, 78.347, 2.62]),
+    anchorSourceMesh: 33,
+  }),
+  POWER_SWITCH: Object.freeze({
+    meshes: new Set(Array.from({ length: 7 }, (_, offset) => 252 + offset)),
+    translationMm: Object.freeze([-28.163, 78.447, 2.62]),
+    anchorSourceMesh: 32,
+  }),
+  USB_C: Object.freeze({
+    meshes: new Set(Array.from({ length: 5 }, (_, offset) => 259 + offset)),
+    translationMm: Object.freeze([-28.163, 80.347, 2.62]),
+    anchorSourceMesh: 37,
+  }),
+  STATUS_CIRCLE: Object.freeze({
+    meshes: new Set([264]),
+    translationMm: Object.freeze([-28.163, 80.747, 2.62]),
+    anchorSourceMesh: 32,
+  }),
+  LIGHTNING_BOLT: Object.freeze({
+    meshes: new Set([265]),
+    translationMm: Object.freeze([-28.163, 80.247, 2.62]),
+    anchorSourceMesh: 37,
+  }),
+  EXPANSION_PORT: Object.freeze({
+    meshes: new Set(Array.from({ length: 7 }, (_, offset) => 266 + offset)),
+    // Exact centre-to-centre offset between both CAD expansion connectors.
+    translationMm: Object.freeze([29, 27.59, 2.62]),
+    anchorSourceMesh: 31,
+  }),
+})
 
 function hash(content) {
   return createHash('sha256').update(content).digest('hex')
@@ -96,7 +137,15 @@ function materialForMesh(role, index, materials) {
   const materialRole = materialRoleForMesh(role, index)
   if (materials.has(materialRole)) return materials.get(materialRole)
   let material
-  if (materialRole === 'PORTS') {
+  if (materialRole === 'MARKINGS') {
+    material = new THREE.MeshBasicMaterial({
+      color: 0x363a37,
+      polygonOffset: true,
+      polygonOffsetFactor: -2,
+      polygonOffsetUnits: -2,
+      name: 'rear-product-markings',
+    })
+  } else if (materialRole === 'PORTS') {
     material = new THREE.MeshPhysicalMaterial({
       color: 0x252826,
       roughness: 0.54,
@@ -199,7 +248,35 @@ function createScreen() {
   return screen
 }
 
-function buildScene(imported) {
+function addE1003Markings(root, imported, materials) {
+  const group = new THREE.Group()
+  group.name = 'MARKINGS'
+  group.userData.role = 'MARKINGS'
+  const material = materialForMesh('MARKINGS', 0, materials)
+
+  for (const [groupName, definition] of Object.entries(e1003MarkingGroups)) {
+    for (const sourceMesh of definition.meshes) {
+      const mesh = imported.meshes[sourceMesh]
+      if (!mesh) throw new Error(`E1003 marking source mesh ${sourceMesh} is missing`)
+      const object = new THREE.Mesh(geometryFromOcct(mesh), material)
+      object.name = `MARKINGS_${groupName}_${sourceMesh}`
+      object.position.fromArray(definition.translationMm).multiplyScalar(0.001)
+      object.renderOrder = 4
+      object.userData = {
+        role: 'MARKINGS',
+        materialRole: 'MARKINGS',
+        sourceDevice: 'E1003',
+        sourceMesh,
+        markingGroup: groupName,
+        anchorSourceMesh: definition.anchorSourceMesh,
+      }
+      group.add(object)
+    }
+  }
+  root.add(group)
+}
+
+function buildScene(imported, e1003Imported) {
   const root = new THREE.Group()
   root.name = 'E1002'
   root.userData = {
@@ -232,6 +309,7 @@ function buildScene(imported) {
     roleGroups.get(role).add(object)
   })
 
+  addE1003Markings(root, e1003Imported, materials)
   root.add(createScreen())
   root.position.y = -0.06
   root.updateMatrixWorld(true)
@@ -325,6 +403,14 @@ async function main() {
     }
     await writeFile(sourcePath, sourceBytes)
 
+    const e1003Response = await fetch(E1003_MODEL.sourceUrl, { signal: AbortSignal.timeout(30_000) })
+    if (!e1003Response.ok) throw new Error(`E1003 marking CAD download failed with HTTP ${e1003Response.status}`)
+    const e1003SourceBytes = new Uint8Array(await e1003Response.arrayBuffer())
+    const e1003SourceSha256 = hash(e1003SourceBytes)
+    if (e1003SourceSha256 !== E1003_MODEL.sourceSha256) {
+      throw new Error(`E1003 marking CAD source changed unexpectedly (${e1003SourceSha256})`)
+    }
+
     const occt = await require('occt-import-js')()
     const imported = occt.ReadStepFile(sourceBytes, {
       linearUnit: 'millimeter',
@@ -333,8 +419,15 @@ async function main() {
       angularDeflection: 0.25,
     })
     if (!imported.success) throw new Error('OpenCascade could not read the STEP assembly')
+    const e1003Imported = occt.ReadStepFile(e1003SourceBytes, {
+      linearUnit: 'millimeter',
+      linearDeflectionType: 'absolute_value',
+      linearDeflection: 0.2,
+      angularDeflection: 0.25,
+    })
+    if (!e1003Imported.success) throw new Error('OpenCascade could not read the E1003 marking geometry')
 
-    const scene = buildScene(imported)
+    const scene = buildScene(imported, e1003Imported)
     const measured = inspectScene(scene)
     const binary = await exportBinary(scene)
     if (binary.byteLength > E1002_MODEL.maxBytes) {
@@ -359,6 +452,14 @@ async function main() {
         normalTreatment: '45-degree crease-aware normals with a planar front-face lock',
         excludedInternalMeshes: [...excludedInternalMeshes],
         excludedVariantMeshes: [...excludedVariantMeshes],
+        markings: {
+          sourceDevice: 'E1003',
+          sourceSha256: e1003SourceSha256,
+          groups: Object.fromEntries(Object.entries(e1003MarkingGroups).map(([name, definition]) => [name, {
+            meshes: [...definition.meshes],
+            translationMm: definition.translationMm,
+          }])),
+        },
         addedScreenMm: { width: 159, height: 95.4, aspect: E1002_MODEL.screenAspect },
       },
       output: {

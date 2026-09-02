@@ -11,10 +11,16 @@ extern "C" {
 enum {
     WIND_RENDERER_WIDTH = 800,
     WIND_RENDERER_HEIGHT = 480,
+    WIND_RENDERER_E1003_COMPOSITION_HEIGHT = 600,
+    WIND_RENDERER_E1003_WIDTH = 1872,
+    WIND_RENDERER_E1003_HEIGHT = 1404,
     WIND_RENDERER_DAY_COUNT = 5,
     WIND_RENDERER_SAMPLES_PER_DAY = 5,
     WIND_RENDERER_PALETTE_BYTES = WIND_RENDERER_WIDTH * WIND_RENDERER_HEIGHT,
+    WIND_RENDERER_E1003_COMPOSITION_BYTES =
+        WIND_RENDERER_WIDTH * WIND_RENDERER_E1003_COMPOSITION_HEIGHT,
     WIND_RENDERER_RGBA_BYTES = WIND_RENDERER_PALETTE_BYTES * 4,
+    WIND_RENDERER_E1003_RGBA_BYTES = WIND_RENDERER_E1003_COMPOSITION_BYTES * 4,
     WIND_RENDERER_CONTRACT_VERSION = 6,
     WIND_RENDERER_MAX_TIDE_SAMPLES = 121,
     WIND_RENDERER_MAX_TIDE_EXTREMA = 32,
@@ -45,6 +51,7 @@ typedef enum {
 typedef enum {
     WIND_RENDERER_DISPLAY_E1001_GRAY4 = 1,
     WIND_RENDERER_DISPLAY_E1002_SPECTRA6 = 2,
+    WIND_RENDERER_DISPLAY_E1003_GC16 = 3,
 } wind_renderer_display_t;
 
 typedef enum {
@@ -200,9 +207,23 @@ int wind_renderer_render(const wind_renderer_dashboard_t *dashboard,
                          wind_renderer_stats_t *stats);
 
 /* Render the same composition with model-specific final pixel semantics. */
-int wind_renderer_render_for_display(
-    const wind_renderer_dashboard_t *dashboard, wind_renderer_display_t display,
-    uint8_t *logical_out, size_t logical_size, wind_renderer_stats_t *stats);
+int wind_renderer_render_for_display(const wind_renderer_dashboard_t *dashboard,
+                                     wind_renderer_display_t display,
+                                     uint8_t *logical_out, size_t logical_size,
+                                     wind_renderer_stats_t *stats);
+
+/* Returns the physical panel size associated with a renderer model. */
+int wind_renderer_display_dimensions(wind_renderer_display_t display, int *width,
+                                     int *height);
+
+/*
+ * Projects one logical composition row onto its physical panel. E1003 scales
+ * the 800 x 600 composition exactly to the native 1872 x 1404 pixels.
+ */
+int wind_renderer_project_display_row(wind_renderer_display_t display,
+                                      const uint8_t *logical, size_t logical_size,
+                                      int target_y, uint8_t *target_row,
+                                      size_t target_row_size);
 
 /* Mixes the display identity into panel-cache invalidation. */
 uint64_t wind_renderer_display_signature(uint64_t base,
@@ -213,46 +234,48 @@ uint64_t wind_renderer_display_signature(uint64_t base,
  * continuous grayscale values and red accents for a clean browser preview.
  * Only the final output pass differs; layout and drawing stay shared.
  */
-int wind_renderer_render_preview_rgba(
-    const wind_renderer_dashboard_t *dashboard, uint8_t *rgba_out,
-    size_t rgba_size, wind_renderer_stats_t *stats);
+int wind_renderer_render_preview_rgba(const wind_renderer_dashboard_t *dashboard,
+                                      uint8_t *rgba_out, size_t rgba_size,
+                                      wind_renderer_stats_t *stats);
+
+/* Browser preview at the model's native composition aspect and color depth. */
+int wind_renderer_render_preview_rgba_for_display(
+    const wind_renderer_dashboard_t *dashboard, wind_renderer_display_t display,
+    uint8_t *rgba_out, size_t rgba_size, wind_renderer_stats_t *stats);
+
+int wind_renderer_input_v2_render_preview_rgba_for_display(
+    const wind_renderer_input_v2_t *input, wind_renderer_display_t display,
+    uint8_t *rgba_out, size_t rgba_size, wind_renderer_stats_t *stats);
 
 uint32_t wind_renderer_contract_version(void);
 
 void wind_renderer_input_v2_init(wind_renderer_input_v2_t *input);
 
 int wind_renderer_input_v2_set_metadata(wind_renderer_input_v2_t *input,
-                                        const char *spot_name,
-                                        const char *provider,
+                                        const char *spot_name, const char *provider,
                                         const char *updated_time);
 
 int wind_renderer_input_v2_set_status(wind_renderer_input_v2_t *input,
-                                      wind_renderer_state_t state,
-                                      int refresh_failed, int age_hours,
-                                      int battery_percent,
+                                      wind_renderer_state_t state, int refresh_failed,
+                                      int age_hours, int battery_percent,
                                       wind_renderer_display_mode_t display_mode,
                                       int threshold_kt);
 
 int wind_renderer_input_v2_set_display_rows(wind_renderer_input_v2_t *input,
-                                            int show_weather,
-                                            int show_temperature,
-                                            int show_tide,
-                                            int tide_available);
+                                            int show_weather, int show_temperature,
+                                            int show_tide, int tide_available);
 
 int wind_renderer_input_v2_set_preferences(wind_renderer_input_v2_t *input,
-                                           int use_24_hour,
-                                           int temperature_fahrenheit,
+                                           int use_24_hour, int temperature_fahrenheit,
                                            int show_dedicated_footer);
 
-int wind_renderer_input_v2_set_day(wind_renderer_input_v2_t *input,
-                                   int day_index, const char *day,
-                                   const char *date);
+int wind_renderer_input_v2_set_day(wind_renderer_input_v2_t *input, int day_index,
+                                   const char *day, const char *date);
 
-int wind_renderer_input_v2_set_sample(wind_renderer_input_v2_t *input,
-                                      int day_index, int sample_index,
-                                      const char *time, int sustained_kt,
-                                      int gust_kt, int destination_degrees,
-                                      int available,
+int wind_renderer_input_v2_set_sample(wind_renderer_input_v2_t *input, int day_index,
+                                      int sample_index, const char *time,
+                                      int sustained_kt, int gust_kt,
+                                      int destination_degrees, int available,
                                       wind_renderer_weather_t weather,
                                       int temperature_tenths_c,
                                       int temperature_available);
@@ -262,10 +285,11 @@ int wind_renderer_input_v2_set_tide_sample(wind_renderer_input_v2_t *input,
                                            int local_hour, int sea_level_mm,
                                            int available);
 
-int wind_renderer_input_v2_set_tide_extremum(
-    wind_renderer_input_v2_t *input, int extremum_index, int day_index,
-    int local_hour, int local_minute, int sea_level_mm, int is_high,
-    int available);
+int wind_renderer_input_v2_set_tide_extremum(wind_renderer_input_v2_t *input,
+                                             int extremum_index, int day_index,
+                                             int local_hour, int local_minute,
+                                             int sea_level_mm, int is_high,
+                                             int available);
 
 /*
  * Creates the canonical pointer-based dashboard view over input. The returned
@@ -278,9 +302,9 @@ int wind_renderer_input_v2_render(const wind_renderer_input_v2_t *input,
                                   uint8_t *palette_out, size_t palette_size,
                                   wind_renderer_stats_t *stats);
 
-int wind_renderer_input_v2_render_preview_rgba(
-    const wind_renderer_input_v2_t *input, uint8_t *rgba_out,
-    size_t rgba_size, wind_renderer_stats_t *stats);
+int wind_renderer_input_v2_render_preview_rgba(const wind_renderer_input_v2_t *input,
+                                               uint8_t *rgba_out, size_t rgba_size,
+                                               wind_renderer_stats_t *stats);
 
 /*
  * Expands one renderer palette row to RGB888 for display-manager streaming.

@@ -2,6 +2,8 @@ import {
   RENDERER_CONTRACT_VERSION,
   RENDERER_HEIGHT,
   RENDERER_PALETTE_BYTES,
+  RENDERER_PREVIEW_DIMENSIONS,
+  RENDERER_DISPLAYS,
   RENDERER_RGBA_BYTES,
   RENDERER_TEXT_CAPACITIES,
   RENDERER_WIDTH,
@@ -30,6 +32,8 @@ const EXPECTED_EXPORTS = [
   'wind_wasm_output_ptr',
   'wind_wasm_preview_output_ptr',
   'wind_wasm_preview_bytes',
+  'wind_wasm_preview_width',
+  'wind_wasm_preview_height',
   'wind_wasm_reset',
   'wind_wasm_set_metadata_field',
   'wind_wasm_set_status',
@@ -144,7 +148,6 @@ class SharedRenderer {
     this.width = exports.wind_wasm_width()
     this.height = exports.wind_wasm_height()
     this.paletteBytes = exports.wind_wasm_palette_bytes()
-    this.previewBytes = exports.wind_wasm_preview_bytes()
   }
 
   #assertActive() {
@@ -261,10 +264,27 @@ class SharedRenderer {
     return this.#copyOutput('wind_wasm_output_ptr', this.paletteBytes)
   }
 
-  renderPreview(input) {
+  renderPreviewForDisplay(input, display) {
+    const expected = RENDERER_PREVIEW_DIMENSIONS[display]
+    if (!expected) fail('INVALID_INPUT', 'Unknown renderer display')
     this.#prepareInput(input)
-    this.#call('wind_wasm_render_preview')
-    return this.#copyOutput('wind_wasm_preview_output_ptr', this.previewBytes)
+    this.#call('wind_wasm_render_preview', display)
+    const width = this.#exports.wind_wasm_preview_width()
+    const height = this.#exports.wind_wasm_preview_height()
+    const byteLength = this.#exports.wind_wasm_preview_bytes()
+    if (width !== expected.width || height !== expected.height ||
+        byteLength !== width * height * 4) {
+      fail('RENDER_FAILED', 'The renderer published invalid preview dimensions')
+    }
+    return {
+      data: this.#copyOutput('wind_wasm_preview_output_ptr', byteLength),
+      width,
+      height,
+    }
+  }
+
+  renderPreview(input) {
+    return this.renderPreviewForDisplay(input, RENDERER_DISPLAYS.E1002_SPECTRA6).data
   }
 
   dispose() {
@@ -307,15 +327,13 @@ export async function loadSharedRenderer({
     const width = exports.wind_wasm_width()
     const height = exports.wind_wasm_height()
     const paletteBytes = exports.wind_wasm_palette_bytes()
-    const previewBytes = exports.wind_wasm_preview_bytes()
     if (version !== RENDERER_CONTRACT_VERSION) {
       fail('INCOMPATIBLE_RENDERER', `Renderer contract ${version} is not supported`)
     }
     if (
       width !== RENDERER_WIDTH ||
       height !== RENDERER_HEIGHT ||
-      paletteBytes !== RENDERER_PALETTE_BYTES ||
-      previewBytes !== RENDERER_RGBA_BYTES
+      paletteBytes !== RENDERER_PALETTE_BYTES
     ) {
       fail('INCOMPATIBLE_RENDERER', 'Renderer dimensions do not match the Windscout display')
     }

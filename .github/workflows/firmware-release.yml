@@ -47,6 +47,17 @@ jobs:
         working-directory: web
         run: npx playwright install --with-deps chromium
 
+      - name: Render device previews from the 3D scene
+        working-directory: web
+        run: npm run devices:previews
+
+      - name: Upload generated device previews
+        uses: actions/upload-artifact@v7
+        with:
+          name: windscout-device-previews
+          path: web/public/devices/previews/*.png
+          if-no-files-found: error
+
       - name: Run web browser tests
         working-directory: web
         run: npm run test:e2e
@@ -57,7 +68,7 @@ jobs:
         run: npm run build
 
   build-firmware:
-    name: Verify and build E1002 firmware
+    name: Verify and build E1002 + E1003 firmware
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -93,7 +104,7 @@ jobs:
             python3 build.py --board seeedstudio_reterminal_e1002 --step firmware
             -DFIRMWARE_VERSION='${{ steps.version.outputs.value }}'
 
-      - name: Prepare release and same-origin website bundles
+      - name: Prepare E1002 release bundles
         run: |
           mkdir -p release
           cp firmware/build/windscout.bin release/windscout-seeedstudio_reterminal_e1002.bin
@@ -108,6 +119,33 @@ jobs:
             --partitions firmware/partitions.csv \
             --output site-firmware \
             --version '${{ steps.version.outputs.value }}'
+
+      - name: Build reTerminal E1003 firmware
+        uses: espressif/esp-idf-ci-action@9d38657f3d789ca759b2b37aaf5ceffbc42c4f0d # v1
+        with:
+          esp_idf_version: v6.0.2
+          target: esp32s3
+          path: firmware
+          command: >-
+            python3 build.py --board seeedstudio_reterminal_e1003 --step firmware --fullclean
+            -DFIRMWARE_VERSION='${{ steps.version.outputs.value }}'
+
+      - name: Prepare E1003 release bundles
+        run: |
+          cp firmware/build/windscout.bin release/windscout-seeedstudio_reterminal_e1003.bin
+          python3 firmware/scripts/generate_installer_manifest.py \
+            --build-dir firmware/build \
+            --partitions firmware/partitions.csv \
+            --output release/installer/e1003 \
+            --version '${{ steps.version.outputs.value }}' \
+            --board-id seeedstudio_reterminal_e1003 \
+            --flat
+          python3 firmware/scripts/generate_installer_manifest.py \
+            --build-dir firmware/build \
+            --partitions firmware/partitions.csv \
+            --output site-firmware/e1003 \
+            --version '${{ steps.version.outputs.value }}' \
+            --board-id seeedstudio_reterminal_e1003
 
       - name: Upload GitHub Release files
         uses: actions/upload-artifact@v7
@@ -149,6 +187,12 @@ jobs:
         working-directory: web
         run: npm ci
 
+      - name: Download device previews rendered by verification
+        uses: actions/download-artifact@v7
+        with:
+          name: windscout-device-previews
+          path: web/public/devices/previews
+
       - name: Verify Geoapify configuration
         env:
           VITE_GEOAPIFY_API_KEY: ${{ vars.VITE_GEOAPIFY_API_KEY }}
@@ -179,23 +223,25 @@ jobs:
           from pathlib import Path
 
           root = Path("web/dist/firmware")
-          pointer = json.loads((root / "latest.json").read_text())
-          manifest = root / pointer["manifest"]
-          if not manifest.is_file():
-              raise SystemExit(f"Missing installer manifest: {manifest}")
-          manifest_bytes = manifest.read_bytes()
-          if hashlib.sha256(manifest_bytes).hexdigest() != pointer["sha256"]:
-              raise SystemExit("Installer manifest does not match latest.json")
-          data = json.loads(manifest_bytes)
-          for part in data["parts"]:
-              path = manifest.parent / part["file"]
-              if (not path.is_file() or path.stat().st_size != part["size"] or
-                      hashlib.sha256(path.read_bytes()).hexdigest() != part["sha256"]):
-                  raise SystemExit(f"Missing or incomplete installer part: {path}")
+          for pointer_path in [root / "latest.json", root / "e1003" / "latest.json"]:
+              pointer = json.loads(pointer_path.read_text())
+              manifest = pointer_path.parent / pointer["manifest"]
+              if not manifest.is_file():
+                  raise SystemExit(f"Missing installer manifest: {manifest}")
+              manifest_bytes = manifest.read_bytes()
+              if hashlib.sha256(manifest_bytes).hexdigest() != pointer["sha256"]:
+                  raise SystemExit(f"Installer manifest does not match {pointer_path}")
+              data = json.loads(manifest_bytes)
+              for part in data["parts"]:
+                  path = manifest.parent / part["file"]
+                  if (not path.is_file() or path.stat().st_size != part["size"] or
+                          hashlib.sha256(path.read_bytes()).hexdigest() != part["sha256"]):
+                      raise SystemExit(f"Missing or incomplete installer part: {path}")
 
           for asset in Path("web/dist/assets").glob("*.js"):
               source = asset.read_text(errors="ignore")
-              if '"/devices/e1002/' in source or '"/renderer/wind-renderer.wasm' in source:
+              if ('"/devices/e1002/' in source or '"/devices/e1003/' in source or
+                      '"/renderer/wind-renderer.wasm' in source):
                   raise SystemExit(f"Root-relative public asset escaped the Pages base: {asset}")
 
           source_maps = list(Path("web/dist").rglob("*.map"))
@@ -245,5 +291,6 @@ jobs:
           draft: false
           files: |
             release/windscout-seeedstudio_reterminal_e1002.bin
-            release/installer/*
+            release/windscout-seeedstudio_reterminal_e1003.bin
+            release/installer/**/*
           generate_release_notes: true

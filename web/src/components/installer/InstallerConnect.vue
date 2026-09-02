@@ -1,5 +1,12 @@
 <script setup>
-defineProps({ unsupportedReason: { type: String, default: '' } })
+defineProps({
+  deviceLabel: { type: String, default: 'reTerminal E1001 or E1002' },
+  purchaseUrl: {
+    type: String,
+    default: 'https://www.seeedstudio.com/reTerminal-E1002-p-6533.html?sensecap_affiliate=UF4PmgK&referring_service=link',
+  },
+  unsupportedReason: { type: String, default: '' },
+})
 defineEmits(['connect'])
 </script>
 
@@ -12,13 +19,13 @@ defineEmits(['connect'])
       </template>
       <template v-else>
         <h2 id="installer-title">Connect your reTerminal</h2>
-        <p>Connect your reTerminal E1001 or E1002 with a USB data cable.</p>
+        <p>Connect your {{ deviceLabel }} with a USB data cable.</p>
       </template>
     </div>
     <div v-if="!unsupportedReason" class="installer-actions">
       <a
         class="installer-secondary"
-        href="https://www.seeedstudio.com/reTerminal-E1002-p-6533.html?sensecap_affiliate=UF4PmgK&amp;referring_service=link"
+        :href="purchaseUrl"
         target="_blank"
         rel="noopener noreferrer"
       >

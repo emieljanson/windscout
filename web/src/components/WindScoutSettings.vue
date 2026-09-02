@@ -4,7 +4,9 @@ import { storeToRefs } from 'pinia'
 import { useConfiguratorStore } from '../stores/configurator'
 import { FLOATING_INSPECTOR_VIEWPORT_QUERY } from '../composables/useCompactViewport'
 import { MAX_THRESHOLD, MIN_THRESHOLD } from '../renderer/contract'
+import { DEVICE_OPTIONS } from '../config/configuration'
 import { normalizeSpotQuery, searchSpots } from '../spots/searchSpots'
+import ReTerminalHelpDialog from './ReTerminalHelpDialog.vue'
 import SpotCreationDialog from './SpotCreationDialog.vue'
 import SettingCombobox from './settings/SettingCombobox.vue'
 import SettingNumberInput from './settings/SettingNumberInput.vue'
@@ -24,6 +26,7 @@ const {
   forecastMessage,
   forecastStatus,
   selectedModelId,
+  selectedBoardId,
   selectedSpotId,
   showDedicatedFooter,
   spots,
@@ -39,6 +42,7 @@ const spotSearchTerm = ref('')
 const spotHasUserSelection = ref(false)
 const spotSearch = ref(null)
 const spotDialogOpen = ref(false)
+const reTerminalHelpOpen = ref(false)
 const customSpotQuery = ref('')
 const filteredSpots = computed(() => (
   spotSearchTerm.value.trim().length < 2
@@ -164,6 +168,28 @@ function clearPillPointerFocus(event) {
       <span class="forecast-status__message">{{ forecastMessage }}</span>
     </div>
 
+    <SettingRow v-if="compact" class="mobile-model-row" label="reTerminal">
+      <template #label-action>
+        <button
+          class="setting-row__help"
+          type="button"
+          aria-label="About reTerminal devices"
+          aria-haspopup="dialog"
+          :aria-expanded="reTerminalHelpOpen"
+          @click="reTerminalHelpOpen = true"
+        >
+          ?
+        </button>
+      </template>
+      <SettingSelect
+        :model-value="selectedBoardId"
+        :options="DEVICE_OPTIONS"
+        native
+        name="device"
+        @update:model-value="store.setSelectedBoardId"
+      />
+    </SettingRow>
+
     <div v-if="compact" class="mobile-display-pills" role="group" aria-label="Show on Windscout">
       <button
         class="mobile-display-pill"
@@ -250,6 +276,27 @@ function clearPillPointerFocus(event) {
 
     <div v-if="!compact" class="settings-surface">
       <div class="inspector-rows">
+        <SettingRow label="reTerminal">
+          <template #label-action>
+            <button
+              class="setting-row__help"
+              type="button"
+              aria-label="About reTerminal devices"
+              aria-haspopup="dialog"
+              :aria-expanded="reTerminalHelpOpen"
+              @click="reTerminalHelpOpen = true"
+            >
+              ?
+            </button>
+          </template>
+          <SettingSelect
+            :model-value="selectedBoardId"
+            :options="DEVICE_OPTIONS"
+            name="device"
+            @update:model-value="store.setSelectedBoardId"
+          />
+        </SettingRow>
+
         <SettingRow v-if="!compact" label="Wind model">
           <SettingSelect
             :model-value="selectedModelId"
@@ -325,5 +372,6 @@ function clearPillPointerFocus(event) {
       :initial-query="customSpotQuery"
       :save-spot="saveSpot"
     />
+    <ReTerminalHelpDialog v-model:open="reTerminalHelpOpen" />
   </div>
 </template>

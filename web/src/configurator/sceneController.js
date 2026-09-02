@@ -1,3 +1,5 @@
+import { BOARD_IDS } from '../config/configuration'
+
 export const HERO_CAMERA = Object.freeze({
   position: Object.freeze([-0.18, 0.09, 0.42]),
   target: Object.freeze([0, 0, 0]),
@@ -14,6 +16,46 @@ export const USB_CAMERA = Object.freeze({
   position: Object.freeze([0.28, 0.075, -0.32]),
   target: Object.freeze([0.035, -0.005, -0.004]),
 })
+
+export const E1003_USB_CAMERA = Object.freeze({
+  // The E1003 socket sits lower on its taller rear pod. Pull back slightly so
+  // the larger device and the entering connector remain readable together.
+  position: Object.freeze([0.36, 0.055, -0.38]),
+  target: Object.freeze([0.058, -0.026, -0.007]),
+})
+
+export function usbCameraForBoard(boardId) {
+  return boardId === BOARD_IDS.E1003 ? E1003_USB_CAMERA : USB_CAMERA
+}
+
+const DEVICE_STAGES = Object.freeze({
+  [BOARD_IDS.E1002]: Object.freeze({
+    surfaceY: -0.06035,
+    shadowY: -0.0604,
+    contactY: -0.06012,
+    contactWidth: 0.183,
+    contactDepth: 0.026,
+    contactZ: 0.004,
+    contactOpacity: 0.58,
+    contactPower: 2.35,
+    heroZoom: 1,
+  }),
+  [BOARD_IDS.E1003]: Object.freeze({
+    surfaceY: -0.093,
+    shadowY: -0.09305,
+    contactY: -0.09277,
+    contactWidth: 0.232,
+    contactDepth: 0.0285,
+    contactZ: 0.0044,
+    contactOpacity: 0.22,
+    contactPower: 1.2,
+    heroZoom: 0.72,
+  }),
+})
+
+export function deviceStageForBoard(boardId) {
+  return DEVICE_STAGES[boardId] ?? DEVICE_STAGES[BOARD_IDS.E1002]
+}
 
 export const CABLE_CAMERA = Object.freeze({
   // Product on the left, exposed cable running across the frame on the right.
@@ -265,8 +307,10 @@ export function createUsbCameraAnimation({
   controls,
   reducedMotion,
   requestRender,
+  usbPose = USB_CAMERA,
 }) {
-  const referenceDistance = poseDistance(HERO_CAMERA, USB_CAMERA)
+  const cameraViews = { ...CAMERA_VIEWS, usb: usbPose }
+  const referenceDistance = poseDistance(HERO_CAMERA, usbPose)
   let savedPose
   let startPose
   let startOrbit
@@ -310,7 +354,7 @@ export function createUsbCameraAnimation({
     if (nextView === activeView) return
     if (nextView !== 'hero' && !savedPose) savedPose = capturePose(camera, controls)
     activeView = nextView
-    const target = CAMERA_VIEWS[nextView] ?? (savedPose ?? capturePose(camera, controls))
+    const target = cameraViews[nextView] ?? (savedPose ?? capturePose(camera, controls))
     begin(target)
   }
 

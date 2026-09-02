@@ -34,7 +34,7 @@ export function createProductStudioScene(palette = {}) {
 export function createProductStudioEnvironment(renderer, palette) {
   const studio = createProductStudioScene(palette)
   const generator = new THREE.PMREMGenerator(renderer)
-  const environment = generator.fromScene(studio, 0.045).texture
+  const environment = generator.fromScene(studio, 0.04).texture
 
   studio.traverse((child) => {
     child.geometry?.dispose?.()

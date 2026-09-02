@@ -3,6 +3,17 @@ import { DEFAULT_THRESHOLD } from '../renderer/contract'
 
 export const CONFIGURATION_VERSION = 3
 export const BOARD_ID = 'seeedstudio_reterminal_e1002'
+export const BOARD_IDS = Object.freeze({
+  E1001: 'seeedstudio_reterminal_e1001',
+  E1002: BOARD_ID,
+  E1003: 'seeedstudio_reterminal_e1003',
+})
+export const SUPPORTED_BOARD_IDS = Object.freeze(Object.values(BOARD_IDS))
+export const DEVICE_OPTIONS = Object.freeze([
+  Object.freeze({ value: BOARD_IDS.E1001, label: 'E1001' }),
+  Object.freeze({ value: BOARD_IDS.E1002, label: 'E1002' }),
+  Object.freeze({ value: BOARD_IDS.E1003, label: 'E1003' }),
+])
 
 const SPOT_ID_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/
 const TIMEZONE_PATTERN = /^[A-Za-z0-9._+-]+(?:\/[A-Za-z0-9._+-]+)+$|^Etc\/UTC$/
@@ -78,7 +89,7 @@ export function installedConfigurationDigest(configuration) {
 
 export function validateInstalledConfiguration(configuration) {
   if (!configuration || configuration.version !== CONFIGURATION_VERSION ||
-      configuration.boardId !== BOARD_ID) return false
+      !SUPPORTED_BOARD_IDS.includes(configuration.boardId)) return false
   const { spot, display } = configuration
   if (!spot || typeof spot.id !== 'string' || !SPOT_ID_PATTERN.test(spot.id) ||
       typeof spot.name !== 'string' || spot.name.length < 1 || spot.name.length > 64 ||
@@ -99,10 +110,10 @@ export function validateInstalledConfiguration(configuration) {
     configuration.digest === installedConfigurationDigest(configuration)
 }
 
-export function createInstalledConfiguration({ spot, modelId, display }, { allowInvalid = false } = {}) {
+export function createInstalledConfiguration({ spot, modelId, display, boardId = BOARD_ID }, { allowInvalid = false } = {}) {
   const configuration = {
     version: CONFIGURATION_VERSION,
-    boardId: BOARD_ID,
+    boardId,
     spot: {
       id: String(spot?.id ?? ''),
       name: String(spot?.name ?? ''),

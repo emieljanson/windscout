@@ -11,7 +11,11 @@ extern "C" {
 #endif
 
 #define INSTALLED_CONFIGURATION_VERSION 3u
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+#define WINDSCOUT_BOARD_ID "seeedstudio_reterminal_e1003"
+#else
 #define WINDSCOUT_BOARD_ID "seeedstudio_reterminal_e1002"
+#endif
 #define INSTALLED_CONFIGURATION_WRITE_BOUNDARY_COUNT 3
 
 typedef struct {

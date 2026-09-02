@@ -1,16 +1,20 @@
 import { describe, expect, it, vi } from 'vitest'
+import { BOARD_IDS } from '../src/config/configuration'
 import {
   HERO_CAMERA,
   HERO_ENTRANCE_DURATION_MS,
   NARROW_CAMERA,
   ORBIT_LIMITS,
   USB_CAMERA,
+  E1003_USB_CAMERA,
   USB_CAMERA_DURATION_MS,
   applyHeroPose,
   calculateSceneComposition,
   configureOrbitControls,
   createHeroEntranceAnimation,
   createUsbCameraAnimation,
+  deviceStageForBoard,
+  usbCameraForBoard,
   easeCameraMovement,
   springCameraMovement,
 } from '../src/configurator/sceneController'
@@ -26,6 +30,26 @@ function vector(values) {
 }
 
 describe('scene controller', () => {
+  it('frames the USB socket for the selected physical device', () => {
+    expect(usbCameraForBoard(BOARD_IDS.E1002)).toBe(USB_CAMERA)
+    expect(usbCameraForBoard(BOARD_IDS.E1003)).toBe(E1003_USB_CAMERA)
+    expect(E1003_USB_CAMERA.target).not.toEqual(USB_CAMERA.target)
+  })
+
+  it('grounds the taller E1003 on its own product stage', () => {
+    const e1002 = deviceStageForBoard(BOARD_IDS.E1002)
+    const e1003 = deviceStageForBoard(BOARD_IDS.E1003)
+
+    expect(e1003.surfaceY).toBeLessThan(e1002.surfaceY)
+    expect(e1003.contactWidth).toBeGreaterThan(e1002.contactWidth)
+    expect(e1003.contactDepth).toBeGreaterThan(e1002.contactDepth)
+    expect(e1003.contactWidth / e1002.contactWidth).toBeCloseTo(224 / 176, 2)
+    expect(e1003.contactDepth / e1002.contactDepth).toBeCloseTo(18.6 / 17, 2)
+    expect(e1003.contactZ / e1002.contactZ).toBeCloseTo(18.6 / 17, 1)
+    expect(e1003.contactOpacity).toBeLessThan(e1002.contactOpacity)
+    expect(e1003.contactPower).toBeLessThan(e1002.contactPower)
+    expect(e1003.heroZoom).toBeLessThan(e1002.heroZoom)
+  })
   it('restores the designed camera and orbit target', () => {
     const camera = { position: { set: (...values) => { camera.values = values } } }
     const controls = { target: { set: (...values) => { controls.values = values } }, update: () => { controls.updated = true } }

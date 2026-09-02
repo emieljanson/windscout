@@ -1,6 +1,10 @@
 <script setup>
 import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { createInstalledConfiguration, displayConfigurationFromStore } from '../config/configuration'
+import {
+  SUPPORTED_BOARD_IDS,
+  createInstalledConfiguration,
+  displayConfigurationFromStore,
+} from '../config/configuration'
 import { getSerialSupport } from '../installer/serialPortAdapter'
 import InstallContinuation from '../components/InstallContinuation.vue'
 import WindScoutSettings from '../components/WindScoutSettings.vue'
@@ -11,6 +15,12 @@ const WindScoutScene = defineAsyncComponent(() => import('../components/WindScou
 
 const store = useConfiguratorStore()
 const { isCompact } = useCompactViewport()
+const requestedPreviewBoardId = new URLSearchParams(window.location.search).get('devicePreview')
+const previewBoardId = SUPPORTED_BOARD_IDS.includes(requestedPreviewBoardId)
+  ? requestedPreviewBoardId
+  : null
+const captureMode = Boolean(previewBoardId)
+if (captureMode) store.setShowThreshold(true)
 const sceneFailed = ref(false)
 const sceneError = ref('')
 const installerOpen = ref(false)
@@ -21,6 +31,7 @@ const showInstaller = computed(() => (
 const installationConfiguration = computed(() => createInstalledConfiguration({
   spot: store.spotById(store.selectedSpotId),
   modelId: store.selectedModelId,
+  boardId: store.selectedBoardId,
   display: displayConfigurationFromStore(store),
 }))
 let visualViewportFrame
@@ -62,8 +73,10 @@ onMounted(() => {
   window.addEventListener('resize', scheduleVisualViewportUpdate)
   window.visualViewport?.addEventListener('resize', scheduleVisualViewportUpdate)
   window.visualViewport?.addEventListener('scroll', scheduleVisualViewportUpdate)
-  void store.initializeForecast()
-  void store.initializeTide()
+  if (!captureMode) {
+    void store.initializeForecast()
+    void store.initializeTide()
+  }
 })
 
 onBeforeUnmount(() => {
@@ -77,12 +90,21 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="configurator-page" :class="{ 'configurator-page--compact': isCompact }">
+  <div
+    class="configurator-page"
+    :class="{
+      'configurator-page--compact': isCompact && !captureMode,
+      'configurator-page--device-capture': captureMode,
+    }"
+  >
     <main id="main-content" class="configurator-layout">
       <section class="product-stage" aria-label="Windscout 3D preview">
         <WindScoutScene
           v-if="!sceneFailed"
+          :key="previewBoardId || store.selectedBoardId"
           class="device-scene"
+          :board-id="previewBoardId || store.selectedBoardId"
+          :capture-mode="captureMode"
           :focus-usb-connection="showUsbConnection"
           :show-usb-cable="installerOpen"
           @error="handleSceneError"
@@ -95,6 +117,7 @@ onBeforeUnmount(() => {
       </section>
 
       <aside
+        v-if="!captureMode"
         class="settings-panel"
         :class="{ 'settings-panel--compact': isCompact }"
         aria-label="Windscout settings"

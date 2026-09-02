@@ -53,7 +53,7 @@ static uint32_t record_checksum(const hardware_profile_record_t *record)
 static bool model_valid(hardware_model_t model)
 {
     return model == HARDWARE_MODEL_UNKNOWN || model == HARDWARE_MODEL_E1001 ||
-           model == HARDWARE_MODEL_E1002;
+           model == HARDWARE_MODEL_E1002 || model == HARDWARE_MODEL_E1003;
 }
 
 static bool source_valid_for_model(hardware_profile_source_t source, hardware_model_t model)
@@ -277,7 +277,8 @@ bool hardware_profile_can_use_panel_for_fixed_model(hardware_model_t fixed_model
     if (s_boot_state.effective_model != HARDWARE_MODEL_UNKNOWN) {
         return s_boot_state.effective_model == fixed_model;
     }
-    return fixed_model == HARDWARE_MODEL_E1001 || fixed_model == HARDWARE_MODEL_E1002;
+    return fixed_model == HARDWARE_MODEL_E1001 || fixed_model == HARDWARE_MODEL_E1002 ||
+           fixed_model == HARDWARE_MODEL_E1003;
 }
 
 static esp_err_t persist_transition(hardware_profile_record_t *record,
@@ -423,6 +424,7 @@ const char *hardware_model_name(hardware_model_t model)
     switch (model) {
     case HARDWARE_MODEL_E1001: return "e1001";
     case HARDWARE_MODEL_E1002: return "e1002";
+    case HARDWARE_MODEL_E1003: return "e1003";
     default: return "unknown";
     }
 }

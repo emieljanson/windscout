@@ -48,9 +48,9 @@ static const char *TAG = "it8951";
 #define IT8951_CMD_TEMP 0x0040
 
 // ---- Registers ----
-#define IT8951_REG_LISAR 0x0208    // Load Image Start Addr (32-bit: lo@+0, hi@+2)
-#define IT8951_REG_LUTAFSR 0x1224  // LUT/display busy status (0 = idle)
-#define IT8951_REG_I80CPCR 0x0004  // Host packed-write control
+#define IT8951_REG_LISAR 0x0208   // Load Image Start Addr (32-bit: lo@+0, hi@+2)
+#define IT8951_REG_LUTAFSR 0x1224 // LUT/display busy status (0 = idle)
+#define IT8951_REG_I80CPCR 0x0004 // Host packed-write control
 
 // ---- SPI preambles (16-bit, MSB first) ----
 #define IT8951_PRE_CMD 0x6000
@@ -58,7 +58,7 @@ static const char *TAG = "it8951";
 #define IT8951_PRE_RD_DATA 0x1000
 
 // ---- Image load: 4bpp, little-endian, no rotation ----
-#define IT8951_BPP_4 2  // pixel-format field: 0=2bpp,1=3bpp,2=4bpp,3=8bpp
+#define IT8951_BPP_4 2 // pixel-format field: 0=2bpp,1=3bpp,2=4bpp,3=8bpp
 #define IT8951_LD_ENDIAN 0
 #define IT8951_LD_ROTATE 0
 
@@ -82,7 +82,7 @@ static const char *TAG = "it8951";
 // The GC16 refresh dominates update time (~30 s), so we run the whole device at
 // the read-safe 4 MHz rather than juggling a separate write clock.
 #define IT8951_SPI_CLOCK_HZ (4 * 1000 * 1000)
-#define IT8951_SPI_CHUNK 4000  // bytes per data burst (must be <= bus max_transfer_sz)
+#define IT8951_SPI_CHUNK 4000 // bytes per data burst (must be <= bus max_transfer_sz)
 #define IT8951_BUSY_TIMEOUT_US (5 * 1000 * 1000)
 
 typedef struct {
@@ -100,10 +100,10 @@ static spi_device_handle_t s_spi = NULL;
 static uint8_t *s_dma_buf = NULL;
 static int s_pin_cs = -1;
 static int s_pin_rst = -1;
-static int s_pin_busy = -1;    // HRDY: high = ready, low = busy
-static int s_pin_enable = -1;  // EPD bias (TPS65185) enable
+static int s_pin_busy = -1;   // HRDY: high = ready, low = busy
+static int s_pin_enable = -1; // EPD bias (TPS65185) enable
 static uint32_t s_img_addr = 0;
-static int8_t s_temp_c = IT8951_DEFAULT_TEMP_C;  // panel temperature for waveform select
+static int8_t s_temp_c = IT8951_DEFAULT_TEMP_C; // panel temperature for waveform select
 // Default to the ED103TC2 geometry until GetSystemInfo reports the real values.
 static it8951_dev_info_t s_dev = {.panel_w = 1872, .panel_h = 1404};
 
@@ -117,18 +117,15 @@ static esp_pm_lock_handle_t pm_lock = NULL;
 
 // ---- Low-level SPI helpers (manual CS, MSB-first 16-bit words) ----
 
-static inline void cs_low(void)
-{
+static inline void cs_low(void) {
     gpio_set_level(s_pin_cs, 0);
 }
-static inline void cs_high(void)
-{
+static inline void cs_high(void) {
     gpio_set_level(s_pin_cs, 1);
 }
 
 // Wait for the controller to assert HRDY (ready). Returns false on timeout.
-static bool wait_ready(void)
-{
+static bool wait_ready(void) {
     int64_t deadline = esp_timer_get_time() + IT8951_BUSY_TIMEOUT_US;
     while (gpio_get_level(s_pin_busy) == 0) {
         if (esp_timer_get_time() > deadline) {
@@ -140,37 +137,32 @@ static bool wait_ready(void)
     return true;
 }
 
-static void spi_tx(const uint8_t *tx, size_t len)
-{
+static void spi_tx(const uint8_t *tx, size_t len) {
     spi_transaction_t t = {.length = len * 8, .tx_buffer = tx};
     esp_err_t ret = spi_device_polling_transmit(s_spi, &t);
     if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "SPI tx %d bytes failed: %s", (int) len, esp_err_to_name(ret));
+        ESP_LOGE(TAG, "SPI tx %d bytes failed: %s", (int)len, esp_err_to_name(ret));
     }
 }
 
-static void spi_txrx(const uint8_t *tx, uint8_t *rx, size_t len)
-{
+static void spi_txrx(const uint8_t *tx, uint8_t *rx, size_t len) {
     spi_transaction_t t = {.length = len * 8, .tx_buffer = tx, .rx_buffer = rx};
     spi_device_polling_transmit(s_spi, &t);
 }
 
-static void spi_write16(uint16_t v)
-{
-    uint8_t b[2] = {(uint8_t) (v >> 8), (uint8_t) (v & 0xFF)};
+static void spi_write16(uint16_t v) {
+    uint8_t b[2] = {(uint8_t)(v >> 8), (uint8_t)(v & 0xFF)};
     spi_tx(b, 2);
 }
 
-static uint16_t spi_read16(void)
-{
+static uint16_t spi_read16(void) {
     uint8_t tx[2] = {0, 0};
     uint8_t rx[2] = {0, 0};
     spi_txrx(tx, rx, 2);
-    return ((uint16_t) rx[0] << 8) | rx[1];
+    return ((uint16_t)rx[0] << 8) | rx[1];
 }
 
-static void it8951_write_cmd(uint16_t cmd)
-{
+static void it8951_write_cmd(uint16_t cmd) {
     wait_ready();
     cs_low();
     spi_write16(IT8951_PRE_CMD);
@@ -179,8 +171,7 @@ static void it8951_write_cmd(uint16_t cmd)
     cs_high();
 }
 
-static void it8951_write_data(uint16_t data)
-{
+static void it8951_write_data(uint16_t data) {
     wait_ready();
     cs_low();
     spi_write16(IT8951_PRE_WR_DATA);
@@ -189,26 +180,24 @@ static void it8951_write_data(uint16_t data)
     cs_high();
 }
 
-static uint16_t it8951_read_data(void)
-{
+static uint16_t it8951_read_data(void) {
     wait_ready();
     cs_low();
     spi_write16(IT8951_PRE_RD_DATA);
     wait_ready();
-    (void) spi_read16();  // dummy word (read latency)
+    (void)spi_read16(); // dummy word (read latency)
     wait_ready();
     uint16_t v = spi_read16();
     cs_high();
     return v;
 }
 
-static void it8951_read_data_buf(uint16_t *buf, size_t words)
-{
+static void it8951_read_data_buf(uint16_t *buf, size_t words) {
     wait_ready();
     cs_low();
     spi_write16(IT8951_PRE_RD_DATA);
     wait_ready();
-    (void) spi_read16();  // dummy word (read latency)
+    (void)spi_read16(); // dummy word (read latency)
     wait_ready();
     // Read all words in ONE continuous transaction. Reading word-by-word leaves
     // gaps between SPI transactions where the IT8951 can re-present stale MISO
@@ -216,13 +205,15 @@ static void it8951_read_data_buf(uint16_t *buf, size_t words)
     uint8_t rx[64] = {0};
     const size_t nbytes = words * 2;
     if (nbytes <= sizeof(rx)) {
-        spi_transaction_t t = {.length = nbytes * 8, .rxlength = nbytes * 8, .rx_buffer = rx};
+        spi_transaction_t t = {
+            .length = nbytes * 8, .rxlength = nbytes * 8, .rx_buffer = rx};
         esp_err_t ret = spi_device_polling_transmit(s_spi, &t);
         if (ret != ESP_OK) {
-            ESP_LOGE(TAG, "SPI read %d bytes failed: %s", (int) nbytes, esp_err_to_name(ret));
+            ESP_LOGE(TAG, "SPI read %d bytes failed: %s", (int)nbytes,
+                     esp_err_to_name(ret));
         }
         for (size_t i = 0; i < words; i++) {
-            buf[i] = ((uint16_t) rx[i * 2] << 8) | rx[i * 2 + 1];  // MSB-first
+            buf[i] = ((uint16_t)rx[i * 2] << 8) | rx[i * 2 + 1]; // MSB-first
         }
     } else {
         for (size_t i = 0; i < words; i++) {
@@ -232,15 +223,13 @@ static void it8951_read_data_buf(uint16_t *buf, size_t words)
     cs_high();
 }
 
-static void it8951_write_reg(uint16_t reg, uint16_t val)
-{
+static void it8951_write_reg(uint16_t reg, uint16_t val) {
     it8951_write_cmd(IT8951_TCON_REG_WR);
     it8951_write_data(reg);
     it8951_write_data(val);
 }
 
-static uint16_t it8951_read_reg(uint16_t reg)
-{
+static uint16_t it8951_read_reg(uint16_t reg) {
     it8951_write_cmd(IT8951_TCON_REG_RD);
     it8951_write_data(reg);
     return it8951_read_data();
@@ -248,20 +237,18 @@ static uint16_t it8951_read_reg(uint16_t reg)
 
 // ---- IT8951 operations ----
 
-static void it8951_reset(void)
-{
+static void it8951_reset(void) {
     gpio_set_level(s_pin_rst, 0);
     vTaskDelay(pdMS_TO_TICKS(10));
     gpio_set_level(s_pin_rst, 1);
     vTaskDelay(pdMS_TO_TICKS(100));
 }
 
-static bool it8951_get_dev_info(void)
-{
+static bool it8951_get_dev_info(void) {
     for (int attempt = 0; attempt < 8; attempt++) {
         it8951_write_cmd(IT8951_CMD_GET_DEV_INFO);
-        it8951_read_data_buf((uint16_t *) &s_dev, sizeof(s_dev) / 2);
-        uint32_t addr = ((uint32_t) s_dev.img_addr_h << 16) | s_dev.img_addr_l;
+        it8951_read_data_buf((uint16_t *)&s_dev, sizeof(s_dev) / 2);
+        uint32_t addr = ((uint32_t)s_dev.img_addr_h << 16) | s_dev.img_addr_l;
         // Validate against a flaky SPI read: sane panel size + an image-buffer
         // address inside the IT8951's external RAM window.
         if (s_dev.panel_w >= 100 && s_dev.panel_w <= 4096 && s_dev.panel_h >= 100 &&
@@ -269,45 +256,40 @@ static bool it8951_get_dev_info(void)
             s_img_addr = addr;
             return true;
         }
-        ESP_LOGW(TAG, "dev info invalid (panel %ux%u, addr 0x%08lx), retry", s_dev.panel_w,
-                 s_dev.panel_h, (unsigned long) addr);
+        ESP_LOGW(TAG, "dev info invalid (panel %ux%u, addr 0x%08lx), retry",
+                 s_dev.panel_w, s_dev.panel_h, (unsigned long)addr);
         vTaskDelay(pdMS_TO_TICKS(5));
     }
     ESP_LOGE(TAG, "GetSystemInfo failed validation after retries");
     return false;
 }
 
-static int16_t it8951_get_vcom(void)
-{
+static int16_t it8951_get_vcom(void) {
     it8951_write_cmd(IT8951_CMD_VCOM);
-    it8951_write_data(0);  // 0 = read
-    return (int16_t) it8951_read_data();
+    it8951_write_data(0); // 0 = read
+    return (int16_t)it8951_read_data();
 }
 
-static void it8951_set_vcom(uint16_t mv)
-{
+static void it8951_set_vcom(uint16_t mv) {
     it8951_write_cmd(IT8951_CMD_VCOM);
-    it8951_write_data(1);  // 1 = set
+    it8951_write_data(1); // 1 = set
     it8951_write_data(mv);
 }
 
 // Force the panel temperature (selects the display waveform).
-static void it8951_set_temp(int16_t celsius)
-{
+static void it8951_set_temp(int16_t celsius) {
     it8951_write_cmd(IT8951_CMD_TEMP);
-    it8951_write_data(1);  // 1 = force-write temperature
-    it8951_write_data((uint16_t) celsius);
+    it8951_write_data(1); // 1 = force-write temperature
+    it8951_write_data((uint16_t)celsius);
 }
 
-static void it8951_set_target_memory(uint32_t addr)
-{
-    it8951_write_reg(IT8951_REG_LISAR + 2, (uint16_t) (addr >> 16));
-    it8951_write_reg(IT8951_REG_LISAR, (uint16_t) (addr & 0xFFFF));
+static void it8951_set_target_memory(uint32_t addr) {
+    it8951_write_reg(IT8951_REG_LISAR + 2, (uint16_t)(addr >> 16));
+    it8951_write_reg(IT8951_REG_LISAR, (uint16_t)(addr & 0xFFFF));
 }
 
 // Poll the display/LUT engine until idle.
-static void it8951_wait_display_ready(void)
-{
+static void it8951_wait_display_ready(void) {
     int64_t deadline = esp_timer_get_time() + IT8951_BUSY_TIMEOUT_US;
     while (it8951_read_reg(IT8951_REG_LUTAFSR) != 0) {
         if (esp_timer_get_time() > deadline) {
@@ -318,8 +300,8 @@ static void it8951_wait_display_ready(void)
     }
 }
 
-static void it8951_display_area(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t mode)
-{
+static void it8951_display_area(uint16_t x, uint16_t y, uint16_t w, uint16_t h,
+                                uint16_t mode) {
     it8951_wait_display_ready();
     it8951_write_cmd(IT8951_CMD_DPY_AREA);
     it8951_write_data(x);
@@ -331,13 +313,12 @@ static void it8951_display_area(uint16_t x, uint16_t y, uint16_t w, uint16_t h, 
 
 // ---- epaper.h interface ----
 
-esp_err_t epaper_init(const epaper_config_t *cfg)
-{
+esp_err_t epaper_init(const epaper_config_t *cfg) {
     if (!cfg) return ESP_ERR_INVALID_ARG;
     s_pin_cs = cfg->pin_cs;
     s_pin_rst = cfg->pin_rst;
-    s_pin_busy = cfg->pin_busy;      // HRDY
-    s_pin_enable = cfg->pin_enable;  // EPD bias enable (optional)
+    s_pin_busy = cfg->pin_busy;     // HRDY
+    s_pin_enable = cfg->pin_enable; // EPD bias enable (optional)
 
     // GPIOs: CS/RST/EN as outputs, HRDY as input.
     gpio_config_t out_cfg = {
@@ -357,7 +338,7 @@ esp_err_t epaper_init(const epaper_config_t *cfg)
     cs_high();
     gpio_set_level(s_pin_rst, 1);
     if (s_pin_enable >= 0) {
-        gpio_set_level(s_pin_enable, 1);  // enable EPD bias (TPS65185)
+        gpio_set_level(s_pin_enable, 1); // enable EPD bias (TPS65185)
         vTaskDelay(pdMS_TO_TICKS(10));
     }
 
@@ -375,14 +356,16 @@ esp_err_t epaper_init(const epaper_config_t *cfg)
     }
 
 #ifdef CONFIG_PM_ENABLE
-    esp_err_t pm_ret = esp_pm_lock_create(ESP_PM_NO_LIGHT_SLEEP, 0, "epd_update", &pm_lock);
+    esp_err_t pm_ret =
+        esp_pm_lock_create(ESP_PM_NO_LIGHT_SLEEP, 0, "epd_update", &pm_lock);
     if (pm_ret != ESP_OK) {
         ESP_LOGE(TAG, "Failed to create PM lock: %s", esp_err_to_name(pm_ret));
     }
 #endif
 
     // DMA-capable internal-RAM bounce buffer for streaming the PSRAM framebuffer.
-    s_dma_buf = heap_caps_malloc(IT8951_SPI_CHUNK, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+    s_dma_buf =
+        heap_caps_malloc(IT8951_SPI_CHUNK, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
     if (!s_dma_buf) {
         ESP_LOGE(TAG, "failed to alloc %d-byte SPI DMA buffer", IT8951_SPI_CHUNK);
         return ESP_ERR_NO_MEM;
@@ -416,16 +399,14 @@ esp_err_t epaper_init(const epaper_config_t *cfg)
     return ESP_OK;
 }
 
-void epaper_set_temperature(int8_t celsius)
-{
+void epaper_set_temperature(int8_t celsius) {
     s_temp_c = celsius;
     if (s_spi) {
         it8951_set_temp(celsius);
     }
 }
 
-esp_err_t epaper_display(uint8_t *image)
-{
+esp_err_t epaper_display(uint8_t *image) {
     if (!s_spi || !image || !s_dma_buf) {
         return ESP_ERR_INVALID_STATE;
     }
@@ -436,15 +417,15 @@ esp_err_t epaper_display(uint8_t *image)
 #endif
     const uint16_t w = s_dev.panel_w;
     const uint16_t h = s_dev.panel_h;
-    const size_t row_bytes = (size_t) w / 2;  // 4bpp = 2 px/byte
+    const size_t row_bytes = (size_t)w / 2; // 4bpp = 2 px/byte
 
     it8951_set_target_memory(s_img_addr);
 
     // Load full-frame image area (4bpp).
     it8951_write_cmd(IT8951_TCON_LD_IMG_AREA);
     it8951_write_data((IT8951_LD_ENDIAN << 8) | (IT8951_BPP_4 << 4) | IT8951_LD_ROTATE);
-    it8951_write_data(0);  // x
-    it8951_write_data(0);  // y
+    it8951_write_data(0); // x
+    it8951_write_data(0); // y
     it8951_write_data(w);
     it8951_write_data(h);
 
@@ -470,7 +451,7 @@ esp_err_t epaper_display(uint8_t *image)
     cs_low();
     spi_write16(IT8951_PRE_WR_DATA);
     for (uint16_t y = 0; y < h; y++) {
-        const uint8_t *src = image + (size_t) y * row_bytes;
+        const uint8_t *src = image + (size_t)y * row_bytes;
         for (size_t wi = 0; wi < row_words; wi++) {
             const uint8_t *sw = src + (row_words - 1 - wi) * 2;
             s_dma_buf[wi * 2] = sw[0];
@@ -509,23 +490,43 @@ esp_err_t epaper_display(uint8_t *image)
     return ESP_OK;
 }
 
-esp_err_t epaper_clear(uint8_t *image, uint8_t color)
-{
-    (void) color;
+esp_err_t epaper_display_logical(const uint8_t *image, size_t image_size) {
+    const size_t logical_size = (size_t)s_dev.panel_w * s_dev.panel_h;
+    const size_t packed_size = logical_size / 2;
+    if (!image) return ESP_ERR_INVALID_ARG;
+    if (image_size != logical_size || (s_dev.panel_w & 1u) != 0) {
+        return ESP_ERR_INVALID_SIZE;
+    }
+
+    uint8_t *packed = heap_caps_malloc(packed_size, MALLOC_CAP_SPIRAM);
+    if (!packed) return ESP_ERR_NO_MEM;
+    for (size_t pixel = 0; pixel < logical_size; pixel += 2) {
+        if (image[pixel] > 15 || image[pixel + 1] > 15) {
+            heap_caps_free(packed);
+            return ESP_ERR_INVALID_ARG;
+        }
+        packed[pixel / 2] = (uint8_t)((image[pixel] << 4) | image[pixel + 1]);
+    }
+    esp_err_t result = epaper_display(packed);
+    heap_caps_free(packed);
+    return result;
+}
+
+esp_err_t epaper_clear(uint8_t *image, uint8_t color) {
+    (void)color;
     // Fill the frame buffer with white (GC16 level 15 -> nibble 0xF). The named
     // 6-color "white" doesn't map to GC16, so "clear" is always white here. The
     // caller (display_manager_clear) then epaper_display()s this buffer -- one
     // GC16 white refresh. Without this fill the buffer keeps the previous image
     // and the caller's epaper_display would repaint it.
     if (image) {
-        memset(image, 0xFF, (size_t) s_dev.panel_w * s_dev.panel_h / 2);
+        memset(image, 0xFF, (size_t)s_dev.panel_w * s_dev.panel_h / 2);
         return ESP_OK;
     }
     return ESP_ERR_INVALID_ARG;
 }
 
-esp_err_t epaper_enter_deepsleep(void)
-{
+esp_err_t epaper_enter_deepsleep(void) {
 #ifdef CONFIG_PM_ENABLE
     if (pm_lock) {
         esp_pm_lock_acquire(pm_lock);
@@ -546,12 +547,10 @@ esp_err_t epaper_enter_deepsleep(void)
     return ESP_OK;
 }
 
-uint16_t epaper_get_width(void)
-{
+uint16_t epaper_get_width(void) {
     return s_dev.panel_w;
 }
 
-uint16_t epaper_get_height(void)
-{
+uint16_t epaper_get_height(void) {
     return s_dev.panel_h;
 }

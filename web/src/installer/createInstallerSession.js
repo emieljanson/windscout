@@ -71,6 +71,7 @@ export function createInstallerSession({
   const pendingFailures = []
   const listeners = new Set()
   const probingProtocols = new Set()
+  const expectedBoardId = configuration?.boardId ?? BOARD_ID
 
   try {
     diagnostics.registerSensitiveValues?.([
@@ -78,7 +79,7 @@ export function createInstallerSession({
       configuration?.spot?.name,
       configuration?.spot?.timezone,
     ])
-    diagnostics.setContext?.({ boardId: BOARD_ID, chipFamily: CHIP_FAMILY })
+    diagnostics.setContext?.({ boardId: expectedBoardId, chipFamily: CHIP_FAMILY })
   } catch {}
 
   function update(patch) {
@@ -284,7 +285,7 @@ export function createInstallerSession({
         protocol: candidate,
         device: {
           kind: 'windscout',
-          verifiedBoard: hello.boardId === BOARD_ID,
+          verifiedBoard: hello.boardId === expectedBoardId,
           boardId: hello.boardId,
           chipFamily: hello.chipFamily ?? CHIP_FAMILY,
           firmwareVersion: hello.firmwareVersion,
@@ -350,7 +351,7 @@ export function createInstallerSession({
     try {
       await releaseConnections({ clearDevice: true })
       const [releaseResult, probeResult] = await Promise.allSettled([
-        releaseLoader({ signal: operationController.signal }),
+        releaseLoader({ boardId: expectedBoardId, signal: operationController.signal }),
         probeApp(port),
       ])
       const appProbe = probeResult.status === 'fulfilled' ? probeResult.value : null
@@ -391,7 +392,7 @@ export function createInstallerSession({
         requiredConfigurationVersion: CONFIGURATION_VERSION,
       })
       if (action.action === INSTALL_ACTIONS.BLOCKED) {
-        throw new InstallerError(INSTALLER_ERROR_CODES.INCOMPATIBLE_DEVICE, 'This is not a supported reTerminal E1001 or E1002.', { recoverable: false })
+        throw new InstallerError(INSTALLER_ERROR_CODES.INCOMPATIBLE_DEVICE, 'This is not the selected reTerminal model.', { recoverable: false })
       }
       rememberVerifiedPort(selectedPort)
       setReleaseDiagnosticContext()
@@ -505,10 +506,15 @@ export function createInstallerSession({
         return state
       }
       if ([INSTALL_ACTIONS.INSTALL, INSTALL_ACTIONS.REINSTALL, INSTALL_ACTIONS.UPDATE_FIRMWARE].includes(action.action)) {
-        if (!device.verifiedBoard && !confirmed) throw new InstallerError(INSTALLER_ERROR_CODES.UNCONFIRMED_DEVICE, 'Confirm this is a reTerminal E1001 or E1002 before installing.')
+        if (!device.verifiedBoard && !confirmed) throw new InstallerError(INSTALLER_ERROR_CODES.UNCONFIRMED_DEVICE, 'Confirm this is the selected reTerminal model before installing.')
         const mode = action.action === INSTALL_ACTIONS.UPDATE_FIRMWARE ? 'preservingUpdate' : 'cleanInstall'
         update({ phase: 'downloading', progress: 0.05, action })
-        const bundle = await partsLoader({ ...release, mode, signal: operationController?.signal })
+        const bundle = await partsLoader({
+          ...release,
+          boardId: expectedBoardId,
+          mode,
+          signal: operationController?.signal,
+        })
         if (currentAttempt !== attempt) return state
         update({ phase: 'installing-firmware', progress: 0.15, safeToDisconnect: false })
         if (!device.bootloader) {
@@ -581,7 +587,10 @@ export function createInstallerSession({
         kind: 'rom', chipFamily: identity.chipFamily, verifiedBoard: false,
         firmwareVersion: null, bootloader: identity,
       }
-      release ??= await releaseLoader({ signal: operationController?.signal })
+      release ??= await releaseLoader({
+        boardId: expectedBoardId,
+        signal: operationController?.signal,
+      })
       if (expectedAttempt !== attempt) {
         try { await identity.transport?.disconnect() } catch {}
         return state
@@ -593,7 +602,7 @@ export function createInstallerSession({
         requiredConfigurationVersion: CONFIGURATION_VERSION,
       })
       if (action.action === INSTALL_ACTIONS.BLOCKED) {
-        throw new InstallerError(INSTALLER_ERROR_CODES.INCOMPATIBLE_DEVICE, 'This is not a supported reTerminal E1001 or E1002.', { recoverable: false })
+        throw new InstallerError(INSTALLER_ERROR_CODES.INCOMPATIBLE_DEVICE, 'This is not the selected reTerminal model.', { recoverable: false })
       }
       setReleaseDiagnosticContext()
       confirmed = false

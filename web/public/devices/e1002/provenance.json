@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-29T17:00:35.000Z",
+  "generatedAt": "2026-09-02T07:38:27.006Z",
   "source": {
     "url": "https://files.seeedstudio.com/wiki/reterminal_e10xx/res/reTerminal_E1001_E1002_3D.stp",
     "sha256": "d007d0db5ecd78f2109ee9115aa562b31d058fc054172b7237a4692c6e30a6b1",
@@ -34,6 +34,106 @@
       16,
       17
     ],
+    "markings": {
+      "sourceDevice": "E1003",
+      "sourceSha256": "fbcb819feac7228d764971a64a2fb27522eee235b8a9fb43e875cbf94e969240",
+      "groups": {
+        "TOP_CONTROLS": {
+          "meshes": [
+            241,
+            243,
+            244,
+            245
+          ],
+          "translationMm": [
+            -27.754,
+            29.85,
+            2.62
+          ]
+        },
+        "MICRO_SD": {
+          "meshes": [
+            246,
+            247,
+            248,
+            249,
+            250,
+            251
+          ],
+          "translationMm": [
+            -28.163,
+            78.347,
+            2.62
+          ]
+        },
+        "POWER_SWITCH": {
+          "meshes": [
+            252,
+            253,
+            254,
+            255,
+            256,
+            257,
+            258
+          ],
+          "translationMm": [
+            -28.163,
+            78.447,
+            2.62
+          ]
+        },
+        "USB_C": {
+          "meshes": [
+            259,
+            260,
+            261,
+            262,
+            263
+          ],
+          "translationMm": [
+            -28.163,
+            80.347,
+            2.62
+          ]
+        },
+        "STATUS_CIRCLE": {
+          "meshes": [
+            264
+          ],
+          "translationMm": [
+            -28.163,
+            80.747,
+            2.62
+          ]
+        },
+        "LIGHTNING_BOLT": {
+          "meshes": [
+            265
+          ],
+          "translationMm": [
+            -28.163,
+            80.247,
+            2.62
+          ]
+        },
+        "EXPANSION_PORT": {
+          "meshes": [
+            266,
+            267,
+            268,
+            269,
+            270,
+            271,
+            272
+          ],
+          "translationMm": [
+            29,
+            27.59,
+            2.62
+          ]
+        }
+      }
+    },
     "addedScreenMm": {
       "width": 159,
       "height": 95.4,
@@ -42,8 +142,8 @@
   },
   "output": {
     "file": "e1002.glb",
-    "bytes": 2406564,
-    "sha256": "cb7e076764822d78c409b6b61c91394c11a07506af0db7876f924520d1ff6d64",
+    "bytes": 2570672,
+    "sha256": "4855e3318564745511ab43ef60125cdc59b4a2feebb403580fbe0cdf7b2ea39f",
     "roles": [
       "BODY",
       "CONTROLS",

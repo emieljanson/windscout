@@ -152,6 +152,20 @@ describe('shared WebAssembly renderer', { timeout: RENDERER_TEST_TIMEOUT_MS }, (
     expect(hasRed).toBe(true)
   })
 
+  it('renders the E1003 preview as a native 4:3 grayscale composition', async () => {
+    const renderer = await loadRealRenderer()
+    const frame = renderer.renderPreviewForDisplay(fixtureInput(1, 17), 3)
+
+    expect(frame.width).toBe(800)
+    expect(frame.height).toBe(600)
+    expect(frame.data).toHaveLength(800 * 600 * 4)
+    for (let offset = 0; offset < frame.data.length; offset += 4 * 97) {
+      expect(frame.data[offset]).toBe(frame.data[offset + 1])
+      expect(frame.data[offset + 1]).toBe(frame.data[offset + 2])
+      expect(frame.data[offset + 3]).toBe(255)
+    }
+  })
+
   it('crosses the flat setter bridge without depending on native struct layout', async () => {
     const renderer = await loadRealRenderer()
     const expected = new Uint8Array(await readFile(join(fixtureDirectory, 'solid-17.bin')))

@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { describe, expect, it, vi } from 'vitest'
+import { BOARD_IDS } from '../src/config/configuration'
 import {
   USB_CABLE_COLOR,
   USB_CABLE_DISTANCE_FADE_END,
@@ -31,6 +32,16 @@ describe('USB-C cable', () => {
     expect(finish.tangent.x).toBeLessThan(-0.99)
     expect(Math.abs(finish.tangent.z)).toBeLessThan(0.015)
     expect(finish.cablePoints.at(-1).distanceTo(finish.connector)).toBeCloseTo(0.00358, 4)
+  })
+
+  it('uses the E1003 socket and lower floor when that device is selected', () => {
+    const finish = cablePoseAt(1, 'compact', undefined, BOARD_IDS.E1003)
+
+    expect(finish.connector.x).toBeCloseTo(0.0831, 4)
+    expect(finish.connector.y).toBeCloseTo(-0.02644, 4)
+    expect(finish.connector.z).toBeCloseTo(-0.00727, 4)
+    expect(finish.connector.x - 0.0124).toBeCloseTo(0.0707, 4)
+    expect(finish.cablePoints[0].y).toBeCloseTo(-0.09045, 4)
   })
 
   it('keeps the loose cable on the floor to the right of the connector', () => {
