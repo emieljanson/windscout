@@ -178,7 +178,7 @@ function clearPillPointerFocus(event) {
           :aria-expanded="reTerminalHelpOpen"
           @click="reTerminalHelpOpen = true"
         >
-          ?
+          reTerminal
         </button>
       </template>
       <SettingSelect
@@ -286,7 +286,7 @@ function clearPillPointerFocus(event) {
               :aria-expanded="reTerminalHelpOpen"
               @click="reTerminalHelpOpen = true"
             >
-              ?
+              reTerminal
             </button>
           </template>
           <SettingSelect

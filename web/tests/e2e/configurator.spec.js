@@ -360,6 +360,10 @@ test('keeps compact mode focused on direct display options', async ({ page }) =>
   await expect(page.getByRole('combobox', { name: 'Search spot' })).toHaveCount(0)
   await expect(page.getByRole('dialog', { name: 'Add spot' })).toHaveCount(0)
   const reTerminalHelp = page.getByRole('button', { name: 'About reTerminal devices' })
+  await expect(reTerminalHelp).toHaveText('reTerminal')
+  expect(await reTerminalHelp.evaluate((element) => getComputedStyle(element).getPropertyValue('--help-dot-color').trim())).toBe('#b8b8ba')
+  await reTerminalHelp.hover()
+  expect(await reTerminalHelp.evaluate((element) => getComputedStyle(element).getPropertyValue('--help-dot-color').trim())).toBe('#000')
   await reTerminalHelp.click()
   const reTerminalDialog = page.getByRole('dialog', { name: 'Windscout for reTerminal' })
   await expect(reTerminalDialog).toBeVisible()
@@ -469,7 +473,9 @@ for (const viewport of [
     expect(panelMetrics.bottom).toBeLessThanOrEqual(viewport.height)
     expect(panelMetrics.documentWidth).toBeLessThanOrEqual(viewport.width)
     expect(splitShadows(panelMetrics.shadow)).toHaveLength(3)
-    expect(panelMetrics.bottom - panelMetrics.top).toBeLessThanOrEqual(380)
+    expect(panelMetrics.bottom - panelMetrics.top).toBeLessThanOrEqual(410)
+
+    await expect(page.locator('.inspector-rows')).toHaveCSS('row-gap', '8px')
 
     const dividerBox = await page.locator('.inspector-divider').boundingBox()
     expect(Math.abs(dividerBox.x - panelMetrics.left)).toBeLessThanOrEqual(1)

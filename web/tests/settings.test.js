@@ -136,6 +136,8 @@ describe('WindScout settings panel', () => {
     mountSettings()
     const help = wrapper.get('button[aria-label="About reTerminal devices"]')
 
+    expect(help.text()).toBe('reTerminal')
+    expect(wrapper.text()).not.toContain('?')
     expect(help.attributes('aria-haspopup')).toBe('dialog')
     expect(help.attributes('aria-expanded')).toBe('false')
     await help.trigger('click')
@@ -145,11 +147,13 @@ describe('WindScout settings panel', () => {
     const dialog = document.body.querySelector('[role="dialog"]')
     expect(dialog?.getAttribute('aria-labelledby')).toBeTruthy()
     expect(dialog?.textContent).toContain('Windscout for reTerminal')
+    expect(dialog?.textContent).toContain('Windscout only uses colour for the threshold line')
     expect(dialog?.textContent).toContain('direct installation currently supports E1002 and E1003')
     expect(dialog?.textContent).toContain('E1001')
     expect(dialog?.textContent).toContain('7.3″ six-colour — E1002')
-    expect(dialog?.textContent).toContain('10.3″ monochrome + touch — E1003')
-    expect(dialog?.textContent).toContain('affiliate links')
+    expect(dialog?.textContent).toContain('10.3″ monochrome — E1003')
+    expect(dialog?.textContent).not.toContain('touch')
+    expect(dialog?.textContent).not.toContain('affiliate')
     const buyLinks = [...dialog.querySelectorAll('a')]
     const deviceImages = [...dialog.querySelectorAll('img')]
     expect(deviceImages.map((image) => image.getAttribute('src'))).toEqual([

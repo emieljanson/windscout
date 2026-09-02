@@ -32,7 +32,7 @@ const devices = Object.freeze([
   Object.freeze({
     model: 'E1003',
     image: publicAssetUrl('devices/previews/e1003.png'),
-    display: '10.3″ monochrome + touch',
+    display: '10.3″ monochrome',
     buyUrl: 'https://www.seeedstudio.com/reTerminal-E1003-p-6731.html?sensecap_affiliate=UF4PmgK&referring_service=link',
   }),
 ])
@@ -46,7 +46,7 @@ const devices = Object.freeze([
         <header>
           <DialogTitle class="reterminal-help__title">Windscout for reTerminal</DialogTitle>
           <DialogDescription class="reterminal-help__description">
-            Choose your screen: monochrome, six-colour, or larger with touch. E1001 preview is available; direct installation currently supports E1002 and E1003.
+            Choose your reTerminal by screen size and colour. Windscout only uses colour for the threshold line. E1001 preview is available; direct installation currently supports E1002 and E1003.
           </DialogDescription>
         </header>
 
@@ -67,10 +67,6 @@ const devices = Object.freeze([
             </a>
           </li>
         </ul>
-
-        <p class="reterminal-help__note">
-          Check the model number on the back. Buy links are affiliate links.
-        </p>
 
         <DialogClose as-child>
           <button class="reterminal-help__close" type="button" aria-label="Close reTerminal help">

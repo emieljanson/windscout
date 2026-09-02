@@ -473,7 +473,7 @@
   block-size: 1px;
   background: #f6f6f6;
 }
-.inspector-rows { display: grid; gap: 0.25rem; padding-block-end: 0.4375rem; }
+.inspector-rows { display: grid; gap: 0.5rem; padding-block-end: 0.4375rem; }
 .inspector-rows > .setting-row { block-size: var(--settings-control-height); }
 .inspector-rows > .setting-row > .setting-row__control { block-size: var(--settings-control-height); }
 .setting-row--compact-control { grid-template-columns: minmax(0, 1fr) 3.5625rem; gap: 0.5rem; }

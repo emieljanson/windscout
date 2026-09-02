@@ -29,7 +29,7 @@ try {
   browser = await chromium.launch({ headless: true })
   const page = await browser.newPage({
     viewport: { width: 720, height: 520 },
-    deviceScaleFactor: 1,
+    deviceScaleFactor: 2,
     reducedMotion: 'reduce',
   })
 
