@@ -175,7 +175,17 @@ export function createSerialProtocol(port, {
   }
   return {
     async open() {
-      await port.open({ baudRate, bufferSize: 16384 })
+      record({ category: 'serial', operation: 'open', status: 'started', measurements: { baudRate } })
+      try {
+        await port.open({ baudRate, bufferSize: 16384 })
+      } catch (error) {
+        record({
+          category: 'serial', operation: 'open', status: 'failed', message: error?.message,
+          measurements: { baudRate },
+        })
+        throw error
+      }
+      record({ category: 'serial', operation: 'open', status: 'ready', measurements: { baudRate } })
       if (typeof port.setSignals === 'function') {
         // The E1002 USB-UART bridge maps DTR to boot mode and RTS to reset.
         // Chrome can leave those lines asserted when opening the port, so give

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build and validate WindScout's immutable E1002 browser-installer bundle."""
+"""Build and validate WindScout's immutable browser-installer bundles."""
 
 from __future__ import annotations
 
@@ -13,6 +13,10 @@ from pathlib import Path
 
 
 BOARD_ID = "seeedstudio_reterminal_e1002"
+SUPPORTED_BOARD_IDS = {
+    BOARD_ID,
+    "seeedstudio_reterminal_e1003",
+}
 FIRMWARE_LAYOUT_VERSION = 1
 FLASH_SIZE_BYTES = 32 * 1024 * 1024
 PART_KINDS = {
@@ -89,8 +93,18 @@ def _validate_ranges(parts: list[dict], flash_size: int, label: str) -> None:
             raise ManifestError(f"{label} ranges overlap: {previous[2]} and {current[2]}")
 
 
-def validate_manifest(manifest: dict, bundle_dir: Path, partitions_path: Path) -> None:
-    if manifest.get("schemaVersion") != 1 or manifest.get("boardId") != BOARD_ID:
+def validate_manifest(
+    manifest: dict,
+    bundle_dir: Path,
+    partitions_path: Path,
+    expected_board_id: str | None = None,
+) -> None:
+    board_id = manifest.get("boardId")
+    if (
+        manifest.get("schemaVersion") != 1
+        or board_id not in SUPPORTED_BOARD_IDS
+        or (expected_board_id is not None and board_id != expected_board_id)
+    ):
         raise ManifestError("Unsupported installer manifest identity")
     if (
         manifest.get("chipFamily") != "ESP32-S3"
@@ -149,7 +163,7 @@ def generate_installer_bundle(
     build_dir = Path(build_dir)
     partitions_path = Path(partitions_path)
     output_dir = Path(output_dir)
-    if board_id != BOARD_ID:
+    if board_id not in SUPPORTED_BOARD_IDS:
         raise ManifestError(f"Unsupported installer board: {board_id}")
     safe_version = re.sub(r"[^A-Za-z0-9._-]", "-", version).strip("-")
     if not safe_version:
@@ -162,7 +176,7 @@ def generate_installer_bundle(
         raise ManifestError("Installer bundle is not an ESP32-S3 build")
     flash_size = _flash_size(args.get("flash_settings", {}).get("flash_size", ""))
     if flash_size != FLASH_SIZE_BYTES:
-        raise ManifestError("E1002 installer requires the real 32 MB flash layout")
+        raise ManifestError("The reTerminal installer requires the real 32 MB flash layout")
     flash_files = args.get("flash_files", {})
     if set(flash_files.values()) != set(PART_KINDS):
         raise ManifestError("Unexpected or stale ESP-IDF flash part names")
@@ -191,7 +205,7 @@ def generate_installer_bundle(
     manifest = {
         "schemaVersion": 1,
         "version": version,
-        "boardId": BOARD_ID,
+        "boardId": board_id,
         "chipFamily": "ESP32-S3",
         "firmwareLayoutVersion": FIRMWARE_LAYOUT_VERSION,
         "flashSize": flash_size,
@@ -205,7 +219,7 @@ def generate_installer_bundle(
         },
         "otaApplication": by_kind["application"]["file"],
     }
-    validate_manifest(manifest, bundle_dir, partitions_path)
+    validate_manifest(manifest, bundle_dir, partitions_path, board_id)
     manifest_bytes = (json.dumps(manifest, indent=2, sort_keys=True) + "\n").encode()
     manifest_name = f"installer-manifest-{safe_version}.json" if flat else "installer-manifest.json"
     manifest_path = bundle_dir / manifest_name

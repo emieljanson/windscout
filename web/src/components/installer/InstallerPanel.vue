@@ -4,6 +4,7 @@ import { toast } from 'vue-sonner'
 import { createInstallerSession } from '../../installer/createInstallerSession'
 import { isInstallerDiagnosticReference } from '../../installer/sentryReporter'
 import { getSerialSupport } from '../../installer/serialPortAdapter'
+import { BOARD_IDS } from '../../config/configuration'
 import InstallerComplete from './InstallerComplete.vue'
 import InstallerConnect from './InstallerConnect.vue'
 import InstallerDiagnosticStatus from './InstallerDiagnosticStatus.vue'
@@ -26,6 +27,16 @@ let scanPromise = null
 const support = getSerialSupport()
 const session = props.sessionFactory({ configuration: props.configuration })
 const isDemo = session.isDemo === true
+const deviceLabel = computed(() => ({
+  [BOARD_IDS.E1001]: 'reTerminal E1001',
+  [BOARD_IDS.E1002]: 'reTerminal E1002',
+  [BOARD_IDS.E1003]: 'reTerminal E1003',
+})[props.configuration.boardId ?? BOARD_IDS.E1002] ?? 'supported reTerminal')
+const purchaseUrl = computed(() => ({
+  [BOARD_IDS.E1001]: 'https://www.seeedstudio.com/reTerminal-E1001-p-6534.html?sensecap_affiliate=UF4PmgK&referring_service=link',
+  [BOARD_IDS.E1002]: 'https://www.seeedstudio.com/reTerminal-E1002-p-6533.html?sensecap_affiliate=UF4PmgK&referring_service=link',
+  [BOARD_IDS.E1003]: 'https://www.seeedstudio.com/reTerminal-E1003-p-6731.html?sensecap_affiliate=UF4PmgK&referring_service=link',
+})[props.configuration.boardId ?? BOARD_IDS.E1002] ?? 'https://wiki.seeedstudio.com/reterminal_e10xx_main_page/')
 const unsupportedReason = computed(() => (support.supported || isDemo) ? '' : 'Update to a current desktop version of Firefox, Chrome, or Edge to install Windscout over USB.')
 const displayPhase = computed(() => unsupportedReason.value && state.value.phase === 'ready' ? 'error' : state.value.phase)
 const unsubscribe = session.subscribe((next) => { state.value = { ...next } })
@@ -41,7 +52,7 @@ watch(
 
 const critical = computed(() => !state.value.safeToDisconnect)
 const progressCopy = computed(() => ({
-  ready: ['Install Windscout', 'Ready to connect a reTerminal E1001 or E1002.'],
+  ready: ['Install Windscout', `Ready to connect a ${deviceLabel.value}.`],
   'checking-device': ['Checking device', 'Windscout is identifying the device and the safest setup path.'],
   downloading: ['Preparing firmware', 'The verified Windscout release is being prepared before any write starts.'],
   'installing-firmware': ['Writing firmware', 'Keep the USB cable connected until writing is complete.'],
@@ -150,7 +161,13 @@ onBeforeUnmount(() => { toast.dismiss('installer-error'); toast.dismiss('install
     <div class="installer-stage">
       <Transition name="installer-step-slide" @before-leave="hideLeavingStep">
         <div :key="state.phase" ref="activeView" class="installer-stage__view">
-          <InstallerConnect v-if="state.phase === 'ready'" :unsupported-reason="unsupportedReason" @connect="connect" />
+          <InstallerConnect
+            v-if="state.phase === 'ready'"
+            :device-label="deviceLabel"
+            :purchase-url="purchaseUrl"
+            :unsupported-reason="unsupportedReason"
+            @connect="connect"
+          />
 
           <div v-else-if="state.phase === 'choosing-device'" class="installer-step installer-step--choose-device" aria-busy="true">
             <div class="installer-step__copy">
@@ -169,7 +186,7 @@ onBeforeUnmount(() => { toast.dismiss('installer-error'); toast.dismiss('install
           <div v-else-if="state.phase === 'confirm-device'" class="installer-step">
             <div class="installer-step__copy">
               <h2 id="installer-title">Confirm your reTerminal</h2>
-              <p>Make sure this is a reTerminal E1001 or E1002. Installing will replace its software and saved setup.</p>
+              <p>Make sure this is a {{ deviceLabel }}. Installing will replace its software and saved setup.</p>
             </div>
             <div class="installer-actions">
               <button data-autofocus class="installer-primary" type="button" @click="session.confirmDevice()">Install Windscout</button>

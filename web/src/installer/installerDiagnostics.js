@@ -5,11 +5,13 @@ const REDACTED = '[redacted]'
 
 const CONTEXT_FIELDS = new Set([
   'phase', 'errorCode', 'action', 'route', 'release', 'boardId', 'chipFamily',
-  'layoutVersion', 'browser', 'os', 'attempt',
+  'layoutVersion', 'browser', 'os', 'attempt', 'selectedBoardId',
+  'detectedBoardId', 'detectedFirmwareVersion', 'releaseBoardId',
+  'releaseVersion', 'connectionKind', 'decisionReason',
 ])
 const MEASUREMENT_FIELDS = new Set([
   'elapsedMs', 'durationMs', 'fileIndex', 'writtenBytes', 'totalBytes',
-  'retryCount', 'entryCount', 'textBytes',
+  'retryCount', 'entryCount', 'textBytes', 'baudRate',
 ])
 
 function byteLength(value) {

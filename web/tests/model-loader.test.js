@@ -1,6 +1,14 @@
 import { describe, expect, it, vi } from 'vitest'
 import { E1002_MODEL } from '../src/assets/e1002'
-import { findMissingModelRoles, hideE1002Stand, loadE1002Model } from '../src/configurator/modelLoader'
+import { E1003_MODEL } from '../src/assets/e1003'
+import { BOARD_IDS } from '../src/config/configuration'
+import {
+  findMissingModelRoles,
+  hideDeviceStand,
+  hideE1002Stand,
+  loadDeviceModel,
+  loadE1002Model,
+} from '../src/configurator/modelLoader'
 
 function modelWithRoles(roles) {
   return {
@@ -27,6 +35,14 @@ describe('E1002 model loader contract', () => {
     expect(stand.visible).toBe(false)
   })
 
+  it('hides the optional printed stand when a source model contains one', () => {
+    const e1002Stand = { visible: true }
+
+    expect(hideDeviceStand({ getObjectByName: () => e1002Stand }, BOARD_IDS.E1002)).toBe(true)
+    expect(hideDeviceStand({ getObjectByName: () => undefined }, BOARD_IDS.E1003)).toBe(false)
+    expect(e1002Stand.visible).toBe(false)
+  })
+
   it('aborts a model request that never settles', async () => {
     vi.useFakeTimers()
     const request = loadE1002Model({
@@ -37,5 +53,23 @@ describe('E1002 model loader contract', () => {
     await vi.advanceTimersByTimeAsync(25)
     await expectation
     vi.useRealTimers()
+  })
+
+  it.each([
+    [BOARD_IDS.E1001, E1002_MODEL],
+    [BOARD_IDS.E1002, E1002_MODEL],
+    [BOARD_IDS.E1003, E1003_MODEL],
+  ])('loads the model that belongs to %s', async (boardId, definition) => {
+    const scene = modelWithRoles(definition.requiredRoles)
+    const loadAsync = vi.fn(async () => ({ scene }))
+
+    await expect(loadDeviceModel(boardId, {
+      loaderFactory: () => ({ loadAsync }),
+    })).resolves.toBe(scene)
+    expect(loadAsync).toHaveBeenCalledWith(definition.url)
+  })
+
+  it('rejects unsupported board IDs before loading an asset', () => {
+    expect(() => loadDeviceModel('unsupported-board')).toThrow('Unsupported reTerminal model')
   })
 })

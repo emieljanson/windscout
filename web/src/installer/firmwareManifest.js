@@ -1,5 +1,5 @@
 import { InstallerError, INSTALLER_ERROR_CODES } from './installerErrors'
-import { BOARD_ID, CONFIGURATION_VERSION } from '../config/configuration'
+import { BOARD_ID, BOARD_IDS, CONFIGURATION_VERSION } from '../config/configuration'
 
 export const CHIP_FAMILY = 'ESP32-S3'
 export const FIRMWARE_DOWNLOAD_TIMEOUT_MS = 30_000
@@ -30,8 +30,8 @@ function assertNoOverlap(parts) {
   }
 }
 
-export function validateFirmwareManifest(manifest) {
-  if (!manifest || manifest.schemaVersion !== 1 || manifest.boardId !== BOARD_ID ||
+export function validateFirmwareManifest(manifest, expectedBoardId = BOARD_ID) {
+  if (!manifest || manifest.schemaVersion !== 1 || manifest.boardId !== expectedBoardId ||
       manifest.chipFamily !== CHIP_FAMILY || manifest.flashSize !== FLASH_SIZE ||
       !Number.isInteger(manifest.firmwareLayoutVersion) || manifest.firmwareLayoutVersion < 1 ||
       !manifest.protocol || manifest.protocol.minimum > 1 || manifest.protocol.maximum < 1 ||
@@ -139,6 +139,7 @@ function releaseUrl(path, base, message) {
 }
 
 export async function loadFirmwareRelease({
+  boardId = BOARD_ID,
   baseUrl = FIRMWARE_BASE_URL,
   fetchFn = globalThis.fetch,
   cryptoApi = globalThis.crypto,
@@ -146,10 +147,12 @@ export async function loadFirmwareRelease({
 } = {}) {
   return withDownloadTimeout(async (downloadSignal) => {
     const root = new URL(baseUrl, globalThis.location?.href ?? 'https://windscout.invalid/')
-    const pointerUrl = new URL('latest.json', root)
+    const pointerPath = boardId === BOARD_IDS.E1003 ? 'e1003/latest.json' : 'latest.json'
+    const pointerUrl = new URL(pointerPath, root)
     const pointer = await fetchJson(fetchFn, pointerUrl, downloadSignal)
     if (!pointer || typeof pointer.manifest !== 'string' || !SHA256_PATTERN.test(pointer.sha256 ?? '')) fail('The release pointer is invalid.')
-    const manifestUrl = releaseUrl(pointer.manifest, root, 'The release pointer leaves the Windscout firmware directory.')
+    const pointerDirectory = new URL('.', pointerUrl)
+    const manifestUrl = releaseUrl(pointer.manifest, pointerDirectory, 'The release pointer leaves the Windscout firmware directory.')
     const response = await fetchFn(manifestUrl, { cache: 'no-store', signal: downloadSignal })
     if (!response.ok) throw new InstallerError(INSTALLER_ERROR_CODES.DOWNLOAD_FAILED, 'The firmware manifest could not be downloaded.')
     const manifestBytes = new Uint8Array(await response.arrayBuffer())
@@ -157,7 +160,7 @@ export async function loadFirmwareRelease({
     if (manifestDigest !== pointer.sha256) fail('The firmware manifest failed verification.')
     let manifest
     try {
-      manifest = validateFirmwareManifest(JSON.parse(new TextDecoder().decode(manifestBytes)))
+      manifest = validateFirmwareManifest(JSON.parse(new TextDecoder().decode(manifestBytes)), boardId)
     } catch (error) {
       if (error instanceof InstallerError) throw error
       fail('The firmware manifest is not valid JSON.')
@@ -167,9 +170,9 @@ export async function loadFirmwareRelease({
   }, signal)
 }
 
-export async function loadFirmwareParts({ manifest, manifestUrl, mode, fetchFn = globalThis.fetch, cryptoApi = globalThis.crypto, signal }) {
+export async function loadFirmwareParts({ manifest, manifestUrl, mode, boardId = BOARD_ID, fetchFn = globalThis.fetch, cryptoApi = globalThis.crypto, signal }) {
   return withDownloadTimeout(async (downloadSignal) => {
-    validateFirmwareManifest(manifest)
+    validateFirmwareManifest(manifest, boardId)
     const writeSet = manifest[mode]
     if (!writeSet) fail('Unknown firmware write mode.')
     const parts = await Promise.all(writeSet.parts.map(async (part) => {

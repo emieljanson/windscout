@@ -1,6 +1,6 @@
 import { createHash, webcrypto } from 'node:crypto'
 import { describe, expect, it, vi } from 'vitest'
-import { CONFIGURATION_VERSION } from '../../src/config/configuration'
+import { BOARD_IDS, CONFIGURATION_VERSION } from '../../src/config/configuration'
 import { FIRMWARE_BASE_URL, FIRMWARE_DOWNLOAD_TIMEOUT_MS, loadFirmwareParts, loadFirmwareRelease, validateFirmwareManifest, verifyFirmwareBytes } from '../../src/installer/firmwareManifest'
 
 function sha(bytes) { return createHash('sha256').update(bytes).digest('hex') }
@@ -68,6 +68,30 @@ describe('firmware manifest', () => {
       manifest: { version: source.version },
       manifestUrl: new URL(`https://example.test/firmware/installer-manifest-${source.version}.json`),
     })
+  })
+
+  it('resolves an E1003 manifest relative to its board-specific pointer', async () => {
+    const source = { ...manifest(), boardId: BOARD_IDS.E1003 }
+    const manifestBytes = new TextEncoder().encode(JSON.stringify(source))
+    const pointer = {
+      version: source.version,
+      manifest: `${source.version}/installer-manifest.json`,
+      sha256: sha(manifestBytes),
+    }
+    const fetchFn = vi.fn(async (url) => String(url).endsWith('latest.json')
+      ? { ok: true, json: async () => pointer }
+      : { ok: true, arrayBuffer: async () => manifestBytes.buffer })
+
+    const release = await loadFirmwareRelease({
+      baseUrl: 'https://example.test/firmware/',
+      boardId: BOARD_IDS.E1003,
+      fetchFn,
+      cryptoApi: webcrypto,
+    })
+
+    expect(release.manifestUrl).toEqual(new URL(
+      'https://example.test/firmware/e1003/2.0.0/installer-manifest.json',
+    ))
   })
 
   it('rejects a changed manifest and a pointer outside the firmware directory', async () => {

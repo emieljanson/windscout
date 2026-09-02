@@ -1,11 +1,20 @@
 import { LoadingManager } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { E1002_MODEL } from '../assets/e1002'
+import { E1003_MODEL } from '../assets/e1003'
+import { BOARD_IDS } from '../config/configuration'
 
 export const MODEL_LOAD_TIMEOUT_MS = 15_000
 
-export function findMissingModelRoles(scene) {
-  return E1002_MODEL.requiredRoles.filter((role) => !scene.getObjectByName(role))
+function modelForBoard(boardId) {
+  if (boardId === BOARD_IDS.E1001) return E1002_MODEL
+  if (boardId === BOARD_IDS.E1002) return E1002_MODEL
+  if (boardId === BOARD_IDS.E1003) return E1003_MODEL
+  throw new TypeError(`Unsupported reTerminal model: ${boardId}`)
+}
+
+export function findMissingModelRoles(scene, modelDefinition = E1002_MODEL) {
+  return modelDefinition.requiredRoles.filter((role) => !scene.getObjectByName(role))
 }
 
 export function hideE1002Stand(scene) {
@@ -17,7 +26,11 @@ export function hideE1002Stand(scene) {
   return true
 }
 
-export async function loadE1002Model({
+export function hideDeviceStand(scene, boardId) {
+  return hideE1002Stand(scene)
+}
+
+async function loadModel(definition, label, {
   loaderFactory = (manager) => new GLTFLoader(manager),
   timeoutMs = MODEL_LOAD_TIMEOUT_MS,
 } = {}) {
@@ -33,13 +46,22 @@ export async function loadE1002Model({
 
   let gltf
   try {
-    gltf = await Promise.race([loader.loadAsync(E1002_MODEL.url), timeoutPromise])
+    gltf = await Promise.race([loader.loadAsync(definition.url), timeoutPromise])
   } finally {
     clearTimeout(timeout)
   }
-  const missingRoles = findMissingModelRoles(gltf.scene)
+  const missingRoles = findMissingModelRoles(gltf.scene, definition)
   if (missingRoles.length) {
-    throw new Error(`E1002 model is missing scene roles: ${missingRoles.join(', ')}`)
+    throw new Error(`${label} model is missing scene roles: ${missingRoles.join(', ')}`)
   }
   return gltf.scene
+}
+
+export function loadE1002Model(options) {
+  return loadModel(E1002_MODEL, 'E1002', options)
+}
+
+export function loadDeviceModel(boardId, options) {
+  const definition = modelForBoard(boardId)
+  return loadModel(definition, 'Device', options)
 }

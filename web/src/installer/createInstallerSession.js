@@ -71,6 +71,7 @@ export function createInstallerSession({
   const pendingFailures = []
   const listeners = new Set()
   const probingProtocols = new Set()
+  const expectedBoardId = configuration?.boardId ?? BOARD_ID
 
   try {
     diagnostics.registerSensitiveValues?.([
@@ -78,7 +79,11 @@ export function createInstallerSession({
       configuration?.spot?.name,
       configuration?.spot?.timezone,
     ])
-    diagnostics.setContext?.({ boardId: BOARD_ID, chipFamily: CHIP_FAMILY })
+    diagnostics.setContext?.({
+      boardId: expectedBoardId,
+      selectedBoardId: expectedBoardId,
+      chipFamily: CHIP_FAMILY,
+    })
   } catch {}
 
   function update(patch) {
@@ -113,6 +118,13 @@ export function createInstallerSession({
         boardId: device?.boardId ?? release?.manifest?.boardId,
         chipFamily: device?.chipFamily ?? release?.manifest?.chipFamily,
         layoutVersion: device?.firmwareLayoutVersion ?? release?.manifest?.firmwareLayoutVersion,
+        selectedBoardId: expectedBoardId,
+        detectedBoardId: device?.boardId ?? 'unknown',
+        detectedFirmwareVersion: device?.firmwareVersion ?? 'unknown',
+        releaseBoardId: release?.manifest?.boardId ?? 'unknown',
+        releaseVersion: release?.manifest?.version ?? 'unknown',
+        connectionKind: device?.kind ?? 'unknown',
+        decisionReason: action?.reason ?? 'unknown',
       })
     } catch {}
   }
@@ -120,8 +132,6 @@ export function createInstallerSession({
   function isReportable(error) {
     return ![
       INSTALLER_ERROR_CODES.UNSUPPORTED,
-      INSTALLER_ERROR_CODES.INCOMPATIBLE_DEVICE,
-      INSTALLER_ERROR_CODES.UNCONFIRMED_DEVICE,
     ].includes(error?.code)
   }
 
@@ -185,6 +195,16 @@ export function createInstallerSession({
       diagnostics.record?.({ category: 'installer', operation: phase, status: 'failed', message: error?.message })
     } catch {}
     sendFailure(failure)
+  }
+
+  function recordVerificationFailure(status) {
+    try {
+      diagnostics.record?.({
+        category: 'verification',
+        operation: 'device-state',
+        status: status?.apply ?? 'incomplete',
+      })
+    } catch {}
   }
 
   async function releaseConnections({ clearDevice = false } = {}) {
@@ -284,7 +304,7 @@ export function createInstallerSession({
         protocol: candidate,
         device: {
           kind: 'windscout',
-          verifiedBoard: hello.boardId === BOARD_ID,
+          verifiedBoard: hello.boardId === expectedBoardId,
           boardId: hello.boardId,
           chipFamily: hello.chipFamily ?? CHIP_FAMILY,
           firmwareVersion: hello.firmwareVersion,
@@ -350,7 +370,7 @@ export function createInstallerSession({
     try {
       await releaseConnections({ clearDevice: true })
       const [releaseResult, probeResult] = await Promise.allSettled([
-        releaseLoader({ signal: operationController.signal }),
+        releaseLoader({ boardId: expectedBoardId, signal: operationController.signal }),
         probeApp(port),
       ])
       const appProbe = probeResult.status === 'fulfilled' ? probeResult.value : null
@@ -390,11 +410,11 @@ export function createInstallerSession({
         configurationDigest: configuration.digest,
         requiredConfigurationVersion: CONFIGURATION_VERSION,
       })
+      setReleaseDiagnosticContext()
       if (action.action === INSTALL_ACTIONS.BLOCKED) {
-        throw new InstallerError(INSTALLER_ERROR_CODES.INCOMPATIBLE_DEVICE, 'This is not a supported reTerminal E1001 or E1002.', { recoverable: false })
+        throw new InstallerError(INSTALLER_ERROR_CODES.INCOMPATIBLE_DEVICE, 'This is not the selected reTerminal model.', { recoverable: false })
       }
       rememberVerifiedPort(selectedPort)
-      setReleaseDiagnosticContext()
       if (action.action === INSTALL_ACTIONS.CONFIRM_E1002) {
         update({ phase: 'confirm-device', action })
       } else {
@@ -461,6 +481,7 @@ export function createInstallerSession({
     const applied = await protocol.request('apply_configuration', undefined, APPLY_STATUS_REQUEST_TIMEOUT_MS)
     if (!isCurrent(expectedAttempt)) return false
     if (!['applying', 'complete'].includes(applied.status)) {
+      recordVerificationFailure({ apply: applied.status })
       throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'Windscout could not apply the new setup.')
     }
     for (let poll = 0; poll < 180; poll += 1) {
@@ -469,6 +490,7 @@ export function createInstallerSession({
       const status = await protocol.request('get_state', undefined, APPLY_STATUS_REQUEST_TIMEOUT_MS)
       if (!isCurrent(expectedAttempt)) return false
       if (['render_failed', 'commit_failed'].includes(status.apply)) {
+        recordVerificationFailure(status)
         throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'Windscout could not apply the new setup.')
       }
       const applyComplete = status.apply === 'complete' ||
@@ -489,6 +511,7 @@ export function createInstallerSession({
       const status = await protocol.request('get_state', undefined, APPLY_STATUS_REQUEST_TIMEOUT_MS)
       if (!isCurrent(expectedAttempt)) return false
       if (['render_failed', 'commit_failed'].includes(status.apply)) {
+        recordVerificationFailure(status)
         throw new InstallerError(INSTALLER_ERROR_CODES.VERIFICATION_FAILED, 'Windscout could not apply the new setup.')
       }
       if (status.configurationDigest === configuration.digest &&
@@ -505,10 +528,15 @@ export function createInstallerSession({
         return state
       }
       if ([INSTALL_ACTIONS.INSTALL, INSTALL_ACTIONS.REINSTALL, INSTALL_ACTIONS.UPDATE_FIRMWARE].includes(action.action)) {
-        if (!device.verifiedBoard && !confirmed) throw new InstallerError(INSTALLER_ERROR_CODES.UNCONFIRMED_DEVICE, 'Confirm this is a reTerminal E1001 or E1002 before installing.')
+        if (!device.verifiedBoard && !confirmed) throw new InstallerError(INSTALLER_ERROR_CODES.UNCONFIRMED_DEVICE, 'Confirm this is the selected reTerminal model before installing.')
         const mode = action.action === INSTALL_ACTIONS.UPDATE_FIRMWARE ? 'preservingUpdate' : 'cleanInstall'
         update({ phase: 'downloading', progress: 0.05, action })
-        const bundle = await partsLoader({ ...release, mode, signal: operationController?.signal })
+        const bundle = await partsLoader({
+          ...release,
+          boardId: expectedBoardId,
+          mode,
+          signal: operationController?.signal,
+        })
         if (currentAttempt !== attempt) return state
         update({ phase: 'installing-firmware', progress: 0.15, safeToDisconnect: false })
         if (!device.bootloader) {
@@ -581,7 +609,10 @@ export function createInstallerSession({
         kind: 'rom', chipFamily: identity.chipFamily, verifiedBoard: false,
         firmwareVersion: null, bootloader: identity,
       }
-      release ??= await releaseLoader({ signal: operationController?.signal })
+      release ??= await releaseLoader({
+        boardId: expectedBoardId,
+        signal: operationController?.signal,
+      })
       if (expectedAttempt !== attempt) {
         try { await identity.transport?.disconnect() } catch {}
         return state
@@ -592,10 +623,10 @@ export function createInstallerSession({
         configurationDigest: configuration.digest,
         requiredConfigurationVersion: CONFIGURATION_VERSION,
       })
-      if (action.action === INSTALL_ACTIONS.BLOCKED) {
-        throw new InstallerError(INSTALLER_ERROR_CODES.INCOMPATIBLE_DEVICE, 'This is not a supported reTerminal E1001 or E1002.', { recoverable: false })
-      }
       setReleaseDiagnosticContext()
+      if (action.action === INSTALL_ACTIONS.BLOCKED) {
+        throw new InstallerError(INSTALLER_ERROR_CODES.INCOMPATIBLE_DEVICE, 'This is not the selected reTerminal model.', { recoverable: false })
+      }
       confirmed = false
       update({ phase: 'confirm-device', progress: 0, safeToDisconnect: true, action })
       return state

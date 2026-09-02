@@ -106,7 +106,7 @@ test('guides a fake E1002 through confirmation, reconnect, Wi-Fi and completion'
 
   await page.getByRole('button', { name: 'Continue' }).click()
   await expect(page.getByRole('heading', { name: 'Confirm your reTerminal' })).toBeVisible()
-  await expect(page.getByText('Make sure this is a reTerminal E1001 or E1002. Installing will replace its software and saved setup.')).toBeVisible()
+  await expect(page.getByText('Make sure this is a reTerminal E1002. Installing will replace its software and saved setup.')).toBeVisible()
   await expectCopyAligned()
   await expect(stateIcon).toHaveAttribute('data-phase', 'confirm-device')
   expect(await stateIcon.boundingBox()).toMatchObject({ x: iconOrigin.x, y: iconOrigin.y })
@@ -175,7 +175,7 @@ test('demo follows only the fresh-device happy flow through Wi-Fi', async ({ pag
   const regularHeight = (await panel.boundingBox()).height
   await page.getByRole('button', { name: 'Continue' }).click()
   await expect(page.getByRole('heading', { name: 'Confirm your reTerminal' })).toBeVisible()
-  await expect(page.getByText('Make sure this is a reTerminal E1001 or E1002. Installing will replace its software and saved setup.')).toBeVisible()
+  await expect(page.getByText('Make sure this is a reTerminal E1002. Installing will replace its software and saved setup.')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Cancel' })).toHaveCount(0)
 
   await page.getByRole('button', { name: 'Install Windscout' }).click()

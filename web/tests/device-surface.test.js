@@ -51,13 +51,15 @@ describe('E1002 product surfaces', () => {
     geometry.dispose()
   })
 
-  it('applies micro-relief only to the powder-coated enclosure', () => {
+  it('applies the same micro-relief to every powder-coated housing panel', () => {
     const model = new THREE.Group()
     const enclosureMaterial = new THREE.MeshPhysicalMaterial({ name: 'enclosure-white-powder-coat' })
+    const rearMaterial = new THREE.MeshPhysicalMaterial({ name: 'rear-service-cover' })
     const panelMaterial = new THREE.MeshPhysicalMaterial({ name: 'front-satin-plastic' })
     const enclosure = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), enclosureMaterial)
+    const rear = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), rearMaterial)
     const panel = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), panelMaterial)
-    model.add(enclosure, panel)
+    model.add(enclosure, rear, panel)
 
     const dispose = enhanceE1002Surface(model, { capabilities: { getMaxAnisotropy: () => 8 } })
 
@@ -65,6 +67,12 @@ describe('E1002 product surfaces', () => {
     expect(enclosureMaterial.normalScale.x).toBeCloseTo(0.62)
     expect(enclosureMaterial.roughnessMap?.name).toBe('powder-coat-micro-roughness')
     expect(enclosureMaterial.roughness).toBeCloseTo(0.62)
+    expect(rearMaterial.normalMap?.name).toBe('powder-coat-micro-normal')
+    expect(rearMaterial.roughnessMap?.name).toBe('powder-coat-micro-roughness')
+    expect(rearMaterial.roughness).toBeCloseTo(enclosureMaterial.roughness)
+    expect(rearMaterial.color.getHex()).toBe(enclosureMaterial.color.getHex())
+    expect(rearMaterial.clearcoat).toBe(enclosureMaterial.clearcoat)
+    expect(rearMaterial.clearcoatRoughness).toBe(enclosureMaterial.clearcoatRoughness)
     expect(panelMaterial.normalMap).toBeNull()
     expect(panelMaterial.roughness).toBeCloseTo(0.025)
     expect(panelMaterial.ior).toBeCloseTo(1.55)
@@ -77,8 +85,10 @@ describe('E1002 product surfaces', () => {
 
     dispose()
     enclosure.geometry.dispose()
+    rear.geometry.dispose()
     panel.geometry.dispose()
     enclosureMaterial.dispose()
+    rearMaterial.dispose()
     panelMaterial.dispose()
   })
 

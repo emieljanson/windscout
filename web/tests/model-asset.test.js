@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { Box3, Vector3 } from 'three'
 import { describe, expect, it } from 'vitest'
 import { E1002_MODEL, validateModelProvenance } from '../src/assets/e1002'
 
@@ -42,6 +43,41 @@ describe('E1002 model contract', () => {
       expect(screw.material.roughness).toBeGreaterThan(0.25)
       expect(screw.material.roughness).toBeLessThan(0.5)
     }
+  })
+
+  it('reuses the exact E1003 marking geometry at one-to-one scale', async () => {
+    const { scene } = await loadGeneratedModel()
+    const markings = scene.getObjectsByProperty('isMesh', true)
+      .filter((mesh) => mesh.userData.role === 'MARKINGS')
+
+    expect(markings).toHaveLength(31)
+    expect(markings.every((mesh) => mesh.userData.sourceDevice === 'E1003')).toBe(true)
+    expect(markings.map((mesh) => mesh.userData.sourceMesh)).toEqual(expect.arrayContaining([
+      241, 243, 244, 245,
+      ...Array.from({ length: 27 }, (_, offset) => 246 + offset),
+    ]))
+
+    const topArrow = markings.find((mesh) => mesh.userData.sourceMesh === 244)
+    const arrowSize = new Box3().setFromObject(topArrow).getSize(new Vector3())
+    expect(arrowSize.x).toBeCloseTo(0.004792, 5)
+    expect(arrowSize.y).toBeCloseTo(0.003008, 5)
+  })
+
+  it('anchors each marking group to its matching E1002 CAD hardware', async () => {
+    const { scene } = await loadGeneratedModel()
+    const markings = scene.getObjectsByProperty('isMesh', true)
+      .filter((mesh) => mesh.userData.role === 'MARKINGS')
+    const anchors = new Map(markings.map((mesh) => [mesh.userData.markingGroup, mesh.userData.anchorSourceMesh]))
+
+    expect(anchors).toEqual(new Map([
+      ['TOP_CONTROLS', 28],
+      ['MICRO_SD', 33],
+      ['POWER_SWITCH', 32],
+      ['USB_C', 37],
+      ['STATUS_CIRCLE', 32],
+      ['LIGHTNING_BOLT', 37],
+      ['EXPANSION_PORT', 31],
+    ]))
   })
 
   it('requires every scene role and recorded publication permission', () => {

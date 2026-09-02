@@ -29,9 +29,12 @@ provide('windscout-setting-row', {
 <template>
   <div class="setting-row" :class="{ 'setting-row--disabled': props.disabled }">
     <div class="setting-row__copy">
-      <label :id="labelId" class="setting-row__label" :for="controlId">
-        {{ props.label }}
-      </label>
+      <div class="setting-row__label-line">
+        <label :id="labelId" class="setting-row__label" :for="controlId">
+          {{ props.label }}
+        </label>
+        <slot name="label-action" />
+      </div>
       <p v-if="props.description" :id="descriptionId" class="setting-row__description">
         {{ props.description }}
       </p>

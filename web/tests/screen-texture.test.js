@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createRendererInput, createScreenTexture } from '../src/configurator/screenTexture'
 import { brouwersdamForecast } from '../src/fixtures/brouwersdam'
-import { DISPLAY_MODES } from '../src/renderer/contract'
+import { DISPLAY_MODES, RENDERER_DISPLAYS } from '../src/renderer/contract'
+import { BOARD_IDS } from '../src/config/configuration'
 import { RENDERER_CONTRACT_VERSION, RENDERER_RGBA_BYTES } from '../src/renderer/sharedRenderer'
 
 function completeFrame(red = 255, green = 255, blue = 255) {
@@ -16,8 +17,14 @@ function completeFrame(red = 255, green = 255, blue = 255) {
 }
 
 function fakeRenderer(frames) {
+  const renderPreview = vi.fn(() => frames.shift())
   return {
-    renderPreview: vi.fn(() => frames.shift()),
+    renderPreview,
+    renderPreviewForDisplay: vi.fn((input) => ({
+      data: renderPreview(input),
+      width: 800,
+      height: 480,
+    })),
     dispose: vi.fn(),
   }
 }
@@ -81,6 +88,46 @@ describe('canonical screen texture', () => {
     expect([...source.texture.image.data.slice(0, 4)]).toEqual([255, 0, 0, 255])
     expect(secondFrame).not.toBe(firstFrame)
     expect(source.texture.image.data).not.toBe(secondFrame)
+  })
+
+  it.each([
+    [BOARD_IDS.E1001, RENDERER_DISPLAYS.E1001_GRAY4],
+    [BOARD_IDS.E1003, RENDERER_DISPLAYS.E1003_GC16],
+  ])('renders a black threshold on grayscale model %s', async (boardId, display) => {
+    const renderer = fakeRenderer([completeFrame(255, 0, 0)])
+    const source = await createScreenTexture({
+      forecast: brouwersdamForecast,
+      config: { showThreshold: true, threshold: 17 },
+      boardId,
+      rendererLoader: async () => renderer,
+    })
+
+    expect(renderer.renderPreviewForDisplay).toHaveBeenCalledWith(expect.anything(), display)
+    expect([...source.texture.image.data.slice(0, 4)]).toEqual([0, 0, 0, 255])
+  })
+
+  it('keeps the threshold red on the E1002 colour display', async () => {
+    const renderer = fakeRenderer([completeFrame(255, 0, 0)])
+    const source = await createScreenTexture({
+      forecast: brouwersdamForecast,
+      config: { showThreshold: true, threshold: 17 },
+      boardId: BOARD_IDS.E1002,
+      rendererLoader: async () => renderer,
+    })
+
+    expect([...source.texture.image.data.slice(0, 4)]).toEqual([255, 0, 0, 255])
+  })
+
+  it('turns the native E1003 threshold gray into preview black', async () => {
+    const renderer = fakeRenderer([completeFrame(85, 85, 85)])
+    const source = await createScreenTexture({
+      forecast: brouwersdamForecast,
+      config: { showThreshold: true, threshold: 17 },
+      boardId: BOARD_IDS.E1003,
+      rendererLoader: async () => renderer,
+    })
+
+    expect([...source.texture.image.data.slice(0, 4)]).toEqual([0, 0, 0, 255])
   })
 
   it('maps row choices and five local tide days into renderer input', () => {

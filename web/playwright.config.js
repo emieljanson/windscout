@@ -17,7 +17,9 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   webServer: {
-    command: 'npm run dev -- --host 127.0.0.1 --port 4173',
+    // Browser tests mock the installer firmware responses. Starting Vite
+    // directly keeps an unrelated local device build from blocking UI QA.
+    command: 'vite --host 127.0.0.1 --port 4173',
     url: 'http://127.0.0.1:4173',
     reuseExistingServer: true,
     env: {

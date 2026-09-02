@@ -25,6 +25,17 @@
   min-height: 100%;
 }
 
+.configurator-page--device-capture,
+.configurator-page--device-capture .configurator-layout,
+.configurator-page--device-capture .product-stage {
+  min-height: 100vh;
+  background: transparent;
+}
+
+.configurator-page--device-capture .product-stage {
+  overflow: visible;
+}
+
 .scene-error {
   position: absolute;
   z-index: 2;

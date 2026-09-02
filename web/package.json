@@ -17,7 +17,8 @@
     "spots:catalog:check": "node scripts/spots/check-catalog.mjs --check",
     "renderer:build": "node scripts/build-wind-renderer.mjs",
     "renderer:check": "node scripts/build-wind-renderer.mjs --check",
-    "model:prepare": "node scripts/prepare-e1002-model.mjs",
+    "devices:previews": "node scripts/render-device-previews.mjs",
+    "model:prepare": "node scripts/prepare-e1002-model.mjs && node scripts/prepare-e1003-model.mjs",
     "installer:prepare": "node scripts/prepare-local-installer.mjs"
   },
   "dependencies": {

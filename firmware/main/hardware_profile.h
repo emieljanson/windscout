@@ -16,6 +16,7 @@ typedef enum {
     HARDWARE_MODEL_UNKNOWN = 0,
     HARDWARE_MODEL_E1001 = 1,
     HARDWARE_MODEL_E1002 = 2,
+    HARDWARE_MODEL_E1003 = 3,
 } hardware_model_t;
 
 typedef enum {

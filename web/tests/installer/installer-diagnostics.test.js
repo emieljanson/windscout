@@ -33,6 +33,9 @@ describe('installer diagnostics', () => {
     diagnostics.setContext({
       phase: 'wifi',
       boardId: 'seeedstudio_reterminal_e1002',
+      selectedBoardId: 'seeedstudio_reterminal_e1003',
+      detectedBoardId: 'seeedstudio_reterminal_e1002',
+      decisionReason: 'different-windscout-model',
       configurationDigest: 'must-not-survive',
       arbitrary: 'also-drop-me',
     })
@@ -52,7 +55,13 @@ describe('installer diagnostics', () => {
       '192.168.1.2', 'token=secret',
     ]) expect(encoded).not.toContain(forbidden)
     expect(diagnostics.snapshot()).toMatchObject({
-      context: { phase: 'wifi', boardId: 'seeedstudio_reterminal_e1002' },
+      context: {
+        phase: 'wifi',
+        boardId: 'seeedstudio_reterminal_e1002',
+        selectedBoardId: 'seeedstudio_reterminal_e1003',
+        detectedBoardId: 'seeedstudio_reterminal_e1002',
+        decisionReason: 'different-windscout-model',
+      },
       entries: [{ category: 'device', operation: 'test_wifi', status: 'failed', measurements: { elapsedMs: 20 } }],
     })
   })

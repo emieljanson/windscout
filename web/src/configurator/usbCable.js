@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
+import { BOARD_IDS } from '../config/configuration'
 import { WAKE_BUTTON_COLOR } from './productColors'
 
 export const USB_CABLE_COLOR = WAKE_BUTTON_COLOR
@@ -23,17 +24,26 @@ const VERTICAL_PORT_ROLL = new THREE.Quaternion().setFromAxisAngle(LOCAL_FORWARD
 // continues invisibly inside.
 const USB_PORT = new THREE.Vector3(0.0437, -0.0071, -0.00535)
 const CONNECTOR_HOUSING_FRONT = millimeters(12.4)
-const CONNECTOR_INSERTED_ORIGIN_X = USB_PORT.x + CONNECTOR_HOUSING_FRONT
-const CONNECTOR_PATH_POINTS = [
-    [0.56, USB_PORT.y, USB_PORT.z],
-    [0.48, USB_PORT.y, USB_PORT.z],
-    [0.4, USB_PORT.y, USB_PORT.z],
-    [0.32, USB_PORT.y, USB_PORT.z],
-    [0.24, USB_PORT.y, USB_PORT.z],
-    [0.16, USB_PORT.y, USB_PORT.z],
-    [0.09, USB_PORT.y, USB_PORT.z],
-    [CONNECTOR_INSERTED_ORIGIN_X, USB_PORT.y, USB_PORT.z],
-]
+const E1002_CABLE_PROFILE = Object.freeze({
+  floorY: FLOOR_Y,
+  floorSurfaceY: FLOOR_SURFACE_Y,
+  housingFront: CONNECTOR_HOUSING_FRONT,
+  millimeters,
+  port: USB_PORT,
+})
+const E1003_MM_TO_SCENE_UNIT = 0.001
+const E1003_CABLE_PROFILE = Object.freeze({
+  floorY: -0.09045,
+  floorSurfaceY: -0.09045 - 1.45 * E1003_MM_TO_SCENE_UNIT,
+  housingFront: 12.4 * E1003_MM_TO_SCENE_UNIT,
+  millimeters: (value) => value * E1003_MM_TO_SCENE_UNIT,
+  // Socket centre from STEP meshes 106/107 after the model's y-centering.
+  port: new THREE.Vector3(0.0707, -0.02644, -0.00727),
+})
+
+function cableProfileForBoard(boardId) {
+  return boardId === BOARD_IDS.E1003 ? E1003_CABLE_PROFILE : E1002_CABLE_PROFILE
+}
 
 export function applyUsbCableDistanceMask(material) {
   material.transparent = true
@@ -72,16 +82,18 @@ diffuseColor.a *= usbCableDistanceMask;
   material.customProgramCacheKey = () => 'usb-cable-distance-mask-v1'
 }
 
-function createConnectorPath(connectorStartX) {
-  const scale = (connectorStartX - CONNECTOR_INSERTED_ORIGIN_X)
-    / (USB_CABLE_DEFAULT_START_X - CONNECTOR_INSERTED_ORIGIN_X)
+function createConnectorPath(connectorStartX, profile) {
+  const insertedOriginX = profile.port.x + profile.housingFront
+  const pathPoints = [0.56, 0.48, 0.4, 0.32, 0.24, 0.16, 0.09, insertedOriginX]
+  const scale = (connectorStartX - insertedOriginX)
+    / (USB_CABLE_DEFAULT_START_X - insertedOriginX)
   return new THREE.CatmullRomCurve3(
-    CONNECTOR_PATH_POINTS.map(([x, y, z], index) => new THREE.Vector3(
-      index === CONNECTOR_PATH_POINTS.length - 1
+    pathPoints.map((x, index) => new THREE.Vector3(
+      index === pathPoints.length - 1
         ? x
-        : CONNECTOR_INSERTED_ORIGIN_X + (x - CONNECTOR_INSERTED_ORIGIN_X) * scale,
-      y,
-      z,
+        : insertedOriginX + (x - insertedOriginX) * scale,
+      profile.port.y,
+      profile.port.z,
     )),
     false,
     'centripetal',
@@ -149,29 +161,31 @@ export function cablePoseAt(
   progress,
   compositionMode = 'compact',
   connectorStartX = USB_CABLE_DEFAULT_START_X,
+  boardId = BOARD_IDS.E1002,
 ) {
+  const profile = cableProfileForBoard(boardId)
   const value = THREE.MathUtils.clamp(progress, 0, 1)
-  const connectorPath = createConnectorPath(connectorStartX)
+  const connectorPath = createConnectorPath(connectorStartX, profile)
   const connector = connectorPositionAt(connectorPath, value)
   const tangent = connectorPath.getTangentAt(value)
   // Carry the braid over the narrow strain-relief section and stop it at the
   // wider collar, without letting the woven tube poke through that transition.
   const cableJoin = connector.clone().addScaledVector(tangent, -millimeters(3.6))
   const straightSheathLead = connector.clone().addScaledVector(tangent, -millimeters(36.2))
-  const floorDepth = USB_PORT.z
+  const floorDepth = profile.port.z
   // Give the braided sheath enough run-up to lift as one broad, weighted arc.
   // A short run-up makes it behave like soft string and creates a sudden drop
   // immediately behind the connector.
-  const floorApproachX = Math.max(connector.x + millimeters(105), 0.135)
+  const floorApproachX = Math.max(connector.x + profile.millimeters(105), 0.135)
 
   return {
     connector,
     tangent,
     cablePoints: [
-      new THREE.Vector3(1.6, FLOOR_Y, floorDepth),
-      new THREE.Vector3(1.1, FLOOR_Y, floorDepth),
-      new THREE.Vector3(0.75, FLOOR_Y, floorDepth),
-      new THREE.Vector3(floorApproachX, FLOOR_Y, floorDepth),
+      new THREE.Vector3(1.6, profile.floorY, floorDepth),
+      new THREE.Vector3(1.1, profile.floorY, floorDepth),
+      new THREE.Vector3(0.75, profile.floorY, floorDepth),
+      new THREE.Vector3(floorApproachX, profile.floorY, floorDepth),
       straightSheathLead,
       cableJoin,
     ],
@@ -553,15 +567,18 @@ function geometryForFloorEffect(points, {
   verticalScale,
   lift,
   depthOffset,
+  profile,
 }) {
   const geometry = geometryForCable(points.slice(0, pointCount), millimeters(radius))
   const positions = geometry.attributes.position
   for (let index = 0; index < positions.count; index += 1) {
     positions.setY(
       index,
-      FLOOR_SURFACE_Y + (positions.getY(index) - FLOOR_Y) * verticalScale + millimeters(lift),
+      profile.floorSurfaceY
+        + (positions.getY(index) - profile.floorY) * verticalScale
+        + profile.millimeters(lift),
     )
-    positions.setZ(index, positions.getZ(index) + millimeters(depthOffset))
+    positions.setZ(index, positions.getZ(index) + profile.millimeters(depthOffset))
   }
   positions.needsUpdate = true
   geometry.computeVertexNormals()
@@ -573,22 +590,25 @@ function updateFloorEffectGeometry(geometry, points, {
   verticalScale,
   lift,
   depthOffset,
+  profile,
 }) {
   updateTubeGeometry(geometry, cableCurveForPoints(points.slice(0, pointCount)))
   const positions = geometry.attributes.position
   for (let index = 0; index < positions.count; index += 1) {
     positions.setY(
       index,
-      FLOOR_SURFACE_Y + (positions.getY(index) - FLOOR_Y) * verticalScale + millimeters(lift),
+      profile.floorSurfaceY
+        + (positions.getY(index) - profile.floorY) * verticalScale
+        + profile.millimeters(lift),
     )
-    positions.setZ(index, positions.getZ(index) + millimeters(depthOffset))
+    positions.setZ(index, positions.getZ(index) + profile.millimeters(depthOffset))
   }
   positions.needsUpdate = true
   geometry.computeVertexNormals()
   geometry.computeBoundingSphere()
 }
 
-function geometryForContactShadow(points) {
+function geometryForContactShadow(points, profile) {
   // Keep the crisp contact layer under the floor section only. Flattening the
   // raised bend created a second cable-shaped line beneath the real cable.
   return geometryForFloorEffect(points.slice(2, 4), {
@@ -597,15 +617,17 @@ function geometryForContactShadow(points) {
     verticalScale: 0.025,
     lift: 0.05,
     depthOffset: 0,
+    profile,
   })
 }
 
-function updateContactShadowGeometry(geometry, points) {
+function updateContactShadowGeometry(geometry, points, profile) {
   updateFloorEffectGeometry(geometry, points.slice(2, 4), {
     pointCount: 2,
     verticalScale: 0.025,
     lift: 0.05,
     depthOffset: 0,
+    profile,
   })
 }
 
@@ -621,7 +643,8 @@ function orientConnector(connector, tangent) {
     .multiply(VERTICAL_PORT_ROLL)
 }
 
-export function createUsbCable(initialCompositionMode = 'compact') {
+export function createUsbCable(initialCompositionMode = 'compact', boardId = BOARD_IDS.E1002) {
+  const profile = cableProfileForBoard(boardId)
   let compositionMode = initialCompositionMode
   let currentProgress = 0
   let connectorStartX = USB_CABLE_DEFAULT_START_X
@@ -716,9 +739,9 @@ export function createUsbCable(initialCompositionMode = 'compact') {
   object.name = 'USB_CABLE'
   object.visible = false
 
-  const initialPose = cablePoseAt(0, compositionMode, connectorStartX)
+  const initialPose = cablePoseAt(0, compositionMode, connectorStartX, boardId)
   const contactShadow = new THREE.Mesh(
-    geometryForContactShadow(initialPose.cablePoints),
+    geometryForContactShadow(initialPose.cablePoints, profile),
     materials.shadow,
   )
   contactShadow.name = 'USB_CABLE_CONTACT_SHADOW'
@@ -742,12 +765,12 @@ export function createUsbCable(initialCompositionMode = 'compact') {
 
   function setProgress(progress, forceGeometry = false) {
     currentProgress = progress
-    const pose = cablePoseAt(progress, compositionMode, connectorStartX)
+    const pose = cablePoseAt(progress, compositionMode, connectorStartX, boardId)
     // Follow the easing's exact progress. Quantizing this value made the cable
     // hold a shape for several frames and then jump near the end of an ease-out.
     if (forceGeometry || progress !== cableGeometryProgress) {
       updateCableGeometry(sheath.geometry, pose.cablePoints)
-      updateContactShadowGeometry(contactShadow.geometry, pose.cablePoints)
+      updateContactShadowGeometry(contactShadow.geometry, pose.cablePoints, profile)
       cableGeometryProgress = progress
     }
     connector.position.copy(pose.connector)

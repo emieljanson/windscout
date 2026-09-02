@@ -50,6 +50,13 @@ function reportInput(overrides = {}) {
         action: 'install',
         release: 'v1.2.3',
         boardId: 'seeedstudio_reterminal_e1002',
+        selectedBoardId: 'seeedstudio_reterminal_e1003',
+        detectedBoardId: 'seeedstudio_reterminal_e1002',
+        detectedFirmwareVersion: '2.0.0',
+        releaseBoardId: 'seeedstudio_reterminal_e1003',
+        releaseVersion: 'v1.2.3',
+        connectionKind: 'windscout',
+        decisionReason: 'different-windscout-model',
         chipFamily: 'ESP32-S3',
       },
       entries: [{ offsetMs: 20, category: 'flash', operation: 'write', status: 'failed', message: 'connection lost', measurements: { writtenBytes: 10 } }],
@@ -99,6 +106,15 @@ describe('Sentry installer reporter', () => {
         stackFrameVariables: false,
         frameContextLines: 0,
       },
+    }))
+    expect(sdk.captureException).toHaveBeenCalledWith(expect.any(Error), expect.objectContaining({
+      tags: expect.objectContaining({
+        selected_board_id: 'seeedstudio_reterminal_e1003',
+        detected_board_id: 'seeedstudio_reterminal_e1002',
+        release_board_id: 'seeedstudio_reterminal_e1003',
+        connection_kind: 'windscout',
+        decision_reason: 'different-windscout-model',
+      }),
     }))
   })
 
@@ -185,7 +201,7 @@ describe('filterInstallerEvent', () => {
         phase: 'wifi',
         password: 'secret',
       },
-      contexts: { installer: { boardId: 'safe', password: 'secret' }, trace: { trace_id: 'private' } },
+      contexts: { installer: { boardId: 'safe', selectedBoardId: 'selected', detectedBoardId: 'detected', decisionReason: 'mismatch', password: 'secret' }, trace: { trace_id: 'private' } },
       extra: { timeline: [{ category: 'wifi', operation: 'test', message: 'safe', password: 'secret' }], password: 'secret' },
       exception: { values: [{ type: 'Error', value: 'safe', stacktrace: { frames: [{ filename: 'https://x.test/app.js?secret=yes', function: 'run', lineno: 1, vars: { password: 'secret' }, context_line: 'secret' }] } }] },
       request: { data: 'secret' },
@@ -196,7 +212,7 @@ describe('filterInstallerEvent', () => {
     expect(encoded).not.toMatch(/password|secret@example|trace_id|context_line|vars|secret=yes/)
     expect(filtered).toMatchObject({
       tags: { 'windscout.diagnostic': 'installer', 'windscout.reference': 'WS-0123456789', phase: 'wifi' },
-      contexts: { installer: { boardId: 'safe' } },
+      contexts: { installer: { boardId: 'safe', selectedBoardId: 'selected', detectedBoardId: 'detected', decisionReason: 'mismatch' } },
       extra: { timeline: [{ category: 'wifi', operation: 'test', message: 'safe' }] },
     })
   })

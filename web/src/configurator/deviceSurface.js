@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { BOARD_IDS } from '../config/configuration'
 
 const PRIMARY_SOFTBOX = Object.freeze({
   direction: Object.freeze([0.5, -0.22, 0.84]),
@@ -12,15 +13,152 @@ const SECONDARY_SOFTBOX = Object.freeze({
   halfHeight: 0.12,
 })
 
+const POWDER_COAT_MATERIALS = new Set([
+  'enclosure-white-powder-coat',
+  'rear-service-cover',
+  'control-surround-white',
+  'front-lower-cover',
+])
+
 // BODY_18/BODY_19 expose a 160.2 × 94.9 mm opening. This scale keeps the
 // canonical 159 × 95.4 mm (800 × 480) UI undistorted while placing exactly
 // 1.525 mm of screen underneath each of the four visible bezel edges.
 export const SCREEN_BEZEL_OVERSCAN = 1.02672956
 
+function createE100xProductLabelTexture(boardId) {
+  const model = boardId === BOARD_IDS.E1001 ? 'E1001' : 'E1002'
+  const canvas = document.createElement('canvas')
+  canvas.width = 1040
+  canvas.height = 640
+  const context = canvas.getContext('2d')
+  context.fillStyle = '#f1f2ef'
+  context.fillRect(0, 0, canvas.width, canvas.height)
+  context.strokeStyle = '#a7aca9'
+  context.lineWidth = 4
+  context.strokeRect(2, 2, canvas.width - 4, canvas.height - 4)
+  context.fillStyle = '#242825'
+  context.textAlign = 'left'
+  context.font = '700 70px Arial, sans-serif'
+  context.fillText('seeed studio', 48, 92)
+  context.font = '600 31px Arial, sans-serif'
+  context.fillText(`reTerminal ${model} ePaper Display`, 50, 138)
+  context.font = '400 25px Arial, sans-serif'
+  context.fillText(`Model: ${model}`, 50, 188)
+  context.fillText('FCC ID: Z4T-E100X', 50, 226)
+  context.fillText('SKU: 100017057', 50, 264)
+
+  const barcode = (x, y, width, height, seed) => {
+    let cursor = x
+    let value = seed
+    while (cursor < x + width) {
+      value = (value * 9301 + 49297) % 233280
+      const barWidth = 2 + (value % 6)
+      context.fillRect(cursor, y, barWidth, height)
+      cursor += barWidth + 3 + (value % 4)
+    }
+  }
+  barcode(50, 304, 425, 78, boardId === BOARD_IDS.E1001 ? 1001 : 1002)
+  context.font = '400 20px Arial, sans-serif'
+  context.fillText('S/N: 10001705725250001', 50, 412)
+  barcode(50, 446, 425, 66, 72525)
+
+  context.font = '600 88px Arial, sans-serif'
+  context.fillText('CE', 625, 350)
+  context.lineWidth = 7
+  context.strokeStyle = '#242825'
+  context.strokeRect(834, 266, 70, 105)
+  context.beginPath()
+  context.moveTo(820, 250)
+  context.lineTo(918, 390)
+  context.moveTo(918, 250)
+  context.lineTo(820, 390)
+  context.stroke()
+  context.font = '500 24px Arial, sans-serif'
+  context.fillText('R 217-252557', 620, 448)
+
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.colorSpace = THREE.SRGBColorSpace
+  texture.name = `${model.toLowerCase()}-product-label-texture`
+  return texture
+}
+
 export function fitScreenUnderBezel(screen, overscan = SCREEN_BEZEL_OVERSCAN) {
   screen.scale.x *= overscan
   screen.scale.y *= overscan
   return screen
+}
+
+export function addDeviceRearMarkings(model, boardId, requestRender = () => {}) {
+  if (![BOARD_IDS.E1001, BOARD_IDS.E1002].includes(boardId)) return () => {}
+
+  const depthMaterial = new THREE.MeshPhysicalMaterial({
+    color: 0x343936,
+    roughness: 0.88,
+    metalness: 0.04,
+    name: 'e1002-rear-cavity-depth',
+  })
+  const depth = new THREE.Mesh(new THREE.PlaneGeometry(0.087, 0.113), depthMaterial)
+  depth.name = 'REAR_CAVITY_DEPTH'
+  depth.position.set(0, -0.0001, -0.0117)
+  depth.rotation.y = Math.PI
+  depth.userData = { role: 'BODY', materialRole: 'REAR_CAVITY_DEPTH' }
+  model.add(depth)
+
+  const topDepth = new THREE.Mesh(new THREE.PlaneGeometry(0.065, 0.014), depthMaterial)
+  topDepth.name = 'TOP_MICROPHONE_DEPTH'
+  topDepth.position.set(0.008, 0.0573, -0.006)
+  topDepth.rotation.x = -Math.PI / 2
+  topDepth.userData = { role: 'BODY', materialRole: 'TOP_CAVITY_DEPTH' }
+  model.add(topDepth)
+
+  const keyholeMaterial = new THREE.MeshPhysicalMaterial({
+    color: 0xc7cac5,
+    roughness: 0.78,
+    metalness: 0,
+    name: 'e1002-keyhole-recess-white',
+  })
+  const keyhole = new THREE.Mesh(new THREE.PlaneGeometry(0.018, 0.033), keyholeMaterial)
+  keyhole.name = 'E1002_KEYHOLE_RECESS'
+  keyhole.position.set(0, 0.028, -0.01175)
+  keyhole.rotation.y = Math.PI
+  keyhole.renderOrder = 2
+  keyhole.userData = { role: 'BODY', materialRole: 'KEYHOLE_RECESS' }
+  model.add(keyhole)
+
+  const labelTexture = createE100xProductLabelTexture(boardId)
+  const labelMaterial = new THREE.MeshPhysicalMaterial({
+    map: labelTexture,
+    color: 0xf1f2ef,
+    roughness: 0.82,
+    metalness: 0,
+    side: THREE.DoubleSide,
+    polygonOffset: true,
+    polygonOffsetFactor: -2,
+    polygonOffsetUnits: -2,
+    name: 'e1002-product-label-paper',
+  })
+  const label = new THREE.Mesh(new THREE.PlaneGeometry(0.052, 0.032), labelMaterial)
+  label.name = 'REAR_PRODUCT_LABEL'
+  label.position.set(-0.01, -0.012, -0.01318)
+  label.rotation.y = Math.PI
+  label.renderOrder = 5
+  model.add(label)
+  requestRender()
+
+  return () => {
+    depth.removeFromParent()
+    depth.geometry.dispose()
+    topDepth.removeFromParent()
+    topDepth.geometry.dispose()
+    depthMaterial.dispose()
+    keyhole.removeFromParent()
+    keyhole.geometry.dispose()
+    keyholeMaterial.dispose()
+    label.removeFromParent()
+    label.geometry.dispose()
+    labelMaterial.dispose()
+    labelTexture.dispose()
+  }
 }
 
 function noise(x, y) {
@@ -126,15 +264,21 @@ export function enhanceE1002Surface(model, renderer) {
     if (!child.isMesh || !child.material) return
     const materials = Array.isArray(child.material) ? child.material : [child.material]
     for (const material of materials) {
-      if (material.name === 'enclosure-white-powder-coat') {
+      if (POWDER_COAT_MATERIALS.has(material.name)) {
         addSurfaceProjectionUvs(child.geometry)
+        material.color.setHex(0xd9dad7)
         material.normalMap = powderCoatNormal
         material.normalScale.set(0.62, 0.62)
         material.roughness = 0.62
         material.roughnessMap = powderCoatRoughness
+        material.metalness = 0
+        material.ior = 1.52
+        material.specularIntensity = 0.52
+        material.clearcoat = 0.08
+        material.clearcoatRoughness = 0.56
         material.envMapIntensity = 0.8
         material.needsUpdate = true
-      } else if (material.name === 'front-satin-plastic') {
+      } else if (material.name === 'front-satin-plastic' || material.name === 'front-satin-trim') {
         material.color.setHex(0xe0e2de)
         material.roughness = 0.025
         material.ior = 1.55

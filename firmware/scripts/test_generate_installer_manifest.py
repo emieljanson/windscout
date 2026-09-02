@@ -104,6 +104,23 @@ class InstallerManifestTest(unittest.TestCase):
             self.assertNotIn("/", part["file"])
             self.assertTrue((self.output / part["file"]).is_file())
 
+    def test_generates_an_e1003_manifest_with_the_same_safe_layout(self):
+        manifest_path = generate_installer_bundle(
+            build_dir=self.build,
+            partitions_path=self.partitions,
+            output_dir=self.output,
+            version="v1.2.3-e1003",
+            board_id="seeedstudio_reterminal_e1003",
+        )
+        manifest = json.loads(manifest_path.read_text())
+        self.assertEqual(manifest["boardId"], "seeedstudio_reterminal_e1003")
+        validate_manifest(
+            manifest,
+            manifest_path.parent,
+            self.partitions,
+            "seeedstudio_reterminal_e1003",
+        )
+
     def test_rejects_corruption_overlap_wrong_board_and_stale_names(self):
         with self.assertRaises(ManifestError):
             generate_installer_bundle(

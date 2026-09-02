@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import InstallerPanel from '../../src/components/installer/InstallerPanel.vue'
 import SettingSelect from '../../src/components/settings/SettingSelect.vue'
+import { BOARD_IDS } from '../../src/config/configuration'
 
 const sonner = vi.hoisted(() => ({
   dismiss: vi.fn(),
@@ -25,15 +26,26 @@ function fakeSession(initial = { phase: 'ready', progress: 0, safeToDisconnect: 
   return session
 }
 
-function mountPanel(session) {
+function mountPanel(session, configuration = { digest: 'wanted' }) {
   wrapper = mount(InstallerPanel, {
-    props: { configuration: { digest: 'wanted' }, sessionFactory: () => session },
+    props: { configuration, sessionFactory: () => session },
     attachTo: document.body,
   })
+
   return wrapper
 }
 
 describe('installer inspector panel', () => {
+  it('links the E1003 connection step to the selected device', () => {
+    const session = fakeSession()
+    session.isDemo = true
+    mountPanel(session, { digest: 'wanted', boardId: BOARD_IDS.E1003 })
+
+    expect(wrapper.get('.installer-secondary').attributes('href'))
+      .toContain('reTerminal-E1003-p-6731.html')
+    expect(wrapper.text()).toContain('Connect your reTerminal E1003')
+  })
+
   it('keeps one icon grid mounted while step content changes around it', async () => {
     const session = fakeSession()
     mountPanel(session)
@@ -137,7 +149,7 @@ describe('installer inspector panel', () => {
     const session = fakeSession({ phase: 'confirm-device', progress: 0, safeToDisconnect: true, error: null })
     mountPanel(session)
     expect(wrapper.text()).toContain('Confirm your reTerminal')
-    expect(wrapper.text()).toContain('reTerminal E1001 or E1002')
+    expect(wrapper.text()).toContain('reTerminal E1002')
     expect(wrapper.text()).toContain('replace its software and saved setup')
     expect(wrapper.get('.installer-primary').text()).toBe('Install Windscout')
     expect(wrapper.find('.installer-secondary').exists()).toBe(false)

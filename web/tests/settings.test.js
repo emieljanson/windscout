@@ -4,6 +4,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
 
 import WindScoutSettings from '../src/components/WindScoutSettings.vue'
+import ReTerminalHelpDialog from '../src/components/ReTerminalHelpDialog.vue'
 import SpotCreationDialog from '../src/components/SpotCreationDialog.vue'
 import SettingCombobox from '../src/components/settings/SettingCombobox.vue'
 import SettingSelect from '../src/components/settings/SettingSelect.vue'
@@ -46,6 +47,7 @@ describe('WindScout settings panel', () => {
 
     expect(wrapper.findAll('.setting-section__title')).toHaveLength(0)
     expect(wrapper.findAll('.setting-row__label').map((label) => label.text())).toEqual([
+      'reTerminal',
       'Wind model',
       'Wind threshold',
       'Weather',
@@ -99,7 +101,7 @@ describe('WindScout settings panel', () => {
     expect(selectSpot).toHaveBeenCalledTimes(1)
   })
 
-  it('keeps compact mode focused on four direct display pills', async () => {
+  it('lets compact mode switch models from a labelled dropdown', async () => {
     const store = useConfiguratorStore()
     mountSettings({ compact: true })
 
@@ -108,18 +110,66 @@ describe('WindScout settings panel', () => {
     expect(wrapper.find('.inspector-search').exists()).toBe(false)
     expect(wrapper.find('.inspector-divider').exists()).toBe(false)
     expect(wrapper.text()).not.toContain('Wind model')
-    expect(wrapper.findAll('select.setting-select__native')).toHaveLength(0)
+    expect(wrapper.findAll('select.setting-select__native')).toHaveLength(1)
     expect(wrapper.findAll('.setting-select__trigger')).toHaveLength(0)
+    const deviceSelect = wrapper.get('select[name="device"]')
+    expect(deviceSelect.findAll('option').map((option) => option.text())).toEqual([
+      'E1001',
+      'E1002',
+      'E1003',
+    ])
     const pills = wrapper.findAll('.mobile-display-pill')
     expect(pills.map((pill) => pill.text())).toEqual(['Threshold', 'Weather', 'Temp', 'Tide'])
     expect(pills.map((pill) => pill.attributes('aria-pressed'))).toEqual(['false', 'true', 'false', 'false'])
 
+    await deviceSelect.setValue('seeedstudio_reterminal_e1003')
     await pills[0].trigger('click')
     await pills[2].trigger('click')
+    expect(store.selectedBoardId).toBe('seeedstudio_reterminal_e1003')
     expect(store.showThreshold).toBe(true)
     expect(store.temperatureChoice).toBe('celsius')
     expect(pills[0].attributes('aria-pressed')).toBe('true')
     expect(pills[2].attributes('aria-pressed')).toBe('true')
+  })
+
+  it('explains the reTerminal choices from the settings label', async () => {
+    mountSettings()
+    const help = wrapper.get('button[aria-label="About reTerminal devices"]')
+
+    expect(help.attributes('aria-haspopup')).toBe('dialog')
+    expect(help.attributes('aria-expanded')).toBe('false')
+    await help.trigger('click')
+    await nextTick()
+
+    expect(wrapper.findComponent(ReTerminalHelpDialog).props('open')).toBe(true)
+    const dialog = document.body.querySelector('[role="dialog"]')
+    expect(dialog?.getAttribute('aria-labelledby')).toBeTruthy()
+    expect(dialog?.textContent).toContain('Windscout for reTerminal')
+    expect(dialog?.textContent).toContain('direct installation currently supports E1002 and E1003')
+    expect(dialog?.textContent).toContain('E1001')
+    expect(dialog?.textContent).toContain('7.3″ six-colour — E1002')
+    expect(dialog?.textContent).toContain('10.3″ monochrome + touch — E1003')
+    expect(dialog?.textContent).toContain('affiliate links')
+    const buyLinks = [...dialog.querySelectorAll('a')]
+    const deviceImages = [...dialog.querySelectorAll('img')]
+    expect(deviceImages.map((image) => image.getAttribute('src'))).toEqual([
+      '/devices/previews/e1001.png',
+      '/devices/previews/e1002.png',
+      '/devices/previews/e1003.png',
+    ])
+    expect(deviceImages.every((image) => image.getAttribute('alt') === '')).toBe(true)
+    expect(buyLinks.map((link) => link.textContent.trim())).toEqual(['Buy', 'Buy', 'Buy'])
+    expect(buyLinks.map((link) => link.getAttribute('aria-label'))).toEqual([
+      'Buy reTerminal E1001',
+      'Buy reTerminal E1002',
+      'Buy reTerminal E1003',
+    ])
+    expect(buyLinks.every((link) => link.href.includes('sensecap_affiliate=UF4PmgK'))).toBe(true)
+    expect(buyLinks.every((link) => link.rel === 'sponsored noopener noreferrer')).toBe(true)
+
+    document.body.querySelector('button[aria-label="Close reTerminal help"]')?.click()
+    await nextTick()
+    expect(wrapper.findComponent(ReTerminalHelpDialog).props('open')).toBe(false)
   })
 
   it('opens custom spot creation from the typed add action and selects the saved spot', async () => {
@@ -160,11 +210,11 @@ describe('WindScout settings panel', () => {
     const store = useConfiguratorStore()
     const selectModel = vi.spyOn(store, 'selectModel').mockResolvedValue(true)
     mountSettings()
-    const modelSelect = wrapper.findAllComponents(SettingSelect)[0]
+    const modelSelect = rowControl('Wind model').findComponent(SettingSelect)
 
     expect(wrapper.get('.settings-shell').classes()).not.toContain('settings-shell--compact')
     expect(wrapper.findAll('select.setting-select__native')).toHaveLength(0)
-    expect(wrapper.findAll('.setting-select__trigger')).toHaveLength(2)
+    expect(wrapper.findAll('.setting-select__trigger')).toHaveLength(3)
 
     expect(modelSelect.props('options').map((option) => option.label)).toEqual([
       'Best Match', 'ECMWF IFS', 'DWD ICON', 'NOAA GFS',
@@ -184,7 +234,7 @@ describe('WindScout settings panel', () => {
     store.forecastsByModel.dmi_harmonie = { spotId: store.selectedSpotId }
     mountSettings()
 
-    const modelOptions = wrapper.findAllComponents(SettingSelect)[0].props('options')
+    const modelOptions = rowControl('Wind model').findComponent(SettingSelect).props('options')
     expect(modelOptions.map((option) => option.label)).toEqual([
       'Best Match',
       'KNMI HARMONIE', 'DMI HARMONIE',
@@ -218,7 +268,7 @@ describe('WindScout settings panel', () => {
   it('maps Temperature to Hide, Celsius, or Fahrenheit as one setting', async () => {
     const store = useConfiguratorStore()
     mountSettings()
-    const temperatureSelect = wrapper.findAllComponents(SettingSelect)[1]
+    const temperatureSelect = rowControl('Temperature').findComponent(SettingSelect)
 
     expect(store.temperatureChoice).toBe('hide')
     expect(temperatureSelect.props('options').map((option) => option.label)).toEqual([

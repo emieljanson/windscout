@@ -12,6 +12,8 @@ import { fetchOpenMeteoTide } from '../forecast/openMeteoMarine'
 import { readCachedTide, writeCachedTide } from '../forecast/tideCache'
 import {
   createDefaultDisplayConfiguration,
+  BOARD_ID,
+  SUPPORTED_BOARD_IDS,
   TEMPERATURE_CHOICES,
   TEMPERATURE_UNITS,
   TIME_FORMATS,
@@ -41,6 +43,7 @@ export const useConfiguratorStore = defineStore('configurator', {
       showDedicatedFooter: displayConfiguration.showDedicatedFooter,
       timeFormat: displayConfiguration.timeFormat,
       temperatureUnit: displayConfiguration.temperatureUnit,
+      selectedBoardId: BOARD_ID,
       selectedSpotId: DEFAULT_SPOT_ID,
       personalSpots: readPersonalSpots(),
       selectedModelId: DEFAULT_FORECAST_MODEL_ID,
@@ -94,6 +97,11 @@ export const useConfiguratorStore = defineStore('configurator', {
     },
   },
   actions: {
+    setSelectedBoardId(value) {
+      if (!SUPPORTED_BOARD_IDS.includes(value)) return false
+      this.selectedBoardId = value
+      return true
+    },
     loadPersonalSpots({ storage } = {}) {
       this.personalSpots = readPersonalSpots(storage)
       return this.personalSpots

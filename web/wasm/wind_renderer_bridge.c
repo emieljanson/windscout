@@ -16,12 +16,14 @@ enum {
 
 static wind_renderer_input_v2_t renderer_input;
 static uint8_t renderer_output[WIND_RENDERER_PALETTE_BYTES];
-static uint8_t renderer_preview_output[WIND_RENDERER_RGBA_BYTES];
+static uint8_t renderer_preview_output[WIND_RENDERER_E1003_RGBA_BYTES];
 static char string_scratch[WIND_RENDERER_SPOT_NAME_CAPACITY];
 static int input_ready;
 static int input_error;
 static int output_valid;
 static int preview_output_valid;
+static uint32_t preview_width;
+static uint32_t preview_height;
 
 static int copy_text(char *destination, size_t capacity) {
     if (!destination || capacity == 0 ||
@@ -80,7 +82,15 @@ EMSCRIPTEN_KEEPALIVE uintptr_t wind_wasm_preview_output_ptr(void) {
 }
 
 EMSCRIPTEN_KEEPALIVE uint32_t wind_wasm_preview_bytes(void) {
-    return WIND_RENDERER_RGBA_BYTES;
+    return preview_width * preview_height * 4u;
+}
+
+EMSCRIPTEN_KEEPALIVE uint32_t wind_wasm_preview_width(void) {
+    return preview_width;
+}
+
+EMSCRIPTEN_KEEPALIVE uint32_t wind_wasm_preview_height(void) {
+    return preview_height;
 }
 
 EMSCRIPTEN_KEEPALIVE int wind_wasm_reset(uint32_t contract_version) {
@@ -89,6 +99,8 @@ EMSCRIPTEN_KEEPALIVE int wind_wasm_reset(uint32_t contract_version) {
     input_error = 0;
     output_valid = 0;
     preview_output_valid = 0;
+    preview_width = 0;
+    preview_height = 0;
     if (contract_version != WIND_RENDERER_CONTRACT_VERSION) return -1;
     wind_renderer_input_v2_init(&renderer_input);
     input_ready = 1;
@@ -100,12 +112,12 @@ EMSCRIPTEN_KEEPALIVE int wind_wasm_set_metadata_field(int field) {
     int result = -1;
     switch (field) {
         case METADATA_SPOT_NAME:
-            result = copy_text(renderer_input.spot_name,
-                               sizeof(renderer_input.spot_name));
+            result =
+                copy_text(renderer_input.spot_name, sizeof(renderer_input.spot_name));
             break;
         case METADATA_PROVIDER:
-            result = copy_text(renderer_input.provider,
-                               sizeof(renderer_input.provider));
+            result =
+                copy_text(renderer_input.provider, sizeof(renderer_input.provider));
             break;
         case METADATA_UPDATED_TIME:
             result = copy_text(renderer_input.updated_time,
@@ -117,30 +129,29 @@ EMSCRIPTEN_KEEPALIVE int wind_wasm_set_metadata_field(int field) {
     return accept_result(result);
 }
 
-EMSCRIPTEN_KEEPALIVE int wind_wasm_set_status(
-    int state, int refresh_failed, int age_hours, int battery_percent,
-    int display_mode, int threshold_kt) {
+EMSCRIPTEN_KEEPALIVE int wind_wasm_set_status(int state, int refresh_failed,
+                                              int age_hours, int battery_percent,
+                                              int display_mode, int threshold_kt) {
     if (!input_ready || input_error) return -1;
     return accept_result(wind_renderer_input_v2_set_status(
-        &renderer_input, (wind_renderer_state_t)state, refresh_failed,
-        age_hours, battery_percent,
-        (wind_renderer_display_mode_t)display_mode, threshold_kt));
+        &renderer_input, (wind_renderer_state_t)state, refresh_failed, age_hours,
+        battery_percent, (wind_renderer_display_mode_t)display_mode, threshold_kt));
 }
 
-EMSCRIPTEN_KEEPALIVE int wind_wasm_set_display_rows(
-    int show_weather, int show_temperature, int show_tide, int tide_available) {
+EMSCRIPTEN_KEEPALIVE int wind_wasm_set_display_rows(int show_weather,
+                                                    int show_temperature, int show_tide,
+                                                    int tide_available) {
     if (!input_ready || input_error) return -1;
     return accept_result(wind_renderer_input_v2_set_display_rows(
-        &renderer_input, show_weather, show_temperature, show_tide,
-        tide_available));
+        &renderer_input, show_weather, show_temperature, show_tide, tide_available));
 }
 
-EMSCRIPTEN_KEEPALIVE int wind_wasm_set_preferences(
-    int use_24_hour, int temperature_fahrenheit, int show_dedicated_footer) {
+EMSCRIPTEN_KEEPALIVE int wind_wasm_set_preferences(int use_24_hour,
+                                                   int temperature_fahrenheit,
+                                                   int show_dedicated_footer) {
     if (!input_ready || input_error) return -1;
     return accept_result(wind_renderer_input_v2_set_preferences(
-        &renderer_input, use_24_hour, temperature_fahrenheit,
-        show_dedicated_footer));
+        &renderer_input, use_24_hour, temperature_fahrenheit, show_dedicated_footer));
 }
 
 EMSCRIPTEN_KEEPALIVE int wind_wasm_set_day_field(int day_index, int field) {
@@ -160,27 +171,28 @@ EMSCRIPTEN_KEEPALIVE int wind_wasm_set_day_field(int day_index, int field) {
     return accept_result(result);
 }
 
-EMSCRIPTEN_KEEPALIVE int wind_wasm_set_sample_label(int day_index,
-                                                    int sample_index) {
+EMSCRIPTEN_KEEPALIVE int wind_wasm_set_sample_label(int day_index, int sample_index) {
     if (!input_ready || input_error || day_index < 0 ||
         day_index >= WIND_RENDERER_DAY_COUNT || sample_index < 0 ||
         sample_index >= WIND_RENDERER_SAMPLES_PER_DAY) {
         input_error = 1;
         return -1;
     }
-    return accept_result(copy_text(
-        renderer_input.days[day_index].samples[sample_index].time,
-        sizeof(renderer_input.days[day_index].samples[sample_index].time)));
+    return accept_result(
+        copy_text(renderer_input.days[day_index].samples[sample_index].time,
+                  sizeof(renderer_input.days[day_index].samples[sample_index].time)));
 }
 
-EMSCRIPTEN_KEEPALIVE int wind_wasm_set_sample_values(
-    int day_index, int sample_index, int sustained_kt, int gust_kt,
-    int destination_degrees, int available, int weather,
-    int temperature_tenths_c, int temperature_available) {
+EMSCRIPTEN_KEEPALIVE int wind_wasm_set_sample_values(int day_index, int sample_index,
+                                                     int sustained_kt, int gust_kt,
+                                                     int destination_degrees,
+                                                     int available, int weather,
+                                                     int temperature_tenths_c,
+                                                     int temperature_available) {
     if (!input_ready || input_error) return -1;
     const char *time = NULL;
-    if (day_index >= 0 && day_index < WIND_RENDERER_DAY_COUNT &&
-        sample_index >= 0 && sample_index < WIND_RENDERER_SAMPLES_PER_DAY) {
+    if (day_index >= 0 && day_index < WIND_RENDERER_DAY_COUNT && sample_index >= 0 &&
+        sample_index < WIND_RENDERER_SAMPLES_PER_DAY) {
         time = renderer_input.days[day_index].samples[sample_index].time;
     }
     return accept_result(wind_renderer_input_v2_set_sample(
@@ -189,18 +201,18 @@ EMSCRIPTEN_KEEPALIVE int wind_wasm_set_sample_values(
         temperature_tenths_c, temperature_available));
 }
 
-EMSCRIPTEN_KEEPALIVE int wind_wasm_set_tide_sample(
-    int tide_index, int day_index, int local_hour, int sea_level_mm,
-    int available) {
+EMSCRIPTEN_KEEPALIVE int wind_wasm_set_tide_sample(int tide_index, int day_index,
+                                                   int local_hour, int sea_level_mm,
+                                                   int available) {
     if (!input_ready || input_error) return -1;
     return accept_result(wind_renderer_input_v2_set_tide_sample(
-        &renderer_input, tide_index, day_index, local_hour, sea_level_mm,
-        available));
+        &renderer_input, tide_index, day_index, local_hour, sea_level_mm, available));
 }
 
-EMSCRIPTEN_KEEPALIVE int wind_wasm_set_tide_extremum(
-    int extremum_index, int day_index, int local_hour, int local_minute,
-    int sea_level_mm, int is_high, int available) {
+EMSCRIPTEN_KEEPALIVE int wind_wasm_set_tide_extremum(int extremum_index, int day_index,
+                                                     int local_hour, int local_minute,
+                                                     int sea_level_mm, int is_high,
+                                                     int available) {
     if (!input_ready || input_error) return -1;
     return accept_result(wind_renderer_input_v2_set_tide_extremum(
         &renderer_input, extremum_index, day_index, local_hour, local_minute,
@@ -211,10 +223,9 @@ EMSCRIPTEN_KEEPALIVE int wind_wasm_render(void) {
     output_valid = 0;
     if (!input_ready || input_error) return -1;
     wind_renderer_stats_t stats;
-    const int result = wind_renderer_input_v2_render(
-        &renderer_input, renderer_output, sizeof(renderer_output), &stats);
-    if (result != 0 || stats.dither_passes != 1 ||
-        stats.clipped_primitives != 0) {
+    const int result = wind_renderer_input_v2_render(&renderer_input, renderer_output,
+                                                     sizeof(renderer_output), &stats);
+    if (result != 0 || stats.dither_passes != 1 || stats.clipped_primitives != 0) {
         memset(renderer_output, 0, sizeof(renderer_output));
         return result != 0 ? result : -2;
     }
@@ -222,15 +233,24 @@ EMSCRIPTEN_KEEPALIVE int wind_wasm_render(void) {
     return 0;
 }
 
-EMSCRIPTEN_KEEPALIVE int wind_wasm_render_preview(void) {
+EMSCRIPTEN_KEEPALIVE int wind_wasm_render_preview(int display) {
     preview_output_valid = 0;
     if (!input_ready || input_error) return -1;
+    if (display == WIND_RENDERER_DISPLAY_E1003_GC16) {
+        preview_width = WIND_RENDERER_WIDTH;
+        preview_height = WIND_RENDERER_E1003_COMPOSITION_HEIGHT;
+    } else if (display == WIND_RENDERER_DISPLAY_E1001_GRAY4 ||
+               display == WIND_RENDERER_DISPLAY_E1002_SPECTRA6) {
+        preview_width = WIND_RENDERER_WIDTH;
+        preview_height = WIND_RENDERER_HEIGHT;
+    } else {
+        return -1;
+    }
     wind_renderer_stats_t stats;
-    const int result = wind_renderer_input_v2_render_preview_rgba(
-        &renderer_input, renderer_preview_output,
+    const int result = wind_renderer_input_v2_render_preview_rgba_for_display(
+        &renderer_input, (wind_renderer_display_t)display, renderer_preview_output,
         sizeof(renderer_preview_output), &stats);
-    if (result != 0 || stats.dither_passes != 0 ||
-        stats.clipped_primitives != 0) {
+    if (result != 0 || stats.dither_passes != 0 || stats.clipped_primitives != 0) {
         memset(renderer_preview_output, 0, sizeof(renderer_preview_output));
         return result != 0 ? result : -2;
     }
