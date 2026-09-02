@@ -319,13 +319,17 @@ export function createInstallerSession({
         await waitFor(SAVED_WIFI_CONNECT_RETRY_MS)
         current = await candidate.request('get_state')
       }
+      const usesHardwareProfile = hello.capabilities.includes('hardware-profile')
+      const reportedHardwareModel = usesHardwareProfile
+        ? ({ e1001: BOARD_IDS.E1001, e1002: BOARD_IDS.E1002 }[hello.hardwareModel])
+        : undefined
       return {
         protocol: candidate,
         device: {
           kind: 'windscout',
-          verifiedBoard: (hello.capabilities.includes('hardware-profile')
-            ? ({ e1001: BOARD_IDS.E1001, e1002: BOARD_IDS.E1002 }[hello.hardwareModel])
-            : hello.boardId) === expectedHardwareModel,
+          verifiedBoard: (usesHardwareProfile ? reportedHardwareModel : hello.boardId) === expectedHardwareModel,
+          hardwareModelMismatch: usesHardwareProfile && reportedHardwareModel !== undefined &&
+            reportedHardwareModel !== expectedHardwareModel,
           boardId: hello.boardId,
           hardwareModel: hello.hardwareModel,
           hardwareProfileRevision: hello.hardwareProfileRevision,

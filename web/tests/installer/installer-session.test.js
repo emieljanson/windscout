@@ -185,7 +185,9 @@ describe('installer session', () => {
 
     await session.connect()
 
-    const staged = protocol.request.mock.calls.find(([command]) => command === 'stage_configuration')[1]
+    const stagedCall = protocol.request.mock.calls.find(([command]) => command === 'stage_configuration')
+    expect(stagedCall).toBeDefined()
+    const staged = stagedCall[1]
     expect(staged.configuration.boardId).toBe(BOARD_IDS.E1002)
     expect(staged.configuration.digest).not.toBe(selectedConfiguration.digest)
     expect(session.getState().phase).toBe('complete')
@@ -202,6 +204,22 @@ describe('installer session', () => {
     await session.connect()
 
     expect(session.getState().phase).toBe('confirm-device')
+  })
+
+  it('blocks a known universal hardware profile that differs from the selected model', async () => {
+    const session = createInstallerSession({
+      configuration: e1001Configuration(),
+      requestPort: async () => ({}),
+      releaseLoader: async () => release,
+      protocolFactory: () => appProtocol({ hardwareModel: 'e1002' }),
+    })
+
+    await session.connect()
+
+    expect(session.getState()).toMatchObject({
+      phase: 'error',
+      error: { code: INSTALLER_ERROR_CODES.INCOMPATIBLE_DEVICE },
+    })
   })
 
   it('blocks an E1002 when the E1003 installer route is selected', async () => {

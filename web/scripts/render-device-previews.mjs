@@ -79,10 +79,14 @@ try {
 
       const padding = 24
       const contentWidth = maxX - minX + 1
-      const outputWidth = Math.min(source.width, contentWidth + padding * 2)
+      const contentCenterX = (minX + maxX + 1) / 2
       const deviceCenterX = solidMaxX >= solidMinX
         ? (solidMinX + solidMaxX + 1) / 2
-        : (minX + maxX + 1) / 2
+        : contentCenterX
+      const outputWidth = Math.min(
+        source.width,
+        contentWidth + padding * 2 + Math.ceil(Math.abs(deviceCenterX - contentCenterX) * 2),
+      )
       const left = Math.max(0, Math.min(
         source.width - outputWidth,
         Math.round(deviceCenterX - outputWidth / 2),

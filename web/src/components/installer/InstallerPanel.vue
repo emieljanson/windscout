@@ -133,7 +133,8 @@ async function close() {
 
 function handleKeydown(event) {
   root.value?.querySelector('.is-initial-focus')?.classList.remove('is-initial-focus')
-  if (event.key === 'Escape' && reTerminalHelpOpen.value) return
+  if (event.key === 'Escape' &&
+      (reTerminalHelpOpen.value || event.target?.closest?.('[role="dialog"]'))) return
   if (event.key === 'Escape' && !critical.value) void close()
 }
 

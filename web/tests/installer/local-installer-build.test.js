@@ -96,11 +96,19 @@ describe('local installer firmware build', () => {
 
   it('ignores a model-specific build that cannot install E1001', () => {
     const { root, firmware } = fixture()
+    const sourceTime = new Date('2026-08-30T10:00:00Z')
+    utimesSync(path.join(firmware, 'main', 'windscout_main.c'), sourceTime, sourceTime)
+    const universal = build(
+      firmware,
+      'build-local',
+      'universal-dev',
+      new Date('2026-08-30T11:00:00Z'),
+    )
     build(firmware, 'build', 'e1003-only', new Date('2026-08-30T12:00:00Z'), {
       universal: false,
     })
 
-    expect(() => selectLocalFirmwareBuild(root)).toThrow(/E1001\/E1002/i)
+    expect(selectLocalFirmwareBuild(root)).toMatchObject({ buildDir: universal })
   })
 
   it('refuses a different build with the same embedded firmware version', () => {

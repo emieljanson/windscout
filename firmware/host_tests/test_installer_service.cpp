@@ -218,6 +218,7 @@ TEST(InstallerServiceTest, UnknownAndRecoveryProfilesBlockSetupMutations)
         auto service = make_service(&fake);
         service.dependencies.get_hardware_profile = get_hardware_profile;
         service.dependencies.scan_wifi = scan_wifi;
+        service.dependencies.begin_apply = begin_apply;
 
         EXPECT_NE(request(&service, R"({"command":"scan_networks"})")
                       .find("hardware_profile_required"), std::string::npos);

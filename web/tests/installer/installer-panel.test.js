@@ -104,6 +104,8 @@ describe('installer inspector panel', () => {
       expect(buyButton.element.nextElementSibling).toBe(wrapper.get('.installer-primary').element)
       await buyButton.trigger('click')
       expect(wrapper.findComponent(ReTerminalHelpDialog).props('open')).toBe(true)
+      wrapper.findComponent(ReTerminalHelpDialog).vm.$emit('update:open', false)
+      await wrapper.vm.$nextTick()
       expect(wrapper.get('.installer-primary').text()).toBe('Continue')
       await wrapper.get('.installer-primary').trigger('click')
       expect(session.connect).toHaveBeenCalledOnce()
