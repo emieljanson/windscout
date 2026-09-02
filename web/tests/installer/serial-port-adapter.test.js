@@ -96,6 +96,21 @@ describe('serial port adapter', () => {
     })
   })
 
+  it('records why opening an already busy USB port failed', async () => {
+    const diagnostics = { record: vi.fn() }
+    const port = { open: vi.fn().mockRejectedValue(new Error('Failed to open serial port')) }
+    const protocol = createSerialProtocol(port, { diagnostics })
+
+    await expect(protocol.open()).rejects.toThrow('Failed to open serial port')
+    expect(diagnostics.record).toHaveBeenLastCalledWith({
+      category: 'serial',
+      operation: 'open',
+      status: 'failed',
+      message: 'Failed to open serial port',
+      measurements: { baudRate: 115200 },
+    })
+  })
+
   it('serializes overlapping protocol requests on one reader', async () => {
     const responses = []
     const commands = []

@@ -37,7 +37,7 @@ export function createEsptoolAdapter({
         const loader = new ESPLoader({ transport, baudrate, terminal: diagnosticTerminal(terminal) })
         try {
           const chip = await loader.main('default_reset')
-          record({ category: 'bootloader', operation: 'baudrate', status: 'ready', measurements: { baudrate } })
+          record({ category: 'bootloader', operation: 'baudrate', status: 'ready', measurements: { baudRate: baudrate } })
           return { chip, loader, transport }
         } catch (error) {
           await transport.disconnect().catch(() => {})
@@ -51,7 +51,7 @@ export function createEsptoolAdapter({
         } catch (fastError) {
           record({
             category: 'bootloader', operation: 'baudrate', status: 'fallback',
-            message: fastError?.message, measurements: { baudrate: 115200 },
+            message: fastError?.message, measurements: { baudRate: 115200 },
           })
           identity = await connect(115200)
         }

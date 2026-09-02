@@ -8,16 +8,19 @@ const MAX_REPORTED_OCCURRENCES = 200
 const TAG_FIELDS = new Set([
   'windscout.diagnostic', 'windscout.reference', 'error_code', 'phase', 'action',
   'route', 'release', 'board_id', 'chip_family', 'layout_version', 'browser', 'os',
-  'build_release',
+  'build_release', 'selected_board_id', 'detected_board_id', 'detected_firmware',
+  'release_board_id', 'release_version', 'connection_kind', 'decision_reason',
 ])
 const CONTEXT_FIELDS = new Set([
   'phase', 'errorCode', 'action', 'route', 'release', 'boardId', 'chipFamily',
-  'layoutVersion', 'browser', 'os', 'attempt',
+  'layoutVersion', 'browser', 'os', 'attempt', 'selectedBoardId',
+  'detectedBoardId', 'detectedFirmwareVersion', 'releaseBoardId',
+  'releaseVersion', 'connectionKind', 'decisionReason',
 ])
 const ENTRY_FIELDS = new Set(['offsetMs', 'category', 'operation', 'status', 'message', 'measurements'])
 const MEASUREMENT_FIELDS = new Set([
   'elapsedMs', 'durationMs', 'fileIndex', 'writtenBytes', 'totalBytes',
-  'retryCount', 'entryCount', 'textBytes',
+  'retryCount', 'entryCount', 'textBytes', 'baudRate',
 ])
 
 function safeString(value, maxLength = 240) {
@@ -288,6 +291,13 @@ export function createSentryReporter({
       browser: context.browser,
       os: context.os,
       build_release: release || undefined,
+      selected_board_id: context.selectedBoardId,
+      detected_board_id: context.detectedBoardId,
+      detected_firmware: context.detectedFirmwareVersion,
+      release_board_id: context.releaseBoardId,
+      release_version: context.releaseVersion,
+      connection_kind: context.connectionKind,
+      decision_reason: context.decisionReason,
     }
     for (const key of Object.keys(tags)) if (tags[key] === undefined) delete tags[key]
 

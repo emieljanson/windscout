@@ -162,6 +162,42 @@ describe('installer session', () => {
     })
   })
 
+  it('reports both device identities when an E1002 is connected on the E1003 route', async () => {
+    const e1003Release = {
+      ...release,
+      manifest: { ...release.manifest, version: '3.0.0', boardId: BOARD_IDS.E1003 },
+    }
+    const diagnostics = createInstallerDiagnostics({ now: () => 1000 })
+    const reporter = { report: vi.fn(async () => ({ status: 'sent', reference: 'WS-TEST123456' })) }
+    const session = createInstallerSession({
+      configuration: { ...configuration, boardId: BOARD_IDS.E1003 },
+      requestPort: async () => ({}),
+      releaseLoader: async () => e1003Release,
+      protocolFactory: () => appProtocol({ boardId: BOARD_IDS.E1002, firmwareVersion: '2.4.1' }),
+      diagnostics,
+      reporter,
+    })
+
+    await session.connect()
+    await vi.waitFor(() => expect(reporter.report).toHaveBeenCalledOnce())
+
+    expect(reporter.report.mock.calls[0][0]).toMatchObject({
+      phase: 'checking-device',
+      error: { code: INSTALLER_ERROR_CODES.INCOMPATIBLE_DEVICE },
+      snapshot: {
+        context: {
+          selectedBoardId: BOARD_IDS.E1003,
+          detectedBoardId: BOARD_IDS.E1002,
+          detectedFirmwareVersion: '2.4.1',
+          releaseBoardId: BOARD_IDS.E1003,
+          releaseVersion: '3.0.0',
+          connectionKind: 'windscout',
+          decisionReason: 'different-windscout-model',
+        },
+      },
+    })
+  })
+
   it('waits for saved Wi-Fi to reconnect after the serial open reset', async () => {
     let stateChecks = 0
     const protocol = appProtocol()

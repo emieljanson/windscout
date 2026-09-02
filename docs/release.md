@@ -75,6 +75,19 @@ Sentry release, uploads hidden source maps, and removes every `.map` file before
 GitHub Pages packaging. The public DSN may be exposed in the JavaScript bundle;
 the auth token may not.
 
+Each failed installer event includes only the bounded, filtered information
+needed to reproduce the hardware path:
+
+- selected, detected and release board IDs;
+- detected and release firmware versions;
+- app or bootloader connection path and install decision;
+- current phase, stable error code and serial-command durations;
+- bootloader baud-rate fallback and the last flash byte progress;
+- explicit `render_failed` or `commit_failed` verification outcomes.
+
+Use `selected_board_id`, `detected_board_id`, `decision_reason`, `phase` and
+`error_code` as the first Sentry filters when validating an E1003 remotely.
+
 ## Moving the production domain
 
 The DNS record already targets `emieljanson.github.io`, so no DNS redesign is
