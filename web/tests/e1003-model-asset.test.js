@@ -20,12 +20,12 @@ function meshesIn(scene) {
 
 describe('E1003 physical model contract', () => {
   it('records the documented enclosure and native 4:3 screen', () => {
-    expect(E1003_MODEL.enclosureMm).toEqual({ width: 224, height: 187, depth: 18.6, standDepth: 54.5 })
+    expect(E1003_MODEL.enclosureMm).toEqual({ width: 224, height: 187, depth: 18.6 })
     expect(E1003_MODEL.screenMm).toEqual({ width: 209.664, height: 157.248 })
     expect(E1003_MODEL.screenAspect).toBe(4 / 3)
   })
 
-  it('contains the visible controls, ports, front stack, stand, and fasteners from the official STEP assembly', async () => {
+  it('contains the visible controls, ports, front stack, and fasteners without the removable printed stand', async () => {
     const meshes = meshesIn(generatedScene)
     const sourceMeshes = new Set(meshes.map((mesh) => mesh.userData.sourceMesh))
 

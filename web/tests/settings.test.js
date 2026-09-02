@@ -145,7 +145,7 @@ describe('WindScout settings panel', () => {
     const dialog = document.body.querySelector('[role="dialog"]')
     expect(dialog?.getAttribute('aria-labelledby')).toBeTruthy()
     expect(dialog?.textContent).toContain('Windscout for reTerminal')
-    expect(dialog?.textContent).toContain('Windscout installs directly')
+    expect(dialog?.textContent).toContain('direct installation currently supports E1002 and E1003')
     expect(dialog?.textContent).toContain('E1001')
     expect(dialog?.textContent).toContain('7.3″ six-colour — E1002')
     expect(dialog?.textContent).toContain('10.3″ monochrome + touch — E1003')

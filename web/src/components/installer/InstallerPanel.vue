@@ -33,7 +33,7 @@ const deviceLabel = computed(() => ({
   [BOARD_IDS.E1003]: 'reTerminal E1003',
 })[props.configuration.boardId ?? BOARD_IDS.E1002] ?? 'supported reTerminal')
 const purchaseUrl = computed(() => ({
-  [BOARD_IDS.E1001]: 'https://wiki.seeedstudio.com/reterminal_e10xx_main_page/',
+  [BOARD_IDS.E1001]: 'https://www.seeedstudio.com/reTerminal-E1001-p-6534.html?sensecap_affiliate=UF4PmgK&referring_service=link',
   [BOARD_IDS.E1002]: 'https://www.seeedstudio.com/reTerminal-E1002-p-6533.html?sensecap_affiliate=UF4PmgK&referring_service=link',
   [BOARD_IDS.E1003]: 'https://www.seeedstudio.com/reTerminal-E1003-p-6731.html?sensecap_affiliate=UF4PmgK&referring_service=link',
 })[props.configuration.boardId ?? BOARD_IDS.E1002] ?? 'https://wiki.seeedstudio.com/reterminal_e10xx_main_page/')

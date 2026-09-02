@@ -172,7 +172,20 @@ void app_main(void)
                                                        : EPAPER_HARDWARE_E1002;
     ESP_ERROR_CHECK(epaper_select_backend(panel_hardware));
 #endif
-    ESP_ERROR_CHECK(board_hal_init());
+    result = board_hal_init();
+    if (result != ESP_OK) {
+        ESP_LOGE(TAG, "Display hardware initialization failed: %s",
+                 esp_err_to_name(result));
+        if (profile.stored_model != HARDWARE_MODEL_UNKNOWN) {
+            (void) hardware_profile_record_driver_failure(
+                profile.stored_model, HARDWARE_DRIVER_STAGE_INITIALIZE, result);
+        }
+        // USB recovery must remain available even when the panel or its
+        // controller is missing. A fatal check here would reboot forever
+        // before the browser installer can reconnect.
+        ESP_ERROR_CHECK(wind_installer_service_start());
+        while (true) vTaskDelay(pdMS_TO_TICKS(60000));
+    }
     ESP_ERROR_CHECK(storage_init());
 
     result = board_hal_rtc_init();

@@ -61,6 +61,16 @@ TEST(ProductionPowerPolicy, RuntimePanelSelectionIsLimitedToTheUniversalTarget)
     EXPECT_LT(guard, selection);
 }
 
+TEST(ProductionPowerPolicy, PanelInitializationFailureKeepsUsbRecoveryAlive)
+{
+    const std::string main_source = read_source(WIND_MAIN_SOURCE);
+    const auto initialization = main_source.find("result = board_hal_init()");
+    const auto recovery = main_source.find("wind_installer_service_start()", initialization);
+    ASSERT_NE(initialization, std::string::npos);
+    ASSERT_NE(recovery, std::string::npos);
+    EXPECT_LT(initialization, recovery);
+}
+
 TEST(ProductionPowerPolicy, UniversalCarrierSkipsPanelSleepWithoutAnActiveBackend)
 {
     const std::string board_source = read_source(E100X_BOARD_SOURCE);

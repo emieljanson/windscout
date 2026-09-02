@@ -285,6 +285,11 @@ jobs:
           name: windscout-firmware-release
           path: release
 
+      - name: Package board-specific installer archives
+        run: |
+          tar --exclude=e1003 -czf "$GITHUB_WORKSPACE/release/windscout-installer-e1002.tar.gz" -C release/installer .
+          tar -czf "$GITHUB_WORKSPACE/release/windscout-installer-e1003.tar.gz" -C release/installer/e1003 .
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
@@ -292,5 +297,6 @@ jobs:
           files: |
             release/windscout-seeedstudio_reterminal_e1002.bin
             release/windscout-seeedstudio_reterminal_e1003.bin
-            release/installer/**/*
+            release/windscout-installer-e1002.tar.gz
+            release/windscout-installer-e1003.tar.gz
           generate_release_notes: true

@@ -8,6 +8,7 @@ import {
   DialogRoot,
   DialogTitle,
 } from 'reka-ui'
+import { publicAssetUrl } from '../assets/publicAssetUrl'
 
 defineProps({
   open: { type: Boolean, required: true },
@@ -18,19 +19,19 @@ const emit = defineEmits(['update:open'])
 const devices = Object.freeze([
   Object.freeze({
     model: 'E1001',
-    image: '/devices/previews/e1001.png',
+    image: publicAssetUrl('devices/previews/e1001.png'),
     display: '7.5″ monochrome',
     buyUrl: 'https://www.seeedstudio.com/reTerminal-E1001-p-6534.html?sensecap_affiliate=UF4PmgK&referring_service=link',
   }),
   Object.freeze({
     model: 'E1002',
-    image: '/devices/previews/e1002.png',
+    image: publicAssetUrl('devices/previews/e1002.png'),
     display: '7.3″ six-colour',
     buyUrl: 'https://www.seeedstudio.com/reTerminal-E1002-p-6533.html?sensecap_affiliate=UF4PmgK&referring_service=link',
   }),
   Object.freeze({
     model: 'E1003',
-    image: '/devices/previews/e1003.png',
+    image: publicAssetUrl('devices/previews/e1003.png'),
     display: '10.3″ monochrome + touch',
     buyUrl: 'https://www.seeedstudio.com/reTerminal-E1003-p-6731.html?sensecap_affiliate=UF4PmgK&referring_service=link',
   }),
@@ -45,7 +46,7 @@ const devices = Object.freeze([
         <header>
           <DialogTitle class="reterminal-help__title">Windscout for reTerminal</DialogTitle>
           <DialogDescription class="reterminal-help__description">
-            Choose your screen: monochrome, six-colour, or larger with touch. Windscout installs directly on all three.
+            Choose your screen: monochrome, six-colour, or larger with touch. E1001 preview is available; direct installation currently supports E1002 and E1003.
           </DialogDescription>
         </header>
 

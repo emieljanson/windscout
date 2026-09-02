@@ -1,6 +1,7 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { createInstallerDemoSession } from '../installer/createInstallerDemoSession'
+import { BOARD_IDS } from '../config/configuration'
 import InstallerPanel from './installer/InstallerPanel.vue'
 
 const open = ref(false)
@@ -12,8 +13,10 @@ const testSessionFactory = import.meta.env.DEV
   : undefined
 const demoEnabled = import.meta.env.DEV && new URLSearchParams(window.location.search).get('installerDemo') === '1'
 const sessionFactory = demoEnabled ? createInstallerDemoSession : testSessionFactory
+const installerAvailable = computed(() => props.configuration.boardId !== BOARD_IDS.E1001)
 
 function start() {
+  if (!installerAvailable.value) return
   open.value = true
   emit('open')
 }
@@ -41,11 +44,13 @@ onMounted(() => {
       data-testid="install-continuation"
       class="install-button"
       type="button"
+      :disabled="!installerAvailable"
+      :title="installerAvailable ? undefined : 'E1001 installation is not available yet.'"
       :aria-expanded="open"
       aria-controls="installer-flow"
       @click="start"
     >
-      <span id="install-entry-title">Install</span>
+      <span id="install-entry-title">{{ installerAvailable ? 'Install' : 'Preview only' }}</span>
     </button>
     <Transition name="installer-layer-transition" @after-leave="restoreFocus">
       <InstallerPanel

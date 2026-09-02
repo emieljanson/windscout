@@ -35,14 +35,12 @@ describe('E1002 model loader contract', () => {
     expect(stand.visible).toBe(false)
   })
 
-  it('hides an optional printed stand for either device', () => {
+  it('hides the optional printed stand when a source model contains one', () => {
     const e1002Stand = { visible: true }
-    const e1003Stand = { visible: true }
 
     expect(hideDeviceStand({ getObjectByName: () => e1002Stand }, BOARD_IDS.E1002)).toBe(true)
-    expect(hideDeviceStand({ getObjectByName: () => e1003Stand }, BOARD_IDS.E1003)).toBe(true)
+    expect(hideDeviceStand({ getObjectByName: () => undefined }, BOARD_IDS.E1003)).toBe(false)
     expect(e1002Stand.visible).toBe(false)
-    expect(e1003Stand.visible).toBe(false)
   })
 
   it('aborts a model request that never settles', async () => {

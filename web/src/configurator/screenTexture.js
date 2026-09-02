@@ -16,7 +16,10 @@ function grayscaleThresholdPreview(rgba, boardId, config) {
   if (!config?.showThreshold || boardId === BOARD_IDS.E1002) return rgba
   const preview = rgba.slice()
   for (let offset = 0; offset < preview.length; offset += 4) {
-    if (preview[offset] === 255 && preview[offset + 1] === 0 && preview[offset + 2] === 0) {
+    const isRedThreshold = preview[offset] === 255 && preview[offset + 1] === 0 && preview[offset + 2] === 0
+    const isE1003ThresholdGray = boardId === BOARD_IDS.E1003 &&
+      preview[offset] === 85 && preview[offset + 1] === 85 && preview[offset + 2] === 85
+    if (isRedThreshold || isE1003ThresholdGray) {
       preview[offset] = 0
       preview[offset + 1] = 0
       preview[offset + 2] = 0

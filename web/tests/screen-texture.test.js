@@ -118,6 +118,18 @@ describe('canonical screen texture', () => {
     expect([...source.texture.image.data.slice(0, 4)]).toEqual([255, 0, 0, 255])
   })
 
+  it('turns the native E1003 threshold gray into preview black', async () => {
+    const renderer = fakeRenderer([completeFrame(85, 85, 85)])
+    const source = await createScreenTexture({
+      forecast: brouwersdamForecast,
+      config: { showThreshold: true, threshold: 17 },
+      boardId: BOARD_IDS.E1003,
+      rendererLoader: async () => renderer,
+    })
+
+    expect([...source.texture.image.data.slice(0, 4)]).toEqual([0, 0, 0, 255])
+  })
+
   it('maps row choices and five local tide days into renderer input', () => {
     const tide = {
       capability: 'available',
