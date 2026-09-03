@@ -42,6 +42,7 @@ set(LEGACY_SOURCES
     "wind_renderer.c"
     "wind_display_config.c"
     "wind_app.c"
+    "wind_analytics.c"
 )
 
 set(WINDSCOUT_SOURCES

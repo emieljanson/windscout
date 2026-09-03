@@ -30,6 +30,15 @@ message(STATUS "Firmware version: ${FIRMWARE_VERSION}")
 add_compile_options(-Wno-missing-field-initializers)
 add_compile_definitions(FIRMWARE_VERSION="${FIRMWARE_VERSION}")
 
+set(WINDSCOUT_POSTHOG_PROJECT_TOKEN "$ENV{WINDSCOUT_POSTHOG_PROJECT_TOKEN}")
+if(WINDSCOUT_POSTHOG_PROJECT_TOKEN AND
+   NOT WINDSCOUT_POSTHOG_PROJECT_TOKEN MATCHES "^[A-Za-z0-9_]+$")
+    message(FATAL_ERROR "WINDSCOUT_POSTHOG_PROJECT_TOKEN contains unsupported characters")
+endif()
+add_compile_definitions(
+    WINDSCOUT_POSTHOG_PROJECT_TOKEN="${WINDSCOUT_POSTHOG_PROJECT_TOKEN}"
+)
+
 # Generate partitions.csv by reading config from sdkconfig / defaults files.
 set(_config_files "")
 if(DEFINED SDKCONFIG_DEFAULTS)

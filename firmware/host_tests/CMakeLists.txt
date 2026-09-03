@@ -215,6 +215,15 @@ add_wind_test(wind_timezone_test test_wind_timezone.cpp)
 
 add_wind_test(wind_clock_test test_wind_clock.cpp ../main/wind_clock.c)
 
+add_wind_test(
+  wind_analytics_test
+  test_wind_analytics.cpp
+  ../main/wind_analytics.c
+  ../main/wind_clock.c
+)
+target_link_libraries(wind_analytics_test cjson)
+target_include_directories(wind_analytics_test BEFORE PRIVATE ${cjson_SOURCE_DIR})
+
 add_wind_test(wind_tide_test test_wind_tide.cpp ../main/wind_tide.c)
 
 add_wind_test(
