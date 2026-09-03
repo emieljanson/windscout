@@ -253,6 +253,7 @@ typedef struct {
     wind_tide_t tide;
     bool have_tide;
     const wind_spot_t *spot;
+    const char *device_timezone;
     char forecast_path[96];
     char schedule_path[96];
     char tide_path[96];
@@ -473,7 +474,7 @@ static esp_err_t render_dashboard(void *context, const wind_forecast_t *forecast
     dashboard.temperature_fahrenheit = display.temperature_fahrenheit;
     if (forecast) {
         char update_date[16] = "";
-        if (wind_timezone_from_unix(spot->timezone, forecast->retrieved_at, &local) !=
+        if (wind_timezone_from_unix(runtime->device_timezone, forecast->retrieved_at, &local) !=
             ESP_OK) {
             return ESP_ERR_INVALID_STATE;
         }
@@ -642,6 +643,7 @@ static esp_err_t ensure_ready(void) {
     for (size_t index = 0; index < wind_spots_count(); ++index) {
         wind_spot_runtime_t *runtime = &s_spots[index];
         runtime->spot = wind_spots_at(index);
+        runtime->device_timezone = wind_spots_device_timezone();
         int forecast_length =
             index == 0
                 ? snprintf(runtime->forecast_path, sizeof(runtime->forecast_path), "%s",
