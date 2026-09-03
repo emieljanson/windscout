@@ -338,6 +338,10 @@ add_wind_test(
   ../main/wind_schedule.c
   ../main/wind_app.c
 )
+target_compile_definitions(
+  wind_app_test
+  PRIVATE WIND_APP_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/../main/wind_app.c"
+)
 
 set(WIND_FONT_SOURCES
   ../main/wind_font.c

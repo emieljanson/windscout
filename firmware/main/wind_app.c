@@ -236,6 +236,7 @@ esp_err_t wind_app_show_cached(wind_app_t *app, int64_t now,
 #include "open_meteo_knmi_provider.h"
 #include "open_meteo_marine_provider.h"
 #include "wind_config.h"
+#include "wind_analytics.h"
 #include "wind_renderer.h"
 #include "wind_spots.h"
 #include "wind_tide_cache.h"
@@ -270,7 +271,7 @@ static SemaphoreHandle_t s_runtime_lock;
 static bool s_ready;
 static bool s_last_render_succeeded;
 
-static esp_err_t wind_app_refresh_unlocked(bool force_refresh);
+static esp_err_t wind_app_refresh_unlocked(bool force_refresh, bool *published_forecast);
 
 static wind_renderer_display_t active_renderer_display(void) {
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E100X
@@ -776,7 +777,7 @@ esp_err_t wind_app_preview_configuration(const installed_configuration_t *candid
         config_manager_set_timezone_transient(candidate->spot.timezone) &&
         wind_spots_use_configuration(candidate) == ESP_OK) {
         s_ready = false;
-        result = wind_app_refresh_unlocked(true);
+        result = wind_app_refresh_unlocked(true, NULL);
     }
     (void)wind_spots_use_configuration(&active);
     (void)config_manager_set_timezone_transient(active.spot.timezone);
@@ -807,7 +808,10 @@ wind_app_activate_configuration(const installed_configuration_t *configuration) 
     return ESP_OK;
 }
 
-static esp_err_t wind_app_refresh_unlocked(bool force_refresh) {
+static esp_err_t wind_app_refresh_unlocked(bool force_refresh, bool *published_forecast) {
+    if (published_forecast) {
+        *published_forecast = false;
+    }
     esp_err_t result = ensure_ready();
     if (result != ESP_OK) {
         return result;
@@ -817,6 +821,7 @@ static esp_err_t wind_app_refresh_unlocked(bool force_refresh) {
     time(&now);
     refresh_render_signatures();
     load_or_refresh_tide(&s_spots[s_selected_index], force_refresh, now);
+    bool any_forecast_published = false;
     for (size_t index = 0; index < wind_spots_count(); ++index) {
         wind_app_outcome_t outcome;
         esp_err_t spot_result =
@@ -827,6 +832,7 @@ static esp_err_t wind_app_refresh_unlocked(bool force_refresh) {
                  s_spots[index].spot->id, outcome.attempted_fetch,
                  outcome.published_forecast, outcome.displayed,
                  outcome.display_unchanged);
+        any_forecast_published = any_forecast_published || outcome.published_forecast;
         if (index == s_selected_index || result == ESP_OK) {
             result = spot_result;
         }
@@ -834,6 +840,9 @@ static esp_err_t wind_app_refresh_unlocked(bool force_refresh) {
             s_last_render_succeeded = spot_result == ESP_OK &&
                                       (outcome.displayed || outcome.display_unchanged);
         }
+    }
+    if (published_forecast) {
+        *published_forecast = any_forecast_published;
     }
     xSemaphoreGive(s_app_lock);
     return result;
@@ -843,8 +852,18 @@ esp_err_t wind_app_refresh(bool force_refresh) {
     if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE) {
         return ESP_ERR_INVALID_STATE;
     }
-    esp_err_t result = wind_app_refresh_unlocked(force_refresh);
+    bool published_forecast = false;
+    esp_err_t result = wind_app_refresh_unlocked(force_refresh, &published_forecast);
     xSemaphoreGive(s_runtime_lock);
+    if (published_forecast) {
+        time_t now;
+        time(&now);
+        const esp_err_t analytics_result = wind_analytics_maybe_send(now);
+        if (analytics_result != ESP_OK) {
+            ESP_LOGW(TAG, "Dashboard activity heartbeat failed: %s",
+                     esp_err_to_name(analytics_result));
+        }
+    }
     return result;
 }
 
