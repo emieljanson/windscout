@@ -98,12 +98,14 @@ esp_err_t wind_analytics_run(const wind_analytics_dependencies_t *dependencies, 
     esp_err_t result = dependencies->load(dependencies->context, &state);
     if (result == ESP_ERR_NOT_FOUND) {
         state.version = WIND_ANALYTICS_STATE_VERSION;
+        uint32_t random_words[4];
+        for (size_t index = 0; index < 4; ++index) {
+            random_words[index] = dependencies->random_u32(dependencies->context);
+        }
         int written = snprintf(
             state.dashboard_id, sizeof(state.dashboard_id), "%08lx%08lx%08lx%08lx",
-            (unsigned long) dependencies->random_u32(dependencies->context),
-            (unsigned long) dependencies->random_u32(dependencies->context),
-            (unsigned long) dependencies->random_u32(dependencies->context),
-            (unsigned long) dependencies->random_u32(dependencies->context));
+            (unsigned long) random_words[0], (unsigned long) random_words[1],
+            (unsigned long) random_words[2], (unsigned long) random_words[3]);
         if (written != WIND_ANALYTICS_DASHBOARD_ID_LENGTH ||
             !wind_analytics_dashboard_id_valid(state.dashboard_id)) {
             return ESP_FAIL;
