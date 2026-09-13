@@ -174,7 +174,7 @@ static esp_err_t run_internal(wind_app_t *app, bool force_refresh, bool allow_fe
 
     uint64_t hash = wind_cache_bitmap_hash(bitmap, app->config.bitmap_size);
     uint64_t confirmed_hash = 0;
-    if (hash != 0 &&
+    if (!app->force_display && hash != 0 &&
         wind_cache_panel_load(app->config.panel_cache_path,
                               app->config.render_signature,
                               &confirmed_hash) == ESP_OK &&
@@ -201,6 +201,7 @@ static esp_err_t run_internal(wind_app_t *app, bool force_refresh, bool allow_fe
                                       app->config.render_signature, hash);
     if (result == ESP_OK) {
         local.displayed = true;
+        app->force_display = false;
     }
     if (outcome) {
         *outcome = local;
@@ -275,6 +276,7 @@ static SemaphoreHandle_t s_app_lock;
 static SemaphoreHandle_t s_runtime_lock;
 static bool s_ready;
 static bool s_last_render_succeeded;
+static bool s_force_next_display;
 
 static esp_err_t wind_app_refresh_unlocked(bool force_refresh, bool *published_forecast);
 
@@ -717,7 +719,9 @@ esp_err_t wind_app_show_battery_empty(void) {
         return ESP_ERR_INVALID_STATE;
     const size_t size = active_renderer_bitmap_size();
     uint8_t *bitmap = malloc(size);
-    esp_err_t result = bitmap ? wind_app_clear_panel_confirmation() : ESP_ERR_NO_MEM;
+    esp_err_t result = bitmap ? ESP_OK : ESP_ERR_NO_MEM;
+    if (bitmap && wind_app_clear_panel_confirmation() != ESP_OK)
+        ESP_LOGW(TAG, "Could not invalidate panel cache before battery screen");
     if (result == ESP_OK) {
         result = wind_renderer_render_battery_empty_for_display(
             active_renderer_display(), bitmap, size) == 0 ? ESP_OK : ESP_FAIL;
@@ -826,7 +830,9 @@ static esp_err_t ensure_ready(void) {
         if (result != ESP_OK) {
             return result;
         }
+        runtime->app.force_display = s_force_next_display;
     }
+    s_force_next_display = false;
     s_ready = true;
     return ESP_OK;
 }
@@ -1110,6 +1116,12 @@ esp_err_t wind_app_clear_panel_confirmation(void) {
     // even when the panel cache still describes the previously rendered frame.
     // Keep installer verification tied to what is actually visible.
     s_last_render_succeeded = false;
+    // A storage failure must not leave a stale confirmation suppressing the
+    // forecast after an out-of-band screen. Keep an in-memory override too.
+    s_force_next_display = !s_ready;
+    if (s_ready)
+        for (size_t index = 0; index < wind_spots_count(); ++index)
+            s_spots[index].app.force_display = true;
     return wind_cache_panel_invalidate(WIND_PANEL_CACHE_PATH);
 }
 

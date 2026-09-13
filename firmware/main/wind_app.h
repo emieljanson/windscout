@@ -47,6 +47,7 @@ typedef struct {
     int64_t coverage_refresh_cache_retrieved_at;
     bool coverage_refresh_attempted;
     bool initialized;
+    bool force_display;
 } wind_app_t;
 
 typedef struct {

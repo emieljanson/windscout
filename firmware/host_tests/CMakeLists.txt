@@ -390,6 +390,12 @@ target_compile_definitions(
 )
 target_link_libraries(render_wind_fixture m)
 
+add_executable(render_battery_empty render_battery_empty.c ../main/wind_renderer.c ${WIND_FONT_SOURCES})
+target_include_directories(render_battery_empty PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../main)
+target_link_libraries(render_battery_empty m)
+add_test(NAME BatteryEmptyPreviewExport
+         COMMAND render_battery_empty ${CMAKE_CURRENT_BINARY_DIR}/battery-empty.ppm)
+
 add_wind_test(wind_swell_test test_wind_swell.cpp ../main/wind_swell.c ../main/wind_swell_cache.c ../main/open_meteo_marine_provider.c ../main/wind_tide.c)
 target_link_libraries(wind_swell_test cjson)
 target_include_directories(wind_swell_test BEFORE PRIVATE ${cjson_SOURCE_DIR})

@@ -126,13 +126,15 @@ bool battery_test_latched;
 int battery_persist_result;
 int battery_render_result;
 std::string battery_effects;
-int PersistBatteryAttempt(bool empty) {
+int PersistBatteryAttempt(bool empty)
+{
     EXPECT_TRUE(empty);
     EXPECT_TRUE(battery_test_latched);
     battery_effects += 'P';
     return battery_persist_result;
 }
-int RenderBatteryAttempt() {
+int RenderBatteryAttempt()
+{
     EXPECT_TRUE(battery_test_latched);
     EXPECT_EQ(battery_effects, "P");
     battery_effects += 'R';
@@ -140,7 +142,8 @@ int RenderBatteryAttempt() {
 }
 }
 
-TEST(BatteryReserve, PersistsBeforeRenderingAndNeverRetriesAnAttempt) {
+TEST(BatteryReserve, PersistsBeforeRenderingAndNeverRetriesAnAttempt)
+{
     for (int persist_result : {0, -1}) {
         for (int render_result : {0, -1}) {
             battery_test_latched = false;

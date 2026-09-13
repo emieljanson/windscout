@@ -333,15 +333,14 @@ int wind_renderer_input_v2_render_preview_rgba(const wind_renderer_input_v2_t *i
                                                uint8_t *rgba_out, size_t rgba_size,
                                                wind_renderer_stats_t *stats);
 
-/*
- * Expands one renderer palette row to RGB888 for display-manager streaming.
- * Expands native black, white, and red palette values to RGB888.
- */
 /* Standalone 800 x 480 empty-battery UI; does not change battery policy. */
 int wind_renderer_render_battery_empty(uint8_t *palette_out, size_t palette_size);
+/* E1001/E1002 require WIND_RENDERER_PALETTE_BYTES (800 x 480).
+ * E1003 requires WIND_RENDERER_E1003_COMPOSITION_BYTES (800 x 600). */
 int wind_renderer_render_battery_empty_for_display(wind_renderer_display_t display,
                                                    uint8_t *output, size_t size);
 
+/* Expands native black, white, and red palette values to RGB888. */
 int wind_renderer_palette_row_to_rgb(const uint8_t *palette_row, size_t width,
                                      uint8_t *rgb_row, size_t rgb_size);
 
