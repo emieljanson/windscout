@@ -2,7 +2,7 @@ import { InstallerError, INSTALLER_ERROR_CODES, isChooserCancellation } from './
 
 const MAGIC = new TextEncoder().encode('WINDSC01')
 const HEADER_SIZE = 24
-const MAX_PAYLOAD_SIZE = 4096
+const MAX_PAYLOAD_SIZE = 16384
 
 export function getSerialSupport({
   navigatorApi = globalThis.navigator,

@@ -1,6 +1,12 @@
 import { expect, test } from '@playwright/test'
 
 async function installFakeDevice(page) {
+  // These fixtures emulate an E1002, independent of the configurator default.
+  await page.addInitScript(() => {
+    localStorage.setItem('windpeek-configurator-v1', JSON.stringify({
+      schemaVersion: 2, selectedBoardId: 'seeedstudio_reterminal_e1002',
+    }))
+  })
   await page.addInitScript(() => {
     globalThis.__WINDPEEK_INSTALLER_SESSION_FACTORY__ = () => {
       let state = { phase: 'ready', progress: 0, safeToDisconnect: true, error: null }
@@ -175,7 +181,7 @@ test('demo follows only the fresh-device happy flow through Wi-Fi', async ({ pag
   const regularHeight = (await panel.boundingBox()).height
   await page.getByRole('button', { name: 'Continue' }).click()
   await expect(page.getByRole('heading', { name: 'Confirm your reTerminal' })).toBeVisible()
-  await expect(page.getByText('Make sure this is a reTerminal E1002. Installing will replace its software and saved setup.')).toBeVisible()
+  await expect(page.getByText('Make sure this is a reTerminal E1003. Installing will replace its software and saved setup.')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Cancel' })).toHaveCount(0)
 
   await page.getByRole('button', { name: 'Install Windpeek' }).click()

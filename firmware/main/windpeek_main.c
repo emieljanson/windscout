@@ -19,10 +19,13 @@
 #include "wifi_manager.h"
 #include "wind_app.h"
 #include "wind_clock.h"
+#include "wind_navigation.h"
+#include "wind_spots.h"
 #include "wind_installer_service.h"
 
 static const char *TAG = "windpeek";
 static volatile bool s_time_synchronized;
+static TaskHandle_t s_dashboard_task;
 
 static bool hardware_profile_allows_panel(void)
 {
@@ -112,12 +115,50 @@ static bool connect_installed_wifi(void)
     return wifi_manager_connect_for_refresh(ssid, password) == ESP_OK;
 }
 
+// Short releases navigate. Holding both buttons remains the boot recovery chord.
+static void spot_buttons_task(void *argument)
+{
+    (void) argument;
+    wind_navigation_buttons_t buttons = {0};
+    while (true) {
+        const int direction = wind_navigation_poll(
+            &buttons, gpio_get_level(BOARD_HAL_ROTATE_KEY) == 0,
+            gpio_get_level(BOARD_HAL_CLEAR_KEY) == 0,
+            power_manager_is_installer_active(), wind_spots_count(),
+            (uint32_t)(xTaskGetTickCount() * portTICK_PERIOD_MS));
+        if (direction != 0) {
+            power_manager_reset_sleep_timer();
+            if (wind_app_navigation_requires_network(direction) && !wifi_manager_is_connected())
+                (void)connect_installed_wifi();
+            const esp_err_t result = direction < 0 ? wind_app_select_previous() : wind_app_select_next();
+            if (result != ESP_OK) {
+                ESP_LOGW(TAG, "Spot navigation failed: %s", esp_err_to_name(result));
+            } else if (s_dashboard_task) {
+                xTaskNotifyGive(s_dashboard_task);
+            }
+            power_manager_enter_sleep();
+        }
+        vTaskDelay(pdMS_TO_TICKS(20));
+    }
+}
+
+static int dashboard_seconds_until_wake(void *context)
+{
+    (void)context;
+    return wind_app_seconds_until_next_wake();
+}
+
+static bool dashboard_wait_notified(void *context, int seconds)
+{
+    (void)context;
+    return ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(seconds * 1000)) != 0;
+}
+
 static void dashboard_task(void *argument)
 {
     (void) argument;
     while (true) {
-        const int seconds = wind_app_seconds_until_next_wake();
-        vTaskDelay(pdMS_TO_TICKS((seconds > 0 ? seconds : 1) * 1000));
+        wind_navigation_wait_for_refresh(NULL, dashboard_seconds_until_wake, dashboard_wait_notified);
         if (!power_manager_is_installer_active()) {
             if (!wifi_manager_is_connected() && !connect_installed_wifi()) {
                 ESP_LOGW(TAG, "Scheduled refresh is offline");
@@ -208,16 +249,21 @@ void app_main(void)
         power_manager_enter_sleep_with_timer((uint32_t) early_seconds);
     }
 
-    result = wind_app_start();
+    const wakeup_source_t wake = power_manager_get_wakeup_source();
+    const int direction = wind_navigation_wake_direction(wake, wind_spots_count());
+    result = direction < 0 ? wind_app_select_previous() : direction > 0 ? wind_app_select_next() : wind_app_start();
     if (result != ESP_OK) {
         ESP_LOGW(TAG, "Dashboard refresh completed with error: %s", esp_err_to_name(result));
     }
 
-    if (power_manager_get_wakeup_source() == WAKEUP_SOURCE_TIMER) {
+    if (wind_navigation_sleep_after_wake(wake, wind_spots_count())) {
+        while (gpio_get_level(BOARD_HAL_ROTATE_KEY) == 0 || gpio_get_level(BOARD_HAL_CLEAR_KEY) == 0)
+            vTaskDelay(pdMS_TO_TICKS(20));
         power_manager_enter_sleep();
     }
 
-    xTaskCreate(dashboard_task, "wind_dashboard", 8192, NULL, 5, NULL);
+    xTaskCreate(dashboard_task, "wind_dashboard", 16384, NULL, 5, &s_dashboard_task);
+    xTaskCreate(spot_buttons_task, "wind_buttons", 16384, NULL, 5, NULL);
     ESP_LOGI(TAG, "Windpeek ready%s", connected ? "" : " (offline)");
     while (true) vTaskDelay(pdMS_TO_TICKS(60000));
 }

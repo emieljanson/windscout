@@ -7,10 +7,10 @@ import { createPersonalSpot, writePersonalSpot } from '../spots/personalSpots'
 
 const sizes = { hide: 'off', numbers: 'small', graph: 'large' }
 const flags = { weather: 'showWeather', temperature: 'showTemperature', tide: 'showTide', footer: 'showDedicatedFooter', threshold: 'showThreshold' }
-const keys = ['swell', 'cfg', 'spot', 'custom', 'board', 'wind', 'waves', 'wind-model', 'wave-model', 'order', 'minimum', 'time', 'unit', ...Object.keys(flags)]
+const keys = ['spots', 'swell', 'cfg', 'spot', 'custom', 'board', 'wind', 'waves', 'wind-model', 'wave-model', 'order', 'minimum', 'time', 'unit', ...Object.keys(flags)]
 
 // Versioned, explicit fields only. No installer credentials or runtime state enter the URL.
-export function configurationUrl(store, href) {
+export function configurationUrl(store, href, { includeSpots = true } = {}) {
   const url = new URL(href)
   for (const key of keys) url.searchParams.delete(key)
   url.searchParams.set('configure', '')
@@ -31,13 +31,22 @@ export function configurationUrl(store, href) {
   url.searchParams.set('time', store.timeFormat)
   url.searchParams.set('unit', store.temperatureUnit)
   for (const [param, field] of Object.entries(flags)) url.searchParams.set(param, store[field] ? '1' : '0')
+  if (includeSpots && Array.isArray(store.configuredSpotIds)) {
+    const entries = store.configuredSpotIds.map(id => {
+      const draft = id === store.selectedSpotId ? store : { ...store, ...store.spotSettings[id], selectedSpotId: id, spotById: store.spotById }
+      return configurationUrl(draft, href, { includeSpots: false })?.search
+    })
+    if (entries.some(entry => !entry)) return null
+    url.searchParams.set('spots', JSON.stringify(entries))
+  }
   return url
 }
 
-export function readConfigurationUrl(search, spots) {
+export function readConfigurationUrl(search, spots, { allowSpots = true } = {}) {
   try {
     const params = new URLSearchParams(search)
-    if (params.get('cfg') !== '1' || search.length > 5000 || keys.some(key => params.getAll(key).length > 1)) return null
+    if (params.get('cfg') !== '1' || search.length > (allowSpots ? 50000 : 5000) || keys.some(key => params.getAll(key).length > 1)) return null
+    if (!allowSpots && params.has('spots')) return null
     const custom = params.get('custom')
     if (custom && params.has('spot')) return null
     let spot
@@ -66,17 +75,36 @@ export function readConfigurationUrl(search, spots) {
       if (!['0', '1'].includes(params.get(param))) return null
       patch[field] = params.get(param) === '1'
     }
-    return { patch, spot }
+    const personalSpots = []
+    if (allowSpots) {
+      patch.configuredSpotIds = [spot.id]
+      patch.spotSettings = {}
+      if (params.has('spots')) {
+        const entries = JSON.parse(params.get('spots'))
+        if (!Array.isArray(entries) || entries.length > 10) return null
+        patch.configuredSpotIds = []
+        for (const entry of entries) {
+          if (typeof entry !== 'string') return null
+          const result = readConfigurationUrl(entry, spots, { allowSpots: false })
+          if (!result || patch.configuredSpotIds.includes(result.spot.id)) return null
+          patch.configuredSpotIds.push(result.spot.id)
+          const { selectedSpotId, selectedBoardId, hasUserSpotIntent, ...settings } = result.patch
+          patch.spotSettings[result.spot.id] = settings
+          if (result.spot.personal) personalSpots.push(result.spot)
+        }
+        if (patch.selectedBoardId === BOARD_IDS.E1003 && entries.length && !patch.configuredSpotIds.includes(spot.id)) return null
+      }
+    }
+    return { patch, spot, personalSpots }
   } catch { return null }
 }
 
 export function applyConfigurationUrl(store, search, storage) {
   const result = readConfigurationUrl(search, store.spots)
   if (!result) return false
-  if (result.spot.personal) {
-    const remaining = store.personalSpots.filter(spot => spot.id !== result.spot.id)
-    store.personalSpots = [...remaining, result.spot]
-    writePersonalSpot(result.spot, storage)
+  for (const spot of [...result.personalSpots, ...(result.spot.personal ? [result.spot] : [])]) {
+    store.personalSpots = [...store.personalSpots.filter(candidate => candidate.id !== spot.id), spot]
+    writePersonalSpot(spot, storage)
   }
   store.$patch({ ...result.patch, swellFocus: result.patch.swellSize !== 'off' })
   return true

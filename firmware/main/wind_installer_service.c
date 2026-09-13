@@ -3,10 +3,12 @@
 #include <inttypes.h>
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "cJSON.h"
 #include "wind_clock.h"
+#include "wind_usb_protocol.h"
 
 #ifndef FIRMWARE_VERSION
 #define FIRMWARE_VERSION "development"
@@ -128,12 +130,12 @@ static bool valid_digest(const char *value)
     return true;
 }
 
-static bool parse_configuration(const cJSON *json, installed_configuration_t *configuration,
+static bool parse_single_configuration(const cJSON *json, installed_configuration_t *configuration,
                                 char digest_text[17])
 {
     if (!cJSON_IsObject(json)) return false;
     static const char *const root_keys[] = {
-        "version", "boardId", "deviceTimezone", "spot", "forecastModel", "display", "digest",
+        "version", "boardId", "deviceTimezone", "spot", "forecastModel", "display", "digest", "additionalSpots",
     };
     static const char *const spot_keys[] = {
         "id", "name", "latitude", "longitude", "timezone",
@@ -146,7 +148,7 @@ static bool parse_configuration(const cJSON *json, installed_configuration_t *co
     const cJSON *version = cJSON_GetObjectItemCaseSensitive(json, "version");
     const cJSON *spot = cJSON_GetObjectItemCaseSensitive(json, "spot");
     const cJSON *display = cJSON_GetObjectItemCaseSensitive(json, "display");
-    if (!cJSON_IsNumber(version) || !object_has_only_keys(json, root_keys, 7) ||
+    if (!cJSON_IsNumber(version) || !object_has_only_keys(json, root_keys, 8) ||
         !object_has_only_keys(spot, spot_keys, 5) ||
         !object_has_only_keys(display, display_keys, 12) ||
         !copy_json_string(json, "boardId", configuration->board_id,
@@ -176,7 +178,8 @@ static bool parse_configuration(const cJSON *json, installed_configuration_t *co
         !json_bool(display, "showTide", &configuration->display.show_tide) ||
         !json_bool(display, "showDedicatedFooter",
                    &configuration->display.show_dedicated_footer)) return false;
-    if (version->valuedouble != INSTALLED_CONFIGURATION_VERSION ||
+    if ((version->valuedouble != INSTALLED_CONFIGURATION_VERSION &&
+         version->valuedouble != INSTALLED_CONFIGURATION_MULTI_VERSION) ||
         !valid_spot_id(configuration->spot.id) || strlen(configuration->spot.timezone) < 3 ||
         !valid_digest(digest_text) ||
         (strcmp(time_format, "24-hour") != 0 && strcmp(time_format, "12-hour") != 0) ||
@@ -210,7 +213,38 @@ static bool parse_configuration(const cJSON *json, installed_configuration_t *co
         configuration->display.module_order[i] = 255;
         for (int j = 0; j < 5; ++j) if (!strcmp(item->valuestring, modules[j])) configuration->display.module_order[i] = j;
     }
-    return installed_configuration_validate(configuration);
+    // Validate the single entry before the outer parser attaches the remaining spots.
+    const uint32_t parsed_version = configuration->version;
+    configuration->version = INSTALLED_CONFIGURATION_VERSION;
+    bool valid = installed_configuration_validate(configuration);
+    configuration->version = parsed_version;
+    return valid;
+}
+
+static bool parse_configuration(const cJSON *json, installed_configuration_t *configuration,
+                                char digest_text[17])
+{
+    if (!parse_single_configuration(json, configuration, digest_text)) return false;
+    const cJSON *entries = cJSON_GetObjectItemCaseSensitive(json, "additionalSpots");
+    if (configuration->version == INSTALLED_CONFIGURATION_VERSION) return entries == NULL;
+    if (!cJSON_IsArray(entries) || cJSON_GetArraySize(entries) < 1 ||
+        cJSON_GetArraySize(entries) >= INSTALLED_CONFIGURATION_MAX_SPOTS) return false;
+    installed_configuration_t *entry = calloc(1, sizeof(*entry));
+    if (!entry) return false;
+    bool valid = true;
+    configuration->additional_spot_count = cJSON_GetArraySize(entries);
+    for (size_t i = 0; i < configuration->additional_spot_count; ++i) {
+        const cJSON *json_entry = cJSON_GetArrayItem(entries, i);
+        char entry_digest[17], expected[17];
+        if (!parse_single_configuration(json_entry, entry, entry_digest) ||
+            entry->version != INSTALLED_CONFIGURATION_VERSION ||
+            cJSON_GetObjectItemCaseSensitive(json_entry, "additionalSpots")) { valid = false; break; }
+        snprintf(expected, sizeof(expected), "%016" PRIx64, installed_configuration_digest(entry));
+        if (strcmp(expected, entry_digest)) { valid = false; break; }
+        installed_configuration_get_spot(entry, 0, &configuration->additional_spots[i]);
+    }
+    free(entry);
+    return valid && installed_configuration_validate(configuration);
 }
 
 static esp_err_t write_response(char *response, size_t response_size, const char *status,
@@ -371,7 +405,7 @@ esp_err_t wind_installer_service_handle_json(wind_installer_service_t *service,
                                              const char *payload, size_t payload_length,
                                              char *response, size_t response_size)
 {
-    if (!service || !payload || payload_length == 0 || payload_length > 4096 || !response) {
+    if (!service || !payload || payload_length == 0 || payload_length > WIND_USB_MAX_PAYLOAD || !response) {
         return ESP_ERR_INVALID_ARG;
     }
     cJSON *request = cJSON_ParseWithLength(payload, payload_length);
@@ -567,7 +601,7 @@ esp_err_t wind_installer_service_confirm_pending_apply_response(
 #include "wind_spots.h"
 #include "wind_usb_protocol.h"
 
-#define WIND_INSTALLER_APPLY_STACK_SIZE 16384
+#define WIND_INSTALLER_APPLY_STACK_SIZE 32768
 
 typedef enum {
     PHYSICAL_APPLY_IDLE,
@@ -943,7 +977,7 @@ esp_err_t wind_installer_service_start(void)
     };
     wind_installer_service_init(&s_physical_installer.service, &dependencies);
     s_physical_installer.last_activity_us = esp_timer_get_time();
-    return xTaskCreate(installer_usb_task, "wind_usb", 8192, &s_physical_installer, 6, NULL) == pdPASS
+    return xTaskCreate(installer_usb_task, "wind_usb", 16384, &s_physical_installer, 6, NULL) == pdPASS
                ? ESP_OK : ESP_ERR_NO_MEM;
 }
 #endif

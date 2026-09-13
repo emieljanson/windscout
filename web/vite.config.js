@@ -11,6 +11,8 @@ export default defineConfig(({ mode }) => {
 
   return {
     base: './',
+    // Scan the shipped app; archived prototypes may import retired APIs.
+    optimizeDeps: { entries: ['index.html'] },
     plugins: [
       vue(),
       swellPagePlugin(),
