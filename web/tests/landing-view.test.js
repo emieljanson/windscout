@@ -7,13 +7,13 @@ describe('Windpeek landing page', () => {
     window.history.replaceState({}, '', '/?site=swell')
     const wrapper = mount(LandingView, { global: { stubs: { LandingHero: true } } })
     expect(wrapper.findAll('.hardware-model img').map(image => image.attributes('src'))).toEqual([
-      '/devices/previews/e1001-swell.png', '/devices/previews/e1002-swell.png', '/devices/previews/e1003-swell.png',
+      '/devices/previews/e1003-swell.png', '/devices/previews/e1002-swell.png', '/devices/previews/e1001-swell.png',
     ])
     wrapper.unmount()
     window.history.replaceState({}, '', '/')
   })
 
-  it('presents every compatible device equally before the configuration step', () => {
+  it('recommends E1003 and presents every compatible device before the configuration step', () => {
     const wrapper = mount(LandingView, {
       global: {
         stubs: {
@@ -42,26 +42,25 @@ describe('Windpeek landing page', () => {
     expect(wrapper.findAll('.faq details')).toHaveLength(6)
     const devices = wrapper.findAll('.hardware-model')
     expect(devices).toHaveLength(3)
-    expect(devices.map(device => device.get('.hardware-model__name').text())).toEqual(['E1001', 'E1002', 'E1003'])
+    expect(devices.map(device => device.get('.hardware-model__name').text())).toEqual(['E1003Our pick', 'E1002', 'E1001'])
     const specs = wrapper.findAll('.hardware-spec')
-    expect(specs.map(spec => spec.get('dt').text())).toEqual(['Screen', 'Screen resolution', 'Spots you can monitor', 'Threshold line', 'Battery'])
+    expect(specs.map(spec => spec.get('dt').text())).toEqual(['Screen', 'Screen resolution', 'Spots you can monitor', 'Battery'])
     wrapper.findAll('.hardware-spec__copy--mobile').forEach(copy => {
       expect(copy.attributes('aria-hidden')).toBeUndefined()
     })
     expect(specs.map(spec => spec.findAll('dd').map(value => value.findAll('.hardware-spec__line').map(line => line.find('.hardware-spec__copy--desktop').exists() ? line.get('.hardware-spec__copy--desktop').text() : line.text())))).toEqual([
-      [['7.5″, 4 greys'], ['7.3″, 6 colours'], ['10.3″, 16 greys']],
-      [['Standard screen'], ['Standard screen'], ['High-res screen']],
-      [['Monitor 1 spot'], ['Monitor 1 spot'], ['Monitor up to 3 spots']],
-      [['Black threshold'], ['Red threshold'], ['Black threshold']],
-      [['3 month battery'], ['3 month battery'], ['6 month battery']],
+      [['10.3″, 16 greys'], ['7.3″, 6 colours'], ['7.5″, 4 greys']],
+      [['High-res screen'], ['Standard screen'], ['Standard screen']],
+      [['Monitor up to 10 spots'], ['Monitor 1 spot'], ['Monitor 1 spot']],
+      [['6 month battery'], ['3 month battery'], ['3 month battery']],
     ])
     expect(wrapper.findAll('.hardware-spec--spots .hardware-spec__copy--mobile').map(copy => copy.text()))
-      .toEqual(['1 spot', '1 spot', 'Up to 3 spots'])
+      .toEqual(['Up to 10 spots', '1 spot', '1 spot'])
     devices.forEach((device, index) => {
-      const model = `E100${index + 1}`
+      const model = `E100${3 - index}`
       const image = device.get('img')
 
-      expect(image.attributes('src')).toContain(`devices/previews/e100${index + 1}-wind.png`)
+      expect(image.attributes('src')).toContain(`devices/previews/e100${3 - index}-wind.png`)
       expect(image.attributes('loading')).toBe('lazy')
       expect(image.attributes('decoding')).toBe('async')
       expect(device.find('.hardware-model__buy').exists()).toBe(false)
@@ -69,13 +68,11 @@ describe('Windpeek landing page', () => {
     const buyLinks = wrapper.findAll('.hardware-model__buy')
     expect(buyLinks).toHaveLength(3)
     buyLinks.forEach((buyLink, index) => {
-      const model = `E100${index + 1}`
-      expect(buyLink.attributes('href')).toContain(`seeedstudio.com/reTerminal-${model}`)
-      expect(buyLink.attributes('href')).toContain('sensecap_affiliate=UF4PmgK')
-      expect(buyLink.attributes('href')).toContain('referring_service=link')
-      expect(buyLink.attributes('target')).toBe('_blank')
-      expect(buyLink.attributes('rel')).toContain('noopener')
-      expect(buyLink.text()).toBe(`Buy for ${['~$74', '~$107', '~$160'][index]}`)
+      const model = `E100${3 - index}`
+      expect(buyLink.element.tagName).toBe('BUTTON')
+      expect(buyLink.attributes('aria-haspopup')).toBe('dialog')
+      expect(buyLink.attributes('aria-label')).toContain(model)
+      expect(buyLink.text()).toBe(`Buy for ${['~$157', '~$107', '~$74'][index]}`)
     })
     expect(wrapper.find('.hardware-compare').exists()).toBe(false)
     expect(wrapper.get('.configure-action--desktop').attributes('href')).toContain('?configure=')

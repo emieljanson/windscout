@@ -1,4 +1,5 @@
 <script setup>
+import BuyCouponDialog from './BuyCouponDialog.vue'
 import { siteVariant } from '../marketing/siteVariant'
 import { publicAssetUrl } from '../assets/publicAssetUrl'
 
@@ -10,7 +11,6 @@ const hardwareModels = [
     spotsCompact: '1 spot',
     screen: '7.5″, 4 greys',
     resolution: 'Standard screen',
-    threshold: 'Black threshold',
     battery: '3 month battery',
     batteryCompact: '3 mo battery',
     price: '~$74',
@@ -23,7 +23,6 @@ const hardwareModels = [
     spotsCompact: '1 spot',
     screen: '7.3″, 6 colours',
     resolution: 'Standard screen',
-    threshold: 'Red threshold',
     battery: '3 month battery',
     batteryCompact: '3 mo battery',
     price: '~$107',
@@ -32,24 +31,22 @@ const hardwareModels = [
   },
   {
     model: 'E1003',
-    spots: 'Monitor up to 3 spots',
-    spotsCompact: 'Up to 3 spots',
+    spots: 'Monitor up to 10 spots',
+    spotsCompact: 'Up to 10 spots',
     screen: '10.3″, 16 greys',
     resolution: 'High-res screen',
-    threshold: 'Black threshold',
     battery: '6 month battery',
     batteryCompact: '6 mo battery',
-    price: '~$160',
+    price: '~$157',
     image: publicAssetUrl(`devices/previews/e1003-${variant.id}.png`),
     buyUrl: 'https://www.seeedstudio.com/reTerminal-E1003-p-6731.html?sensecap_affiliate=UF4PmgK&referring_service=link',
   },
-]
+].reverse()
 
 const hardwareSpecs = [
   { id: 'screen', label: 'Screen', keys: ['screen'] },
   { id: 'resolution', label: 'Screen resolution', keys: ['resolution'] },
   { id: 'spots', label: 'Spots you can monitor', keys: ['spots'] },
-  { id: 'threshold', label: 'Threshold line', keys: ['threshold'] },
   { id: 'battery', label: 'Battery', keys: ['battery'] },
 ]
 </script>
@@ -57,11 +54,11 @@ const hardwareSpecs = [
 <template>
   <div class="reterminal-comparison">
 <ul class="hardware-models">
-          <li v-for="device in hardwareModels" :key="device.model" class="hardware-model">
+          <li v-for="device in hardwareModels" :key="device.model" class="hardware-model" :class="{ 'hardware-model--e1003': device.model === 'E1003' }">
             <div class="hardware-model__visual">
               <img :src="device.image" alt="" loading="lazy" decoding="async">
             </div>
-            <p class="hardware-model__name">{{ device.model }}</p>
+            <p class="hardware-model__name">{{ device.model }}<span v-if="device.model === 'E1003'" class="hardware-model__badge">Our pick</span></p>
           </li>
         </ul>
 
@@ -83,13 +80,8 @@ const hardwareSpecs = [
 
         <ul class="hardware-buys" aria-label="Buy a reTerminal">
           <li v-for="device in hardwareModels" :key="device.model">
-            <a
-              class="button hardware-model__buy"
-              :href="device.buyUrl"
-              :aria-label="`Buy reTerminal ${device.model}, approximately ${device.price.replace('~', '')}`"
-              target="_blank"
-              rel="sponsored noopener noreferrer"
-            >Buy for {{ device.price }}</a>
+            <BuyCouponDialog :device="device" />
+
           </li>
         </ul>
   </div>

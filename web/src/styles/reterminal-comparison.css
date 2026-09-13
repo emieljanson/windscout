@@ -38,15 +38,28 @@
 .reterminal-comparison .hardware-model {
   display: grid;
   grid-template-rows: 112px auto;
+  row-gap: 8px;
   min-width: 0;
   justify-items: start;
 }
 
 .reterminal-comparison .hardware-model__visual {
+  position: relative;
   display: grid;
   width: 100%;
   min-width: 0;
   place-items: center start;
+}
+
+.reterminal-comparison .hardware-model__badge {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 3px 5px;
+  white-space: nowrap;
+  border-radius: 999px;
+  background: #d8ef9e;
+  color: #24330d;
+  font: 600 10px/1.2 'Inter Variable', Inter, sans-serif;
 }
 
 .reterminal-comparison .hardware-model__visual img {
@@ -58,12 +71,14 @@
   transform-origin: left center;
 }
 
-.reterminal-comparison .hardware-model:nth-child(3) .hardware-model__visual img {
+.reterminal-comparison .hardware-model--e1003 .hardware-model__visual img {
   width: 128%;
   transform: translateX(-23%);
 }
 
 .reterminal-comparison .hardware-model__name {
+  display: flex;
+  align-items: center;
   width: 100%;
   color: var(--landing-text);
   font-size: 15px;
@@ -154,3 +169,5 @@
   .reterminal-comparison .hardware-spec__copy--desktop { display: none; }
   .reterminal-comparison .hardware-spec__copy--mobile { display: inline; }
 }
+
+.reterminal-comparison .hardware-model__price-note { display: block; margin-top: 6px; text-align: center; font-size: 11px; color: var(--landing-text); }

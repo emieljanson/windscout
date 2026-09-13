@@ -227,26 +227,25 @@ describe('Windpeek settings panel', () => {
     expect(dialog?.textContent).toContain('10.3″, 16 greys')
     expect(dialog?.textContent).not.toContain('touch')
     expect(dialog?.textContent).not.toContain('affiliate')
-    const buyLinks = [...dialog.querySelectorAll('a')]
+    const buyLinks = [...dialog.querySelectorAll('.hardware-model__buy')]
     const deviceImages = [...dialog.querySelectorAll('img')]
     expect(deviceImages.map((image) => image.getAttribute('src'))).toEqual([
-      '/devices/previews/e1001-wind.png',
-      '/devices/previews/e1002-wind.png',
       '/devices/previews/e1003-wind.png',
+      '/devices/previews/e1002-wind.png',
+      '/devices/previews/e1001-wind.png',
     ])
     expect(deviceImages.every((image) => image.getAttribute('alt') === '')).toBe(true)
     expect(buyLinks.map((link) => link.textContent.trim().replace(/\s+/g, ' '))).toEqual([
-      'Buy for ~$74',
+      'Buy for ~$157',
       'Buy for ~$107',
-      'Buy for ~$160',
+      'Buy for ~$74',
     ])
     expect(buyLinks.map((link) => link.getAttribute('aria-label'))).toEqual([
-      'Buy reTerminal E1001, approximately $74',
+      'Buy reTerminal E1003, approximately $157',
       'Buy reTerminal E1002, approximately $107',
-      'Buy reTerminal E1003, approximately $160',
+      'Buy reTerminal E1001, approximately $74',
     ])
-    expect(buyLinks.every((link) => link.href.includes('sensecap_affiliate=UF4PmgK'))).toBe(true)
-    expect(buyLinks.every((link) => link.rel === 'sponsored noopener noreferrer')).toBe(true)
+    expect(buyLinks.every((button) => button.getAttribute('aria-haspopup') === 'dialog')).toBe(true)
 
     document.body.querySelector('button[aria-label="Close reTerminal help"]')?.click()
     await nextTick()
