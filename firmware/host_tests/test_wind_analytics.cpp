@@ -103,19 +103,42 @@ TEST(WindAnalyticsTest, SuppressesHeartbeatUntilSevenDaysAfterSuccess)
     EXPECT_EQ(fake.sends, 1);
 }
 
-TEST(WindAnalyticsTest, FailedSendRetriesOnlyAfterOneDay)
+TEST(WindAnalyticsTest, FailedSendRetriesAtNextRefreshThenWaitsSevenDaysAfterSuccess)
 {
     FakeAnalytics fake;
-    fake.load_result = ESP_OK;
-    fake.stored = existing_state(0, kNow);
     fake.send_result = ESP_FAIL;
     const auto deps = dependencies(&fake);
 
-    EXPECT_EQ(wind_analytics_run(&deps, kNow + WIND_ANALYTICS_RETRY_SECONDS - 1), ESP_OK);
-    EXPECT_EQ(fake.sends, 0);
-    EXPECT_EQ(wind_analytics_run(&deps, kNow + WIND_ANALYTICS_RETRY_SECONDS), ESP_FAIL);
+    EXPECT_EQ(wind_analytics_run(&deps, kNow), ESP_FAIL);
     EXPECT_EQ(fake.sends, 1);
     EXPECT_EQ(fake.stored.last_success_unix, 0);
+    const std::string dashboard_id = fake.sent_id;
+
+    const time_t next_refresh = kNow + 15 * 60;
+    fake.send_result = ESP_OK;
+    EXPECT_EQ(wind_analytics_run(&deps, next_refresh), ESP_OK);
+    EXPECT_EQ(fake.sends, 2);
+    EXPECT_EQ(fake.sent_id, dashboard_id);
+    EXPECT_EQ(fake.stored.last_success_unix, next_refresh);
+
+    EXPECT_EQ(wind_analytics_run(&deps, next_refresh + 7 * 86400 - 1), ESP_OK);
+    EXPECT_EQ(fake.sends, 2);
+    EXPECT_EQ(wind_analytics_run(&deps, next_refresh + 7 * 86400), ESP_OK);
+    EXPECT_EQ(fake.sends, 3);
+}
+
+TEST(WindAnalyticsTest, PreviouslySuccessfulDashboardAlsoRetriesAtNextRefresh)
+{
+    FakeAnalytics fake;
+    fake.load_result = ESP_OK;
+    fake.stored = existing_state(kNow - 7 * 86400);
+    fake.send_result = ESP_FAIL;
+    const auto deps = dependencies(&fake);
+
+    EXPECT_EQ(wind_analytics_run(&deps, kNow), ESP_FAIL);
+    EXPECT_EQ(wind_analytics_run(&deps, kNow + 15 * 60), ESP_FAIL);
+    EXPECT_EQ(fake.sends, 2);
+    EXPECT_EQ(fake.stored.last_success_unix, kNow - 7 * 86400);
 }
 
 TEST(WindAnalyticsTest, InvalidOrBackwardTimeFailsClosed)

@@ -128,11 +128,8 @@ esp_err_t wind_analytics_run(const wind_analytics_dependencies_t *dependencies, 
         current - state.last_success_unix < WIND_ANALYTICS_HEARTBEAT_SECONDS) {
         return ESP_OK;
     }
-    if (state.last_attempt_unix > state.last_success_unix &&
-        current - state.last_attempt_unix < WIND_ANALYTICS_RETRY_SECONDS) {
-        return ESP_OK;
-    }
-
+    // The caller attempts once per successful forecast refresh. Failed sends
+    // remain due; only a successful send starts the seven-day quiet period.
     state.last_attempt_unix = current;
     result = dependencies->store(dependencies->context, &state);
     if (result != ESP_OK) return result;
