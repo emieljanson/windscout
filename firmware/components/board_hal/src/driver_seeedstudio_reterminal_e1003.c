@@ -2,6 +2,7 @@
 
 #include "battery_adc.h"
 #include "board_hal.h"
+#include "board_touch.h"
 #include "driver/gpio.h"
 #include "driver/i2c_master.h"
 #include "driver/spi_master.h"
@@ -22,6 +23,7 @@
 static const char *TAG = "board_hal_reterminal_e1003";
 
 static i2c_master_bus_handle_t i2c_bus = NULL;
+#include "e1003_touch.inc"
 
 // Battery measurement constants
 #define VBAT_ADC_CHANNEL BOARD_HAL_BAT_ADC_PIN
@@ -173,6 +175,7 @@ esp_err_t board_hal_init(void)
     };
     esp_err_t i2c_ret = i2c_new_master_bus(&i2c_bus_config, &i2c_bus);
     if (i2c_ret == ESP_OK) {
+        touch_init();
         if (sensor_init(i2c_bus) == ESP_OK) {
             ESP_LOGI(TAG, "SHT40 sensor initialized");
             // Feed the live panel temperature to the IT8951 so it selects the

@@ -226,6 +226,11 @@ typedef struct {
  * palette_out. Output bytes use the native Spectra palette indices for black,
  * white, and red.
  */
+/* E1003-only, at most three rows. Missing samples stay visibly unavailable. */
+int wind_renderer_render_overview(const wind_renderer_dashboard_t *rows,
+    size_t row_count, size_t first_spot, size_t total_spots,
+    uint8_t *gc16_out, size_t output_size, wind_renderer_stats_t *stats);
+
 int wind_renderer_render(const wind_renderer_dashboard_t *dashboard,
                          uint8_t *palette_out, size_t palette_size,
                          wind_renderer_stats_t *stats);

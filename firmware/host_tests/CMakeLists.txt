@@ -412,3 +412,6 @@ target_include_directories(e1003_multiple_spots_test BEFORE PRIVATE ${cjson_SOUR
 add_wind_test(wind_navigation_test test_wind_navigation.cpp)
 target_compile_definitions(wind_navigation_test PRIVATE
   WIND_MAIN_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/../main/windpeek_main.c")
+add_wind_test(wind_overview_test test_wind_overview.cpp ../main/wind_overview.c)
+
+add_wind_test(e1003_touch_test test_e1003_touch.cpp)

@@ -424,7 +424,7 @@ TEST_F(WindAppTest, FailedForcedDisplayKeepsTheOverride)
 TEST(WindAppProductionContractTest, NavigationHeartbeatRequiresPublishedForecastAndReleasedLocks)
 {
     const auto source = read_wind_app_source();
-    const auto start = source.find("static esp_err_t navigate(int direction)");
+    const auto start = source.find("static esp_err_t navigate(int direction, bool absolute)");
     const auto end = source.find("esp_err_t wind_app_select_previous", start);
     ASSERT_NE(start, std::string::npos);
     ASSERT_NE(end, std::string::npos);
@@ -445,4 +445,20 @@ TEST(WindAppProductionContractTest, NavigationHeartbeatRequiresPublishedForecast
     EXPECT_LT(runtime_unlock, published);
     EXPECT_LT(published, heartbeat);
     EXPECT_NE(body.find("return result;", heartbeat), std::string::npos);
+}
+
+TEST_F(WindAppTest, OverviewPrefetchConsumesFailedRetryWithoutWritingIndividualScreen)
+{
+    const int64_t now=1787544000;
+    fake.fetch_result=ESP_ERR_TIMEOUT;
+    wind_app_outcome_t outcome{};
+    ASSERT_EQ(wind_app_prefetch(&app,false,now,&outcome),ESP_OK);
+    ASSERT_GT(app.schedule.retry_at,now);
+    const int64_t retry=app.schedule.retry_at;
+    ASSERT_EQ(wind_app_prefetch(&app,false,retry,&outcome),ESP_OK);
+    EXPECT_TRUE(outcome.attempted_fetch);
+    EXPECT_EQ(outcome.fetch_result,ESP_ERR_TIMEOUT);
+    EXPECT_EQ(app.schedule.retry_at,0);
+    EXPECT_GT(wind_schedule_next_attempt(&app.schedule,retry),retry);
+    EXPECT_EQ(fake.displays,0);EXPECT_EQ(fake.renders,0);
 }

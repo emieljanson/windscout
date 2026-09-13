@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { readFile } from 'node:fs/promises'
 import { amsterdamDate, forecastResponseForLatitude, tideTimes } from './helpers/forecast'
 
 const CONFIGURATOR_READY_TIMEOUT_MS = 30_000
@@ -798,7 +799,6 @@ test('adds E1003 spots and preserves their individual display choices', async ({
 })
 
 test('shows the ten-spot toast when trying to add one more', async ({ page }) => {
-  const { readFile } = await import('node:fs/promises')
   const spots = JSON.parse(await readFile(new URL('../../src/spots/catalog.generated.json', import.meta.url), 'utf8'))
   const ids = spots.slice(0, 10).map(spot => spot.id)
   await page.addInitScript((configuredSpotIds) => {

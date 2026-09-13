@@ -1021,3 +1021,30 @@ TEST(BatteryEmptyRenderer, RejectsInvalidBuffersBeforeWriting) {
         WIND_RENDERER_DISPLAY_E1003_GC16, pixels.data(), pixels.size()), 0);
     EXPECT_TRUE(std::all_of(pixels.begin(), pixels.end(), [](uint8_t p) { return p == 0xA5; }));
 }
+
+TEST(SpotOverviewRenderer, RendersMixedGraphsAndPartialPagesInGc16) {
+    wind_renderer_dashboard_t rows[3] = {Dashboard(), Dashboard(), Dashboard()};
+    rows[0].spot_name="EDAM"; rows[1].spot_name="WIJK AAN ZEE"; rows[2].spot_name="SCHEVENINGEN";
+    rows[1].swell_size=2;
+    std::vector<uint8_t> pixels(WIND_RENDERER_E1003_COMPOSITION_BYTES+1,0xA5);
+    wind_renderer_stats_t stats{};
+    ASSERT_EQ(wind_renderer_render_overview(rows,3,0,7,pixels.data(),pixels.size()-1,&stats),0);
+    EXPECT_EQ(stats.clipped_primitives,0);
+    EXPECT_EQ(pixels.back(),0xA5);
+    EXPECT_TRUE(std::all_of(pixels.begin(),pixels.end()-1,[](uint8_t p){return p<=15;}));
+    EXPECT_GT(std::count(pixels.begin(),pixels.end(),11),0);
+    EXPECT_EQ(pixels[544*800+710],0);
+    ASSERT_EQ(wind_renderer_render_overview(rows,1,6,7,pixels.data(),pixels.size()-1,&stats),0);
+    EXPECT_EQ(stats.clipped_primitives,0);
+    EXPECT_EQ(pixels[350*800+50],15); // No invented spot on the final page.
+}
+
+TEST(SpotOverviewRenderer, RejectsInvalidPagesWithoutWriting) {
+    auto row=Dashboard();
+    std::vector<uint8_t> pixels(WIND_RENDERER_E1003_COMPOSITION_BYTES,0xA5);
+    EXPECT_NE(wind_renderer_render_overview(&row,0,0,7,pixels.data(),pixels.size(),nullptr),0);
+    EXPECT_NE(wind_renderer_render_overview(&row,1,1,7,pixels.data(),pixels.size(),nullptr),0);
+    EXPECT_NE(wind_renderer_render_overview(&row,1,9,7,pixels.data(),pixels.size(),nullptr),0);
+    EXPECT_NE(wind_renderer_render_overview(&row,1,0,7,pixels.data(),pixels.size()-1,nullptr),0);
+    EXPECT_TRUE(std::all_of(pixels.begin(),pixels.end(),[](uint8_t p){return p==0xA5;}));
+}

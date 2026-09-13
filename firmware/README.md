@@ -70,3 +70,22 @@ The combined Windpeek firmware source that includes the UC8179 E1001 driver is
 distributed under GNU GPL v3.0 only. Existing MIT-licensed portions retain their
 MIT notices. See `LICENSING.md` for the exact boundary and third-party assets
 that require separate distribution rights.
+
+### E1003 spot overview
+
+Tap the spot name or press the green button to open the fullscreen overview.
+It shows up to three configured spots with five forecast days, using each spot's
+large wind or swell graph (configured module order breaks ties). Tap a row to
+open that spot. Swipe up/down or use the lower-right chevrons to move between
+pages. The two other physical buttons select the previous/next spot directly.
+The chevrons have separate 46×46 logical touch targets around 34×34 artwork.
+
+The GT911 driver uses the existing I2C bus. Touch can wake the E1003; the current
+overview page survives deep sleep and resets when its configuration changes.
+Rendering and fetching suppress idle sleep. Cached forecasts remain usable
+offline; missing forecast samples render as unavailable.
+
+Host tests cover gesture cancellation, page boundaries, hidden targets and
+mixed wind/swell rendering. `output/spot-overview/render-production.c` exports
+the production renderer at 1872×1404. Physical touch orientation, tap/swipe
+response and wake behavior still require verification on an attached E1003.

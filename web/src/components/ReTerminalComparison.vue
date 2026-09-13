@@ -7,8 +7,9 @@ const variant = siteVariant()
 const hardwareModels = [
   {
     model: 'E1001',
-    spots: 'Monitor 1 spot',
-    spotsCompact: '1 spot',
+    spots: '1 spot',
+    overview: '—',
+    controls: '—',
     screen: '7.5″, 4 greys',
     resolution: 'Standard screen',
     battery: '3 month battery',
@@ -19,8 +20,9 @@ const hardwareModels = [
   },
   {
     model: 'E1002',
-    spots: 'Monitor 1 spot',
-    spotsCompact: '1 spot',
+    spots: '1 spot',
+    overview: '—',
+    controls: '—',
     screen: '7.3″, 6 colours',
     resolution: 'Standard screen',
     battery: '3 month battery',
@@ -31,8 +33,9 @@ const hardwareModels = [
   },
   {
     model: 'E1003',
-    spots: 'Monitor up to 10 spots',
-    spotsCompact: 'Up to 10 spots',
+    spots: 'Up to 10 spots',
+    overview: '3-spot overview',
+    controls: 'Touchscreen',
     screen: '10.3″, 16 greys',
     resolution: 'High-res screen',
     battery: '6 month battery',
@@ -46,7 +49,9 @@ const hardwareModels = [
 const hardwareSpecs = [
   { id: 'screen', label: 'Screen', keys: ['screen'] },
   { id: 'resolution', label: 'Screen resolution', keys: ['resolution'] },
-  { id: 'spots', label: 'Spots you can monitor', keys: ['spots'] },
+  { id: 'spots', label: 'Saved spots', keys: ['spots'] },
+  { id: 'overview', label: 'Forecast view', keys: ['overview'] },
+  { id: 'controls', label: 'Touchscreen', keys: ['controls'] },
   { id: 'battery', label: 'Battery', keys: ['battery'] },
 ]
 </script>

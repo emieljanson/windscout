@@ -18,6 +18,9 @@
 #endif
 
 #include "board_hal.h"
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+#include "board_touch.h"
+#endif
 #include "config.h"
 #include "config_manager.h"
 #include "debug_log.h"
@@ -137,7 +140,7 @@ static void sleep_timer_task(void *arg)
         if (battery_empty) continue;
         bool usb_powered = board_hal_is_usb_connected() || installer_active;
         bool interactive_wake =
-            (wakeup_source == WAKEUP_SOURCE_BOOT_BUTTON || wakeup_source == WAKEUP_SOURCE_NONE);
+            (wakeup_source == WAKEUP_SOURCE_BOOT_BUTTON || wakeup_source == WAKEUP_SOURCE_TOUCH || wakeup_source == WAKEUP_SOURCE_NONE);
         wifi_manager_set_performance_mode(interactive_wake || usb_powered);
 
 #ifndef DEBUG_DEEP_SLEEP_WAKE
@@ -262,7 +265,13 @@ esp_err_t power_manager_init(void)
             }
             expected_wakeup_time = 0;  // Reset after checking
         }
-    } else if (wakeup_causes & (1 << ESP_SLEEP_WAKEUP_EXT1)) {
+    }
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+    else if (wakeup_causes & (1 << ESP_SLEEP_WAKEUP_EXT0)) {
+        wakeup_source = WAKEUP_SOURCE_TOUCH;
+    }
+#endif
+    else if (wakeup_causes & (1 << ESP_SLEEP_WAKEUP_EXT1)) {
         // ESP32-S3 only supports EXT1, check which GPIO triggered it
         ext1_wakeup_pin_mask = esp_sleep_get_ext1_wakeup_status();
 
@@ -327,10 +336,13 @@ esp_err_t power_manager_init(void)
     board_hal_led_set(BOARD_HAL_LED_ACTIVITY, false);
 
     // Skip auto-sleep timer if woken by ROTATE button or timer (image generation can take >120s)
+#ifndef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
     if (wakeup_source == WAKEUP_SOURCE_ROTATE_BUTTON ||
         wakeup_source == WAKEUP_SOURCE_CLEAR_BUTTON || wakeup_source == WAKEUP_SOURCE_TIMER) {
         ESP_LOGI(TAG, "Woken by ROTATE button, KEY button or timer, disabling auto-sleep timer");
-    } else {
+    } else
+#endif
+    {
         xTaskCreate(sleep_timer_task, "sleep_timer", 4096, NULL, 5, &sleep_timer_task_handle);
     }
 #ifndef CONFIG_BOARD_CAP_WINDPEEK
@@ -343,8 +355,19 @@ esp_err_t power_manager_init(void)
     return ESP_OK;
 }
 
+static unsigned active_work;
+void power_manager_work_begin(void) { __atomic_add_fetch(&active_work,1,__ATOMIC_SEQ_CST); }
+void power_manager_work_end(void) { __atomic_sub_fetch(&active_work,1,__ATOMIC_SEQ_CST); }
+bool power_manager_work_active(void) { return __atomic_load_n(&active_work,__ATOMIC_SEQ_CST)!=0; }
+
 void power_manager_enter_sleep(void)
 {
+    if (power_manager_work_active() && !battery_empty) return;
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+    /* Let the input task consume a pending contact before arming touch wake. */
+    if (!battery_empty && board_hal_touch_available() &&
+        gpio_get_level(BOARD_HAL_TOUCH_INT) == board_hal_touch_wake_level()) return;
+#endif
     // External power means the device is available for the browser installer
     // and live dashboard updates. A timer wake must not put it back to sleep
     // when the user plugged in USB while it was waking.
@@ -415,6 +438,13 @@ void power_manager_enter_sleep(void)
     if (wakeup_mask != 0) {
         esp_sleep_enable_ext1_wakeup(wakeup_mask, ESP_EXT1_WAKEUP_ANY_LOW);
     }
+
+#ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003
+    if (!battery_empty && board_hal_touch_available()) {
+        /* EXT0 permits the controller's configured polarity independently of buttons. */
+        esp_sleep_enable_ext0_wakeup(BOARD_HAL_TOUCH_INT, board_hal_touch_wake_level());
+    }
+#endif
 
     // Stop WiFi cleanly before deep sleep so the MAC/PHY drains pending
     // state and the modem domain transitions through a normal teardown

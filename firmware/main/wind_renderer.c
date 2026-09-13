@@ -8,6 +8,7 @@
 
 #include "bootstrap_weather_icons.h"
 #include "wind_font.h"
+#include "wind_overview.h"
 
 enum {
     CANVAS_WHITE = 255,
@@ -1178,7 +1179,7 @@ static void draw_swell_trace(canvas_t *canvas, const int *hours, int day,
 }
 
 static void draw_swell_module(canvas_t *canvas, const wind_renderer_dashboard_t *dashboard,
-                              int top, int bottom, int size) {
+                              int top, int bottom, int size, bool overview) {
     const bool large = size == 2;
     bool secondary = false;
     if (large) {
@@ -1186,10 +1187,10 @@ static void draw_swell_module(canvas_t *canvas, const wind_renderer_dashboard_t 
             for (int hour = TIDE_DATA_FIRST_HOUR; hour <= TIDE_DATA_LAST_HOUR; ++hour)
                 if (dashboard->secondary_swell_hourly[day][hour] > 0) secondary = true;
     }
-    const int plot_top = top + MODULE_GRAPH_INSET;
-    const int plot_bottom = bottom - MODULE_PERIOD_INSET;
-    const int direction_y = module_cell_center(top, 0);
-    const int period_baseline = module_text_baseline(bottom - MODULE_PADDING - MODULE_TEXT_CELL / 2);
+    const int plot_top = top + (overview ? 31 : MODULE_GRAPH_INSET);
+    const int plot_bottom = bottom - (overview ? 52 : MODULE_PERIOD_INSET);
+    const int direction_y = overview ? bottom - 16 : module_cell_center(top, 0);
+    const int period_baseline = overview ? bottom - 32 : module_text_baseline(bottom - MODULE_PADDING - MODULE_TEXT_CELL / 2);
     if (large) {
         const int ticks[] = {0, 250, 500, 750, SWELL_SCALE_CM};
         for (size_t tick = 0; tick < sizeof(ticks) / sizeof(ticks[0]); ++tick) {
@@ -1234,15 +1235,16 @@ static void draw_swell_module(canvas_t *canvas, const wind_renderer_dashboard_t 
 }
 
 static dashboard_layout_t draw_wind_module(canvas_t *canvas, const wind_renderer_dashboard_t *dashboard,
-                             int top, int bottom, int size) {
+                             int top, int bottom, int size, bool overview) {
     dashboard_layout_t layout = {0};
-    layout.wind_baseline = bottom - MODULE_PADDING;
-    layout.chart_scale_height = layout.wind_baseline - (top + MODULE_GRAPH_INSET);
-    layout.direction_center = module_cell_center(top, 0);
+    layout.wind_baseline = bottom - (overview ? 32 : MODULE_PADDING);
+    layout.chart_scale_height = layout.wind_baseline - (top + (overview ? 31 : MODULE_GRAPH_INSET));
+    layout.direction_center = overview ? bottom - 16 : module_cell_center(top, 0);
     layout.inset_labels = true;
     if (size == 2) {
-        for (int knots = 5; knots <= 40; knots += 5) {
-            const int y = layout.wind_baseline - knots * layout.chart_scale_height / 40;
+        for (int knots = overview ? 0 : 5; knots <= 40; knots += 5) {
+            /* The overview zero line sits inside the bottom pixel of the bars. */
+            const int y = layout.wind_baseline - knots * layout.chart_scale_height / 40 - (knots == 0 ? 1 : 0);
             for (int x = OUTER_X + 1; x < OUTER_RIGHT; x += 7) set_pixel(canvas, x, y, CANVAS_BLACK);
         }
     }
@@ -1277,8 +1279,8 @@ static void draw_modules(canvas_t *canvas, const wind_renderer_dashboard_t *dash
             const int height = size == 1 ? MODULE_COMPACT_HEIGHT :
                 available / large_count + (large_count == 2 && module == 1 ? available % 2 : 0);
             if (top != DAY_HEADER_BOTTOM) horizontal_line(canvas, OUTER_X, OUTER_RIGHT, top, CANVAS_BLACK);
-            if (module == 0) *wind_layout = draw_wind_module(canvas, dashboard, top, top + height, size);
-            else draw_swell_module(canvas, dashboard, top, top + height, size);
+            if (module == 0) *wind_layout = draw_wind_module(canvas, dashboard, top, top + height, size, false);
+            else draw_swell_module(canvas, dashboard, top, top + height, size, false);
             top += height;
         }
     }
@@ -1319,8 +1321,8 @@ static void draw_ordered_modules(canvas_t *canvas, const wind_renderer_dashboard
             height = available / large + (--remaining == 0 ? available % large : 0);
         }
         if (top != DAY_HEADER_BOTTOM) horizontal_line(canvas, OUTER_X, OUTER_RIGHT, top, CANVAS_BLACK);
-        if (id == 0) *wind_layout = draw_wind_module(canvas, dashboard, top, top + height, sizes[id]);
-        else if (id == 1) draw_swell_module(canvas, dashboard, top, top + height, sizes[id]);
+        if (id == 0) *wind_layout = draw_wind_module(canvas, dashboard, top, top + height, sizes[id], false);
+        else if (id == 1) draw_swell_module(canvas, dashboard, top, top + height, sizes[id], false);
         else if (id == 4) {
             const dashboard_layout_t row = { .tide_top = top, .tide_bottom = top + height - 1 };
             draw_tide(canvas, dashboard, &row);
@@ -2184,4 +2186,82 @@ int wind_renderer_render_preview_rgba_for_display(
         return wind_renderer_render_preview_rgba(dashboard, rgba_out, rgba_size, stats);
     }
     return -1;
+}
+
+/* Render with the production font, then reduce its mask from 43 to 30 px. */
+static bool overview_spot_label(canvas_t *c, int x, int baseline, const char *name) {
+    uint8_t *mask = malloc(800 * 64);
+    if (!mask) return false;
+    memset(mask, 255, 800 * 64);
+    wind_font_draw_antialiased(mask, 800, 64, 800, 0, 48,
+                              WIND_FONT_INTER, 43, 0, name);
+    wind_text_metrics_t m = wind_font_measure(WIND_FONT_INTER, 43, name);
+    const double scale = 30.0 / 43.0;
+    int width = (int)ceil(m.width * scale);
+    for (int dy = 0; dy < 45; dy++) {
+        for (int dx = 0; dx < width; dx++) {
+            double ink = 0;
+            for (int sy = 0; sy < 4; sy++) for (int sx = 0; sx < 4; sx++) {
+                int px = (int)((dx + (sx + 0.5) / 4) / scale);
+                int py = (int)((dy + (sy + 0.5) / 4) / scale);
+                if (px < 800 && py < 64) ink += 255 - mask[py * 800 + px];
+            }
+            if (ink > 0) set_pixel(c, x+dx, baseline-34+dy,
+                                 (uint8_t)(255 - ink / 16 * (255-187) / 255));
+        }
+    }
+    free(mask);
+    return true;
+}
+
+int wind_renderer_render_overview(const wind_renderer_dashboard_t *rows,
+    size_t count, size_t first, size_t total, uint8_t *output, size_t output_size,
+    wind_renderer_stats_t *stats) {
+    if (!rows || !output || count == 0 || count > WIND_OVERVIEW_PAGE_SIZE ||
+        first >= total || count > total-first || first % WIND_OVERVIEW_PAGE_SIZE ||
+        output_size < WIND_RENDERER_E1003_COMPOSITION_BYTES) return -1;
+    canvas_t c = {.height=WIND_RENDERER_E1003_COMPOSITION_HEIGHT,
+        .size=WIND_RENDERER_E1003_COMPOSITION_BYTES, .antialias_text=true,
+        .smooth_curves=true};
+    c.pixels = malloc(c.size);
+    if (!c.pixels) return -2;
+    memset(c.pixels, CANVAS_WHITE, c.size);
+    outline_rect(&c, 12, 12, 776, 576);
+    for (int day = 0; day < WIND_RENDERER_DAY_COUNT; ++day)
+        draw_text(&c, day_column_x(day)+17, 35, WIND_FONT_BERKELEY_MONO_BOLD,
+                  15, safe_text(rows[0].days[day].day));
+    horizontal_line(&c, 12, 787, 46, CANVAS_BLACK);
+    for (size_t row = 0; row < count; ++row) {
+        int top = WIND_OVERVIEW_TOP + row * WIND_OVERVIEW_ROW_HEIGHT;
+        char name[WIND_RENDERER_SPOT_NAME_CAPACITY];
+        uppercase_spot_name(name, sizeof(name), rows[row].spot_name);
+        if (!overview_spot_label(&c, 30, top+41, name)) { free(c.pixels); return -2; }
+        if (rows[row].swell_size == 2)
+            draw_swell_module(&c, &rows[row], top, top+179, 2, true);
+        else draw_wind_module(&c, &rows[row], top, top+179, 2, true);
+        horizontal_line(&c, 12, 787, top+179, CANVAS_BLACK);
+    }
+    for (int day = 1; day < WIND_RENDERER_DAY_COUNT; ++day)
+        vertical_line(&c, day_column_x(day), 12, 587, CANVAS_BLACK);
+    if (total > WIND_OVERVIEW_PAGE_SIZE) {
+        int x = WIND_OVERVIEW_BUTTON_X, y = WIND_OVERVIEW_BUTTON_Y;
+        int side = WIND_OVERVIEW_BUTTON_SIZE;
+        fill_rect(&c, x-3, y-3, side*2+7, side+7, CANVAS_WHITE);
+        outline_rect(&c, x, y, side*2+1, side+1);
+        vertical_line(&c, x+side, y, y+side, CANVAS_BLACK);
+        for (int button = 0; button < 2; ++button) {
+            int cx = x+side/2+button*side, cy = y+side/2;
+            int sign = button == 0 ? 1 : -1;
+            draw_heavy_line(&c, cx-6, cy-sign*3, cx, cy+sign*3);
+            draw_heavy_line(&c, cx, cy+sign*3, cx+6, cy-sign*3);
+            bool enabled = button == 0 ? first+count < total : first > 0;
+            if (!enabled) for (int yy=cy-5; yy<=cy+5; ++yy)
+                for (int xx=cx-7; xx<=cx+7; ++xx)
+                    if (c.pixels[yy*800+xx] == 0) c.pixels[yy*800+xx] = 187;
+        }
+    }
+    for (size_t i = 0; i < c.size; ++i) output[i] = (c.pixels[i]*15u+127u)/255u;
+    if (stats) { memset(stats, 0, sizeof(*stats)); stats->clipped_primitives=c.clipped; }
+    free(c.pixels);
+    return 0;
 }
