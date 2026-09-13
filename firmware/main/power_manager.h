@@ -16,6 +16,8 @@ typedef enum {
 
 esp_err_t power_manager_init(void);
 void power_manager_enter_sleep(void);
+/* No timer wakes while preserving the empty-battery screen. */
+void power_manager_set_battery_empty(bool empty);
 void power_manager_enter_sleep_with_timer(uint32_t sleep_time_sec);
 void power_manager_reset_sleep_timer(void);
 

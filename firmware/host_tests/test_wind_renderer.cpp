@@ -984,3 +984,40 @@ TEST(WindRendererGolden, Unavailable) {
     dashboard.battery_percent = -1;
     ExpectGolden("unavailable", dashboard);
 }
+
+TEST(BatteryEmptyRenderer, UsesEachPanelsNativeWhiteAndKeepsBlackBackground) {
+    for (auto display : {WIND_RENDERER_DISPLAY_E1001_GRAY4,
+                         WIND_RENDERER_DISPLAY_E1002_SPECTRA6,
+                         WIND_RENDERER_DISPLAY_E1003_GC16}) {
+        const int height = display == WIND_RENDERER_DISPLAY_E1003_GC16 ? 600 : 480;
+        const int offset = (height - 480) / 2;
+        const uint8_t white = display == WIND_RENDERER_DISPLAY_E1001_GRAY4 ? 3 :
+            display == WIND_RENDERER_DISPLAY_E1003_GC16 ? 15 : 1;
+        std::vector<uint8_t> pixels(800 * height + 1, 0xA5);
+        ASSERT_EQ(wind_renderer_render_battery_empty_for_display(
+            display, pixels.data(), pixels.size() - 1), 0);
+        EXPECT_EQ(pixels.back(), 0xA5);
+        EXPECT_EQ(pixels.front(), 0);
+        EXPECT_EQ(pixels[(184 + offset) * 800 + 357], white);
+        EXPECT_EQ(pixels[(200 + offset) * 800 + 400], 0);
+        EXPECT_TRUE(std::all_of(pixels.begin(), pixels.end() - 1,
+            [white](uint8_t p) { return p == 0 || p == white; }));
+        EXPECT_GT(std::count(pixels.begin() + (245 + offset) * 800,
+                             pixels.begin() + (290 + offset) * 800, white), 100);
+        int width, panel_height;
+        ASSERT_EQ(wind_renderer_display_dimensions(display, &width, &panel_height), 0);
+        std::vector<uint8_t> row(width);
+        for (int y = 0; y < panel_height; ++y)
+            ASSERT_EQ(wind_renderer_project_display_row(display, pixels.data(),
+                pixels.size() - 1, y, row.data(), row.size()), 0);
+    }
+}
+
+TEST(BatteryEmptyRenderer, RejectsInvalidBuffersBeforeWriting) {
+    std::vector<uint8_t> pixels(WIND_RENDERER_PALETTE_BYTES, 0xA5);
+    EXPECT_NE(wind_renderer_render_battery_empty(nullptr, pixels.size()), 0);
+    EXPECT_NE(wind_renderer_render_battery_empty(pixels.data(), pixels.size() - 1), 0);
+    EXPECT_NE(wind_renderer_render_battery_empty_for_display(
+        WIND_RENDERER_DISPLAY_E1003_GC16, pixels.data(), pixels.size()), 0);
+    EXPECT_TRUE(std::all_of(pixels.begin(), pixels.end(), [](uint8_t p) { return p == 0xA5; }));
+}

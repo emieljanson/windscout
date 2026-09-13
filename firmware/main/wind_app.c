@@ -712,6 +712,22 @@ static esp_err_t display_dashboard(void *context, const uint8_t *bitmap,
     return result != ESP_OK ? result : end_result;
 }
 
+esp_err_t wind_app_show_battery_empty(void) {
+    if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE)
+        return ESP_ERR_INVALID_STATE;
+    const size_t size = active_renderer_bitmap_size();
+    uint8_t *bitmap = malloc(size);
+    esp_err_t result = bitmap ? wind_app_clear_panel_confirmation() : ESP_ERR_NO_MEM;
+    if (result == ESP_OK) {
+        result = wind_renderer_render_battery_empty_for_display(
+            active_renderer_display(), bitmap, size) == 0 ? ESP_OK : ESP_FAIL;
+        if (result == ESP_OK) result = display_dashboard(NULL, bitmap, size);
+    }
+    free(bitmap);
+    xSemaphoreGive(s_runtime_lock);
+    return result;
+}
+
 static esp_err_t ensure_ready(void) {
     if (s_ready) {
         return ESP_OK;
@@ -1114,6 +1130,9 @@ bool wind_app_last_render_succeeded(void) {
     return s_last_render_succeeded;
 }
 #else
+esp_err_t wind_app_show_battery_empty(void) {
+    return ESP_ERR_NOT_SUPPORTED;
+}
 esp_err_t wind_app_configure_runtime(void) {
     return ESP_ERR_NOT_SUPPORTED;
 }
