@@ -394,6 +394,33 @@ TEST(WindAppProductionContractTest, SendsHeartbeatOnlyAfterRefreshLocksAreReleas
     EXPECT_NE(source.find("if (published_forecast)", unlock), std::string::npos);
 }
 
+TEST_F(WindAppTest, ForcedDisplayIgnoresStaleDiskConfirmationAndThenResumesDeduplication)
+{
+    wind_app_outcome_t outcome;
+    ASSERT_EQ(wind_app_run(&app, true, 1787544000, &outcome), ESP_OK);
+    uint64_t hash = 0;
+    ASSERT_EQ(wind_cache_panel_load(panel_storage.c_str(), 1, &hash), ESP_OK);
+    // Simulate an out-of-band screen whose disk confirmation could not be removed.
+    app.force_display = true;
+    ASSERT_EQ(wind_app_run(&app, false, 1787544060, &outcome), ESP_OK);
+    EXPECT_TRUE(outcome.displayed);
+    EXPECT_FALSE(outcome.display_unchanged);
+    EXPECT_FALSE(app.force_display);
+    ASSERT_EQ(wind_app_run(&app, false, 1787544120, &outcome), ESP_OK);
+    EXPECT_TRUE(outcome.display_unchanged);
+    EXPECT_EQ(fake.displays, 2);
+}
+
+TEST_F(WindAppTest, FailedForcedDisplayKeepsTheOverride)
+{
+    wind_app_outcome_t outcome;
+    ASSERT_EQ(wind_app_run(&app, true, 1787544000, &outcome), ESP_OK);
+    app.force_display = true;
+    fake.display_result = ESP_FAIL;
+    EXPECT_EQ(wind_app_run(&app, false, 1787544060, &outcome), ESP_FAIL);
+    EXPECT_TRUE(app.force_display);
+}
+
 TEST(WindAppProductionContractTest, NavigationHeartbeatRequiresPublishedForecastAndReleasedLocks)
 {
     const auto source = read_wind_app_source();

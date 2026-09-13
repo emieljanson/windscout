@@ -14,6 +14,8 @@
 extern "C" {
 #endif
 
+esp_err_t wind_app_show_battery_empty(void);
+
 typedef enum {
     WIND_FRESHNESS_UNAVAILABLE = 0,
     WIND_FRESHNESS_FRESH,
@@ -45,6 +47,7 @@ typedef struct {
     int64_t coverage_refresh_cache_retrieved_at;
     bool coverage_refresh_attempted;
     bool initialized;
+    bool force_display;
 } wind_app_t;
 
 typedef struct {

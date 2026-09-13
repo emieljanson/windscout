@@ -55,6 +55,12 @@ static int64_t next_rotation_time = 0;  // Use absolute time for rotation
 #endif
 static uint64_t ext1_wakeup_pin_mask = 0;
 static uint32_t requested_sleep_seconds;
+static volatile bool battery_empty;
+
+void power_manager_set_battery_empty(bool empty)
+{
+    battery_empty = empty;
+}
 
 static bool scheduled_wake_enabled(void)
 {
@@ -127,6 +133,8 @@ static void sleep_timer_task(void *arg)
         // external power is present. Automated wakes (timer/rotate/clear) and
         // automated battery operation keeps power save: nobody is browsing, and
         // full RX costs ~60-70mA extra.
+        // The final panel refresh owns its sleep transition; don't cut it short.
+        if (battery_empty) continue;
         bool usb_powered = board_hal_is_usb_connected() || installer_active;
         bool interactive_wake =
             (wakeup_source == WAKEUP_SOURCE_BOOT_BUTTON || wakeup_source == WAKEUP_SOURCE_NONE);
@@ -365,7 +373,11 @@ void power_manager_enter_sleep(void)
     board_hal_led_set(BOARD_HAL_LED_POWER, false);
     board_hal_led_set(BOARD_HAL_LED_ACTIVITY, false);
 
-    if (scheduled_wake_enabled()) {
+    if (battery_empty) {
+        expected_wakeup_time = 0;
+        requested_sleep_seconds = 0;
+        esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_TIMER);
+    } else if (scheduled_wake_enabled()) {
         // Wake on the next forecast boundary, or on the single five-minute
         // retry scheduled after a failed forecast refresh.
         int wake_seconds = requested_sleep_seconds > 0
@@ -394,6 +406,12 @@ void power_manager_enter_sleep(void)
         wakeup_mask |= (1ULL << (BOARD_HAL_CLEAR_KEY < 0 ? 0 : BOARD_HAL_CLEAR_KEY));
     }
 
+    if (battery_empty) {
+        // A held button must not cause a battery-draining boot loop.
+        for (int pin = 0; pin < 64; ++pin)
+            if ((wakeup_mask & (1ULL << pin)) && gpio_get_level(pin) == 0)
+                wakeup_mask &= ~(1ULL << pin);
+    }
     if (wakeup_mask != 0) {
         esp_sleep_enable_ext1_wakeup(wakeup_mask, ESP_EXT1_WAKEUP_ANY_LOW);
     }

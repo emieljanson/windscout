@@ -10,6 +10,10 @@
 #include "driver/gpio.h"
 #include "esp_log.h"
 #include "esp_sntp.h"
+#include "esp_attr.h"
+#include "nvs.h"
+#include "freertos/semphr.h"
+#include "wind_battery_policy.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "hardware_profile.h"
@@ -26,6 +30,72 @@
 static const char *TAG = "windpeek";
 static volatile bool s_time_synchronized;
 static TaskHandle_t s_dashboard_task;
+
+RTC_DATA_ATTR static bool s_empty_latched;
+static bool s_battery_state_loaded;
+static SemaphoreHandle_t s_battery_lock;
+
+static esp_err_t store_battery_latch(bool empty)
+{
+    s_empty_latched = empty;
+    nvs_handle_t handle;
+    esp_err_t result = nvs_open("wind_battery", NVS_READWRITE, &handle);
+    if (result == ESP_OK) {
+        result = nvs_set_u8(handle, "empty", empty);
+        if (result == ESP_OK) result = nvs_commit(handle);
+        nvs_close(handle);
+    }
+    if (result != ESP_OK)
+        ESP_LOGW(TAG, "Battery state persistence failed: %s", esp_err_to_name(result));
+    return result;
+}
+
+/* Called only at boot or before existing user/scheduled work, never by a poller. */
+static bool battery_allows_work(void)
+{
+    if (xSemaphoreTake(s_battery_lock, portMAX_DELAY) != pdTRUE) return false;
+    if (!s_battery_state_loaded) {
+        nvs_handle_t handle;
+        if (nvs_open("wind_battery", NVS_READONLY, &handle) == ESP_OK) {
+            uint8_t empty = 0;
+            if (nvs_get_u8(handle, "empty", &empty) == ESP_OK)
+                s_empty_latched = s_empty_latched || empty != 0;
+            nvs_close(handle);
+        }
+        s_battery_state_loaded = true;
+    }
+    const bool usb = board_hal_is_usb_connected();
+    const int millivolts = usb ? -1 : board_hal_get_battery_voltage();
+    const wind_battery_action_t action = wind_battery_action(usb, millivolts, s_empty_latched);
+    if (action == WIND_BATTERY_RUN) {
+        if (s_empty_latched) {
+            // Rebuild the forecast even if its data is identical to the old screen.
+            (void)wind_app_clear_panel_confirmation();
+            store_battery_latch(false);
+        }
+        power_manager_set_battery_empty(false);
+        xSemaphoreGive(s_battery_lock);
+        return true;
+    }
+    power_manager_set_battery_empty(true);
+    // USB may have been removed during an interactive session. Stop an already
+    // running radio before spending the reserve on the final panel refresh.
+    (void)wifi_manager_stop();
+    if (action == WIND_BATTERY_RENDER_EMPTY) {
+        // Persist the attempt BEFORE the power-hungry refresh. A brownout or
+        // failed panel must not cause endless refresh attempts on button wakes.
+        ESP_LOGI(TAG, "Battery reserve reached (%d mV); rendering final screen", millivolts);
+        const esp_err_t result = wind_battery_render_once(
+            &s_empty_latched, store_battery_latch, wind_app_show_battery_empty);
+        if (result != ESP_OK)
+            ESP_LOGW(TAG, "Final battery screen failed: %s", esp_err_to_name(result));
+    }
+    power_manager_enter_sleep();
+    // Sleep can be cancelled by USB arriving during the refresh. Let the caller
+    // retry its existing work path; it will then clear the latch on USB power.
+    xSemaphoreGive(s_battery_lock);
+    return board_hal_is_usb_connected() ? battery_allows_work() : false;
+}
 
 static bool hardware_profile_allows_panel(void)
 {
@@ -127,6 +197,7 @@ static void spot_buttons_task(void *argument)
             power_manager_is_installer_active(), wind_spots_count(),
             (uint32_t)(xTaskGetTickCount() * portTICK_PERIOD_MS));
         if (direction != 0) {
+            if (!battery_allows_work()) continue;
             power_manager_reset_sleep_timer();
             if (wind_app_navigation_requires_network(direction) && !wifi_manager_is_connected())
                 (void)connect_installed_wifi();
@@ -160,6 +231,7 @@ static void dashboard_task(void *argument)
     while (true) {
         wind_navigation_wait_for_refresh(NULL, dashboard_seconds_until_wake, dashboard_wait_notified);
         if (!power_manager_is_installer_active()) {
+            if (!battery_allows_work()) continue;
             if (!wifi_manager_is_connected() && !connect_installed_wifi()) {
                 ESP_LOGW(TAG, "Scheduled refresh is offline");
             }
@@ -237,6 +309,9 @@ void app_main(void)
 
     ESP_ERROR_CHECK(display_manager_init());
     ESP_ERROR_CHECK(power_manager_init());
+    s_battery_lock = xSemaphoreCreateMutex();
+    ESP_ERROR_CHECK(s_battery_lock ? ESP_OK : ESP_ERR_NO_MEM);
+    while (!battery_allows_work()) vTaskDelay(pdMS_TO_TICKS(100));
     ESP_ERROR_CHECK(wind_installer_service_start());
 
     const bool connected = connect_installed_wifi();

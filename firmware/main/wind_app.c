@@ -174,7 +174,7 @@ static esp_err_t run_internal(wind_app_t *app, bool force_refresh, bool allow_fe
 
     uint64_t hash = wind_cache_bitmap_hash(bitmap, app->config.bitmap_size);
     uint64_t confirmed_hash = 0;
-    if (hash != 0 &&
+    if (!app->force_display && hash != 0 &&
         wind_cache_panel_load(app->config.panel_cache_path,
                               app->config.render_signature,
                               &confirmed_hash) == ESP_OK &&
@@ -201,6 +201,7 @@ static esp_err_t run_internal(wind_app_t *app, bool force_refresh, bool allow_fe
                                       app->config.render_signature, hash);
     if (result == ESP_OK) {
         local.displayed = true;
+        app->force_display = false;
     }
     if (outcome) {
         *outcome = local;
@@ -276,9 +277,11 @@ static SemaphoreHandle_t s_app_lock;
 static SemaphoreHandle_t s_runtime_lock;
 static bool s_ready;
 static bool s_last_render_succeeded;
+static bool s_force_next_display;
 
 static esp_err_t wind_app_refresh_unlocked(bool force_refresh, bool *published_forecast);
 static void apply_spot_display(size_t index);
+static esp_err_t clear_panel_confirmation_unlocked(void);
 
 static wind_renderer_display_t active_renderer_display(void) {
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E100X
@@ -714,6 +717,24 @@ static esp_err_t display_dashboard(void *context, const uint8_t *bitmap,
     return result != ESP_OK ? result : end_result;
 }
 
+esp_err_t wind_app_show_battery_empty(void) {
+    if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE)
+        return ESP_ERR_INVALID_STATE;
+    const size_t size = active_renderer_bitmap_size();
+    uint8_t *bitmap = malloc(size);
+    esp_err_t result = bitmap ? ESP_OK : ESP_ERR_NO_MEM;
+    if (bitmap && clear_panel_confirmation_unlocked() != ESP_OK)
+        ESP_LOGW(TAG, "Could not invalidate panel cache before battery screen");
+    if (result == ESP_OK) {
+        result = wind_renderer_render_battery_empty_for_display(
+            active_renderer_display(), bitmap, size) == 0 ? ESP_OK : ESP_FAIL;
+        if (result == ESP_OK) result = display_dashboard(NULL, bitmap, size);
+    }
+    free(bitmap);
+    xSemaphoreGive(s_runtime_lock);
+    return result;
+}
+
 static esp_err_t ensure_ready(void) {
     if (s_ready) {
         return ESP_OK;
@@ -816,6 +837,7 @@ static esp_err_t ensure_ready(void) {
         if (result != ESP_OK) {
             return result;
         }
+        runtime->app.force_display = s_force_next_display;
     }
     apply_spot_display(s_selected_index);
     s_ready = true;
@@ -939,6 +961,7 @@ static esp_err_t wind_app_refresh_unlocked(bool force_refresh, bool *published_f
     // installing or refreshing the spot currently shown on the panel.
     wind_app_outcome_t outcome = {0};
     result = wind_app_run(&s_spots[s_selected_index].app, force_refresh, now, &outcome);
+    if (outcome.displayed) s_force_next_display = false;
     s_last_render_succeeded = result == ESP_OK && (outcome.displayed || outcome.display_unchanged);
     if (published_forecast) *published_forecast = outcome.published_forecast;
     xSemaphoreGive(s_app_lock);
@@ -988,6 +1011,7 @@ static esp_err_t navigate(int direction) {
     load_or_refresh_tide(runtime, false, now);
     wind_app_outcome_t outcome = {0};
     result = wind_app_run(&runtime->app, !have_cache, now, &outcome);
+    if (outcome.displayed) s_force_next_display = false;
     if (result == ESP_OK) {
         s_selected_index = target;
         esp_err_t store_result = wind_spots_store_selected(target);
@@ -1050,6 +1074,7 @@ esp_err_t wind_app_select_next_display_mode(void) {
     wind_app_outcome_t outcome = {0};
     esp_err_t result =
         wind_app_show_cached(&s_spots[s_selected_index].app, now, &outcome);
+    if (outcome.displayed) s_force_next_display = false;
     xSemaphoreGive(s_app_lock);
     xSemaphoreGive(s_runtime_lock);
     return result;
@@ -1104,12 +1129,30 @@ esp_err_t wind_app_start(void) {
     return wind_app_refresh(false);
 }
 
-esp_err_t wind_app_clear_panel_confirmation(void) {
+static esp_err_t clear_panel_confirmation_unlocked(void) {
     // A splash or another out-of-band display write replaces the forecast
     // even when the panel cache still describes the previously rendered frame.
     // Keep installer verification tied to what is actually visible.
     s_last_render_succeeded = false;
+    // A storage failure must not leave a stale confirmation suppressing the
+    // forecast after an out-of-band screen. Keep an in-memory override too.
+    // Retain this across runtime reconfiguration until a forecast is displayed.
+    s_force_next_display = true;
+    if (s_ready)
+        for (size_t index = 0; index < wind_spots_count(); ++index)
+            s_spots[index].app.force_display = true;
     return wind_cache_panel_invalidate(WIND_PANEL_CACHE_PATH);
+}
+
+esp_err_t wind_app_clear_panel_confirmation(void) {
+    // Before runtime initialization only the boot task can draw a splash.
+    // Once initialized, serialize invalidation with refresh and reconfiguration.
+    if (!s_runtime_lock) return clear_panel_confirmation_unlocked();
+    if (xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE)
+        return ESP_ERR_INVALID_STATE;
+    esp_err_t result = clear_panel_confirmation_unlocked();
+    xSemaphoreGive(s_runtime_lock);
+    return result;
 }
 
 int wind_app_seconds_until_next_wake(void) {
@@ -1129,6 +1172,9 @@ bool wind_app_last_render_succeeded(void) {
     return s_last_render_succeeded;
 }
 #else
+esp_err_t wind_app_show_battery_empty(void) {
+    return ESP_ERR_NOT_SUPPORTED;
+}
 esp_err_t wind_app_configure_runtime(void) {
     return ESP_ERR_NOT_SUPPORTED;
 }

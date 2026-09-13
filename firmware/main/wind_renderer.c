@@ -1848,6 +1848,40 @@ int wind_renderer_input_v2_render_preview_rgba_for_display(
                                                          rgba_size, stats);
 }
 
+int wind_renderer_render_battery_empty(uint8_t *palette_out, size_t palette_size) {
+    return wind_renderer_render_battery_empty_for_display(
+        WIND_RENDERER_DISPLAY_E1002_SPECTRA6, palette_out, palette_size);
+}
+
+int wind_renderer_render_battery_empty_for_display(wind_renderer_display_t display,
+                                                   uint8_t *palette_out, size_t palette_size) {
+    if (display != WIND_RENDERER_DISPLAY_E1001_GRAY4 &&
+        display != WIND_RENDERER_DISPLAY_E1002_SPECTRA6 &&
+        display != WIND_RENDERER_DISPLAY_E1003_GC16) return -1;
+    const int height = display == WIND_RENDERER_DISPLAY_E1003_GC16
+        ? WIND_RENDERER_E1003_COMPOSITION_HEIGHT : WIND_RENDERER_HEIGHT;
+    const size_t size = (size_t)WIND_RENDERER_WIDTH * height;
+    if (!palette_out || palette_size < size) return -1;
+    memset(palette_out, CANVAS_BLACK, size);
+    canvas_t canvas = {.pixels = palette_out, .height = height, .size = size};
+    const int offset = (height - WIND_RENDERER_HEIGHT) / 2;
+    /* 80 x 40 body, 4 px outline, centered including the 6 px terminal. */
+    fill_rect(&canvas, 357, 184 + offset, 80, 40, CANVAS_WHITE);
+    fill_rect(&canvas, 361, 188 + offset, 72, 32, CANVAS_BLACK);
+    fill_rect(&canvas, 437, 196 + offset, 6, 16, CANVAS_WHITE);
+    const char *label = "Battery empty";
+    const wind_text_metrics_t metrics =
+        wind_font_measure(WIND_FONT_BERKELEY_MONO_BOLD, 34, label);
+    draw_text_color(&canvas, (WIND_RENDERER_WIDTH - metrics.width) / 2,
+                    282 + offset, WIND_FONT_BERKELEY_MONO_BOLD, 34,
+                    CANVAS_WHITE, label);
+    const uint8_t white = display == WIND_RENDERER_DISPLAY_E1001_GRAY4 ? 3 :
+        display == WIND_RENDERER_DISPLAY_E1003_GC16 ? 15 : PALETTE_WHITE;
+    for (size_t i = 0; i < size; ++i)
+        palette_out[i] = palette_out[i] == CANVAS_BLACK ? PALETTE_BLACK : white;
+    return 0;
+}
+
 int wind_renderer_palette_row_to_rgb(const uint8_t *palette_row, size_t width,
                                      uint8_t *rgb_row, size_t rgb_size) {
     if (!palette_row || !rgb_row || width == 0 || width > rgb_size / 3) return -1;

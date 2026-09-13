@@ -322,6 +322,15 @@ esp_err_t wifi_manager_disconnect(void)
     return esp_wifi_disconnect();
 }
 
+esp_err_t wifi_manager_stop(void)
+{
+    s_connect_on_start = false;
+    s_retry_num = s_max_retries;
+    s_is_connected = false;
+    s_wifi_started = false;
+    return esp_wifi_stop();
+}
+
 bool wifi_manager_is_connected(void)
 {
     return s_is_connected;

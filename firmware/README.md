@@ -26,6 +26,27 @@ RTC. Local forecast and wake times use the installed spot's IANA timezone via
 the bundled TZDB 2025b rules, including daylight-saving changes and fractional
 UTC offsets.
 
+## Empty-battery reserve
+
+On supported Windpeek boards, boot and existing scheduled/button work check
+battery voltage before starting network work. There is no battery polling task
+and no additional timer wake. At or below 3450 mV, the device attempts one full
+black `Battery empty` screen, then deep-sleeps without forecast timer wakes.
+The attempt is latched in RTC memory and NVS before refreshing, so a reset or
+failed refresh does not repeatedly spend the remaining battery. The panel cache
+is invalidated so the forecast is redrawn on recovery.
+
+USB power permits normal operation on the next wake; otherwise recovery needs
+at least 3650 mV to avoid restarting on voltage rebound. After charging, press a
+wake button if attaching USB did not wake the board. Held buttons are excluded
+from critical-sleep wake sources to avoid repeated boots.
+
+These voltage thresholds are provisional engineering reserves, not a calibrated
+remaining-capacity guarantee. Validate the last refresh under load on each board,
+with aged batteries and low temperatures. A sudden power loss can still prevent
+the final refresh; a failed attempt is not retried until recovery. The UI has
+native black/white encoding for E1001, E1002, and E1003.
+
 ## Build and test
 
 ```sh
