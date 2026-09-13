@@ -420,3 +420,29 @@ TEST_F(WindAppTest, FailedForcedDisplayKeepsTheOverride)
     EXPECT_EQ(wind_app_run(&app, false, 1787544060, &outcome), ESP_FAIL);
     EXPECT_TRUE(app.force_display);
 }
+
+TEST(WindAppProductionContractTest, NavigationHeartbeatRequiresPublishedForecastAndReleasedLocks)
+{
+    const auto source = read_wind_app_source();
+    const auto start = source.find("static esp_err_t navigate(int direction)");
+    const auto end = source.find("esp_err_t wind_app_select_previous", start);
+    ASSERT_NE(start, std::string::npos);
+    ASSERT_NE(end, std::string::npos);
+    const auto body = source.substr(start, end - start);
+    const auto run = body.find("wind_app_run(&runtime->app, !have_cache, now, &outcome)");
+    const auto app_unlock = body.find("xSemaphoreGive(s_app_lock)", run);
+    const auto runtime_unlock = body.find("xSemaphoreGive(s_runtime_lock)", app_unlock);
+    const auto published = body.find("if (outcome.published_forecast)", runtime_unlock);
+    const auto heartbeat = body.find("wind_analytics_maybe_send(now)", published);
+    EXPECT_NE(body.find("wind_app_outcome_t outcome = {0}"), std::string::npos);
+    ASSERT_NE(run, std::string::npos);
+    ASSERT_NE(app_unlock, std::string::npos);
+    ASSERT_NE(runtime_unlock, std::string::npos);
+    ASSERT_NE(published, std::string::npos);
+    ASSERT_NE(heartbeat, std::string::npos);
+    EXPECT_LT(run, app_unlock);
+    EXPECT_LT(app_unlock, runtime_unlock);
+    EXPECT_LT(runtime_unlock, published);
+    EXPECT_LT(published, heartbeat);
+    EXPECT_NE(body.find("return result;", heartbeat), std::string::npos);
+}

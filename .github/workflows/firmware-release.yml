@@ -121,7 +121,10 @@ jobs:
           esp_idf_version: v6.0.2
           target: esp32s3
           path: firmware
+          extra_docker_args: -e WINDPEEK_POSTHOG_PROJECT_TOKEN
           command: >-
+            ( test "${{ github.event_name }}" = "pull_request" ||
+            test -n "$WINDPEEK_POSTHOG_PROJECT_TOKEN" ) &&
             python3 build.py --board seeedstudio_reterminal_e100x --step firmware
             -DFIRMWARE_VERSION='${{ steps.version.outputs.value }}'
 
@@ -147,7 +150,10 @@ jobs:
           esp_idf_version: v6.0.2
           target: esp32s3
           path: firmware
+          extra_docker_args: -e WINDPEEK_POSTHOG_PROJECT_TOKEN
           command: >-
+            ( test "${{ github.event_name }}" = "pull_request" ||
+            test -n "$WINDPEEK_POSTHOG_PROJECT_TOKEN" ) &&
             python3 build.py --board seeedstudio_reterminal_e1003 --step firmware --fullclean
             -DFIRMWARE_VERSION='${{ steps.version.outputs.value }}'
 

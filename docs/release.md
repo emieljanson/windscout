@@ -5,7 +5,9 @@ installer, reTerminal firmware and shared renderer must never be released from
 `windscout-site` or assembled by hand from separate builds.
 
 The browser installer supports the Seeed Studio reTerminal E1001, E1002 and
-E1003 with one configured spot per device.
+E1003. E1001/E1002 use one spot; E1003 supports up to ten spots with independent
+forecast and display settings. The two white buttons select the previous or
+next spot, including after a sleep wake.
 
 ## What the release workflow guarantees
 
@@ -110,9 +112,11 @@ Before releasing:
 The event contains only its name, random dashboard ID, firmware version,
 device type and `$process_person_profile: false`. It contains no location,
 Wi-Fi details, configuration, forecast, weather, serial number or hardware
-address. The device attempts it at most weekly after a successful forecast
-refresh; a failed delivery may retry after 24 hours. Analytics failure never
-changes forecast, display or sleep behavior.
+address. The device first attempts it after a successful forecast refresh.
+Failed deliveries retry at the next successful forecast refresh, with one
+attempt per refresh. A successful delivery starts a seven-day quiet period.
+The nine-day insight window leaves two days of margin. Analytics failure never
+changes the forecast or display result, or prevents sleep.
 
 This is an approximate fleet signal, not billing-grade data: client events can
 be blocked or spoofed. To disable it, clear the repository variable and ship a
@@ -172,6 +176,9 @@ for each run.
 - Clean E1002 install on current Edge/Windows
 - Clean E1002 install on current Firefox/Linux
 - Clean E1001 and E1003 installs on a supported desktop browser
+- E1003: install ten spots; verify both buttons, wraparound, per-spot settings,
+  remembered selection after sleep, and navigation while USB-powered
+- Preserving E1003 update from a v5 single-spot configuration with Wi-Fi retained
 - Configuration-only update with no firmware write
 - Preserving firmware update with Wi-Fi and configuration retained
 - Damaged application repair

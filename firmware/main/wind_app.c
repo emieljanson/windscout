@@ -231,6 +231,7 @@ esp_err_t wind_app_show_cached(wind_app_t *app, int64_t now,
 #include "display_manager.h"
 #include "epaper.h"
 #include "esp_log.h"
+#include "esp_heap_caps.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "installed_configuration.h"
@@ -265,7 +266,7 @@ typedef struct {
     char tide_path[96];
 } wind_spot_runtime_t;
 
-static wind_spot_runtime_t s_spots[1];
+static wind_spot_runtime_t *s_spots;
 static installed_configuration_t s_installed_configuration;
 static const installed_configuration_t *s_preview_configuration;
 static size_t s_selected_index;
@@ -279,6 +280,7 @@ static bool s_last_render_succeeded;
 static bool s_force_next_display;
 
 static esp_err_t wind_app_refresh_unlocked(bool force_refresh, bool *published_forecast);
+static void apply_spot_display(size_t index);
 
 static wind_renderer_display_t active_renderer_display(void) {
 #ifdef CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E100X
@@ -736,8 +738,12 @@ static esp_err_t ensure_ready(void) {
     if (s_ready) {
         return ESP_OK;
     }
-    if (wind_spots_count() != sizeof(s_spots) / sizeof(s_spots[0])) {
+    if (wind_spots_count() > INSTALLED_CONFIGURATION_MAX_SPOTS) {
         return ESP_ERR_INVALID_SIZE;
+    }
+    if (!s_spots) {
+        s_spots = heap_caps_calloc(INSTALLED_CONFIGURATION_MAX_SPOTS, sizeof(*s_spots), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+        if (!s_spots) return ESP_ERR_NO_MEM;
     }
     if (!s_app_lock) {
         s_app_lock = xSemaphoreCreateMutex();
@@ -787,7 +793,7 @@ static esp_err_t ensure_ready(void) {
             .latitude = runtime->spot->latitude,
             .longitude = runtime->spot->longitude,
             .timezone = runtime->spot->timezone,
-            .model = s_installed_configuration.forecast_model,
+            .model = index == 0 ? s_installed_configuration.forecast_model : s_installed_configuration.additional_spots[index - 1].forecast_model,
         };
         if (!open_meteo_knmi_config_valid(&runtime->provider_config)) {
             ESP_LOGE(TAG, "Provider configuration rejected for %s", runtime->spot->id);
@@ -799,7 +805,7 @@ static esp_err_t ensure_ready(void) {
             .longitude = runtime->spot->longitude,
             .timezone = runtime->spot->timezone,
         };
-        runtime->marine_config.swell_model = s_installed_configuration.display.swell_model;
+        runtime->marine_config.swell_model = index == 0 ? s_installed_configuration.display.swell_model : s_installed_configuration.additional_spots[index - 1].display.swell_model;
         if (!open_meteo_marine_config_valid(&runtime->marine_config)) {
             // Tide is an optional row. A missing licensed marine endpoint must
             // not take the core wind forecast offline; the renderer will show
@@ -816,7 +822,7 @@ static esp_err_t ensure_ready(void) {
             .provider = provider,
             .identity = {.spot_id = runtime->spot->id,
                          .timezone = runtime->spot->timezone,
-                         .model = s_installed_configuration.forecast_model},
+                         .model = index == 0 ? s_installed_configuration.forecast_model : s_installed_configuration.additional_spots[index - 1].forecast_model},
             .forecast_cache_path = runtime->forecast_path,
             .panel_cache_path = WIND_PANEL_CACHE_PATH,
             .schedule_path = runtime->schedule_path,
@@ -833,6 +839,7 @@ static esp_err_t ensure_ready(void) {
         runtime->app.force_display = s_force_next_display;
     }
     s_force_next_display = false;
+    apply_spot_display(s_selected_index);
     s_ready = true;
     return ESP_OK;
 }
@@ -859,23 +866,31 @@ esp_err_t wind_app_configure_runtime(void) {
 }
 
 static wind_display_config_t
-display_from_installed(const installed_configuration_t *installed) {
+display_from_installed(const installed_display_configuration_t *installed) {
     wind_display_config_t display;
     wind_display_config_default(&display);
-    display.display_mode = installed->display.show_threshold
+    display.display_mode = installed->show_threshold
                                ? WIND_RENDERER_MODE_THRESHOLD
                                : WIND_RENDERER_MODE_SOLID;
-    display.wind_size = installed->display.wind_size;
-    display.swell_size = installed->display.swell_size;
-    memcpy(display.module_order, installed->display.module_order, sizeof(display.module_order));
-    display.threshold_kt = installed->display.threshold_kt;
-    display.show_weather = installed->display.show_weather;
-    display.show_temperature = installed->display.show_temperature;
-    display.show_tide = installed->display.show_tide;
-    display.show_dedicated_footer = installed->display.show_dedicated_footer;
-    display.use_24_hour = installed->display.use_24_hour;
-    display.temperature_fahrenheit = installed->display.temperature_fahrenheit;
+    display.wind_size = installed->wind_size;
+    display.swell_size = installed->swell_size;
+    memcpy(display.module_order, installed->module_order, sizeof(display.module_order));
+    display.threshold_kt = installed->threshold_kt;
+    display.show_weather = installed->show_weather;
+    display.show_temperature = installed->show_temperature;
+    display.show_tide = installed->show_tide;
+    display.show_dedicated_footer = installed->show_dedicated_footer;
+    display.use_24_hour = installed->use_24_hour;
+    display.temperature_fahrenheit = installed->temperature_fahrenheit;
     return display;
+}
+
+static void apply_spot_display(size_t index) {
+    const installed_display_configuration_t *settings = index == 0
+        ? &s_installed_configuration.display : &s_installed_configuration.additional_spots[index - 1].display;
+    const wind_display_config_t display = display_from_installed(settings);
+    (void)config_manager_set_wind_display_config_transient(&display);
+    (void)config_manager_set_timezone_transient(s_spots[index].spot->timezone);
 }
 
 esp_err_t wind_app_preview_configuration(const installed_configuration_t *candidate) {
@@ -889,7 +904,7 @@ esp_err_t wind_app_preview_configuration(const installed_configuration_t *candid
         return ESP_ERR_INVALID_STATE;
     }
     const wind_display_config_t old_display = config_manager_get_wind_display_config();
-    const wind_display_config_t preview_display = display_from_installed(candidate);
+    const wind_display_config_t preview_display = display_from_installed(&candidate->display);
     esp_err_t result = ESP_ERR_INVALID_STATE;
     if (config_manager_set_wind_display_config_transient(&preview_display) &&
         config_manager_set_timezone_transient(candidate->spot.timezone) &&
@@ -913,7 +928,7 @@ wind_app_activate_configuration(const installed_configuration_t *configuration) 
     if (!s_runtime_lock || xSemaphoreTake(s_runtime_lock, portMAX_DELAY) != pdTRUE) {
         return ESP_ERR_INVALID_STATE;
     }
-    const wind_display_config_t display = display_from_installed(configuration);
+    const wind_display_config_t display = display_from_installed(&configuration->display);
     if (!config_manager_set_wind_display_config(&display) ||
         wind_spots_use_configuration(configuration) != ESP_OK) {
         xSemaphoreGive(s_runtime_lock);
@@ -942,29 +957,12 @@ static esp_err_t wind_app_refresh_unlocked(bool force_refresh, bool *published_f
     load_or_refresh_swell(&s_spots[s_selected_index], force_refresh, now);
     refresh_render_signatures();
     load_or_refresh_tide(&s_spots[s_selected_index], force_refresh, now);
-    bool any_forecast_published = false;
-    for (size_t index = 0; index < wind_spots_count(); ++index) {
-        wind_app_outcome_t outcome;
-        esp_err_t spot_result =
-            index == s_selected_index
-                ? wind_app_run(&s_spots[index].app, force_refresh, now, &outcome)
-                : wind_app_prefetch(&s_spots[index].app, force_refresh, now, &outcome);
-        ESP_LOGI(TAG, "%s: fetch=%d published=%d displayed=%d unchanged=%d",
-                 s_spots[index].spot->id, outcome.attempted_fetch,
-                 outcome.published_forecast, outcome.displayed,
-                 outcome.display_unchanged);
-        any_forecast_published = any_forecast_published || outcome.published_forecast;
-        if (index == s_selected_index || result == ESP_OK) {
-            result = spot_result;
-        }
-        if (index == s_selected_index) {
-            s_last_render_succeeded = spot_result == ESP_OK &&
-                                      (outcome.displayed || outcome.display_unchanged);
-        }
-    }
-    if (published_forecast) {
-        *published_forecast = any_forecast_published;
-    }
+    // Fetch other spots when selected. A slow/offline location must not delay
+    // installing or refreshing the spot currently shown on the panel.
+    wind_app_outcome_t outcome = {0};
+    result = wind_app_run(&s_spots[s_selected_index].app, force_refresh, now, &outcome);
+    s_last_render_succeeded = result == ESP_OK && (outcome.displayed || outcome.display_unchanged);
+    if (published_forecast) *published_forecast = outcome.published_forecast;
     xSemaphoreGive(s_app_lock);
     return result;
 }
@@ -1000,6 +998,7 @@ static esp_err_t navigate(int direction) {
     xSemaphoreTake(s_app_lock, portMAX_DELAY);
     const size_t target = wind_spots_offset(s_selected_index, direction);
     wind_spot_runtime_t *runtime = &s_spots[target];
+    apply_spot_display(target);
     wind_forecast_t cached;
     const bool have_cache =
         wind_cache_load(runtime->forecast_path, &runtime->app.config.identity,
@@ -1009,9 +1008,8 @@ static esp_err_t navigate(int direction) {
     load_or_refresh_swell(runtime, false, now);
     refresh_render_signatures();
     load_or_refresh_tide(runtime, false, now);
-    wind_app_outcome_t outcome;
-    result = have_cache ? wind_app_show_cached(&runtime->app, now, &outcome)
-                        : wind_app_run(&runtime->app, true, now, &outcome);
+    wind_app_outcome_t outcome = {0};
+    result = wind_app_run(&runtime->app, !have_cache, now, &outcome);
     if (result == ESP_OK) {
         s_selected_index = target;
         esp_err_t store_result = wind_spots_store_selected(target);
@@ -1021,8 +1019,19 @@ static esp_err_t navigate(int direction) {
         }
         ESP_LOGI(TAG, "Selected spot %s (cached=%d)", runtime->spot->id, have_cache);
     }
+    if (result != ESP_OK) {
+        apply_spot_display(s_selected_index);
+        refresh_render_signatures();
+    }
     xSemaphoreGive(s_app_lock);
     xSemaphoreGive(s_runtime_lock);
+    if (outcome.published_forecast) {
+        const esp_err_t analytics_result = wind_analytics_maybe_send(now);
+        if (analytics_result != ESP_OK) {
+            ESP_LOGW(TAG, "Dashboard activity heartbeat failed: %s",
+                     esp_err_to_name(analytics_result));
+        }
+    }
     return result;
 }
 
@@ -1083,8 +1092,14 @@ bool wind_app_navigation_requires_network(int direction) {
                         &s_spots[target].app.config.identity, &cached) != ESP_OK;
     time_t now;
     time(&now);
-    const wind_display_config_t display = config_manager_get_wind_display_config();
+    const wind_display_config_t display = display_from_installed(target == 0
+        ? &s_installed_configuration.display : &s_installed_configuration.additional_spots[target - 1].display);
     const wind_spot_runtime_t *runtime = &s_spots[target];
+    int64_t boundary = 0;
+    if (!requires_network) requires_network =
+        !forecast_covers_dashboard_window(&cached, runtime->spot->timezone, now) ||
+        wind_schedule_is_due(&runtime->app.schedule, now, &boundary) ||
+        wind_schedule_retry_is_due(&runtime->app.schedule, now, &boundary);
     if (!requires_network && display.swell_size) {
         char path[128];
         snprintf(path, sizeof(path), "%s.swell", runtime->forecast_path);

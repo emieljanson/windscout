@@ -45,8 +45,10 @@ for a clean, sharp preview.
 
 ## Anonymous dashboard activity
 
-Production firmware sends one anonymous PostHog heartbeat at most once a week,
-and only after it has successfully downloaded and stored a new forecast. It
+Production firmware attempts an anonymous PostHog heartbeat after it has
+successfully downloaded and stored a new forecast. Failed deliveries retry
+after the next successful forecast refresh; after a successful delivery,
+the device waits seven days before sending again. The heartbeat
 contains a random dashboard ID, firmware version and device type. It contains
 no location, Wi-Fi details, configuration or weather data. The random ID stays
 on the device until its storage is fully erased or it is factory-flashed.

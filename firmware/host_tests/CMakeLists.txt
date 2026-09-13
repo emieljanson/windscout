@@ -399,3 +399,16 @@ add_test(NAME BatteryEmptyPreviewExport
 add_wind_test(wind_swell_test test_wind_swell.cpp ../main/wind_swell.c ../main/wind_swell_cache.c ../main/open_meteo_marine_provider.c ../main/wind_tide.c)
 target_link_libraries(wind_swell_test cjson)
 target_include_directories(wind_swell_test BEFORE PRIVATE ${cjson_SOURCE_DIR})
+
+add_wind_test(e1003_multiple_spots_test test_e1003_multiple_spots.cpp
+  ../main/installed_configuration.c ../main/wind_spots.c
+  ../main/wind_installer_service.c ../main/wind_clock.c)
+target_compile_definitions(e1003_multiple_spots_test PRIVATE
+  CONFIG_BOARD_DRIVER_SEEEDSTUDIO_RETERMINAL_E1003=1
+  MULTI_SPOT_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/../../shared/configuration-fixtures/e1003-ten-spots.json")
+target_link_libraries(e1003_multiple_spots_test cjson)
+target_include_directories(e1003_multiple_spots_test BEFORE PRIVATE ${cjson_SOURCE_DIR})
+
+add_wind_test(wind_navigation_test test_wind_navigation.cpp)
+target_compile_definitions(wind_navigation_test PRIVATE
+  WIND_MAIN_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/../main/windpeek_main.c")

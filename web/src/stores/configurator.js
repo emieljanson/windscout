@@ -15,7 +15,7 @@ import { fetchIpLocation } from '../location/ipLocation'
 import { readCachedTide, writeCachedTide } from '../forecast/tideCache'
 import {
   createDefaultDisplayConfiguration,
-  BOARD_ID,
+  BOARD_IDS,
   SUPPORTED_BOARD_IDS,
   TEMPERATURE_CHOICES,
   TEMPERATURE_UNITS,
@@ -35,6 +35,8 @@ import {
 
 export { DEFAULT_THRESHOLD, MAX_THRESHOLD, MIN_THRESHOLD } from '../renderer/contract'
 
+const SPOT_SETTING_FIELDS = ['showThreshold', 'threshold', 'showWeather', 'showTemperature', 'showTide', 'showDedicatedFooter', 'timeFormat', 'temperatureUnit', 'windSize', 'swellSize', 'selectedModelId', 'selectedSwellModelId', 'moduleOrder']
+
 export const useConfiguratorStore = defineStore('configurator', {
   state: () => {
     const displayConfiguration = createDefaultDisplayConfiguration()
@@ -48,7 +50,9 @@ export const useConfiguratorStore = defineStore('configurator', {
       timeFormat: displayConfiguration.timeFormat,
       temperatureUnit: displayConfiguration.temperatureUnit,
       temperatureUnitInitialized: false,
-      selectedBoardId: BOARD_ID,
+      selectedBoardId: BOARD_IDS.E1003,
+      configuredSpotIds: [],
+      spotSettings: {},
       selectedSpotId: DEFAULT_SPOT_ID,
       hasUserSpotIntent: false,
       nearbyDefaultStatus: 'idle',
@@ -85,6 +89,8 @@ export const useConfiguratorStore = defineStore('configurator', {
     }
   },
   getters: {
+    supportsMultipleSpots: (state) => state.selectedBoardId === BOARD_IDS.E1003,
+    configuredSpots() { return this.configuredSpotIds.map(id => this.spotById(id)).filter(Boolean) },
     spots: (state) => [...SPOTS, ...state.personalSpots],
     spotById() {
       return (spotId) => this.spots.find((spot) => spot.id === spotId) ?? null
@@ -112,6 +118,39 @@ export const useConfiguratorStore = defineStore('configurator', {
     },
   },
   actions: {
+    captureSpotSettings() {
+      return Object.fromEntries(SPOT_SETTING_FIELDS.map(key => [key, Array.isArray(this[key]) ? [...this[key]] : this[key]]))
+    },
+    async addConfiguredSpot(spotId, options = {}) {
+      if (!this.supportsMultipleSpots || this.configuredSpotIds.length >= 10 || this.configuredSpotIds.includes(spotId) || !this.spotById(spotId)) return false
+      this.markUserSpotIntent()
+      this.configuredSpotIds.push(spotId)
+      await this.selectSpot(spotId, options)
+      return true
+    },
+    async replaceConfiguredSpot(spotId, options = {}) {
+      if (!this.spotById(spotId)) return false
+      if (spotId === this.selectedSpotId) return true
+      if (this.configuredSpotIds.includes(spotId)) return false
+      const index = this.configuredSpotIds.indexOf(this.selectedSpotId)
+      if (index < 0) return false
+      this.markUserSpotIntent()
+      const previousId = this.selectedSpotId
+      this.configuredSpotIds.splice(index, 1, spotId)
+      delete this.spotSettings[previousId]
+      return this.selectSpot(spotId, options)
+    },
+    async removeConfiguredSpot(spotId, options = {}) {
+      const index = this.configuredSpotIds.indexOf(spotId)
+      if (index < 0) return false
+      this.markUserSpotIntent()
+      this.configuredSpotIds.splice(index, 1)
+      delete this.spotSettings[spotId]
+      if (spotId === this.selectedSpotId && this.configuredSpotIds.length) {
+        await this.selectSpot(this.configuredSpotIds[Math.min(index, this.configuredSpotIds.length - 1)], options)
+      }
+      return true
+    },
     markUserSpotIntent() {
       this.hasUserSpotIntent = true
     },
@@ -159,6 +198,9 @@ export const useConfiguratorStore = defineStore('configurator', {
     setSelectedBoardId(value) {
       if (!SUPPORTED_BOARD_IDS.includes(value)) return false
       this.selectedBoardId = value
+      if (this.supportsMultipleSpots && this.configuredSpotIds.length && !this.configuredSpotIds.includes(this.selectedSpotId)) {
+        void this.selectSpot(this.configuredSpotIds[0])
+      }
       return true
     },
     loadPersonalSpots({ storage } = {}) {
@@ -430,7 +472,12 @@ export const useConfiguratorStore = defineStore('configurator', {
       const spot = this.spotById(spotId)
       if (!spot) return false
       if (spotId === this.selectedSpotId) return true
-      this.selectedSpotId = spotId
+      if (this.configuredSpotIds.includes(this.selectedSpotId)) {
+        this.spotSettings[this.selectedSpotId] = this.captureSpotSettings()
+      }
+      const saved = this.spotSettings[spotId]
+      this.$patch({ selectedSpotId: spotId, ...(saved ?? {}) })
+      this.swellFocus = this.swellSize !== 'off'
       this.swellRequestId += 1
       this.swell = null
       this.swellStatus = 'idle'
