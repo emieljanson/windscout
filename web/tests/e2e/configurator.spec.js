@@ -810,7 +810,13 @@ test('shows the ten-spot toast when trying to add one more', async ({ page }) =>
   await mockForecastApi(page)
   await page.goto('/?configure')
   await expect(page.locator('.spot-list__row')).toHaveCount(10)
-  await page.getByRole('combobox', { name: 'Add spot', exact: true }).click()
-  await expect(page.getByText("Can't add more spots", { exact: true })).toBeVisible()
+  const addSpot = page.getByRole('combobox', { name: 'Add spot', exact: true })
+  const limitToast = page.getByText("Can't add more spots", { exact: true })
+  // Autofocus can show the first toast before the page finishes loading.
+  // Clicking the already-focused field must show it again after it expires.
+  await expect(addSpot).toBeFocused()
+  await expect(limitToast).toBeHidden({ timeout: 10_000 })
+  await addSpot.click()
+  await expect(limitToast).toBeVisible()
   await expect(page.locator('.spot-list__row')).toHaveCount(10)
 })

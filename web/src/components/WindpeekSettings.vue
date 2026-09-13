@@ -197,6 +197,7 @@ function saveSpot(input) {
         @update:model-value="selectSpot"
         @search-intent="store.markUserSpotIntent"
         @focus="notifySpotLimit"
+        @click="notifySpotLimit"
         @create="createSpot"
         @dismiss="handleSpotDismiss"
       />
